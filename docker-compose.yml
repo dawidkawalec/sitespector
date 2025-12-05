@@ -1,0 +1,129 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: sitespector-postgres
+    environment:
+      POSTGRES_USER: sitespector_user
+      POSTGRES_PASSWORD: sitespector_password
+      POSTGRES_DB: sitespector_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sitespector_user -d sitespector_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sitespector-network
+
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sitespector-backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
+      - ENVIRONMENT=development
+      - DEBUG=true
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+      - ./tmp/audits:/tmp/audits
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
+  # Background Worker
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sitespector-worker
+    command: python worker.py
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
+      - ENVIRONMENT=development
+      - DEBUG=true
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+      - ./tmp/audits:/tmp/audits
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
+  # Screaming Frog Crawler
+  screaming-frog:
+    build:
+      context: ./docker/screaming-frog
+      dockerfile: Dockerfile
+    container_name: sitespector-screaming-frog
+    volumes:
+      - ./tmp/crawls:/tmp/crawls
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
+  # Lighthouse Auditor
+  lighthouse:
+    build:
+      context: ./docker/lighthouse
+      dockerfile: Dockerfile
+    container_name: sitespector-lighthouse
+    volumes:
+      - ./tmp/lighthouse:/tmp/lighthouse
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sitespector-frontend
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    env_file:
+      - frontend/.env.local
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  sitespector-network:
+    driver: bridge
+
