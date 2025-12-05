@@ -4,7 +4,9 @@ Audit endpoints: CRUD operations for website audits.
 
 from typing import List, Optional
 from uuid import UUID
+from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc
 from sqlalchemy.orm import selectinload
@@ -18,6 +20,7 @@ from app.schemas import (
     AuditUpdate,
 )
 from app.auth import get_current_active_user
+from app.services.pdf_generator import generate_pdf
 
 router = APIRouter(prefix="/audits", tags=["Audits"])
 
@@ -244,4 +247,89 @@ async def delete_audit(
     
     await db.delete(audit)
     await db.commit()
+
+
+@router.get("/{audit_id}/pdf")
+async def download_audit_pdf(
+    audit_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> FileResponse:
+    """
+    Download PDF report for an audit.
+    
+    Generates PDF on-demand if not already cached.
+    
+    Returns:
+        PDF file as downloadable response
+        
+    Raises:
+        404: If audit not found
+        403: If audit belongs to another user
+        400: If audit not completed yet
+    """
+    result = await db.execute(
+        select(Audit).where(Audit.id == audit_id)
+    )
+    audit = result.scalar_one_or_none()
+    
+    if not audit:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Audit not found"
+        )
+    
+    # Check ownership
+    if audit.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this audit"
+        )
+    
+    # Check if audit is completed
+    if audit.status != AuditStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Audit is not completed yet"
+        )
+    
+    # Check if PDF already exists (cached)
+    if audit.pdf_url:
+        pdf_path = Path(audit.pdf_url)
+        if pdf_path.exists():
+            return FileResponse(
+                path=pdf_path,
+                filename=f"sitespector_audit_{audit_id}.pdf",
+                media_type="application/pdf"
+            )
+    
+    # Generate PDF on-demand
+    audit_data = {
+        "id": str(audit.id),
+        "url": audit.url,
+        "status": audit.status.value,
+        "overall_score": audit.overall_score,
+        "seo_score": audit.seo_score,
+        "performance_score": audit.performance_score,
+        "content_score": audit.content_score,
+        "is_local_business": audit.is_local_business,
+        "results": audit.results or {},
+        "created_at": audit.created_at.isoformat(),
+        "competitors": [
+            {"url": c.url, "status": c.status.value, "results": c.results}
+            for c in audit.competitors
+        ],
+    }
+    
+    pdf_path = await generate_pdf(str(audit_id), audit_data)
+    
+    # Update audit with PDF URL
+    audit.pdf_url = pdf_path
+    await db.commit()
+    
+    return FileResponse(
+        path=pdf_path,
+        filename=f"sitespector_audit_{audit_id}.pdf",
+        media_type="application/pdf"
+    )
 

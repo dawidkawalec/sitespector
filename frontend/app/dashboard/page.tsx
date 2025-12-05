@@ -1,0 +1,168 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
+import { auditsAPI, authAPI, isAuthenticated } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { NewAuditDialog } from '@/components/NewAuditDialog'
+import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant, truncateUrl } from '@/lib/utils'
+import { Loader2, Plus } from 'lucide-react'
+import Link from 'next/link'
+
+export default function DashboardPage() {
+  const router = useRouter()
+  const [showNewAuditDialog, setShowNewAuditDialog] = useState(false)
+
+  // Check authentication
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      router.push('/login')
+    }
+  }, [router])
+
+  // Fetch current user
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: authAPI.getCurrentUser,
+    enabled: isAuthenticated(),
+  })
+
+  // Fetch audits
+  const {
+    data: auditsData,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ['audits'],
+    queryFn: () => auditsAPI.list(1, 20),
+    enabled: isAuthenticated(),
+    refetchInterval: 10000, // Poll every 10 seconds
+  })
+
+  if (!isAuthenticated()) {
+    return null
+  }
+
+  return (
+    <div className="container mx-auto py-8 px-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          {user && (
+            <p className="text-muted-foreground mt-1">
+              {user.email} • {user.subscription_tier} • {user.audits_count} audytów
+            </p>
+          )}
+        </div>
+        <Button onClick={() => setShowNewAuditDialog(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nowy audyt
+        </Button>
+      </div>
+
+      {/* Stats */}
+      {auditsData && (
+        <div className="grid gap-4 md:grid-cols-3 mb-8">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Wszystkie audyty</CardDescription>
+              <CardTitle className="text-4xl">{auditsData.total}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Ukończone</CardDescription>
+              <CardTitle className="text-4xl">
+                {auditsData.items.filter((a) => a.status === 'completed').length}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>W trakcie</CardDescription>
+              <CardTitle className="text-4xl">
+                {auditsData.items.filter((a) => a.status === 'processing').length}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      )}
+
+      {/* Audits List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Twoje audyty</CardTitle>
+          <CardDescription>
+            Lista wszystkich przeprowadzonych audytów
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : auditsData?.items.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Nie masz jeszcze żadnych audytów.</p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => setShowNewAuditDialog(true)}
+              >
+                Utwórz pierwszy audyt
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {auditsData?.items.map((audit) => (
+                <Link key={audit.id} href={`/audits/${audit.id}`}>
+                  <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors cursor-pointer">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium">{truncateUrl(audit.url, 60)}</h3>
+                        <Badge variant={getStatusBadgeVariant(audit.status)}>
+                          {audit.status === 'pending' && 'Oczekujący'}
+                          {audit.status === 'processing' && 'W trakcie'}
+                          {audit.status === 'completed' && 'Ukończony'}
+                          {audit.status === 'failed' && 'Błąd'}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(audit.created_at)}
+                      </p>
+                    </div>
+                    {audit.overall_score !== undefined && (
+                      <div className="text-right">
+                        <div className={`text-2xl font-bold ${getScoreColor(audit.overall_score)}`}>
+                          {formatScore(audit.overall_score)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Wynik ogólny
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* New Audit Dialog */}
+      <NewAuditDialog
+        open={showNewAuditDialog}
+        onOpenChange={setShowNewAuditDialog}
+        onSuccess={() => {
+          refetch()
+          setShowNewAuditDialog(false)
+        }}
+      />
+    </div>
+  )
+}
+

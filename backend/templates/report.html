@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>SiteSpector - Raport Audytu Strony</title>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover-page">
+        <h1 style="font-size: 36pt; margin-bottom: 1em;">SiteSpector</h1>
+        <h2 style="font-size: 24pt; color: #666; margin-bottom: 2em;">
+            Raport Audytu Strony Internetowej
+        </h2>
+        <div style="font-size: 18pt; margin-top: 4em;">
+            <p><strong>Audytowana strona:</strong></p>
+            <p style="color: #3b82f6; font-weight: bold;">{{ audit.url }}</p>
+        </div>
+        <div style="font-size: 14pt; color: #666; margin-top: 4em;">
+            <p>Data wygenerowania: {{ generated_date }}</p>
+            <p>ID Audytu: {{ audit.id }}</p>
+        </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="page-break">
+        <h1>Spis Treści</h1>
+        <ol style="font-size: 12pt; line-height: 2;">
+            <li>Podsumowanie Wykonawcze</li>
+            <li>Wyniki Ogólne</li>
+            <li>Analiza SEO Technicznego</li>
+            <li>Analiza Wydajności</li>
+            <li>Analiza Treści</li>
+            {% if audit.is_local_business %}
+            <li>Lokalny SEO</li>
+            {% endif %}
+            {% if audit.competitors|length > 0 %}
+            <li>Analiza Konkurencji</li>
+            {% endif %}
+            <li>Plan Działania</li>
+            <li>Załączniki</li>
+        </ol>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="page-break">
+        <h1>1. Podsumowanie Wykonawcze</h1>
+        
+        <p style="font-size: 13pt; margin: 1.5em 0;">
+            Ten raport przedstawia kompleksową analizę strony <strong>{{ audit.url }}</strong>,
+            przeprowadzoną {{ audit.created_at }} przez platformę SiteSpector.
+        </p>
+
+        <h2>Wyniki Ogólne</h2>
+        <table>
+            <tr>
+                <th>Kategoria</th>
+                <th>Wynik</th>
+                <th>Ocena</th>
+            </tr>
+            <tr>
+                <td>Wynik Ogólny</td>
+                <td><span class="{% if audit.overall_score >= 80 %}score-high{% elif audit.overall_score >= 50 %}score-medium{% else %}score-low{% endif %}">{{ audit.overall_score|round|int }}/100</span></td>
+                <td>{% if audit.overall_score >= 80 %}Bardzo dobry{% elif audit.overall_score >= 50 %}Dobry{% else %}Wymaga poprawy{% endif %}</td>
+            </tr>
+            <tr>
+                <td>SEO</td>
+                <td><span class="{% if audit.seo_score >= 80 %}score-high{% elif audit.seo_score >= 50 %}score-medium{% else %}score-low{% endif %}">{{ audit.seo_score|round|int }}/100</span></td>
+                <td>{% if audit.seo_score >= 80 %}Bardzo dobry{% elif audit.seo_score >= 50 %}Dobry{% else %}Wymaga poprawy{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Wydajność</td>
+                <td><span class="{% if audit.performance_score >= 80 %}score-high{% elif audit.performance_score >= 50 %}score-medium{% else %}score-low{% endif %}">{{ audit.performance_score|round|int }}/100</span></td>
+                <td>{% if audit.performance_score >= 80 %}Bardzo dobra{% elif audit.performance_score >= 50 %}Dobra{% else %}Wymaga poprawy{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Treść</td>
+                <td><span class="{% if audit.content_score >= 80 %}score-high{% elif audit.content_score >= 50 %}score-medium{% else %}score-low{% endif %}">{{ audit.content_score|round|int }}/100</span></td>
+                <td>{% if audit.content_score >= 80 %}Bardzo dobra{% elif audit.content_score >= 50 %}Dobra{% else %}Wymaga poprawy{% endif %}</td>
+            </tr>
+        </table>
+
+        {% if audit.is_local_business %}
+        <div class="recommendation">
+            <h3>🏢 Wykryto Lokalną Firmę</h3>
+            <p>
+                Analiza wykryła, że strona reprezentuje lokalny biznes.
+                Specjalne rekomendacje dla lokalnego SEO znajdują się w sekcji 6.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- SEO Technical Analysis -->
+    <div class="page-break">
+        <h1>3. Analiza SEO Technicznego</h1>
+        
+        <h2>3.1 Struktura Strony</h2>
+        <p>Liczba przeskanowanych stron: {{ seo_data.pages_crawled|default(0) }}</p>
+        <p>Linki wewnętrzne: {{ seo_data.internal_links|default(0) }}</p>
+        <p>Linki zewnętrzne: {{ seo_data.external_links|default(0) }}</p>
+
+        {% if seo_data.broken_links and seo_data.broken_links|length > 0 %}
+        <div class="recommendation">
+            <h3>⚠️ Znaleziono {{ seo_data.broken_links|length }} uszkodzonych linków</h3>
+            <p>Uszkodzone linki negatywnie wpływają na SEO i doświadczenie użytkownika.</p>
+        </div>
+        {% endif %}
+
+        <h2>3.2 Meta Tagi</h2>
+        <p>Status tagów title: {% if seo_data.title_tags %}✅ Znaleziono{% else %}❌ Brak{% endif %}</p>
+        <p>Status meta descriptions: {% if seo_data.meta_descriptions %}✅ Znaleziono{% else %}❌ Brak{% endif %}</p>
+
+        <h2>3.3 Struktura Nagłówków</h2>
+        <p>Tagi H1: {% if seo_data.h1_tags %}✅ Znaleziono{% else %}❌ Brak{% endif %}</p>
+        
+        <h2>3.4 Pliki Techniczne</h2>
+        <p>Sitemap: {% if seo_data.sitemap_url %}✅ {{ seo_data.sitemap_url }}{% else %}❌ Nie znaleziono{% endif %}</p>
+        <p>Robots.txt: {% if seo_data.robots_txt %}✅ Znaleziono{% else %}❌ Brak{% endif %}</p>
+    </div>
+
+    <!-- Performance Analysis -->
+    <div class="page-break">
+        <h1>4. Analiza Wydajności</h1>
+        
+        <h2>4.1 Core Web Vitals - Desktop</h2>
+        <table>
+            <tr>
+                <th>Metryka</th>
+                <th>Wartość</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>Performance Score</td>
+                <td>{{ performance_desktop.performance_score|default(0) }}/100</td>
+                <td>{% if performance_desktop.performance_score >= 90 %}✅ Dobry{% elif performance_desktop.performance_score >= 50 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
+                <td>LCP (Largest Contentful Paint)</td>
+                <td>{{ performance_desktop.lcp|default(0) }} ms</td>
+                <td>{% if performance_desktop.lcp < 2500 %}✅ Dobry{% elif performance_desktop.lcp < 4000 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
+                <td>CLS (Cumulative Layout Shift)</td>
+                <td>{{ performance_desktop.cls|default(0) }}</td>
+                <td>{% if performance_desktop.cls < 0.1 %}✅ Dobry{% elif performance_desktop.cls < 0.25 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
+                <td>TTFB (Time to First Byte)</td>
+                <td>{{ performance_desktop.ttfb|default(0) }} ms</td>
+                <td>{% if performance_desktop.ttfb < 800 %}✅ Dobry{% elif performance_desktop.ttfb < 1800 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+        </table>
+
+        <h2>4.2 Core Web Vitals - Mobile</h2>
+        <table>
+            <tr>
+                <th>Metryka</th>
+                <th>Wartość</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>Performance Score</td>
+                <td>{{ performance_mobile.performance_score|default(0) }}/100</td>
+                <td>{% if performance_mobile.performance_score >= 90 %}✅ Dobry{% elif performance_mobile.performance_score >= 50 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+        </table>
+
+        {% if performance_analysis.recommendations %}
+        <h2>4.3 Rekomendacje Wydajności</h2>
+        {% for rec in performance_analysis.recommendations %}
+        <div class="recommendation">
+            <h3>{{ rec.title|default("Rekomendacja") }}</h3>
+            <p>{{ rec.description|default("") }}</p>
+            {% if rec.code_example %}
+            <p><strong>Przykład kodu:</strong></p>
+            <pre><code>{{ rec.code_example }}</code></pre>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Content Analysis -->
+    <div class="page-break">
+        <h1>5. Analiza Treści</h1>
+        
+        <h2>5.1 Jakość Treści</h2>
+        <p>Wynik jakości: {{ content_analysis.quality_score|default(0) }}/100</p>
+        
+        <h2>5.2 Czytelność</h2>
+        <p>Flesch Reading Ease: {{ content_analysis.readability_score|default(0) }}</p>
+        <p>Interpretacja: {% if content_analysis.readability_score >= 60 %}Łatwa do czytania{% elif content_analysis.readability_score >= 30 %}Średnia trudność{% else %}Trudna do czytania{% endif %}</p>
+
+        {% if content_analysis.recommendations %}
+        <h2>5.3 Rekomendacje Treści</h2>
+        {% for rec in content_analysis.recommendations %}
+        <div class="recommendation">
+            <p>{{ rec }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Local SEO (if applicable) -->
+    {% if audit.is_local_business %}
+    <div class="page-break">
+        <h1>6. Lokalny SEO</h1>
+        
+        <h2>6.1 Sygnały Lokalnego Biznesu</h2>
+        <p>Schema markup LocalBusiness: {% if local_seo.schema_markup %}✅ Znaleziono{% else %}❌ Brak{% endif %}</p>
+        <p>Google My Business: {% if local_seo.google_my_business %}✅ Wykryto{% else %}⚠️ Nie wykryto{% endif %}</p>
+
+        {% if local_seo.recommendations %}
+        <h2>6.2 Rekomendacje Lokalnego SEO</h2>
+        {% for rec in local_seo.recommendations %}
+        <div class="recommendation">
+            <p>{{ rec }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Competitive Analysis (if applicable) -->
+    {% if audit.competitors|length > 0 %}
+    <div class="page-break">
+        <h1>7. Analiza Konkurencji</h1>
+        
+        <p>Porównano z {{ audit.competitors|length }} konkurentami:</p>
+        <ul>
+        {% for competitor in audit.competitors %}
+            <li>{{ competitor.url }}</li>
+        {% endfor %}
+        </ul>
+
+        {% if competitive_analysis.strengths %}
+        <h2>7.1 Twoje Mocne Strony</h2>
+        {% for strength in competitive_analysis.strengths %}
+        <div class="recommendation" style="background-color: #f0fdf4; border-left-color: #16a34a;">
+            <p>{{ strength }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if competitive_analysis.weaknesses %}
+        <h2>7.2 Obszary Do Poprawy</h2>
+        {% for weakness in competitive_analysis.weaknesses %}
+        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
+            <p>{{ weakness }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Action Plan -->
+    <div class="page-break">
+        <h1>8. Plan Działania</h1>
+        
+        <h2>Priorytetowe Zadania</h2>
+        <p>Poniżej przedstawiamy rekomendacje uporządkowane według priorytetu:</p>
+
+        <h3>Wysoki Priorytet (1-2 tygodnie)</h3>
+        <ol>
+            {% if audit.performance_score < 50 %}
+            <li>Optymalizacja wydajności strony (Core Web Vitals)</li>
+            {% endif %}
+            {% if audit.seo_score < 50 %}
+            <li>Naprawa podstawowych błędów SEO</li>
+            {% endif %}
+            {% if seo_data.broken_links and seo_data.broken_links|length > 0 %}
+            <li>Naprawa {{ seo_data.broken_links|length }} uszkodzonych linków</li>
+            {% endif %}
+        </ol>
+
+        <h3>Średni Priorytet (1 miesiąc)</h3>
+        <ol>
+            {% if audit.content_score < 70 %}
+            <li>Poprawa jakości treści</li>
+            {% endif %}
+            {% if audit.is_local_business and not local_seo.schema_markup %}
+            <li>Implementacja schema markup dla lokalnego biznesu</li>
+            {% endif %}
+        </ol>
+
+        <h3>Niski Priorytet (ciągła praca)</h3>
+        <ol>
+            <li>Regularne monitorowanie wydajności</li>
+            <li>Aktualizacja treści</li>
+            <li>Analiza konkurencji</li>
+        </ol>
+    </div>
+
+    <!-- Appendix -->
+    <div class="page-break">
+        <h1>9. Załączniki</h1>
+        
+        <h2>9.1 Przykłady Kodu</h2>
+        <p>Gotowe fragmenty kodu do implementacji na stronie.</p>
+
+        <h3>Schema Markup - LocalBusiness</h3>
+        <pre><code>&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Twoja Firma",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Ulica 123",
+    "addressLocality": "Miasto",
+    "postalCode": "00-000",
+    "addressCountry": "PL"
+  },
+  "telephone": "+48 123 456 789"
+}
+&lt;/script&gt;</code></pre>
+
+        <h2>9.2 Więcej Informacji</h2>
+        <p>Szczegółowe dane surowe oraz dodatkowe analizy dostępne w panelu SiteSpector.</p>
+        <p>W razie pytań skontaktuj się z nami: <strong>kontakt@sitespector.app</strong></p>
+    </div>
+
+    <!-- Footer on last page -->
+    <div style="margin-top: 4em; text-align: center; color: #666; font-size: 10pt;">
+        <p>Raport wygenerowany przez <strong>{{ app_name }}</strong></p>
+        <p>{{ generated_date }}</p>
+        <p>© 2025 SiteSpector. Wszystkie prawa zastrzeżone.</p>
+    </div>
+</body>
+</html>
+
