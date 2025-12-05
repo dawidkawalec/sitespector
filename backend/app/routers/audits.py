@@ -20,7 +20,8 @@ from app.schemas import (
     AuditUpdate,
 )
 from app.auth import get_current_active_user
-from app.services.pdf_generator import generate_pdf
+# Temporarily disabled for local dev - WeasyPrint needs system libraries
+# from app.services.pdf_generator import generate_pdf
 
 router = APIRouter(prefix="/audits", tags=["Audits"])
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { auditsAPI, authAPI, isAuthenticated } from '@/lib/api'
+import { auditsAPI, authAPI, isAuthenticated, removeAuthToken } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +15,11 @@ import Link from 'next/link'
 export default function DashboardPage() {
   const router = useRouter()
   const [showNewAuditDialog, setShowNewAuditDialog] = useState(false)
+
+  const handleLogout = () => {
+    removeAuthToken()
+    router.push('/login')
+  }
 
   // Check authentication
   useEffect(() => {
@@ -58,10 +63,15 @@ export default function DashboardPage() {
             </p>
           )}
         </div>
-        <Button onClick={() => setShowNewAuditDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nowy audyt
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleLogout}>
+            Wyloguj się
+          </Button>
+          <Button onClick={() => setShowNewAuditDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nowy audyt
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
