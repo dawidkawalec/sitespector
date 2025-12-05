@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant } from '@/lib/utils'
 import { ArrowLeft, Download, Loader2, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
+import type { Audit } from '@/lib/api'
 
 export default function AuditDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -31,7 +32,8 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     queryKey: ['audit', params.id],
     queryFn: () => auditsAPI.get(params.id),
     enabled: isAuthenticated(),
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
+      const data = query?.state?.data as Audit | undefined
       // Poll every 5 seconds if processing
       if (data?.status === 'processing' || data?.status === 'pending') {
         return 5000
@@ -316,4 +318,3 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     </div>
   )
 }
-

@@ -15,6 +15,7 @@ import Link from 'next/link'
 export default function DashboardPage() {
   const router = useRouter()
   const [showNewAuditDialog, setShowNewAuditDialog] = useState(false)
+  const [isAuth, setIsAuth] = useState(false)
 
   const handleLogout = () => {
     removeAuthToken()
@@ -23,7 +24,9 @@ export default function DashboardPage() {
 
   // Check authentication
   useEffect(() => {
-    if (!isAuthenticated()) {
+    const auth = isAuthenticated()
+    setIsAuth(auth)
+    if (!auth) {
       router.push('/login')
     }
   }, [router])
@@ -32,7 +35,7 @@ export default function DashboardPage() {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: authAPI.getCurrentUser,
-    enabled: isAuthenticated(),
+    enabled: isAuth,
   })
 
   // Fetch audits
@@ -43,11 +46,12 @@ export default function DashboardPage() {
   } = useQuery({
     queryKey: ['audits'],
     queryFn: () => auditsAPI.list(1, 20),
-    enabled: isAuthenticated(),
+    enabled: isAuth,
     refetchInterval: 10000, // Poll every 10 seconds
   })
 
-  if (!isAuthenticated()) {
+  // Don't render anything on server or if not authenticated
+  if (!isAuth) {
     return null
   }
 
@@ -175,4 +179,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-

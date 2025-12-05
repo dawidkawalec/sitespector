@@ -96,8 +96,9 @@ async def process_audit(audit_id: str) -> None:
             )
             
             # Step 5: Calculate scores
-            seo_score = calculate_seo_score(crawl_data, lighthouse_data["desktop"])
-            performance_score = lighthouse_data["desktop"]["performance_score"]
+            desktop_data = lighthouse_data.get("desktop", {})
+            seo_score = calculate_seo_score(crawl_data, desktop_data)
+            performance_score = desktop_data.get("performance_score", 0)
             content_score = content_analysis.get("quality_score", 0)
             
             overall_score = (seo_score + performance_score + content_score) / 3
@@ -179,13 +180,43 @@ def calculate_seo_score(crawl_data: dict, lighthouse_seo: dict) -> float:
     Returns:
         SEO score (0-100)
     """
-    # Placeholder implementation
-    base_score = lighthouse_seo.get("seo_score", 0)
+    score = 100.0
     
-    # Adjust based on crawl data
-    # TODO: Implement actual scoring logic
+    # Title tag (20 points)
+    if not crawl_data.get("title"):
+        score -= 20
+    elif crawl_data.get("title_length", 0) < 30 or crawl_data.get("title_length", 0) > 70:
+        score -= 10
     
-    return base_score
+    # Meta description (15 points)
+    if not crawl_data.get("meta_description"):
+        score -= 15
+    elif crawl_data.get("meta_description_length", 0) < 120 or crawl_data.get("meta_description_length", 0) > 170:
+        score -= 8
+    
+    # H1 tag (15 points)
+    h1_count = crawl_data.get("h1_count", 0)
+    if h1_count == 0:
+        score -= 15
+    elif h1_count > 1:
+        score -= 10
+    
+    # Images with ALT (10 points)
+    total_images = crawl_data.get("total_images", 0)
+    images_without_alt = crawl_data.get("images_without_alt", 0)
+    if total_images > 0 and images_without_alt > 0:
+        penalty = min(10, (images_without_alt / total_images) * 10)
+        score -= penalty
+    
+    # Sitemap (10 points)
+    if not crawl_data.get("has_sitemap"):
+        score -= 10
+    
+    # Lighthouse SEO score (30 points)
+    lighthouse_seo_score = lighthouse_seo.get("seo_score", 0)
+    score = (score * 0.7) + (lighthouse_seo_score * 0.3)
+    
+    return max(0.0, min(100.0, score))
 
 
 async def worker_loop() -> None:

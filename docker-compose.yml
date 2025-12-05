@@ -34,6 +34,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
       - ENVIRONMENT=development
       - DEBUG=true
+      - CORS_ORIGINS=["http://localhost:3000","http://localhost:3001"]
     env_file:
       - .env
     volumes:
@@ -78,6 +79,7 @@ services:
       context: ./docker/screaming-frog
       dockerfile: Dockerfile
     container_name: sitespector-screaming-frog
+    entrypoint: ["tail", "-f", "/dev/null"]
     volumes:
       - ./tmp/crawls:/tmp/crawls
     networks:
@@ -90,6 +92,7 @@ services:
       context: ./docker/lighthouse
       dockerfile: Dockerfile
     container_name: sitespector-lighthouse
+    entrypoint: ["tail", "-f", "/dev/null"]
     volumes:
       - ./tmp/lighthouse:/tmp/lighthouse
     networks:
@@ -102,17 +105,14 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: sitespector-frontend
-    command: npm run dev
+    command: node server.js
     ports:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - HOSTNAME=0.0.0.0
     env_file:
       - frontend/.env.local
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
     depends_on:
       - backend
     networks:
@@ -126,4 +126,3 @@ volumes:
 networks:
   sitespector-network:
     driver: bridge
-

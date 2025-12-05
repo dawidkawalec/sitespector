@@ -25,8 +25,8 @@ async def analyze_content(content_data: Dict[str, Any]) -> Dict[str, Any]:
     quality_score = 100
     
     # Analyze title
-    title = content_data.get("title", "")
-    title_length = content_data.get("title_length", 0)
+    title = content_data.get("title") or ""
+    title_length = content_data.get("title_length") or 0
     if not title:
         recommendations.append("❌ Brak tagu title - dodaj unikalny tytuł strony (50-60 znaków)")
         quality_score -= 20
@@ -40,8 +40,8 @@ async def analyze_content(content_data: Dict[str, Any]) -> Dict[str, Any]:
         recommendations.append("✅ Title tag ma optymalną długość")
     
     # Analyze meta description
-    meta_desc = content_data.get("meta_description", "")
-    meta_length = content_data.get("meta_description_length", 0)
+    meta_desc = content_data.get("meta_description") or ""
+    meta_length = content_data.get("meta_description_length") or 0
     if not meta_desc:
         recommendations.append("❌ Brak meta description - dodaj opis strony (150-160 znaków)")
         quality_score -= 15
@@ -55,7 +55,7 @@ async def analyze_content(content_data: Dict[str, Any]) -> Dict[str, Any]:
         recommendations.append("✅ Meta description ma optymalną długość")
     
     # Analyze H1 tags
-    h1_count = content_data.get("h1_count", 0)
+    h1_count = content_data.get("h1_count") or 0
     if h1_count == 0:
         recommendations.append("❌ Brak tagu H1 - dodaj główny nagłówek strony")
         quality_score -= 15
@@ -66,8 +66,8 @@ async def analyze_content(content_data: Dict[str, Any]) -> Dict[str, Any]:
         recommendations.append("✅ Strona ma jeden tag H1")
     
     # Analyze images
-    total_images = content_data.get("total_images", 0)
-    images_without_alt = content_data.get("images_without_alt", 0)
+    total_images = content_data.get("total_images") or 0
+    images_without_alt = content_data.get("images_without_alt") or 0
     if images_without_alt > 0:
         recommendations.append(f"⚠️ {images_without_alt} z {total_images} obrazów bez atrybutu ALT - dodaj opisy dla SEO i dostępności")
         quality_score -= min(15, images_without_alt * 2)
@@ -75,7 +75,7 @@ async def analyze_content(content_data: Dict[str, Any]) -> Dict[str, Any]:
         recommendations.append(f"✅ Wszystkie {total_images} obrazów mają atrybut ALT")
     
     # Word count
-    word_count = content_data.get("word_count", 0)
+    word_count = content_data.get("word_count") or 0
     if word_count < 300:
         recommendations.append("⚠️ Za mało treści na stronie - dodaj więcej wartościowej treści (min. 300 słów)")
         quality_score -= 10
@@ -106,9 +106,9 @@ async def analyze_local_seo(content_data: Dict[str, Any]) -> Dict[str, Any]:
     logger.info("Analyzing local SEO signals")
     
     # Simple heuristic: check for local business keywords
-    title = content_data.get("title", "").lower()
-    meta_desc = content_data.get("meta_description", "").lower()
-    h1_tags = [h.lower() for h in content_data.get("h1_tags", [])]
+    title = (content_data.get("title") or "").lower()
+    meta_desc = (content_data.get("meta_description") or "").lower()
+    h1_tags = [(h or "").lower() for h in content_data.get("h1_tags", [])]
     
     all_text = f"{title} {meta_desc} {' '.join(h1_tags)}"
     
@@ -155,7 +155,7 @@ async def analyze_performance(performance_data: Dict[str, Any]) -> Dict[str, Any
     issues = []
     
     # Analyze TTFB
-    ttfb_desktop = desktop.get("ttfb", 0)
+    ttfb_desktop = desktop.get("ttfb") or 0
     if ttfb_desktop > 800:
         issues.append("Bardzo wolny Time to First Byte (TTFB)")
         recommendations.append("❌ TTFB > 800ms - rozważ:")
@@ -168,7 +168,7 @@ async def analyze_performance(performance_data: Dict[str, Any]) -> Dict[str, Any
         recommendations.append("✅ TTFB < 600ms - dobry czas odpowiedzi serwera")
     
     # Analyze LCP
-    lcp_desktop = desktop.get("lcp", 0)
+    lcp_desktop = desktop.get("lcp") or 0
     if lcp_desktop > 2500:
         issues.append("Wolny Largest Contentful Paint (LCP)")
         recommendations.append("❌ LCP > 2.5s - optymalizuj:")
@@ -181,7 +181,7 @@ async def analyze_performance(performance_data: Dict[str, Any]) -> Dict[str, Any
         recommendations.append("✅ LCP < 2.5s - dobry czas renderowania")
     
     # Analyze performance score
-    perf_score = desktop.get("performance_score", 0)
+    perf_score = desktop.get("performance_score") or 0
     if perf_score < 50:
         recommendations.append("❌ Niski wynik wydajności - priorytetowa optymalizacja")
     elif perf_score < 80:
@@ -230,7 +230,7 @@ async def analyze_competitive(
     
     # Get main site performance
     main_lighthouse = main_site_data.get("lighthouse", {}).get("desktop", {})
-    main_perf = main_lighthouse.get("performance_score", 0)
+    main_perf = main_lighthouse.get("performance_score") or 0
     
     # Compare with competitors
     better_count = 0
@@ -238,7 +238,7 @@ async def analyze_competitive(
     
     for comp in competitor_data:
         comp_lighthouse = comp.get("lighthouse", {})
-        comp_perf = comp_lighthouse.get("performance_score", 0)
+        comp_perf = comp_lighthouse.get("performance_score") or 0
         
         if main_perf > comp_perf + 10:
             better_count += 1
@@ -286,4 +286,3 @@ def calculate_readability(text: str) -> Dict[str, Any]:
         "fog_index": 0,
         "interpretation": "Unknown",
     }
-
