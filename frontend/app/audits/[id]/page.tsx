@@ -2,16 +2,27 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import { auditsAPI, isAuthenticated } from '@/lib/api'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { auditsAPI, isAuthenticated, CreateAuditData } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant } from '@/lib/utils'
-import { ArrowLeft, Download, Loader2, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import type { Audit } from '@/lib/api'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function AuditDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -41,6 +52,38 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
       return false
     },
   })
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => auditsAPI.delete(id),
+    onSuccess: () => {
+      router.push('/dashboard')
+    },
+  })
+
+  // Retry/Restart mutation (create new audit with same data)
+  const retryMutation = useMutation({
+    mutationFn: (data: CreateAuditData) => auditsAPI.create(data),
+    onSuccess: (newAudit) => {
+      router.push(`/audits/${newAudit.id}`)
+    },
+  })
+
+  const handleDelete = () => {
+    if (audit) {
+        deleteMutation.mutate(audit.id)
+    }
+  }
+
+  const handleRetry = () => {
+    if (audit) {
+        const competitors = audit.competitors?.map(c => c.url) || []
+        retryMutation.mutate({
+            url: audit.url,
+            competitors: competitors
+        })
+    }
+  }
 
   const downloadPDF = async () => {
     try {
@@ -86,6 +129,157 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     )
   }
 
+  const renderSeoResults = (results: any) => {
+      const crawl = results?.crawl
+      if (!crawl) return <p className="text-muted-foreground">Brak danych z crawlowania.</p>
+      return (
+          <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Meta Title</CardTitle></CardHeader>
+                      <CardContent>
+                          <div className="text-lg font-semibold break-words">{crawl.title || '-'}</div>
+                          <p className="text-xs text-muted-foreground mt-1">Długość: {crawl.title?.length || 0} znaków</p>
+                      </CardContent>
+                  </Card>
+                  <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Meta Description</CardTitle></CardHeader>
+                      <CardContent>
+                           <div className="text-sm break-words">{crawl.meta_desc || '-'}</div>
+                           <p className="text-xs text-muted-foreground mt-1">Długość: {crawl.meta_desc?.length || 0} znaków</p>
+                      </CardContent>
+                  </Card>
+              </div>
+              
+               <Card>
+                  <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Nagłówki H1</CardTitle></CardHeader>
+                  <CardContent>
+                      {crawl.h1_tags && crawl.h1_tags.length > 0 ? (
+                          <ul className="list-disc pl-5 space-y-1">
+                              {crawl.h1_tags.map((h1: string, i: number) => (
+                                  <li key={i} className="text-sm">{h1}</li>
+                              ))}
+                          </ul>
+                      ) : (
+                          <span className="text-yellow-600 text-sm flex items-center gap-1"><AlertCircle className="w-4 h-4"/> Brak nagłówków H1</span>
+                      )}
+                  </CardContent>
+              </Card>
+
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                   <div className="bg-card p-4 rounded-lg border">
+                       <div className="text-xs text-muted-foreground uppercase tracking-wider">Status Code</div>
+                       <div className="text-2xl font-bold mt-1">{crawl.status_code || '-'}</div>
+                   </div>
+                   <div className="bg-card p-4 rounded-lg border">
+                       <div className="text-xs text-muted-foreground uppercase tracking-wider">Load Time</div>
+                       <div className="text-2xl font-bold mt-1">{crawl.load_time ? `${Math.round(crawl.load_time * 1000)}ms` : '-'}</div>
+                   </div>
+                   <div className="bg-card p-4 rounded-lg border">
+                       <div className="text-xs text-muted-foreground uppercase tracking-wider">Word Count</div>
+                       <div className="text-2xl font-bold mt-1">{crawl.word_count || 0}</div>
+                   </div>
+                   <div className="bg-card p-4 rounded-lg border">
+                       <div className="text-xs text-muted-foreground uppercase tracking-wider">Page Size</div>
+                       <div className="text-2xl font-bold mt-1">{crawl.size_bytes ? `${Math.round(crawl.size_bytes / 1024)} KB` : '-'}</div>
+                   </div>
+               </div>
+          </div>
+      )
+  }
+
+  const renderPerformanceResults = (results: any) => {
+      const lh = results?.lighthouse?.desktop
+      if (!lh) return <p className="text-muted-foreground">Brak danych Lighthouse.</p>
+      
+      const metrics = [
+          { label: 'First Contentful Paint', value: lh.FCP, score: lh.FCP_score },
+          { label: 'Largest Contentful Paint', value: lh.LCP, score: lh.LCP_score },
+          { label: 'Total Blocking Time', value: lh.TBT, score: lh.TBT_score },
+          { label: 'Cumulative Layout Shift', value: lh.CLS, score: lh.CLS_score },
+          { label: 'Speed Index', value: lh.SI, score: lh.SI_score },
+      ]
+
+      return (
+          <div className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {metrics.map((metric, i) => (
+                      <Card key={i}>
+                          <CardHeader className="pb-2">
+                              <CardTitle className="text-sm font-medium">{metric.label}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                              <div className={`text-2xl font-bold ${getScoreColor(metric.score)}`}>
+                                  {metric.value || '-'}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">Wynik: {formatScore(metric.score)}</div>
+                          </CardContent>
+                      </Card>
+                  ))}
+              </div>
+          </div>
+      )
+  }
+
+   const renderContentResults = (results: any) => {
+      const content = results?.content_analysis
+      if (!content) return <p className="text-muted-foreground">Brak analizy treści AI.</p>
+      
+      return (
+          <div className="space-y-6">
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Podsumowanie AI</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{content.summary || 'Brak podsumowania.'}</p>
+                  </CardContent>
+              </Card>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                  <Card className="border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-900">
+                      <CardHeader><CardTitle className="text-green-700 dark:text-green-400">Mocne strony</CardTitle></CardHeader>
+                      <CardContent>
+                          <ul className="list-disc pl-5 space-y-1">
+                              {content.strengths?.map((item: string, i: number) => (
+                                  <li key={i} className="text-sm text-green-800 dark:text-green-300">{item}</li>
+                              ))}
+                          </ul>
+                      </CardContent>
+                  </Card>
+                  
+                  <Card className="border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-900">
+                       <CardHeader><CardTitle className="text-red-700 dark:text-red-400">Słabe strony</CardTitle></CardHeader>
+                      <CardContent>
+                          <ul className="list-disc pl-5 space-y-1">
+                              {content.weaknesses?.map((item: string, i: number) => (
+                                  <li key={i} className="text-sm text-red-800 dark:text-red-300">{item}</li>
+                              ))}
+                          </ul>
+                      </CardContent>
+                  </Card>
+              </div>
+
+               <Card>
+                  <CardHeader>
+                      <CardTitle>Sugestie poprawy</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      <ul className="space-y-3">
+                           {content.suggestions?.map((item: string, i: number) => (
+                                  <li key={i} className="text-sm bg-muted p-3 rounded-md border flex gap-3">
+                                      <span className="font-bold text-muted-foreground">{i+1}.</span>
+                                      <span>{item}</span>
+                                  </li>
+                              ))}
+                      </ul>
+                  </CardContent>
+              </Card>
+          </div>
+      )
+  }
+
+
   return (
     <div className="container mx-auto py-8 px-4">
       {/* Header */}
@@ -97,9 +291,9 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
           </Button>
         </Link>
 
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{audit.url}</h1>
+            <h1 className="text-3xl font-bold mb-2 break-all">{audit.url}</h1>
             <div className="flex items-center gap-2">
               <Badge variant={getStatusBadgeVariant(audit.status)}>
                 {audit.status === 'pending' && 'Oczekujący'}
@@ -113,16 +307,42 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {audit.status === 'completed' && (
               <Button onClick={downloadPDF}>
                 <Download className="mr-2 h-4 w-4" />
                 Pobierz PDF
               </Button>
             )}
-            <Button variant="outline" onClick={() => refetch()}>
-              <RefreshCw className="h-4 w-4" />
+            
+             <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
+
+            <Button variant="outline" onClick={handleRetry} title="Uruchom ponownie audyt">
+                <RefreshCw className="h-4 w-4 mr-2" /> Restart
+            </Button>
+
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                     <Button variant="destructive" size="icon">
+                        <Trash className="h-4 w-4" />
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Czy na pewno usunąć ten audyt?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tej operacji nie można cofnąć. Wszystkie dane audytu oraz raporty zostaną trwale usunięte.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Usuń</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+           
           </div>
         </div>
       </div>
@@ -146,15 +366,17 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
       {/* Failed State */}
       {audit.status === 'failed' && (
-        <Card>
+        <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
           <CardContent className="pt-6">
             <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-red-600 mb-2">
                 Wystąpił błąd podczas analizy
               </h3>
               {audit.error_message && (
-                <p className="text-sm text-muted-foreground">{audit.error_message}</p>
+                <p className="text-sm text-muted-foreground max-w-lg mx-auto">{audit.error_message}</p>
               )}
+              <Button onClick={handleRetry} className="mt-6" variant="default">Spróbuj ponownie</Button>
             </div>
           </CardContent>
         </Card>
@@ -220,69 +442,37 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                 <CardContent>
                   <div className="space-y-4">
                     {audit.is_local_business && (
-                      <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                      <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-900">
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100 flex items-center gap-2">
                           🏢 Wykryto lokalną firmę
                         </p>
                         <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                          Rekomendacje dla lokalnego SEO są dostępne w zakładce SEO.
+                          Strona wykazuje cechy biznesu lokalnego. Rekomendacje dla lokalnego SEO są dostępne w zakładce SEO.
                         </p>
                       </div>
                     )}
-                    <p className="text-muted-foreground">
-                      Szczegółowe wyniki znajdują się w pozostałych zakładkach oraz raporcie PDF.
-                    </p>
+                    
+                    {audit.results?.content_analysis?.summary && (
+                        <div className="prose dark:prose-invert max-w-none text-sm">
+                            <h4 className="text-sm font-bold uppercase text-muted-foreground mb-2">Wnioski z analizy AI</h4>
+                            <p>{audit.results.content_analysis.summary}</p>
+                        </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="seo" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Analiza SEO</CardTitle>
-                  <CardDescription>
-                    Techniczne aspekty optymalizacji dla wyszukiwarek
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Wyniki analizy SEO dostępne w pełnym raporcie PDF.
-                  </p>
-                </CardContent>
-              </Card>
+                 {renderSeoResults(audit.results)}
             </TabsContent>
 
             <TabsContent value="performance" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Analiza wydajności</CardTitle>
-                  <CardDescription>
-                    Core Web Vitals i optymalizacja szybkości
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Szczegółowe metryki wydajności dostępne w raporcie PDF.
-                  </p>
-                </CardContent>
-              </Card>
+                 {renderPerformanceResults(audit.results)}
             </TabsContent>
 
             <TabsContent value="content" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Analiza treści</CardTitle>
-                  <CardDescription>
-                    Jakość contentu i czytelność
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Analiza treści i rekomendacje dostępne w raporcie PDF.
-                  </p>
-                </CardContent>
-              </Card>
+                 {renderContentResults(audit.results)}
             </TabsContent>
 
             <TabsContent value="competitors" className="space-y-4">
@@ -298,9 +488,11 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground">
-                        Analiza konkurencji dostępna w raporcie PDF.
-                      </p>
+                         {competitor.status === 'completed' ? (
+                             renderSeoResults(competitor.results)
+                         ) : (
+                             <p className="text-muted-foreground">Brak wyników dla tego konkurenta.</p>
+                         )}
                     </CardContent>
                   </Card>
                 ))

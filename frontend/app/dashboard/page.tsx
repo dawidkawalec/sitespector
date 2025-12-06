@@ -2,15 +2,26 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import { auditsAPI, authAPI, isAuthenticated, removeAuthToken } from '@/lib/api'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { auditsAPI, authAPI, isAuthenticated, removeAuthToken, CreateAuditData } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { NewAuditDialog } from '@/components/NewAuditDialog'
 import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant, truncateUrl } from '@/lib/utils'
-import { Loader2, Plus } from 'lucide-react'
+import { Loader2, Plus, Trash, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -49,6 +60,38 @@ export default function DashboardPage() {
     enabled: isAuth,
     refetchInterval: 10000, // Poll every 10 seconds
   })
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => auditsAPI.delete(id),
+    onSuccess: () => {
+      refetch()
+    },
+  })
+
+  // Retry/Restart mutation
+  const retryMutation = useMutation({
+    mutationFn: (data: CreateAuditData) => auditsAPI.create(data),
+    onSuccess: (newAudit) => {
+      router.push(`/audits/${newAudit.id}`)
+    },
+  })
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    deleteMutation.mutate(id)
+  }
+
+  const handleRetry = (e: React.MouseEvent, audit: any) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const competitors = audit.competitors?.map((c: any) => c.url) || []
+    retryMutation.mutate({
+        url: audit.url,
+        competitors: competitors
+    })
+  }
 
   // Don't render anything on server or if not authenticated
   if (!isAuth) {
@@ -133,34 +176,75 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-4">
               {auditsData?.items.map((audit) => (
-                <Link key={audit.id} href={`/audits/${audit.id}`}>
-                  <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors cursor-pointer">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium">{truncateUrl(audit.url, 60)}</h3>
-                        <Badge variant={getStatusBadgeVariant(audit.status)}>
-                          {audit.status === 'pending' && 'Oczekujący'}
-                          {audit.status === 'processing' && 'W trakcie'}
-                          {audit.status === 'completed' && 'Ukończony'}
-                          {audit.status === 'failed' && 'Błąd'}
-                        </Badge>
+                <div key={audit.id} className="relative group">
+                    <Link href={`/audits/${audit.id}`} className="block">
+                      <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors cursor-pointer pr-32">
+                        <div className="flex-1 min-w-0 mr-4">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h3 className="font-medium truncate">{truncateUrl(audit.url, 50)}</h3>
+                            <Badge variant={getStatusBadgeVariant(audit.status)}>
+                              {audit.status === 'pending' && 'Oczekujący'}
+                              {audit.status === 'processing' && 'W trakcie'}
+                              {audit.status === 'completed' && 'Ukończony'}
+                              {audit.status === 'failed' && 'Błąd'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {formatDate(audit.created_at)}
+                          </p>
+                        </div>
+                        
+                        {audit.overall_score !== undefined && (
+                          <div className="text-right shrink-0">
+                            <div className={`text-2xl font-bold ${getScoreColor(audit.overall_score)}`}>
+                              {formatScore(audit.overall_score)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Wynik ogólny
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(audit.created_at)}
-                      </p>
+                    </Link>
+                    
+                    {/* Actions - Positioned absolutely or flex */}
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2 opacity-100 transition-opacity bg-white dark:bg-slate-950 pl-2 shadow-sm md:shadow-none rounded-l-lg md:rounded-none">
+                         <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={(e) => handleRetry(e, audit)}
+                            title="Uruchom ponownie"
+                            className="h-8 w-8"
+                         >
+                            <RefreshCw className="h-4 w-4" />
+                         </Button>
+
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-destructive hover:text-destructive"
+                                    onClick={(e) => { e.stopPropagation(); }} // Stop propagation only for trigger
+                                >
+                                    <Trash className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Usuń audyt</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Czy na pewno chcesz usunąć audyt dla {audit.url}?
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Anuluj</AlertDialogCancel>
+                                    <AlertDialogAction onClick={(e) => handleDelete(e, audit.id)} className="bg-red-600">Usuń</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
-                    {audit.overall_score !== undefined && (
-                      <div className="text-right">
-                        <div className={`text-2xl font-bold ${getScoreColor(audit.overall_score)}`}>
-                          {formatScore(audit.overall_score)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Wynik ogólny
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}
