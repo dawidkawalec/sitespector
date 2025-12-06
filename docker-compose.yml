@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -75,6 +73,7 @@ services:
 
   # Screaming Frog Crawler
   screaming-frog:
+    platform: linux/amd64
     build:
       context: ./docker/screaming-frog
       dockerfile: Dockerfile
@@ -107,7 +106,7 @@ services:
     container_name: sitespector-frontend
     command: node server.js
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
       - HOSTNAME=0.0.0.0

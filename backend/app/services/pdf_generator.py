@@ -79,16 +79,24 @@ def _extract_report_data(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Structured data for PDF template
     """
-    results = audit_data.get("results", {})
+    results = audit_data.get("results") or {}
+    
+    # Safely extract lighthouse data
+    lighthouse_data = results.get("lighthouse") or {}
+    if not isinstance(lighthouse_data, dict):
+        lighthouse_data = {}
+        
+    desktop_data = lighthouse_data.get("desktop") or {}
+    mobile_data = lighthouse_data.get("mobile") or {}
     
     return {
-        "seo_data": results.get("crawl", {}),
-        "performance_desktop": results.get("lighthouse", {}).get("desktop", {}),
-        "performance_mobile": results.get("lighthouse", {}).get("mobile", {}),
-        "content_analysis": results.get("content_analysis", {}),
-        "local_seo": results.get("local_seo", {}),
-        "performance_analysis": results.get("performance_analysis", {}),
-        "competitive_analysis": results.get("competitive_analysis", {}),
+        "seo_data": results.get("crawl") or {},
+        "performance_desktop": desktop_data,
+        "performance_mobile": mobile_data,
+        "content_analysis": results.get("content_analysis") or {},
+        "local_seo": results.get("local_seo") or {},
+        "performance_analysis": results.get("performance_analysis") or {},
+        "competitive_analysis": results.get("competitive_analysis") or {},
     }
 
 

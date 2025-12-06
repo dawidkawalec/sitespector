@@ -1,22 +1,18 @@
 """
-Lighthouse performance audit service (simplified MVP version).
-Uses aiohttp for basic metrics. For production, use Lighthouse Docker.
+Lighthouse performance audit service using Docker container.
 """
 
 import logging
-import time
+import json
+import asyncio
+import subprocess
 from typing import Dict, Any
-import aiohttp
 
 logger = logging.getLogger(__name__)
 
-
 async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
     """
-    Run simplified performance audit on a URL.
-    
-    MVP version: Uses aiohttp to measure basic metrics.
-    Production: Would use Lighthouse Docker container.
+    Run Lighthouse audit using the sibling Docker container via docker exec.
     
     Args:
         url: Website URL to audit
@@ -25,87 +21,112 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
     Returns:
         Dictionary with performance results
     """
-    logger.info(f"Running performance audit: {url} ({device})")
+    logger.info(f"Running Lighthouse audit (Docker): {url} ({device})")
     
     try:
-        async with aiohttp.ClientSession() as session:
-            # Measure time to first byte and total load time
-            start_time = time.time()
+        # Construct Lighthouse command
+        # We use --output=json and print to stdout to capture result
+        # --chrome-flags are crucial for running in container
+        preset = "--preset=desktop" if device == "desktop" else ""
+        cmd = [
+            "docker", "exec", "sitespector-lighthouse",
+            "lighthouse",
+            url,
+            "--output=json",
+            "--output-path=stdout",
+            "--quiet",
+            "--chrome-flags='--headless --no-sandbox --disable-gpu --disable-dev-shm-usage'",
+            preset
+        ]
+        
+        # Remove empty strings
+        cmd = [c for c in cmd if c]
+        
+        logger.debug(f"Executing command: {' '.join(cmd)}")
+        
+        # Run command asynchronously
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        
+        stdout, stderr = await process.communicate()
+        
+        if process.returncode != 0:
+            error_msg = stderr.decode()
+            logger.error(f"Lighthouse failed with code {process.returncode}: {error_msg}")
+            return _failed_audit_result(url, device, error_msg)
             
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
-                ttfb = (time.time() - start_time) * 1000  # Convert to ms
-                html = await response.text()
-                total_time = (time.time() - start_time) * 1000
-                
-                # Calculate scores based on response time
-                # Good: <200ms, OK: <500ms, Poor: >500ms
-                if ttfb < 200:
-                    perf_score = 95
-                elif ttfb < 500:
-                    perf_score = 75
-                elif ttfb < 1000:
-                    perf_score = 50
-                else:
-                    perf_score = 25
-                
-                # Estimate other metrics based on TTFB
-                fcp = ttfb + 200  # First Contentful Paint typically after TTFB
-                lcp = ttfb + 500  # Largest Contentful Paint
-                
-                # Mock other scores (would come from real Lighthouse)
-                seo_score = 85 if response.status == 200 else 50
-                accessibility_score = 80  # Would need to analyze HTML
-                best_practices_score = 75  # Would need security headers etc.
-                
-                return {
-                    "url": url,
-                    "device": device,
-                    "performance_score": perf_score,
-                    "accessibility_score": accessibility_score,
-                    "best_practices_score": best_practices_score,
-                    "seo_score": seo_score,
-                    "ttfb": round(ttfb),
-                    "fcp": round(fcp),
-                    "lcp": round(lcp),
-                    "cls": 0.05,  # Mock Cumulative Layout Shift
-                    "inp": 50,    # Mock Interaction to Next Paint
-                    "total_blocking_time": round(total_time * 0.1),
-                    "speed_index": round(fcp * 1.5),
-                    "total_time": round(total_time),
-                    "status_code": response.status,
-                }
-                
+        # Parse JSON output
+        try:
+            lh_result = json.loads(stdout.decode())
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse Lighthouse JSON: {e}")
+            logger.error(f"Output start: {stdout.decode()[:200]}...")
+            return _failed_audit_result(url, device, "Invalid JSON output")
+            
+        # Extract metrics
+        categories = lh_result.get("categories", {})
+        audits = lh_result.get("audits", {})
+        
+        performance_score = categories.get("performance", {}).get("score", 0) * 100
+        seo_score = categories.get("seo", {}).get("score", 0) * 100
+        accessibility_score = categories.get("accessibility", {}).get("score", 0) * 100
+        best_practices_score = categories.get("best-practices", {}).get("score", 0) * 100
+        
+        # Core Web Vitals
+        fcp = audits.get("first-contentful-paint", {}).get("numericValue", 0)
+        lcp = audits.get("largest-contentful-paint", {}).get("numericValue", 0)
+        tbt = audits.get("total-blocking-time", {}).get("numericValue", 0)
+        cls = audits.get("cumulative-layout-shift", {}).get("numericValue", 0)
+        si = audits.get("speed-index", {}).get("numericValue", 0)
+        
+        # Additional metrics
+        ttfb = audits.get("server-response-time", {}).get("numericValue", 0)
+        
+        result = {
+            "url": url,
+            "device": device,
+            "performance_score": round(performance_score),
+            "accessibility_score": round(accessibility_score),
+            "best_practices_score": round(best_practices_score),
+            "seo_score": round(seo_score),
+            "ttfb": round(ttfb),
+            "fcp": round(fcp),
+            "lcp": round(lcp),
+            "cls": round(cls, 3),
+            "total_blocking_time": round(tbt),
+            "speed_index": round(si),
+            "total_time": round(lcp), # Approximation
+            "status_code": 200, # Assumed if LH succeeded
+        }
+        
+        logger.info(f"✅ Lighthouse audit completed for {url} ({device})")
+        return result
+        
     except Exception as e:
-        logger.error(f"Error auditing {url}: {e}", exc_info=True)
-        return _failed_audit_result(url, device)
+        logger.error(f"Error running Lighthouse audit: {e}", exc_info=True)
+        return _failed_audit_result(url, device, str(e))
 
 
 async def audit_both(url: str) -> Dict[str, Dict[str, Any]]:
     """
     Run performance audit for both desktop and mobile.
-    
-    Args:
-        url: Website URL to audit
-        
-    Returns:
-        Dictionary with 'desktop' and 'mobile' results
     """
-    desktop_results = await audit_url(url, "desktop")
-    mobile_results = await audit_url(url, "mobile")
+    # Run parallel
+    desktop_task = audit_url(url, "desktop")
+    mobile_task = audit_url(url, "mobile")
     
-    # Mobile typically slower
-    if mobile_results["performance_score"] > 0:
-        mobile_results["performance_score"] = max(0, mobile_results["performance_score"] - 10)
-        mobile_results["ttfb"] = int(mobile_results["ttfb"] * 1.3)
-        mobile_results["lcp"] = int(mobile_results["lcp"] * 1.4)
+    results = await asyncio.gather(desktop_task, mobile_task)
     
     return {
-        "desktop": desktop_results,
-        "mobile": mobile_results,
+        "desktop": results[0],
+        "mobile": results[1],
     }
 
 
-def _failed_audit_result(url: str, device: str) -> Dict[str, Any]:
+def _failed_audit_result(url: str, device: str, error: str = "Unknown error") -> Dict[str, Any]:
     """Return failed audit result."""
     return {
         "url": url,
@@ -118,7 +139,7 @@ def _failed_audit_result(url: str, device: str) -> Dict[str, Any]:
         "fcp": 0,
         "lcp": 0,
         "cls": 0,
-        "inp": 0,
-        "error": "Failed to audit URL",
+        "total_blocking_time": 0,
+        "speed_index": 0,
+        "error": error,
     }
-

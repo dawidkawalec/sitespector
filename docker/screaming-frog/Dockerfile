@@ -1,35 +1,27 @@
-FROM eclipse-temurin:11-jre-jammy
+FROM --platform=linux/amd64 ubuntu:22.04
 
 # Install dependencies
+# gdebi-core handles dependencies automatically for .deb files
 RUN apt-get update && apt-get install -y \
     wget \
-    unzip \
-    curl \
+    gdebi-core \
+    xvfb \
+    libgtk-3-0 \
+    libasound2 \
+    libdbus-glib-1-2 \
+    libx11-xcb1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and install Screaming Frog SEO Spider CLI
-# Note: This requires a valid license for production use
-# For development, you can use the free version with limitations
+# Download and install Screaming Frog SEO Spider .deb
+WORKDIR /tmp
+# Using version 19.4 as example, verify link if fails
+RUN wget https://download.screamingfrog.co.uk/products/seo-spider/screamingfrogseospider_19.4_all.deb -O sf.deb \
+    && gdebi -n sf.deb \
+    && rm sf.deb
 
-WORKDIR /opt
+# Create wrapper script
+COPY crawl.sh /usr/local/bin/crawl.sh
+RUN chmod +x /usr/local/bin/crawl.sh
 
-# Create directory for crawl outputs
-RUN mkdir -p /tmp/crawls
-
-# Placeholder for Screaming Frog installation
-# TODO: Add actual Screaming Frog CLI installation
-# The actual implementation will require:
-# 1. Download Screaming Frog CLI from official source
-# 2. Configure license (if using paid version)
-# 3. Create wrapper script for crawling
-
-# Copy wrapper script
-COPY crawl.sh /opt/crawl.sh
-RUN chmod +x /opt/crawl.sh
-
-# Set entry point
-ENTRYPOINT ["/opt/crawl.sh"]
-
-# Default command
-CMD ["--help"]
-
+# Default entrypoint
+ENTRYPOINT ["/usr/local/bin/crawl.sh"]

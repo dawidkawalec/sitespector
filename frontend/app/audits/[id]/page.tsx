@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { auditsAPI, isAuthenticated, CreateAuditData } from '@/lib/api'
@@ -26,10 +26,13 @@ import {
 
 export default function AuditDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const [isAuth, setIsAuth] = useState(false)
 
-  // Check authentication
+  // Check authentication (client-side only)
   useEffect(() => {
-    if (!isAuthenticated()) {
+    const authStatus = isAuthenticated()
+    setIsAuth(authStatus)
+    if (!authStatus) {
       router.push('/login')
     }
   }, [router])
@@ -42,7 +45,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   } = useQuery({
     queryKey: ['audit', params.id],
     queryFn: () => auditsAPI.get(params.id),
-    enabled: isAuthenticated(),
+    enabled: isAuth,
     refetchInterval: (query) => {
       const data = query?.state?.data as Audit | undefined
       // Poll every 5 seconds if processing
@@ -101,7 +104,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     }
   }
 
-  if (!isAuthenticated()) {
+  if (!isAuth) {
     return null
   }
 
@@ -193,11 +196,12 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
       if (!lh) return <p className="text-muted-foreground">Brak danych Lighthouse.</p>
       
       const metrics = [
-          { label: 'First Contentful Paint', value: lh.FCP, score: lh.FCP_score },
-          { label: 'Largest Contentful Paint', value: lh.LCP, score: lh.LCP_score },
-          { label: 'Total Blocking Time', value: lh.TBT, score: lh.TBT_score },
-          { label: 'Cumulative Layout Shift', value: lh.CLS, score: lh.CLS_score },
-          { label: 'Speed Index', value: lh.SI, score: lh.SI_score },
+          { label: 'First Contentful Paint', value: lh.fcp ? `${lh.fcp}ms` : '-', score: lh.performance_score },
+          { label: 'Largest Contentful Paint', value: lh.lcp ? `${lh.lcp}ms` : '-', score: lh.performance_score },
+          { label: 'Total Blocking Time', value: lh.total_blocking_time ? `${lh.total_blocking_time}ms` : '-', score: lh.performance_score },
+          { label: 'Cumulative Layout Shift', value: lh.cls !== undefined ? lh.cls.toFixed(3) : '-', score: lh.performance_score },
+          { label: 'Speed Index', value: lh.speed_index ? `${lh.speed_index}ms` : '-', score: lh.performance_score },
+          { label: 'Time to First Byte', value: lh.ttfb ? `${lh.ttfb}ms` : '-', score: lh.performance_score },
       ]
 
       return (
@@ -229,49 +233,38 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
           <div className="space-y-6">
               <Card>
                   <CardHeader>
-                      <CardTitle>Podsumowanie AI</CardTitle>
+                      <CardTitle>Analiza Treści</CardTitle>
                   </CardHeader>
                   <CardContent>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{content.summary || 'Brak podsumowania.'}</p>
+                      <div className="grid gap-4 md:grid-cols-3">
+                          <div className="bg-card p-4 rounded-lg border">
+                              <div className="text-xs text-muted-foreground uppercase tracking-wider">Jakość Treści</div>
+                              <div className="text-2xl font-bold mt-1">{content.quality_score || 0}/100</div>
+                          </div>
+                          <div className="bg-card p-4 rounded-lg border">
+                              <div className="text-xs text-muted-foreground uppercase tracking-wider">Liczba Słów</div>
+                              <div className="text-2xl font-bold mt-1">{content.word_count || 0}</div>
+                          </div>
+                          <div className="bg-card p-4 rounded-lg border">
+                              <div className="text-xs text-muted-foreground uppercase tracking-wider">Czytelność</div>
+                              <div className="text-2xl font-bold mt-1">{content.readability_score || 0}/100</div>
+                          </div>
+                      </div>
                   </CardContent>
               </Card>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                  <Card className="border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-900">
-                      <CardHeader><CardTitle className="text-green-700 dark:text-green-400">Mocne strony</CardTitle></CardHeader>
-                      <CardContent>
-                          <ul className="list-disc pl-5 space-y-1">
-                              {content.strengths?.map((item: string, i: number) => (
-                                  <li key={i} className="text-sm text-green-800 dark:text-green-300">{item}</li>
-                              ))}
-                          </ul>
-                      </CardContent>
-                  </Card>
-                  
-                  <Card className="border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-900">
-                       <CardHeader><CardTitle className="text-red-700 dark:text-red-400">Słabe strony</CardTitle></CardHeader>
-                      <CardContent>
-                          <ul className="list-disc pl-5 space-y-1">
-                              {content.weaknesses?.map((item: string, i: number) => (
-                                  <li key={i} className="text-sm text-red-800 dark:text-red-300">{item}</li>
-                              ))}
-                          </ul>
-                      </CardContent>
-                  </Card>
-              </div>
 
                <Card>
                   <CardHeader>
-                      <CardTitle>Sugestie poprawy</CardTitle>
+                      <CardTitle>Rekomendacje SEO</CardTitle>
                   </CardHeader>
                   <CardContent>
                       <ul className="space-y-3">
-                           {content.suggestions?.map((item: string, i: number) => (
+                           {content.recommendations?.map((item: string, i: number) => (
                                   <li key={i} className="text-sm bg-muted p-3 rounded-md border flex gap-3">
                                       <span className="font-bold text-muted-foreground">{i+1}.</span>
                                       <span>{item}</span>
                                   </li>
-                              ))}
+                              )) || <p className="text-muted-foreground">Brak rekomendacji.</p>}
                       </ul>
                   </CardContent>
               </Card>

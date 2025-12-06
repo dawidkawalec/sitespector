@@ -1,50 +1,33 @@
 #!/bin/bash
-#
-# Screaming Frog crawler wrapper script
-#
-# Usage: ./crawl.sh <url> <output_dir>
-#
-
 set -e
 
+# Start Xvfb (Virtual Framebuffer) to allow GUI app to run headless
+Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+export DISPLAY=:99
+
+# Screaming Frog CLI command structure
+# screamingfrogseospider --crawl <url> --headless --save-crawl --output-folder /tmp/crawls --export-tabs "Internal:All,Response Codes:All"
+
 URL=$1
-OUTPUT_DIR=${2:-/tmp/crawls}
-MAX_PAGES=${3:-500}
 
 if [ -z "$URL" ]; then
-    echo "Usage: $0 <url> [output_dir] [max_pages]"
+    echo "Usage: crawl.sh <url>"
     exit 1
 fi
 
-echo "🕷️  Crawling: $URL"
-echo "📁 Output: $OUTPUT_DIR"
-echo "📄 Max pages: $MAX_PAGES"
+echo "Starting Screaming Frog crawl for $URL..."
 
-# Create output directory
-mkdir -p "$OUTPUT_DIR"
+# Check if license is provided (mounted volume or env var)
+# Free version limit: 500 URLs
 
-# TODO: Implement actual Screaming Frog CLI command
-# Example:
-# screamingfrogseospider \
-#     --crawl "$URL" \
-#     --output-folder "$OUTPUT_DIR" \
-#     --max-pages "$MAX_PAGES" \
-#     --export-format json
+screamingfrogseospider --crawl "$URL" --headless --save-crawl --output-folder /tmp/crawls --export-tabs "Internal:All" --export-format "json" > /dev/null
 
-# Placeholder: Create dummy output
-FILENAME="crawl_$(date +%s).json"
-cat > "$OUTPUT_DIR/$FILENAME" <<EOF
-{
-  "url": "$URL",
-  "pages_crawled": 0,
-  "title_tags": [],
-  "meta_descriptions": [],
-  "h1_tags": [],
-  "broken_links": [],
-  "sitemap_url": null,
-  "robots_txt": null
-}
-EOF
+# The output will be in /tmp/crawls/internal_all.json (or similar based on export tabs)
+# We need to find the latest export
+LATEST_EXPORT=$(ls -t /tmp/crawls/*.json | head -n 1)
 
-echo "✅ Crawl complete: $OUTPUT_DIR/$FILENAME"
-
+if [ -f "$LATEST_EXPORT" ]; then
+    cat "$LATEST_EXPORT"
+else
+    echo '{"error": "No crawl data generated"}'
+fi
