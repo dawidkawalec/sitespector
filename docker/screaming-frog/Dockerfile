@@ -1,15 +1,17 @@
 FROM --platform=linux/amd64 ubuntu:22.04
 
-# Install dependencies
-# gdebi-core handles dependencies automatically for .deb files
+# Install dependencies including Java Runtime
+# Screaming Frog requires Java 11+
 RUN apt-get update && apt-get install -y \
     wget \
     gdebi-core \
+    openjdk-11-jre-headless \
     xvfb \
     libgtk-3-0 \
     libasound2 \
     libdbus-glib-1-2 \
     libx11-xcb1 \
+    jq \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install Screaming Frog SEO Spider .deb
