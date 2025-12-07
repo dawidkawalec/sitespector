@@ -28,7 +28,11 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
         # We use --output=json and print to stdout to capture result
         # --chrome-flags are crucial for running in container
         chrome_flags = "--headless --no-sandbox --disable-gpu --disable-dev-shm-usage"
-        preset = "--preset=desktop" if device == "desktop" else "--preset=mobile"
+        
+        # We invoke the 'lighthouse' command directly inside the container
+        # Note: The container ENTRYPOINT is /opt/audit.sh, but we are overriding it via docker exec
+        # effectively running `docker exec <container> lighthouse ...`
+        
         cmd = [
             "docker", "exec", "sitespector-lighthouse",
             "lighthouse",
@@ -37,7 +41,8 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
             "--output-path=stdout",
             "--quiet",
             f"--chrome-flags={chrome_flags}",
-            preset
+            "--emulated-form-factor=" + device,
+            "--only-categories=performance,accessibility,best-practices,seo"
         ]
         
         logger.debug(f"Executing command: {' '.join(cmd)}")

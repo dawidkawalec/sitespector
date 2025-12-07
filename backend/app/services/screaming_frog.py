@@ -44,7 +44,11 @@ async def crawl_url(url: str) -> Dict[str, Any]:
         
         if process.returncode != 0:
             error = stderr.decode()
-            logger.warning(f"Screaming Frog failed: {error[:200]}")
+            if "licence" in error.lower() or "license" in error.lower():
+                logger.warning("Screaming Frog License missing. Falling back to HTTP crawler.")
+            else:
+                logger.warning(f"Screaming Frog failed: {error[:200]}")
+            
             logger.info("Falling back to HTTP crawler...")
             return await _http_fallback_crawl(url)
             
@@ -63,22 +67,90 @@ async def crawl_url(url: str) -> Dict[str, Any]:
 
 
 async def _http_fallback_crawl(url: str) -> Dict[str, Any]:
-    """HTTP fallback when Screaming Frog unavailable."""
+    """
+    HTTP fallback when Screaming Frog unavailable.
+    Crawls the homepage and follows internal links to simulate a basic crawl.
+    """
     import httpx
+    from urllib.parse import urlparse, urljoin
     
-    try:
-        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-            response = await client.get(
-                url,
-                headers={
+    logger.info(f"🕷️  Running HTTP fallback crawl for: {url}")
+    
+    base_domain = urlparse(url).netloc
+    max_pages = 20  # Limit to prevent infinite loops
+    visited_urls = set()
+    queue = [url]
+    crawled_data = []
+    
+    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True, verify=False) as client:
+        while queue and len(visited_urls) < max_pages:
+            current_url = queue.pop(0)
+            if current_url in visited_urls:
+                continue
+                
+            visited_urls.add(current_url)
+            
+            try:
+                # Add headers to mimic a real browser
+                headers = {
                     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
                 }
-            )
-            response.raise_for_status()
-            return _parse_html(response.text, url, response.status_code, response.elapsed.total_seconds())
-    except Exception as e:
-        logger.error(f"HTTP fallback failed: {e}")
-        return _empty_crawl_result(str(e))
+                
+                response = await client.get(current_url, headers=headers)
+                
+                if response.status_code == 200:
+                    page_data = _parse_html(response.text, current_url, response.status_code, response.elapsed.total_seconds())
+                    crawled_data.append(page_data)
+                    
+                    # Extract internal links for the queue
+                    # Only add links if we haven't visited them and they are internal
+                    soup = BeautifulSoup(response.text, 'lxml')
+                    links = soup.find_all('a', href=True)
+                    
+                    for link in links:
+                        href = link['href']
+                        full_url = urljoin(current_url, href)
+                        parsed_link = urlparse(full_url)
+                        
+                        # Check if internal link and not already visited
+                        if parsed_link.netloc == base_domain and full_url not in visited_urls and full_url not in queue:
+                            # Basic filter to avoid junk
+                            if not any(ext in full_url.lower() for ext in ['.jpg', '.png', '.pdf', '.css', '.js', 'mailto:', 'tel:']):
+                                queue.append(full_url)
+                                
+            except Exception as e:
+                logger.warning(f"Failed to crawl {current_url}: {e}")
+                
+    if not crawled_data:
+        return _empty_crawl_result("HTTP crawl failed completely")
+
+    # Aggregate results to match Screaming Frog structure
+    homepage_data = crawled_data[0] # Assume first is homepage
+    
+    total_images = sum(p.get("total_images", 0) for p in crawled_data)
+    images_without_alt = sum(p.get("images_without_alt", 0) for p in crawled_data)
+    internal_links_count = sum(p.get("internal_links_count", 0) for p in crawled_data)
+    
+    # Enrich homepage data with aggregated stats
+    homepage_data["pages_crawled"] = len(crawled_data)
+    homepage_data["total_images"] = total_images
+    homepage_data["images_without_alt"] = images_without_alt
+    homepage_data["internal_links_count"] = internal_links_count
+    
+    # Additional logic to check for robots.txt and sitemap
+    try:
+        robots_url = urljoin(url, "/robots.txt")
+        robots_resp = await client.get(robots_url)
+        homepage_data["has_robots_txt"] = robots_resp.status_code == 200
+        
+        sitemap_url = urljoin(url, "/sitemap.xml")
+        sitemap_resp = await client.get(sitemap_url)
+        homepage_data["has_sitemap"] = sitemap_resp.status_code == 200
+    except:
+        pass
+
+    logger.info(f"✅ HTTP crawl finished. Scanned {len(crawled_data)} pages.")
+    return homepage_data
 
 
 def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:

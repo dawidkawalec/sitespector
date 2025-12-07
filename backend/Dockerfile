@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     fonts-liberation \
     fonts-dejavu \
     docker.io \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
