@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant } from '@/lib/utils'
-import { ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle, FileJson } from 'lucide-react'
 import Link from 'next/link'
 import type { Audit } from '@/lib/api'
 import {
@@ -101,6 +101,39 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
       document.body.removeChild(a)
     } catch (error) {
       console.error('Error downloading PDF:', error)
+    }
+  }
+
+  const downloadRawData = async () => {
+    try {
+      // Direct download via browser to handle headers better
+      // We need to get the token
+      const token = localStorage.getItem('access_token')
+      if (!token) {
+          console.error('No access token found')
+          return
+      }
+
+      // Using fetch to get blob with auth header
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/audits/${params.id}/raw`, {
+          headers: {
+              'Authorization': `Bearer ${token}`
+          }
+      })
+      
+      if (!response.ok) throw new Error('Download failed')
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `audit_${params.id}_raw.zip`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Error downloading raw data:', error)
     }
   }
 
@@ -302,13 +335,19 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
           <div className="flex flex-wrap gap-2">
             {audit.status === 'completed' && (
-              <Button onClick={downloadPDF}>
-                <Download className="mr-2 h-4 w-4" />
-                Pobierz PDF
-              </Button>
+              <>
+                <Button onClick={downloadPDF}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Pobierz PDF
+                </Button>
+                <Button variant="secondary" onClick={downloadRawData} title="Pobierz surowe dane (ZIP)">
+                  <FileJson className="mr-2 h-4 w-4" />
+                  Raw Data
+                </Button>
+              </>
             )}
             
-             <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
+             <Button variant="outline" onClick={() => refetch()} disabled={isLoading} title="Odśwież status">
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
 

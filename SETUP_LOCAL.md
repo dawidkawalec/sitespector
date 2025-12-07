@@ -61,7 +61,7 @@ docker-compose exec backend alembic upgrade head
 
 ### 5. Otwórz aplikację
 
-- **Frontend:** http://localhost:3000
+- **Frontend:** http://localhost:3001
 - **Backend API:** http://localhost:8000
 - **API Docs:** http://localhost:8000/docs
 
@@ -105,7 +105,7 @@ echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
 npm run dev
 ```
 
-Frontend dostępny na: http://localhost:3000
+Frontend dostępny na: http://localhost:3001
 
 ### Worker (opcjonalnie)
 
@@ -380,7 +380,7 @@ Po udanym setupie lokalnym:
    ```
 
 3. **Utwórz pierwszy audyt:**
-   - Zaloguj się na http://localhost:3000/login
+   - Zaloguj się na http://localhost:3001/login
    - Kliknij "Nowy audyt"
    - Wprowadź URL: `https://example.com`
    - Poczekaj na wyniki
