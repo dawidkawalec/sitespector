@@ -25,7 +25,10 @@ class Settings(BaseSettings):
     JWT_EXPIRATION_DAYS: int = Field(default=7, description="JWT token expiration in days")
     BCRYPT_COST: int = Field(default=12, description="Bcrypt hashing cost factor")
 
-    # Claude AI
+    # Gemini AI (replaced Claude)
+    GEMINI_API_KEY: str = Field(default="", description="Google Gemini API key")
+    
+    # Claude AI (Deprecated, kept for compatibility if needed)
     CLAUDE_API_KEY: str = Field(default="", description="Anthropic Claude API key")
     CLAUDE_MODEL: str = Field(
         default="claude-sonnet-4-20250514", description="Claude model version"
@@ -35,6 +38,10 @@ class Settings(BaseSettings):
 
     # Application
     ENVIRONMENT: str = Field(default="development", description="Environment (development/production)")
+    
+    # Screaming Frog Credentials
+    SCREAMING_FROG_USER: str = Field(default="", description="SF License User")
+    SCREAMING_FROG_KEY: str = Field(default="", description="SF License Key")
     DEBUG: bool = Field(default=True, description="Debug mode")
     API_VERSION: str = Field(default="v1", description="API version")
     APP_NAME: str = Field(default="SiteSpector", description="Application name")

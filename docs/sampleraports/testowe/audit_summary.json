@@ -1,0 +1,112 @@
+{
+  "id": "79dfde64-1e71-4ceb-b389-3905b25794ef",
+  "url": "https://meditrue.pl/",
+  "status": "completed",
+  "overall_score": 22.666666666666668,
+  "seo_score": 28.0,
+  "performance_score": 0.0,
+  "content_score": 40.0,
+  "is_local_business": false,
+  "results": {
+    "crawl": {
+      "url": "https://meditrue.pl/",
+      "title": "",
+      "h1_tags": [
+        ""
+      ],
+      "h1_count": 0,
+      "load_time": 0.0,
+      "size_bytes": 0,
+      "word_count": 0,
+      "status_code": 200,
+      "title_length": 0,
+      "total_images": 0,
+      "meta_description": "",
+      "images_without_alt": 0,
+      "internal_links_count": 2,
+      "meta_description_length": 0
+    },
+    "local_seo": {
+      "has_nap": false,
+      "recommendations": [
+        "\u2139\ufe0f Brak wykrycia lokalnego biznesu"
+      ],
+      "has_schema_markup": false,
+      "is_local_business": false
+    },
+    "lighthouse": {
+      "mobile": {
+        "cls": 0.014,
+        "fcp": 2645,
+        "lcp": 3491,
+        "url": "https://meditrue.pl/",
+        "ttfb": 1529,
+        "device": "mobile",
+        "seo_score": 85,
+        "total_time": 3491,
+        "speed_index": 7398,
+        "status_code": 200,
+        "performance_score": 58,
+        "accessibility_score": 85,
+        "total_blocking_time": 1003,
+        "best_practices_score": 100
+      },
+      "desktop": {
+        "cls": 0,
+        "fcp": 0,
+        "lcp": 0,
+        "url": "https://meditrue.pl/",
+        "ttfb": 0,
+        "error": "Runtime error encountered: The page did not paint any content. Please ensure you keep the browser window in the foreground during the load and try again. (NO_FCP)\n",
+        "device": "desktop",
+        "seo_score": 0,
+        "speed_index": 0,
+        "performance_score": 0,
+        "accessibility_score": 0,
+        "total_blocking_time": 0,
+        "best_practices_score": 0
+      }
+    },
+    "content_analysis": {
+      "has_h1": false,
+      "has_title": false,
+      "word_count": 0,
+      "quality_score": 40,
+      "recommendations": [
+        "\u274c Brak tagu title - dodaj unikalny tytu\u0142 strony (50-60 znak\u00f3w)",
+        "\u274c Brak meta description - dodaj opis strony (150-160 znak\u00f3w)",
+        "\u274c Brak tagu H1 - dodaj g\u0142\u00f3wny nag\u0142\u00f3wek strony",
+        "\u26a0\ufe0f Za ma\u0142o tre\u015bci na stronie - dodaj wi\u0119cej warto\u015bciowej tre\u015bci (min. 300 s\u0142\u00f3w)",
+        "\ud83e\udd16 AI: Upewnij si\u0119, \u017ce meta opis zawiera Call to Action",
+        "\ud83e\udd16 AI: Sprawd\u017a, czy nag\u0142\u00f3wek H1 zawiera g\u0142\u00f3wne s\u0142owo kluczowe"
+      ],
+      "readability_score": 75,
+      "has_meta_description": false
+    },
+    "competitive_analysis": {
+      "strengths": [
+        "Brak danych konkurencji do por\u00f3wnania"
+      ],
+      "weaknesses": [],
+      "opportunities": [
+        "Dodaj konkurent\u00f3w aby uzyska\u0107 pe\u0142n\u0105 analiz\u0119"
+      ],
+      "recommendations": [],
+      "competitors_analyzed": 0
+    },
+    "performance_analysis": {
+      "impact": "low",
+      "issues": [],
+      "lcp_desktop": 0,
+      "ttfb_desktop": 0,
+      "recommendations": [
+        "\u2705 TTFB < 600ms - dobry czas odpowiedzi serwera",
+        "\u2705 LCP < 2.5s - dobry czas renderowania",
+        "\u274c Niski wynik wydajno\u015bci - priorytetowa optymalizacja"
+      ],
+      "performance_score": 0
+    }
+  },
+  "created_at": "2025-12-07T09:38:42.881046+00:00",
+  "competitors": []
+}

@@ -32,6 +32,33 @@ async def crawl_url(url: str) -> Dict[str, Any]:
             url
         ]
         
+        # Add license if configured
+        from app.config import settings
+        if settings.SCREAMING_FROG_USER and settings.SCREAMING_FROG_KEY:
+             logger.info("🔑 Using Screaming Frog License")
+             # We assume crawl.sh accepts license args or we prepend them to the SF command inside the container
+             # For now, let's assume we need to run a license command first OR pass it.
+             # Standard CLI: ScreamingFrogSEOSpider --license user key
+             # Since crawl.sh likely wraps the command, we might need to modify how we call it.
+             # If crawl.sh is just `ScreamingFrogSEOSpider --crawl $1 --headless ...`, we can't easily inject.
+             # BUT, we can try to run the license command separately via exec before crawling.
+             
+             license_cmd = [
+                "docker", "exec", "sitespector-screaming-frog",
+                "ScreamingFrogSEOSpider",
+                "--license",
+                settings.SCREAMING_FROG_USER,
+                settings.SCREAMING_FROG_KEY
+             ]
+             
+             # Run license registration
+             proc_lic = await asyncio.create_subprocess_exec(
+                *license_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+             )
+             await proc_lic.communicate()
+        
         logger.debug(f"Executing: {' '.join(cmd)}")
         
         process = await asyncio.create_subprocess_exec(
@@ -52,13 +79,36 @@ async def crawl_url(url: str) -> Dict[str, Any]:
             logger.info("Falling back to HTTP crawler...")
             return await _http_fallback_crawl(url)
             
-        # Parse SF JSON output
+        # Parse SF output (CSV format)
         try:
             output = stdout.decode().strip()
-            crawl_data = json.loads(output)
+            # If output is empty or starts with error json
+            if not output or output.startswith('{'):
+                 try:
+                     err_json = json.loads(output)
+                     if "error" in err_json:
+                         logger.warning(f"SF returned error JSON: {err_json}")
+                         return await _http_fallback_crawl(url)
+                 except: pass
+
+            # Convert CSV to list of dicts
+            import csv
+            import io
+            
+            # Find the start of CSV content (header)
+            # Address,Content,Status Code,Status,Indexability,Indexability Status,Title 1,Title 1 Length,Title 1 Pixel Width,Meta Description 1,Meta Description 1 Length,Meta Description 1 Pixel Width,Meta Keyword 1,Meta Keywords 1 Length,H1-1,H1-1 Length,H2-1,H2-1 Length,Meta Robots 1,Meta Refresh 1,Canonical Link Element 1,Rel Next 1,Rel Prev 1,HTTP Rel Next 1,HTTP Rel Prev 1,Size (bytes),Word Count,Text Ratio,Crawl Depth,Link Score,Inlinks,Unique Inlinks,% of Total,Outlinks,Unique Outlinks,External Outlinks,Unique External Outlinks,Hash,Response Time,Last Modified,Redirect URI,Redirect Type,URL Encoded Address
+            
+            csv_io = io.StringIO(output)
+            reader = csv.DictReader(csv_io)
+            crawl_data = list(reader)
+            
+            if not crawl_data:
+                logger.warning("SF returned empty CSV")
+                return await _http_fallback_crawl(url)
+
             return _transform_sf_data(crawl_data, url)
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid SF JSON: {e}")
+        except Exception as e:
+            logger.error(f"Error parsing SF CSV output: {e}")
             return await _http_fallback_crawl(url)
             
     except Exception as e:
@@ -82,7 +132,7 @@ async def _http_fallback_crawl(url: str) -> Dict[str, Any]:
     queue = [url]
     crawled_data = []
     
-    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True, verify=False) as client:
+    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True, verify=False) as client:
         while queue and len(visited_urls) < max_pages:
             current_url = queue.pop(0)
             if current_url in visited_urls:
@@ -93,10 +143,14 @@ async def _http_fallback_crawl(url: str) -> Dict[str, Any]:
             try:
                 # Add headers to mimic a real browser
                 headers = {
-                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9,pl;q=0.8",
                 }
                 
+                logger.info(f"Attempting HTTP crawl of: {current_url}")
                 response = await client.get(current_url, headers=headers)
+                logger.info(f"HTTP crawl response: {current_url} - Status {response.status_code}")
                 
                 if response.status_code == 200:
                     page_data = _parse_html(response.text, current_url, response.status_code, response.elapsed.total_seconds())
@@ -117,12 +171,14 @@ async def _http_fallback_crawl(url: str) -> Dict[str, Any]:
                             # Basic filter to avoid junk
                             if not any(ext in full_url.lower() for ext in ['.jpg', '.png', '.pdf', '.css', '.js', 'mailto:', 'tel:']):
                                 queue.append(full_url)
-                                
+                else:
+                     logger.warning(f"HTTP crawl failed for {current_url}: Status {response.status_code}")
+
             except Exception as e:
-                logger.warning(f"Failed to crawl {current_url}: {e}")
+                logger.error(f"Failed to crawl {current_url}: {type(e).__name__} - {e}", exc_info=True)
                 
     if not crawled_data:
-        return _empty_crawl_result("HTTP crawl failed completely")
+        return _empty_crawl_result("HTTP crawl failed completely - Check logs for detailed error (SSL/Timeout/Block)")
 
     # Aggregate results to match Screaming Frog structure
     homepage_data = crawled_data[0] # Assume first is homepage

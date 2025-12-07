@@ -79,21 +79,37 @@ def _extract_report_data(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Structured data for PDF template
     """
+    # Helper to safely get nested dicts
+    def get_safe(d, *keys):
+        for k in keys:
+            if not isinstance(d, dict): return {}
+            d = d.get(k, {})
+        return d
+
     results = audit_data.get("results") or {}
     
-    # Safely extract lighthouse data
-    lighthouse_data = results.get("lighthouse") or {}
-    if not isinstance(lighthouse_data, dict):
-        lighthouse_data = {}
-        
-    desktop_data = lighthouse_data.get("desktop") or {}
-    mobile_data = lighthouse_data.get("mobile") or {}
+    # Default mock structures if data is missing to prevent template errors
+    default_seo = {
+        "title": "N/A", "meta_description": "N/A", "h1_tags": [], "status_code": 0,
+        "load_time": 0, "word_count": 0, "size_bytes": 0, "error": "No data"
+    }
     
+    seo_data = results.get("crawl") or default_seo
+    
+    lighthouse = results.get("lighthouse") or {}
+    desktop_data = lighthouse.get("desktop") or {}
+    mobile_data = lighthouse.get("mobile") or {}
+    
+    content_analysis = results.get("content_analysis") or {
+        "quality_score": 0, "readability_score": 0, "word_count": 0, 
+        "summary": "Analysis failed or incomplete.", "recommendations": []
+    }
+
     return {
-        "seo_data": results.get("crawl") or {},
+        "seo_data": seo_data,
         "performance_desktop": desktop_data,
         "performance_mobile": mobile_data,
-        "content_analysis": results.get("content_analysis") or {},
+        "content_analysis": content_analysis,
         "local_seo": results.get("local_seo") or {},
         "performance_analysis": results.get("performance_analysis") or {},
         "competitive_analysis": results.get("competitive_analysis") or {},

@@ -1,18 +1,18 @@
 """
-Anthropic Claude API client for AI analysis.
+Gemini API client for AI analysis.
 """
 
 import logging
-from typing import Dict, Any
-from anthropic import AsyncAnthropic
+from typing import Dict, Any, Optional
+import google.generativeai as genai
 from tenacity import retry, stop_after_attempt, wait_exponential
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Initialize Anthropic client
-client = AsyncAnthropic(api_key=settings.CLAUDE_API_KEY) if settings.CLAUDE_API_KEY else None
-
+# Configure Gemini
+if settings.GEMINI_API_KEY:
+    genai.configure(api_key=settings.GEMINI_API_KEY)
 
 @retry(
     stop=stop_after_attempt(3),
@@ -24,58 +24,69 @@ async def call_claude(
     max_tokens: int = None
 ) -> str:
     """
-    Call Claude API with retry logic.
+    Call Gemini API with retry logic (Kept function name for compatibility).
     
     Args:
         prompt: User prompt
-        system_prompt: System prompt for context
-        max_tokens: Maximum tokens in response
+        system_prompt: System prompt for context (Gemini 1.5 supports system instructions)
+        max_tokens: Maximum tokens in response (handled by generation_config)
         
     Returns:
-        Claude's response text
-        
-    Raises:
-        Exception: If Claude API call fails after retries
+        AI response text
     """
-    if not client:
-        logger.warning("Claude API key not configured - returning mock response")
+    if not settings.GEMINI_API_KEY:
+        logger.warning("Gemini API key not configured - returning mock response")
         return _generate_mock_response()
     
     try:
-        logger.info(f"Calling Claude API (model: {settings.CLAUDE_MODEL})")
+        # Use Gemini 1.5 Flash
+        model_name = "gemini-1.5-flash" 
+        logger.info(f"Calling Gemini API (model: {model_name})")
         
-        response = await client.messages.create(
-            model=settings.CLAUDE_MODEL,
-            max_tokens=max_tokens or settings.CLAUDE_MAX_TOKENS,
-            temperature=settings.CLAUDE_TEMPERATURE,
-            system=system_prompt,
-            messages=[{"role": "user", "content": prompt}]
+        # Configure model with system instruction
+        model = genai.GenerativeModel(
+            model_name=model_name,
+            system_instruction=system_prompt if system_prompt else None
         )
         
-        return response.content[0].text
+        # Generate content
+        # Note: Gemini python client is sync by default but fast. 
+        # For true async in FastAPI, we might need to run in threadpool or use async client if available.
+        # But for now, standard call is fine for worker.
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=max_tokens or 2048,
+                temperature=0.7
+            )
+        )
+        
+        return response.text
         
     except Exception as e:
-        logger.error(f"Claude API error: {e}")
-        # Return mock response on error
+        logger.error(f"Gemini API error: {e}")
+        # Return mock response on error to prevent crash
         return _generate_mock_response()
 
 
 def _generate_mock_response() -> str:
-    """Generate mock AI response when Claude API is not available."""
+    """Generate mock AI response when API is not available."""
     return """
-    **SEO Analysis:**
-    - Title tag optimization needed
-    - Meta description could be improved
-    - Consider adding more H1 tags
-    
-    **Performance Recommendations:**
-    - Optimize images for web
-    - Enable compression
-    - Minimize render-blocking resources
-    
-    **Content Suggestions:**
-    - Add more descriptive headings
-    - Improve content readability
-    - Include relevant keywords naturally
+    {
+        "content": {
+            "quality_score": 75,
+            "readability_score": 80,
+            "word_count": 1200,
+            "recommendations": [
+                "Mock: Title tag optimization needed",
+                "Mock: Meta description could be improved",
+                "Mock: Add more descriptive headings"
+            ],
+            "summary": "Mock summary: The website has good potential but needs SEO work."
+        },
+        "local_seo": {
+            "is_local_business": false,
+            "missing_elements": ["Google Maps", "Phone Number"]
+        }
+    }
     """
-

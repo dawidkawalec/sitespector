@@ -87,6 +87,8 @@ services:
       dockerfile: Dockerfile
     container_name: sitespector-screaming-frog
     entrypoint: ["tail", "-f", "/dev/null"]
+    env_file:
+      - .env
     dns:
       - 8.8.8.8
       - 1.1.1.1

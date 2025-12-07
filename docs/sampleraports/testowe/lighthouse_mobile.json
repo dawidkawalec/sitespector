@@ -1,0 +1,16 @@
+{
+  "cls": 0.014,
+  "fcp": 2645,
+  "lcp": 3491,
+  "url": "https://meditrue.pl/",
+  "ttfb": 1529,
+  "device": "mobile",
+  "seo_score": 85,
+  "total_time": 3491,
+  "speed_index": 7398,
+  "status_code": 200,
+  "performance_score": 58,
+  "accessibility_score": 85,
+  "total_blocking_time": 1003,
+  "best_practices_score": 100
+}
