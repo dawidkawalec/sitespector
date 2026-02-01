@@ -132,7 +132,7 @@ export default function DashboardPage() {
             <CardHeader className="pb-3">
               <CardDescription>Ukończone</CardDescription>
               <CardTitle className="text-4xl">
-                {auditsData.audits.filter((a) => a.status === 'completed').length}
+                {auditsData?.audits?.filter((a) => a.status === 'completed').length || 0}
               </CardTitle>
             </CardHeader>
           </Card>
@@ -140,7 +140,7 @@ export default function DashboardPage() {
             <CardHeader className="pb-3">
               <CardDescription>W trakcie</CardDescription>
               <CardTitle className="text-4xl">
-                {auditsData.audits.filter((a) => a.status === 'processing').length}
+                {auditsData?.audits?.filter((a) => a.status === 'processing').length || 0}
               </CardTitle>
             </CardHeader>
           </Card>
