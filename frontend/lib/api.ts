@@ -90,6 +90,7 @@ export interface Audit {
   created_at: string
   completed_at: string | null
   error_message?: string | null
+  overall_score?: number | null
   screaming_frog_data: any
   lighthouse_desktop_data: any
   lighthouse_mobile_data: any
