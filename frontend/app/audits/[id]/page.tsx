@@ -44,7 +44,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     refetch,
   } = useQuery({
     queryKey: ['audit', params.id],
-    queryFn: () => auditsAPI.get(params.id),
+    queryFn: () => auditsAPI.get(parseInt(params.id)),
     enabled: isAuth,
     refetchInterval: (query) => {
       const data = query?.state?.data as Audit | undefined
@@ -58,7 +58,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
   // Delete mutation
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => auditsAPI.delete(id),
+    mutationFn: (id: string) => auditsAPI.delete(parseInt(id)),
     onSuccess: () => {
       router.push('/dashboard')
     },
@@ -90,7 +90,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
   const downloadPDF = async () => {
     try {
-      const blob = await auditsAPI.downloadPDF(params.id)
+      const blob = await auditsAPI.downloadPDF(parseInt(params.id))
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
