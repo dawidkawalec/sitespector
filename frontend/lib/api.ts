@@ -36,9 +36,9 @@ async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = getAuthToken()
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   }
 
   if (token) {
@@ -153,7 +153,7 @@ export const auditsAPI = {
 
   downloadPDF: async (id: number): Promise<Blob> => {
     const token = getAuthToken()
-    const headers: HeadersInit = {}
+    const headers: Record<string, string> = {}
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
