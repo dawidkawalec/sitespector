@@ -56,7 +56,7 @@ export default function DashboardPage() {
     refetch,
   } = useQuery({
     queryKey: ['audits'],
-    queryFn: () => auditsAPI.list(1, 20),
+    queryFn: () => auditsAPI.list(),
     enabled: isAuth,
     refetchInterval: 10000, // Poll every 10 seconds
   })
