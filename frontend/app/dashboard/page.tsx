@@ -86,10 +86,8 @@ export default function DashboardPage() {
   const handleRetry = (e: React.MouseEvent, audit: any) => {
     e.preventDefault()
     e.stopPropagation()
-    const competitors = audit.competitors?.map((c: any) => c.url) || []
     retryMutation.mutate({
-        url: audit.url,
-        competitors: competitors
+        url: audit.url
     })
   }
 
