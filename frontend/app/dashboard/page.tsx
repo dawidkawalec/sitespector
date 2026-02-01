@@ -125,7 +125,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardDescription>Wszystkie audyty</CardDescription>
-              <CardTitle className="text-4xl">{auditsData.total}</CardTitle>
+              <CardTitle className="text-4xl">{auditsData?.total || 0}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
@@ -160,7 +160,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : auditsData?.audits.length === 0 ? (
+          ) : !auditsData || auditsData?.audits?.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>Nie masz jeszcze żadnych audytów.</p>
               <Button
