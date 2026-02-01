@@ -29,7 +29,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
       - ENVIRONMENT=production
       - DEBUG=false
-      - CORS_ORIGINS=["http://77.42.79.46"]
+      - CORS_ORIGINS=["https://77.42.79.46","http://77.42.79.46"]
     env_file:
       - .env
     volumes:

@@ -256,6 +256,7 @@ async def delete_audit(
 @router.get("/{audit_id}/raw")
 async def download_raw_data(
     audit_id: UUID,
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> FileResponse:
     """
@@ -270,6 +271,13 @@ async def download_raw_data(
     
     if not audit:
         raise HTTPException(status_code=404, detail="Audit not found")
+    
+    # Check ownership
+    if audit.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this audit"
+        )
         
     if audit.status != AuditStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Audit not completed yet")
@@ -313,6 +321,7 @@ async def download_raw_data(
 @router.get("/{audit_id}/pdf")
 async def download_audit_pdf(
     audit_id: UUID,
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> FileResponse:
     """
@@ -327,6 +336,13 @@ async def download_audit_pdf(
     
     if not audit:
         raise HTTPException(status_code=404, detail="Audit not found")
+    
+    # Check ownership
+    if audit.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this audit"
+        )
         
     if audit.status != AuditStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Audit not completed yet")
