@@ -80,7 +80,10 @@ export interface User {
   email: string
   full_name: string | null
   is_active: boolean
+  subscription_tier: string
+  audits_count: number
   created_at: string
+  updated_at?: string
 }
 
 export interface Audit {
