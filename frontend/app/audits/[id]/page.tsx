@@ -506,7 +506,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             </TabsContent>
 
             <TabsContent value="competitors" className="space-y-4">
-              {audit.competitors.length > 0 ? (
+              {audit.competitors && audit.competitors.length > 0 ? (
                 audit.competitors.map((competitor) => (
                   <Card key={competitor.id}>
                     <CardHeader>
