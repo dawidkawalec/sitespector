@@ -88,14 +88,21 @@ export interface Audit {
   url: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
   created_at: string
+  started_at?: string | null
   completed_at: string | null
   error_message?: string | null
   overall_score?: number | null
-  screaming_frog_data: any
-  lighthouse_desktop_data: any
-  lighthouse_mobile_data: any
-  ai_analysis: any
+  seo_score?: number | null
+  performance_score?: number | null
+  content_score?: number | null
+  is_local_business?: boolean
+  results?: any
+  screaming_frog_data?: any
+  lighthouse_desktop_data?: any
+  lighthouse_mobile_data?: any
+  ai_analysis?: any
   pdf_url: string | null
+  competitors?: any[]
 }
 
 export interface CreateAuditData {
