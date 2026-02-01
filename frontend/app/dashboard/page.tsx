@@ -121,30 +121,30 @@ export default function DashboardPage() {
 
       {/* Stats */}
       {auditsData && (
-        <div className="grid gap-4 md:grid-cols-3 mb-8">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Wszystkie audyty</CardDescription>
-              <CardTitle className="text-4xl">{auditsData?.total || 0}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Ukończone</CardDescription>
-              <CardTitle className="text-4xl">
-                {auditsData?.audits?.filter((a) => a.status === 'completed').length || 0}
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>W trakcie</CardDescription>
-              <CardTitle className="text-4xl">
-                {auditsData?.audits?.filter((a) => a.status === 'processing').length || 0}
-              </CardTitle>
-            </CardHeader>
-          </Card>
-        </div>
+      <div className="grid gap-4 md:grid-cols-3 mb-8">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Wszystkie audyty</CardDescription>
+            <CardTitle className="text-4xl">{auditsData?.total || 0}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Ukończone</CardDescription>
+            <CardTitle className="text-4xl">
+              {auditsData?.items?.filter((a) => a.status === 'completed').length || 0}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>W trakcie</CardDescription>
+            <CardTitle className="text-4xl">
+              {auditsData?.items?.filter((a) => a.status === 'processing').length || 0}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
       )}
 
       {/* Audits List */}
@@ -160,20 +160,20 @@ export default function DashboardPage() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : !auditsData || auditsData?.audits?.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Nie masz jeszcze żadnych audytów.</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setShowNewAuditDialog(true)}
-              >
-                Utwórz pierwszy audyt
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {auditsData?.audits?.map((audit) => (
+        ) : !auditsData || auditsData?.items?.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Nie masz jeszcze żadnych audytów.</p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => setShowNewAuditDialog(true)}
+            >
+              Utwórz pierwszy audyt
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {auditsData?.items?.map((audit) => (
                 <div key={audit.id} className="relative group">
                     <Link href={`/audits/${audit.id}`} className="block">
                       <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors cursor-pointer pr-32">

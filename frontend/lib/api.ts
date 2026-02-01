@@ -113,8 +113,10 @@ export interface CreateAuditData {
 }
 
 export interface AuditListResponse {
-  audits: Audit[]
+  items: Audit[]
   total: number
+  page: number
+  page_size: number
 }
 
 // Auth API
