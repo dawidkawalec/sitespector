@@ -173,7 +173,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {auditsData?.audits.map((audit) => (
+              {auditsData?.audits?.map((audit) => (
                 <div key={audit.id} className="relative group">
                     <Link href={`/audits/${audit.id}`} className="block">
                       <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors cursor-pointer pr-32">
