@@ -57,7 +57,6 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
     try {
       const auditData: CreateAuditData = {
         url: data.url,
-        competitors: competitors.filter((c) => c.trim() !== ''),
       }
 
       await auditsAPI.create(auditData)
