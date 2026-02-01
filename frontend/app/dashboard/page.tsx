@@ -45,7 +45,7 @@ export default function DashboardPage() {
   // Fetch current user
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: authAPI.getCurrentUser,
+    queryFn: authAPI.me,
     enabled: isAuth,
   })
 
