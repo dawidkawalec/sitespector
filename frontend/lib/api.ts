@@ -76,7 +76,7 @@ export interface AuthResponse {
 }
 
 export interface User {
-  id: number
+  id: string
   email: string
   full_name: string | null
   is_active: boolean
@@ -87,7 +87,7 @@ export interface User {
 }
 
 export interface Audit {
-  id: number
+  id: string
   url: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
   created_at: string
@@ -140,7 +140,7 @@ export const authAPI = {
 export const auditsAPI = {
   list: () => apiRequest<AuditListResponse>('/api/audits'),
 
-  get: (id: number) => apiRequest<Audit>(`/api/audits/${id}`),
+  get: (id: string) => apiRequest<Audit>(`/api/audits/${id}`),
 
   create: (data: CreateAuditData) =>
     apiRequest<Audit>('/api/audits', {
@@ -148,12 +148,12 @@ export const auditsAPI = {
       body: JSON.stringify(data),
     }),
 
-  delete: (id: number) =>
+  delete: (id: string) =>
     apiRequest<void>(`/api/audits/${id}`, {
       method: 'DELETE',
     }),
 
-  downloadPDF: async (id: number): Promise<Blob> => {
+  downloadPDF: async (id: string): Promise<Blob> => {
     const token = getAuthToken()
     const headers: Record<string, string> = {}
 

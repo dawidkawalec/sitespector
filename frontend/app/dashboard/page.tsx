@@ -63,7 +63,7 @@ export default function DashboardPage() {
 
   // Delete mutation
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => auditsAPI.delete(id),
+    mutationFn: (id: string) => auditsAPI.delete(id),
     onSuccess: () => {
       refetch()
     },
@@ -77,7 +77,7 @@ export default function DashboardPage() {
     },
   })
 
-  const handleDelete = (e: React.MouseEvent, id: number) => {
+  const handleDelete = (e: React.MouseEvent, id: string) => {
     e.preventDefault()
     e.stopPropagation()
     deleteMutation.mutate(id)
