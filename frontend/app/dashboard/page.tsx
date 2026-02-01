@@ -132,7 +132,7 @@ export default function DashboardPage() {
             <CardHeader className="pb-3">
               <CardDescription>Ukończone</CardDescription>
               <CardTitle className="text-4xl">
-                {auditsData.items.filter((a) => a.status === 'completed').length}
+                {auditsData.audits.filter((a) => a.status === 'completed').length}
               </CardTitle>
             </CardHeader>
           </Card>
@@ -140,7 +140,7 @@ export default function DashboardPage() {
             <CardHeader className="pb-3">
               <CardDescription>W trakcie</CardDescription>
               <CardTitle className="text-4xl">
-                {auditsData.items.filter((a) => a.status === 'processing').length}
+                {auditsData.audits.filter((a) => a.status === 'processing').length}
               </CardTitle>
             </CardHeader>
           </Card>
@@ -160,7 +160,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : auditsData?.items.length === 0 ? (
+          ) : auditsData?.audits.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>Nie masz jeszcze żadnych audytów.</p>
               <Button
@@ -173,7 +173,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {auditsData?.items.map((audit) => (
+              {auditsData?.audits.map((audit) => (
                 <div key={audit.id} className="relative group">
                     <Link href={`/audits/${audit.id}`} className="block">
                       <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors cursor-pointer pr-32">
