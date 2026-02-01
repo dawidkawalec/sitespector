@@ -119,6 +119,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=https://77.42.79.46
     container_name: sitespector-frontend
     command: node server.js
     environment:
