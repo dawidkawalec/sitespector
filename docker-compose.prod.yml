@@ -122,7 +122,7 @@ services:
     container_name: sitespector-frontend
     command: node server.js
     environment:
-      - NEXT_PUBLIC_API_URL=http://77.42.79.46/api
+      - NEXT_PUBLIC_API_URL=https://77.42.79.46
       - HOSTNAME=0.0.0.0
     depends_on:
       - backend
