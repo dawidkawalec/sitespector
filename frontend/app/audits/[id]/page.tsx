@@ -80,10 +80,8 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
   const handleRetry = () => {
     if (audit) {
-        const competitors = audit.competitors?.map(c => c.url) || []
         retryMutation.mutate({
-            url: audit.url,
-            competitors: competitors
+            url: audit.url
         })
     }
   }
