@@ -74,7 +74,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
   const handleDelete = () => {
     if (audit) {
-        deleteMutation.mutate(audit.id)
+        deleteMutation.mutate(audit.id.toString())
     }
   }
 
