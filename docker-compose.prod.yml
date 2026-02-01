@@ -1,0 +1,154 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: sitespector-postgres
+    environment:
+      POSTGRES_USER: sitespector_user
+      POSTGRES_PASSWORD: sitespector_password
+      POSTGRES_DB: sitespector_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sitespector_user -d sitespector_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sitespector-backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - CORS_ORIGINS=["http://77.42.79.46"]
+    env_file:
+      - .env
+    volumes:
+      - ./tmp/audits:/tmp/audits
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Background Worker
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sitespector-worker
+    command: python worker.py
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
+      - ENVIRONMENT=production
+      - DEBUG=false
+    env_file:
+      - .env
+    volumes:
+      - ./tmp/audits:/tmp/audits
+      - /var/run/docker.sock:/var/run/docker.sock
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f worker.py || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
+  # Screaming Frog Crawler
+  screaming-frog:
+    platform: linux/amd64
+    build:
+      context: ./docker/screaming-frog
+      dockerfile: Dockerfile
+    container_name: sitespector-screaming-frog
+    entrypoint: ["tail", "-f", "/dev/null"]
+    env_file:
+      - .env
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    volumes:
+      - ./tmp/crawls:/tmp/crawls
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
+  # Lighthouse Auditor
+  lighthouse:
+    build:
+      context: ./docker/lighthouse
+      dockerfile: Dockerfile
+    container_name: sitespector-lighthouse
+    entrypoint: ["tail", "-f", "/dev/null"]
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    volumes:
+      - ./tmp/lighthouse:/tmp/lighthouse
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sitespector-frontend
+    command: node server.js
+    environment:
+      - NEXT_PUBLIC_API_URL=http://77.42.79.46/api
+      - HOSTNAME=0.0.0.0
+    depends_on:
+      - backend
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    container_name: sitespector-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  sitespector-network:
+    driver: bridge
