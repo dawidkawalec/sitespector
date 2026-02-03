@@ -146,8 +146,8 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
         "size_bytes": int(homepage.get('Size (bytes)', 0) or 0),
         "load_time": float(homepage.get('Response Time', 0) or 0),
         "internal_links_count": int(homepage.get('Unique Outlinks', 0) or 0) - int(homepage.get('Unique External Outlinks', 0) or 0),
-        "total_images": len([d for d in data if 'image' in d.get('Content', '').lower()]),
-        "images_without_alt": len([d for d in data if 'image' in d.get('Content', '').lower() and not d.get('Alt Text')]),
+        "total_images": len([d for d in data if 'image' in d.get('Content Type', '').lower()]),
+        "images_without_alt": len([d for d in data if 'image' in d.get('Content Type', '').lower() and not d.get('Alt Text 1')]),
         "pages_crawled": len(data),
         "has_sitemap": False,  # TODO: Detect from crawl data if available
     }
