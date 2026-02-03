@@ -9,6 +9,7 @@ import { useWorkspace } from '@/lib/WorkspaceContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { NewAuditDialog } from '@/components/NewAuditDialog'
 import { SystemStatus } from '@/components/SystemStatus'
 import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant, truncateUrl } from '@/lib/utils'
@@ -30,7 +31,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [showNewAuditDialog, setShowNewAuditDialog] = useState(false)
   const [isAuth, setIsAuth] = useState(false)
-  const { currentWorkspace, isLoading: isWorkspaceLoading } = useWorkspace()
+  const { currentWorkspace, isLoading: isWorkspaceLoading, error: workspaceError, refreshWorkspaces } = useWorkspace()
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -103,7 +104,7 @@ export default function DashboardPage() {
 
   if (!currentWorkspace) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>No Workspace</CardTitle>
@@ -111,8 +112,32 @@ export default function DashboardPage() {
               You don't have access to any workspaces yet.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Button onClick={handleLogout}>Sign out and try again</Button>
+          <CardContent className="space-y-4">
+            {workspaceError && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  Error: {workspaceError}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <p className="text-sm text-muted-foreground">
+              This usually means:
+            </p>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+              <li>Your account was just created and workspaces are being set up</li>
+              <li>There's a configuration issue with Supabase</li>
+              <li>The automatic workspace creation is in progress</li>
+            </ul>
+            
+            <div className="flex gap-2">
+              <Button onClick={handleLogout} variant="outline">
+                Sign out
+              </Button>
+              <Button onClick={() => refreshWorkspaces()}>
+                Retry
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
