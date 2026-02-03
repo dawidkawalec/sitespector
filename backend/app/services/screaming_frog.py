@@ -108,14 +108,22 @@ async def crawl_url(url: str) -> Dict[str, Any]:
 
 def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
     """
-    Transform Screaming Frog CSV data to our format.
+    Transform Screaming Frog CSV data to our format with FULL data preservation.
+    
+    Extracts ALL pages, images, links, and technical SEO data from SF crawl.
     
     Args:
         data: List of dictionaries from Screaming Frog CSV
         url: Original URL crawled
         
     Returns:
-        Dictionary with crawl results
+        Dictionary with comprehensive crawl results including:
+        - Homepage summary (backward compatible)
+        - all_pages: Full list of all HTML pages with details
+        - images: Complete image analysis
+        - links: Internal/external/broken links analysis
+        - technical_seo: Canonical, robots, redirects
+        - pages_by_status: Grouping by HTTP status code
         
     Raises:
         ValueError: If data is invalid or empty
@@ -124,16 +132,80 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
         logger.error("❌ Invalid or empty Screaming Frog data")
         raise ValueError("No URLs found in Screaming Frog data")
     
-    logger.warning(f"SF DEBUG: {len(data)} rows parsed")
-    logger.warning(f"SF DEBUG: First row keys sample: {list(data[0].keys())[:5]}")
-    logger.warning(f"SF DEBUG: Looking for URL: {url}")
+    logger.info(f"✅ SF parsed {len(data)} rows successfully")
         
     # Find homepage
     homepage = next((item for item in data if item.get('Address') == url or item.get('Address') == url + '/'), data[0])
-    logger.warning(f"SF DEBUG: Homepage Address: {homepage.get('Address')}")
-    logger.warning(f"SF DEBUG: Title 1 value: '{homepage.get('Title 1')}'")
+    
+    # Process ALL pages and images
+    all_pages = []
+    images_data = []
+    
+    for row in data:
+        page_url = row.get('Address', '')
+        content_type = row.get('Content Type', '')
+        
+        # Classify by content type
+        if 'image' in content_type.lower():
+            images_data.append({
+                'url': page_url,
+                'alt_text': row.get('Alt Text 1', ''),
+                'size_bytes': int(row.get('Size (bytes)', 0) or 0),
+                'format': content_type,
+            })
+        elif content_type and ('text/html' in content_type.lower() or not content_type):
+            # HTML pages (or unspecified - default to HTML)
+            all_pages.append({
+                'url': page_url,
+                'title': row.get('Title 1', ''),
+                'title_length': int(row.get('Title 1 Length', 0) or 0),
+                'meta_description': row.get('Meta Description 1', ''),
+                'meta_description_length': int(row.get('Meta Description 1 Length', 0) or 0),
+                'h1': row.get('H1-1', ''),
+                'h2': row.get('H2-1', ''),
+                'status_code': int(row.get('Status Code', 0) or 200),
+                'indexability': row.get('Indexability', ''),
+                'indexability_status': row.get('Indexability Status', ''),
+                'word_count': int(row.get('Word Count', 0) or 0),
+                'size_bytes': int(row.get('Size (bytes)', 0) or 0),
+                'response_time': float(row.get('Response Time', 0) or 0),
+                'inlinks': int(row.get('Unique Inlinks', 0) or 0),
+                'outlinks': int(row.get('Unique Outlinks', 0) or 0),
+                'external_outlinks': int(row.get('Unique External Outlinks', 0) or 0),
+                'canonical': row.get('Canonical Link Element 1', ''),
+                'meta_robots': row.get('Meta Robots 1', ''),
+                'redirect_url': row.get('Redirect URL', ''),
+                'redirect_type': row.get('Redirect Type', ''),
+            })
+    
+    # Links analysis
+    internal_links = sum(max(0, p['outlinks'] - p['external_outlinks']) for p in all_pages)
+    external_links = sum(p['external_outlinks'] for p in all_pages)
+    broken_links = len([p for p in all_pages if p['status_code'] >= 400])
+    redirects = len([p for p in all_pages if 300 <= p['status_code'] < 400])
+    
+    # Technical SEO summary
+    missing_canonical = len([p for p in all_pages if not p['canonical'] and p['status_code'] == 200])
+    noindex_pages = len([p for p in all_pages if 'noindex' in p.get('meta_robots', '').lower()])
+    
+    # Pages by status code
+    pages_by_status = {
+        "200": len([p for p in all_pages if p['status_code'] == 200]),
+        "301": len([p for p in all_pages if p['status_code'] == 301]),
+        "302": len([p for p in all_pages if p['status_code'] == 302]),
+        "404": len([p for p in all_pages if p['status_code'] == 404]),
+        "other": len([p for p in all_pages if p['status_code'] not in [200, 301, 302, 404]])
+    }
+    
+    # Images analysis
+    images_with_alt = len([i for i in images_data if i['alt_text']])
+    images_without_alt = len([i for i in images_data if not i['alt_text']])
+    total_images_size = sum(i['size_bytes'] for i in images_data)
+    
+    logger.info(f"✅ Processed: {len(all_pages)} pages, {len(images_data)} images, {internal_links} internal links")
     
     return {
+        # Homepage summary (backward compatible)
         "url": url,
         "title": homepage.get('Title 1', ''),
         "title_length": int(homepage.get('Title 1 Length', 0) or 0),
@@ -146,8 +218,31 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
         "size_bytes": int(homepage.get('Size (bytes)', 0) or 0),
         "load_time": float(homepage.get('Response Time', 0) or 0),
         "internal_links_count": int(homepage.get('Unique Outlinks', 0) or 0) - int(homepage.get('Unique External Outlinks', 0) or 0),
-        "total_images": len([d for d in data if 'image' in d.get('Content Type', '').lower()]),
-        "images_without_alt": len([d for d in data if 'image' in d.get('Content Type', '').lower() and not d.get('Alt Text 1')]),
-        "pages_crawled": len(data),
-        "has_sitemap": False,  # TODO: Detect from crawl data if available
+        "total_images": len(images_data),
+        "images_without_alt": images_without_alt,
+        "pages_crawled": len(all_pages),
+        "has_sitemap": False,
+        
+        # NEW: Full data structures
+        "all_pages": all_pages,  # Complete list of all pages
+        "pages_by_status": pages_by_status,
+        "images": {
+            "total": len(images_data),
+            "with_alt": images_with_alt,
+            "without_alt": images_without_alt,
+            "total_size_mb": round(total_images_size / (1024 * 1024), 2),
+            "all_images": images_data,  # Complete list
+        },
+        "links": {
+            "internal": internal_links,
+            "external": external_links,
+            "broken": broken_links,
+            "redirects": redirects,
+        },
+        "technical_seo": {
+            "missing_canonical": missing_canonical,
+            "noindex_pages": noindex_pages,
+            "redirects": redirects,
+            "broken_links": broken_links,
+        }
     }

@@ -88,7 +88,45 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
         # Additional metrics
         ttfb = audits.get("server-response-time", {}).get("numericValue", 0)
         
+        # NEW: Categorize ALL audits (176 total)
+        diagnostics = []  # Failed audits (score < 0.5)
+        opportunities = []  # Optimization suggestions (0.5 <= score < 1.0)
+        passed_audits = []  # Passed audits (score >= 1.0)
+        
+        for audit_id, audit_data in audits.items():
+            score = audit_data.get('score')
+            
+            # Skip informational audits (no score)
+            if score is None:
+                continue
+            
+            audit_info = {
+                'id': audit_id,
+                'title': audit_data.get('title', ''),
+                'description': audit_data.get('description', ''),
+                'score': round(score, 3),
+                'scoreDisplayMode': audit_data.get('scoreDisplayMode', ''),
+                'displayValue': audit_data.get('displayValue', ''),
+                'numericValue': audit_data.get('numericValue'),
+                'numericUnit': audit_data.get('numericUnit', ''),
+            }
+            
+            # Categorize by score
+            if score < 0.5:
+                diagnostics.append(audit_info)
+            elif score < 1.0:
+                opportunities.append(audit_info)
+            else:
+                passed_audits.append(audit_info)
+        
+        # Sort by score (worst first)
+        diagnostics.sort(key=lambda x: x['score'])
+        opportunities.sort(key=lambda x: x['score'])
+        
+        logger.info(f"✅ Lighthouse: {len(diagnostics)} issues, {len(opportunities)} opportunities, {len(passed_audits)} passed")
+        
         result = {
+            # Existing summary (backward compatible)
             "url": url,
             "device": device,
             "performance_score": round(performance_score),
@@ -101,8 +139,33 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
             "cls": round(cls, 3),
             "total_blocking_time": round(tbt),
             "speed_index": round(si),
-            "total_time": round(lcp), # Approximation
-            "status_code": 200, # Assumed if LH succeeded
+            "total_time": round(lcp),
+            "status_code": 200,
+            
+            # NEW: Full audit data
+            "audits": {
+                "diagnostics": diagnostics,
+                "opportunities": opportunities,
+                "passed": passed_audits,
+            },
+            "categories_detail": {
+                "performance": {
+                    "score": round(performance_score),
+                    "title": categories.get("performance", {}).get("title", ""),
+                },
+                "accessibility": {
+                    "score": round(accessibility_score),
+                    "title": categories.get("accessibility", {}).get("title", ""),
+                },
+                "best_practices": {
+                    "score": round(best_practices_score),
+                    "title": categories.get("best-practices", {}).get("title", ""),
+                },
+                "seo": {
+                    "score": round(seo_score),
+                    "title": categories.get("seo", {}).get("title", ""),
+                },
+            },
         }
         
         logger.info(f"✅ Lighthouse audit completed for {url} ({device})")

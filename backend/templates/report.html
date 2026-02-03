@@ -157,7 +157,12 @@
         <ol style="font-size: 12pt; line-height: 2;">
             <li>Podsumowanie Wykonawcze</li>
             <li>Wyniki Ogólne</li>
-            <li>Analiza SEO Technicznego</li>
+            <li>Analiza Wszystkich Stron ({{ seo_data.pages_crawled }})</li>
+            <li>Szczegóły Strony Głównej - SEO</li>
+            <li>Analiza Obrazów ({{ seo_data.images.total if seo_data.images else 0 }})</li>
+            <li>Analiza Linków</li>
+            <li>Lighthouse - Pełna Diagnostyka</li>
+            <li>Techniczne SEO</li>
             <li>Analiza Wydajności</li>
             <li>Analiza Treści</li>
             {% if audit.is_local_business %}
@@ -220,24 +225,104 @@
         {% endif %}
     </div>
 
-    <!-- SEO Technical Analysis -->
+    <!-- All Pages Analysis - NEW SECTION -->
     <div class="page-break">
-        <h1>3. Analiza SEO Technicznego</h1>
+        <h1>3. Analiza Wszystkich Stron ({{ seo_data.all_pages|length if seo_data.all_pages else seo_data.pages_crawled }})</h1>
         
-        <h2>3.1 Struktura Strony</h2>
-        <p>Liczba przeskanowanych stron: {{ seo_data.pages_crawled }}</p>
-        <p>Linki wewnętrzne: {{ seo_data.internal_links_count }}</p>
-        <p>Obrazy ogółem: {{ seo_data.total_images }}</p>
-        <p>Obrazy bez ALT: {{ seo_data.images_without_alt }}</p>
-
-        {% if seo_data.broken_links and seo_data.broken_links|length > 0 %}
-        <div class="recommendation">
-            <h3>⚠️ Znaleziono {{ seo_data.broken_links|length }} uszkodzonych linków</h3>
-            <p>Uszkodzone linki negatywnie wpływają na SEO i doświadczenie użytkownika.</p>
+        <h2>3.1 Podsumowanie według Status Code</h2>
+        <table>
+            <tr>
+                <th>Status Code</th>
+                <th>Liczba stron</th>
+                <th>Procent</th>
+                <th>Ocena</th>
+            </tr>
+            <tr>
+                <td>200 OK</td>
+                <td><span class="score-high">{{ seo_data.pages_by_status['200'] if seo_data.pages_by_status else 0 }}</span></td>
+                <td>{{ ((seo_data.pages_by_status['200'] / seo_data.pages_crawled * 100)|round(1)) if seo_data.pages_by_status else 0 }}%</td>
+                <td>✅ Dobrze</td>
+            </tr>
+            <tr>
+                <td>301 Redirects</td>
+                <td>{{ seo_data.pages_by_status['301'] if seo_data.pages_by_status else 0 }}</td>
+                <td>{{ ((seo_data.pages_by_status['301'] / seo_data.pages_crawled * 100)|round(1)) if seo_data.pages_by_status else 0 }}%</td>
+                <td>⚠️ Sprawdź</td>
+            </tr>
+            <tr>
+                <td>302 Redirects</td>
+                <td>{{ seo_data.pages_by_status['302'] if seo_data.pages_by_status else 0 }}</td>
+                <td>{{ ((seo_data.pages_by_status['302'] / seo_data.pages_crawled * 100)|round(1)) if seo_data.pages_by_status else 0 }}%</td>
+                <td>⚠️ Sprawdź</td>
+            </tr>
+            <tr>
+                <td>404 Not Found</td>
+                <td><span class="score-low">{{ seo_data.pages_by_status['404'] if seo_data.pages_by_status else 0 }}</span></td>
+                <td>{{ ((seo_data.pages_by_status['404'] / seo_data.pages_crawled * 100)|round(1)) if seo_data.pages_by_status else 0 }}%</td>
+                <td>❌ Napraw!</td>
+            </tr>
+        </table>
+        
+        {% if seo_data.all_pages and seo_data.all_pages|length > 0 %}
+        <h2>3.2 Top 20 Najwolniejszych Stron</h2>
+        <table style="font-size: 9pt;">
+            <thead>
+                <tr>
+                    <th style="width: 50%;">URL</th>
+                    <th style="width: 15%; text-align: center;">Czas (ms)</th>
+                    <th style="width: 15%; text-align: center;">Rozmiar (KB)</th>
+                    <th style="width: 20%; text-align: center;">Liczba słów</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in (seo_data.all_pages | sort(attribute='response_time', reverse=True))[:20] %}
+                <tr>
+                    <td style="word-break: break-all;">{{ page.url }}</td>
+                    <td style="text-align: center;" class="{% if page.response_time > 1 %}score-low{% elif page.response_time > 0.5 %}score-medium{% else %}score-high{% endif %}">
+                        {{ (page.response_time * 1000)|round }}
+                    </td>
+                    <td style="text-align: center;">{{ (page.size_bytes / 1024)|round }}</td>
+                    <td style="text-align: center;">{{ page.word_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <h2>3.3 Strony z Problemami SEO</h2>
+        
+        {% set pages_no_title = seo_data.all_pages | selectattr('title', 'equalto', '') | list %}
+        {% if pages_no_title|length > 0 %}
+        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
+            <h3>❌ Brak Title Tag ({{ pages_no_title|length }} stron)</h3>
+            <p><strong>Przykłady:</strong></p>
+            <ul>
+                {% for page in pages_no_title[:10] %}
+                <li style="font-size: 9pt;">{{ page.url }}</li>
+                {% endfor %}
+            </ul>
         </div>
         {% endif %}
-
-        <h2>3.2 Meta Tagi</h2>
+        
+        {% set pages_no_meta = seo_data.all_pages | selectattr('meta_description', 'equalto', '') | list %}
+        {% if pages_no_meta|length > 0 %}
+        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
+            <h3>❌ Brak Meta Description ({{ pages_no_meta|length }} stron)</h3>
+            <p><strong>Przykłady:</strong></p>
+            <ul>
+                {% for page in pages_no_meta[:10] %}
+                <li style="font-size: 9pt;">{{ page.url }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+    
+    <!-- SEO Homepage Details (old section 3 content) -->
+    <div class="page-break">
+        <h1>4. Szczegóły Strony Głównej - SEO</h1>
+        
+        <h2>4.1 Meta Tagi</h2>
         <table>
             <tr>
                 <th>Element</th>
@@ -259,7 +344,7 @@
             </tr>
         </table>
 
-        <h2>3.3 Struktura Nagłówków</h2>
+        <h2>4.2 Struktura Nagłówków</h2>
         <p>Liczba tagów H1: {{ seo_data.h1_count }}</p>
         {% if seo_data.h1_tags and seo_data.h1_tags|length > 0 %}
         <p><strong>Zawartość H1:</strong></p>
@@ -273,13 +358,6 @@
             ❌ Brak tagów H1 - każda strona powinna mieć dokładnie jeden tag H1
         </p>
         {% endif %}
-        
-        <h2>3.4 Pliki Techniczne</h2>
-        <p>Status Code: {{ seo_data.status_code }}</p>
-        <p>Czas ładowania: {{ "%.2f"|format(seo_data.load_time) }}s</p>
-        <p>Rozmiar strony: {{ (seo_data.size_bytes / 1024)|round|int }} KB</p>
-        <p>Liczba słów: {{ seo_data.word_count }}</p>
-        <p>Sitemap: {% if seo_data.has_sitemap %}✅ Znaleziono{% else %}❌ Nie znaleziono{% endif %}</p>
     </div>
 
     <!-- Performance Analysis -->
@@ -405,11 +483,269 @@
         {% endif %}
     </div>
 
+    <!-- Images Analysis - NEW SECTION -->
+    <div class="page-break">
+        <h1>5. Analiza Obrazów</h1>
+        
+        {% if seo_data.images %}
+        <h2>5.1 Podsumowanie</h2>
+        <table>
+            <tr>
+                <th>Metryka</th>
+                <th>Wartość</th>
+                <th>Ocena</th>
+            </tr>
+            <tr>
+                <td>Wszystkie obrazy</td>
+                <td>{{ seo_data.images.total }}</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td>Obrazy z ALT text</td>
+                <td><span class="score-high">{{ seo_data.images.with_alt }}</span></td>
+                <td>✅ Dobrze</td>
+            </tr>
+            <tr>
+                <td>Obrazy bez ALT text</td>
+                <td><span class="score-low">{{ seo_data.images.without_alt }}</span></td>
+                <td>{% if seo_data.images.without_alt == 0 %}✅ Idealnie{% else %}❌ Napraw!{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Całkowity rozmiar</td>
+                <td>{{ seo_data.images.total_size_mb }} MB</td>
+                <td>{% if seo_data.images.total_size_mb < 5 %}✅ OK{% elif seo_data.images.total_size_mb < 10 %}⚠️ Średni{% else %}❌ Za duży{% endif %}</td>
+            </tr>
+        </table>
+        
+        {% if seo_data.images.all_images %}
+        {% set images_no_alt = seo_data.images.all_images | selectattr('alt_text', 'equalto', '') | list %}
+        {% if images_no_alt|length > 0 %}
+        <h2>5.2 Obrazy Bez ALT Text (Top 50)</h2>
+        <p class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
+            ❌ <strong>Znaleziono {{ images_no_alt|length }} obrazów bez ALT text!</strong><br/>
+            ALT text jest kluczowy dla dostępności i SEO. Każdy obraz powinien mieć opisowy tekst alternatywny.
+        </p>
+        <table style="font-size: 8pt;">
+            <thead>
+                <tr>
+                    <th style="width: 70%;">URL Obrazu</th>
+                    <th style="width: 15%; text-align: center;">Rozmiar (KB)</th>
+                    <th style="width: 15%; text-align: center;">Format</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for img in images_no_alt[:50] %}
+                <tr>
+                    <td style="word-break: break-all;">{{ img.url }}</td>
+                    <td style="text-align: center;">{{ (img.size_bytes / 1024)|round }}</td>
+                    <td style="text-align: center;">{{ img.format }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+        {% endif %}
+        {% else %}
+        <p class="text-muted-foreground">Brak danych o obrazach.</p>
+        {% endif %}
+    </div>
+
+    <!-- Links Analysis - NEW SECTION -->
+    <div class="page-break">
+        <h1>6. Analiza Linków</h1>
+        
+        {% if seo_data.links %}
+        <h2>6.1 Podsumowanie</h2>
+        <table>
+            <tr>
+                <th>Typ Linku</th>
+                <th>Liczba</th>
+                <th>Ocena</th>
+            </tr>
+            <tr>
+                <td>Linki wewnętrzne</td>
+                <td>{{ seo_data.links.internal }}</td>
+                <td>{% if seo_data.links.internal > 50 %}✅ Dobra struktura{% else %}⚠️ Dodaj więcej{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Linki zewnętrzne</td>
+                <td>{{ seo_data.links.external }}</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td>Broken links (404)</td>
+                <td><span class="score-low">{{ seo_data.links.broken }}</span></td>
+                <td>{% if seo_data.links.broken == 0 %}✅ Idealnie{% else %}❌ Napraw natychmiast!{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Redirects (301/302)</td>
+                <td>{{ seo_data.links.redirects }}</td>
+                <td>{% if seo_data.links.redirects < 10 %}✅ OK{% elif seo_data.links.redirects < 30 %}⚠️ Optymalizuj{% else %}❌ Za dużo{% endif %}</td>
+            </tr>
+        </table>
+        
+        {% if seo_data.all_pages %}
+        {% set broken_pages = seo_data.all_pages | selectattr('status_code', 'ge', 400) | list %}
+        {% if broken_pages|length > 0 %}
+        <h2>6.2 Broken Links - PRIORYTET DO NAPRAWY!</h2>
+        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
+            <p><strong>❌ Znaleziono {{ broken_pages|length }} stron z błędami 404+</strong></p>
+            <p>Broken links powodują błędy użytkowników i obniżają pozycję w Google.</p>
+        </div>
+        <table style="font-size: 9pt;">
+            <thead>
+                <tr>
+                    <th style="width: 70%;">URL</th>
+                    <th style="width: 15%; text-align: center;">Status Code</th>
+                    <th style="width: 15%; text-align: center;">Inlinks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in broken_pages[:50] %}
+                <tr>
+                    <td style="word-break: break-all;">{{ page.url }}</td>
+                    <td style="text-align: center;" class="score-low">{{ page.status_code }}</td>
+                    <td style="text-align: center;">{{ page.inlinks }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+        
+        {% set redirect_pages = seo_data.all_pages | selectattr('status_code', 'ge', 300) | selectattr('status_code', 'lt', 400) | list %}
+        {% if redirect_pages|length > 0 %}
+        <h2>6.3 Redirects (Top 30)</h2>
+        <table style="font-size: 8pt;">
+            <thead>
+                <tr>
+                    <th style="width: 40%;">Źródło</th>
+                    <th style="width: 10%; text-align: center;">Status</th>
+                    <th style="width: 50%;">Cel</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in redirect_pages[:30] %}
+                <tr>
+                    <td style="word-break: break-all;">{{ page.url }}</td>
+                    <td style="text-align: center;">{{ page.status_code }}</td>
+                    <td style="word-break: break-all;">{{ page.redirect_url or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+        {% endif %}
+        {% else %}
+        <p>Brak danych o linkach.</p>
+        {% endif %}
+    </div>
+
+    <!-- Lighthouse Full Diagnostics - NEW SECTION -->
+    <div class="page-break">
+        <h1>7. Lighthouse - Pełna Diagnostyka</h1>
+        
+        {% if performance_desktop.audits %}
+        {% set diagnostics = performance_desktop.audits.diagnostics %}
+        {% set opportunities = performance_desktop.audits.opportunities %}
+        
+        {% if diagnostics and diagnostics|length > 0 %}
+        <h2>7.1 Problemy Wymagające Naprawy ({{ diagnostics|length }})</h2>
+        <p class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
+            ❌ <strong>Znaleziono {{ diagnostics|length }} problemów z wynikiem poniżej 50%</strong>
+        </p>
+        {% for audit in diagnostics[:20] %}
+        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
+            <h3>{{ loop.index }}. {{ audit.title }}</h3>
+            <p><strong>Wynik:</strong> <span class="score-low">{{ (audit.score * 100)|round }}%</span></p>
+            {% if audit.displayValue %}
+            <p><strong>Wartość:</strong> {{ audit.displayValue }}</p>
+            {% endif %}
+            <p style="font-size: 10pt;">{{ audit.description }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+        
+        {% if opportunities and opportunities|length > 0 %}
+        <h2>7.2 Możliwości Optymalizacji ({{ opportunities|length }})</h2>
+        {% for audit in opportunities[:15] %}
+        <div class="recommendation" style="background-color: #fefce8; border-left-color: #ca8a04;">
+            <h3>{{ loop.index }}. {{ audit.title }}</h3>
+            <p><strong>Wynik:</strong> <span class="score-medium">{{ (audit.score * 100)|round }}%</span></p>
+            {% if audit.displayValue %}
+            <p><strong>Wartość:</strong> {{ audit.displayValue }}</p>
+            {% endif %}
+            <p style="font-size: 10pt;">{{ audit.description }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endif %}
+    </div>
+
+    <!-- Technical SEO - NEW SECTION -->
+    <div class="page-break">
+        <h1>8. Techniczne SEO</h1>
+        
+        {% if seo_data.technical_seo %}
+        <h2>8.1 Podsumowanie</h2>
+        <table>
+            <tr>
+                <th>Element</th>
+                <th>Status</th>
+                <th>Wymagane Działania</th>
+            </tr>
+            <tr>
+                <td>Strony bez Canonical</td>
+                <td class="{% if seo_data.technical_seo.missing_canonical > 0 %}score-medium{% else %}score-high{% endif %}">
+                    {{ seo_data.technical_seo.missing_canonical }}
+                </td>
+                <td>{% if seo_data.technical_seo.missing_canonical > 0 %}⚠️ Dodaj canonical tags{% else %}✅ OK{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Strony NoIndex</td>
+                <td>{{ seo_data.technical_seo.noindex_pages }}</td>
+                <td>ℹ️ Sprawdź czy zamierzone</td>
+            </tr>
+            <tr>
+                <td>Redirects</td>
+                <td class="{% if seo_data.technical_seo.redirects > 10 %}score-medium{% else %}score-high{% endif %}">
+                    {{ seo_data.technical_seo.redirects }}
+                </td>
+                <td>{% if seo_data.technical_seo.redirects > 10 %}⚠️ Zminimalizuj łańcuchy redirectów{% else %}✅ OK{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Broken Links</td>
+                <td class="{% if seo_data.technical_seo.broken_links > 0 %}score-low{% else %}score-high{% endif %}">
+                    {{ seo_data.technical_seo.broken_links }}
+                </td>
+                <td>{% if seo_data.technical_seo.broken_links > 0 %}❌ Napraw wszystkie 404{% else %}✅ OK{% endif %}</td>
+            </tr>
+        </table>
+        
+        {% if seo_data.all_pages %}
+        {% set pages_no_canonical = seo_data.all_pages | selectattr('canonical', 'equalto', '') | selectattr('status_code', 'equalto', 200) | list %}
+        {% if pages_no_canonical|length > 0 %}
+        <h2>8.2 Strony Bez Canonical Tag (Top 30)</h2>
+        <div class="recommendation" style="background-color: #fefce8; border-left-color: #ca8a04;">
+            <p>⚠️ <strong>{{ pages_no_canonical|length }} stron nie ma canonical tag</strong></p>
+            <p>Canonical tags pomagają uniknąć problemów z duplikacją treści.</p>
+        </div>
+        <ul style="font-size: 9pt;">
+            {% for page in pages_no_canonical[:30] %}
+            <li>{{ page.url }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endif %}
+        {% else %}
+        <p>Brak danych technicznych SEO.</p>
+        {% endif %}
+    </div>
+
     <!-- Content Analysis -->
     <div class="page-break">
-        <h1>5. Analiza Treści</h1>
+        <h1>9. Analiza Treści</h1>
         
-        <h2>5.1 Metryki Treści</h2>
+        <h2>9.1 Metryki Treści</h2>
         <table>
             <tr>
                 <th>Metryka</th>
@@ -559,7 +895,7 @@
 
     <!-- Action Plan -->
     <div class="page-break">
-        <h1>8. Plan Działania</h1>
+        <h1>12. Plan Działania</h1>
         
         <p>Poniżej przedstawiamy rekomendacje uporządkowane według priorytetu, na podstawie rzeczywistych wyników audytu.</p>
 
