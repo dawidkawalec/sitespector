@@ -13,9 +13,13 @@ if [ ! -z "$SCREAMING_FROG_USER" ] && [ ! -z "$SCREAMING_FROG_KEY" ]; then
     echo "$SCREAMING_FROG_USER" > /root/.ScreamingFrogSEOSpider/licence.txt
     echo "$SCREAMING_FROG_KEY" >> /root/.ScreamingFrogSEOSpider/licence.txt
     
-    # Create spider.config to accept EULA automatically if needed (version dependent)
-    # and to disable updates/telemetry
-    echo 'eula.accepted=true' > /root/.ScreamingFrogSEOSpider/spider.config
+    # Accept EULA - SF expects version number (15 for current version)
+    # NOTE: eula.accepted must be a NUMBER, not "true" (causes NumberFormatException)
+    cat > /root/.ScreamingFrogSEOSpider/spider.config <<EOF
+eula.accepted=15
+updates.check=false
+updates.automatically.install=false
+EOF
 fi
 
 URL=$1
