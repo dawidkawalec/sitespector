@@ -255,7 +255,12 @@ async def get_system_status():
         status["services"]["screaming_frog"] = {
             "status": "online" if is_running else "offline",
             "version": "Commercial/CLI" if is_running else None,
-            "error": None if is_running else "Container not running"
+            "error": None if is_running else "Container not running",
+            "debug": {
+                "returncode": ps_result.returncode,
+                "stdout": ps_result.stdout,
+                "stderr": ps_result.stderr
+            }
         }
     except Exception as e:
         logger.error(f"SF status check error: {e}", exc_info=True)
