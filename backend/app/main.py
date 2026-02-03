@@ -242,19 +242,35 @@ async def get_system_status():
     
     # Check Screaming Frog
     try:
-        result = subprocess.run(
-            ["docker", "exec", "sitespector-screaming-frog", "screamingfrogseospider", "--help"],
+        # Check if container is running
+        ps_result = subprocess.run(
+            ["docker", "ps", "--filter", "name=sitespector-screaming-frog", "--format", "{{.Status}}"],
             capture_output=True,
             text=True,
             timeout=5
         )
-        # SF returns exit code 1 with --help but it's actually working if we see Usage in output
-        is_online = "Usage: ScreamingFrogSEOSpider" in result.stdout or "Usage: ScreamingFrogSEOSpider" in result.stderr
-        status["services"]["screaming_frog"] = {
-            "status": "online" if is_online else "offline",
-            "version": "Commercial/CLI" if is_online else None,
-            "error": None if is_online else (result.stderr or "Not responding")
-        }
+        
+        if ps_result.returncode == 0 and "Up" in ps_result.stdout:
+            # Container is running, now verify SF executable responds
+            sf_result = subprocess.run(
+                ["docker", "exec", "sitespector-screaming-frog", "sh", "-c", "command -v screamingfrogseospider"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            is_online = sf_result.returncode == 0 and "screamingfrogseospider" in sf_result.stdout
+            status["services"]["screaming_frog"] = {
+                "status": "online" if is_online else "offline",
+                "version": "Commercial/CLI" if is_online else None,
+                "error": None if is_online else "Executable not found"
+            }
+        else:
+            status["services"]["screaming_frog"] = {
+                "status": "offline",
+                "version": None,
+                "error": "Container not running"
+            }
     except Exception as e:
         status["services"]["screaming_frog"] = {
             "status": "error",
