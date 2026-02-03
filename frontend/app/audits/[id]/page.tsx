@@ -30,6 +30,15 @@ import {
 export default function AuditDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
+  
+  // State for All Pages tab
+  const [pagesSortBy, setPagesSortBy] = useState('url')
+  const [pagesFilterStatus, setPagesFilterStatus] = useState('all')
+  const [pagesCurrentPage, setPagesCurrentPage] = useState(1)
+  
+  // State for Images tab
+  const [imagesFilterAlt, setImagesFilterAlt] = useState('all')
+  const [imagesCurrentPage, setImagesCurrentPage] = useState(1)
 
   // Check authentication (client-side only)
   useEffect(() => {
@@ -460,9 +469,6 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
   const renderAllPages = (results: any) => {
     const pages = results?.crawl?.all_pages || []
-    const [sortBy, setSortBy] = useState('url')
-    const [filterStatus, setFilterStatus] = useState('all')
-    const [currentPage, setCurrentPage] = useState(1)
     const PER_PAGE = 50
     
     if (pages.length === 0) {
@@ -471,22 +477,22 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     
     // Filter by status
     const filtered = pages.filter((p: any) => {
-      if (filterStatus === 'all') return true
-      return p.status_code.toString() === filterStatus
+      if (pagesFilterStatus === 'all') return true
+      return p.status_code.toString() === pagesFilterStatus
     })
     
     // Sort
     const sorted = [...filtered].sort((a: any, b: any) => {
-      if (sortBy === 'url') return a.url.localeCompare(b.url)
-      if (sortBy === 'response_time') return b.response_time - a.response_time
-      if (sortBy === 'word_count') return b.word_count - a.word_count
-      if (sortBy === 'size') return b.size_bytes - a.size_bytes
+      if (pagesSortBy === 'url') return a.url.localeCompare(b.url)
+      if (pagesSortBy === 'response_time') return b.response_time - a.response_time
+      if (pagesSortBy === 'word_count') return b.word_count - a.word_count
+      if (pagesSortBy === 'size') return b.size_bytes - a.size_bytes
       return 0
     })
     
     // Paginate
     const totalPages = Math.ceil(sorted.length / PER_PAGE)
-    const paginated = sorted.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE)
+    const paginated = sorted.slice((pagesCurrentPage - 1) * PER_PAGE, pagesCurrentPage * PER_PAGE)
     
     return (
       <div className="space-y-4">
@@ -495,7 +501,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             <CardTitle>Wszystkie Strony ({pages.length})</CardTitle>
             <CardDescription>Kompletna lista przeskanowanych stron z szczegółami</CardDescription>
             <div className="flex gap-4 mt-4">
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={pagesFilterStatus} onValueChange={setPagesFilterStatus}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Status Code" />
                 </SelectTrigger>
@@ -507,7 +513,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                 </SelectContent>
               </Select>
               
-              <Select value={sortBy} onValueChange={setSortBy}>
+              <Select value={pagesSortBy} onValueChange={setPagesSortBy}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Sortuj" />
                 </SelectTrigger>
@@ -570,22 +576,22 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             
             <div className="flex justify-between items-center mt-4">
               <span className="text-sm text-muted-foreground">
-                Strona {currentPage} z {totalPages} (wyświetlono {paginated.length} z {filtered.length})
+                Strona {pagesCurrentPage} z {totalPages} (wyświetlono {paginated.length} z {filtered.length})
               </span>
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
+                  onClick={() => setPagesCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={pagesCurrentPage === 1}
                 >
                   Poprzednia
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage >= totalPages}
+                  onClick={() => setPagesCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={pagesCurrentPage >= totalPages}
                 >
                   Następna
                 </Button>
@@ -672,8 +678,6 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   const renderImages = (results: any) => {
     const images = results?.crawl?.images?.all_images || []
     const imagesStats = results?.crawl?.images || {}
-    const [filterAlt, setFilterAlt] = useState('all')
-    const [currentPage, setCurrentPage] = useState(1)
     const PER_PAGE = 50
     
     if (images.length === 0) {
@@ -682,15 +686,15 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     
     // Filter
     const filtered = images.filter((img: any) => {
-      if (filterAlt === 'all') return true
-      if (filterAlt === 'with') return !!img.alt_text
-      if (filterAlt === 'without') return !img.alt_text
+      if (imagesFilterAlt === 'all') return true
+      if (imagesFilterAlt === 'with') return !!img.alt_text
+      if (imagesFilterAlt === 'without') return !img.alt_text
       return true
     })
     
     // Paginate
     const totalPages = Math.ceil(filtered.length / PER_PAGE)
-    const paginated = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE)
+    const paginated = filtered.slice((imagesCurrentPage - 1) * PER_PAGE, imagesCurrentPage * PER_PAGE)
     
     return (
       <div className="space-y-4">
@@ -734,7 +738,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
           <CardHeader>
             <CardTitle>Lista Obrazów ({images.length})</CardTitle>
             <div className="flex gap-4 mt-4">
-              <Select value={filterAlt} onValueChange={setFilterAlt}>
+              <Select value={imagesFilterAlt} onValueChange={setImagesFilterAlt}>
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Filtruj" />
                 </SelectTrigger>
@@ -790,22 +794,22 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             
             <div className="flex justify-between items-center mt-4">
               <span className="text-sm text-muted-foreground">
-                Strona {currentPage} z {totalPages}
+                Strona {imagesCurrentPage} z {totalPages}
               </span>
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
+                  onClick={() => setImagesCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={imagesCurrentPage === 1}
                 >
                   Poprzednia
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage >= totalPages}
+                  onClick={() => setImagesCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={imagesCurrentPage >= totalPages}
                 >
                   Następna
                 </Button>
