@@ -95,7 +95,7 @@ Automated website auditing platform that combines:
 - **Backend**: FastAPI (Python 3.11) + SQLAlchemy 2.0 + PostgreSQL 15
 - **Frontend**: Next.js 14 + TypeScript + Tailwind CSS + shadcn/ui
 - **Infrastructure**: Docker Compose + Nginx + Self-signed SSL
-- **AI**: Google Gemini API (gemini-1.5-flash)
+- **AI**: Google Gemini API (gemini-3-flash)
 - **SEO Tools**: Screaming Frog (Docker), Lighthouse (Docker)
 - **PDF**: WeasyPrint (HTML → PDF)
 

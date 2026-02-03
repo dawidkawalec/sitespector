@@ -39,8 +39,8 @@ async def call_claude(
         return _generate_mock_response()
     
     try:
-        # Use Gemini 1.5 Flash
-        model_name = "gemini-1.5-flash" 
+        # Use Gemini 3.0 Flash
+        model_name = "gemini-3-flash" 
         logger.info(f"Calling Gemini API (model: {model_name})")
         
         # Configure model with system instruction

@@ -25,7 +25,6 @@ class Settings(BaseSettings):
     JWT_EXPIRATION_DAYS: int = Field(default=7, description="JWT token expiration in days")
     BCRYPT_COST: int = Field(default=12, description="Bcrypt hashing cost factor")
 
-    # Gemini AI (replaced Claude)
     GEMINI_API_KEY: str = Field(default="", description="Google Gemini API key")
     
     # Claude AI (Deprecated, kept for compatibility if needed)

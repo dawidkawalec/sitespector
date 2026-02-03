@@ -192,7 +192,7 @@ This document tracks key architectural and technical decisions made during SiteS
 - Need AI for content analysis and recommendations
 - Options: GPT-4, Claude, Gemini, Open-source models
 
-**Decision**: Use Google Gemini (gemini-1.5-flash)
+**Decision**: Use Google Gemini (gemini-3-flash)
 
 **Rationale**:
 - Very cheap (~10x cheaper than GPT-4)

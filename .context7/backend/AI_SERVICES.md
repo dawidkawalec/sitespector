@@ -2,7 +2,7 @@
 
 ## Overview
 
-SiteSpector uses **Google Gemini API** (gemini-1.5-flash) for AI-powered content analysis and recommendations.
+SiteSpector uses **Google Gemini API** (gemini-3-flash) for AI-powered content analysis and recommendations.
 
 **Location**: `backend/app/services/ai_analysis.py`
 
@@ -14,7 +14,7 @@ SiteSpector uses **Google Gemini API** (gemini-1.5-flash) for AI-powered content
 
 ### Model
 
-**Name**: `gemini-1.5-flash`
+**Name**: `gemini-3-flash`
 
 **Why Gemini?**
 - Very cheap (~10x cheaper than GPT-4)
@@ -32,7 +32,7 @@ from app.config import settings
 
 genai.configure(api_key=settings.GEMINI_API_KEY)
 
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-3-flash')
 ```
 
 ---
@@ -437,5 +437,5 @@ logger.debug(f"AI output: {ai_response}")
 
 **Last Updated**: 2025-02-03  
 **AI Provider**: Google Gemini  
-**Model**: gemini-1.5-flash  
+**Model**: gemini-3-flash  
 **Status**: Rule-based (AI integration ready but disabled)

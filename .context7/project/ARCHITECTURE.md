@@ -345,11 +345,11 @@ if audit.competitors:
 
 ### Google Gemini API
 
-**Endpoint**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`
+**Endpoint**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent`
 
 **Rate limit**: ~60 requests/minute (not a bottleneck for MVP)
 
-**Cost**: Minimal (gemini-1.5-flash is cheapest tier)
+**Cost**: Minimal (gemini-3-flash is cheapest tier)
 
 **Timeout**: 30 seconds per request (handled by httpx)
 
@@ -634,7 +634,7 @@ docker_client.containers.get("sitespector-screaming-frog").exec_run(
 # External HTTP (internet)
 async with httpx.AsyncClient() as client:
     response = await client.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent",
         headers={"Content-Type": "application/json"},
         json={"contents": [...]}
     )

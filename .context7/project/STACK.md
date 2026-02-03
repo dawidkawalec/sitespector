@@ -99,7 +99,7 @@ SiteSpector is built with a modern, scalable stack optimized for SEO audit proce
 
 ### AI Provider: **Google Gemini API**
 
-**Model**: gemini-1.5-flash
+**Model**: gemini-3-flash
 
 **Why Gemini?**
 - Very cheap (10x cheaper than GPT-4)
@@ -385,11 +385,11 @@ output: 'standalone'
 
 ### Google Gemini API
 
-**Endpoint**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`
+**Endpoint**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent`
 
 **Rate limit**: 60 requests/minute (not hit with current usage)
 
-**Cost**: ~$0.01 per 1000 requests (gemini-1.5-flash)
+**Cost**: ~$0.01 per 1000 requests (gemini-3-flash)
 
 ---
 
@@ -419,7 +419,7 @@ Infrastructure:
 External:
   Screaming Frog: 19+ (licensed)
   Lighthouse: 11+
-  Gemini: gemini-1.5-flash
+  Gemini: gemini-3-flash
 ```
 
 ---
