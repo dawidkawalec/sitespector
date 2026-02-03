@@ -119,11 +119,9 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
   const downloadRawData = async () => {
     try {
-      // Direct download via browser to handle headers better
-      // We need to get the token
       const token = localStorage.getItem('access_token')
       if (!token) {
-          console.error('No access token found')
+          alert('Błąd: Brak tokenu autoryzacji. Zaloguj się ponownie.')
           return
       }
 
@@ -134,7 +132,19 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
           }
       })
       
-      if (!response.ok) throw new Error('Download failed')
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Raw data download failed:', response.status, errorText)
+        
+        if (response.status === 404) {
+          alert('Błąd: Nie znaleziono danych audytu.')
+        } else if (response.status === 403) {
+          alert('Błąd: Brak uprawnień do pobrania danych.')
+        } else {
+          alert(`Błąd pobierania danych: ${response.status}`)
+        }
+        return
+      }
       
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
@@ -147,6 +157,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
       document.body.removeChild(a)
     } catch (error) {
       console.error('Error downloading raw data:', error)
+      alert('Błąd podczas pobierania danych. Sprawdź logi konsoli.')
     }
   }
 
@@ -1397,24 +1408,20 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                   <Download className="mr-2 h-4 w-4" />
                   Pobierz PDF
                 </Button>
-                <Button variant="secondary" onClick={downloadRawData} title="Pobierz surowe dane (ZIP)">
+                <Button variant="secondary" onClick={downloadRawData} title="Pobierz surowe dane JSON (ZIP)">
                   <FileJson className="mr-2 h-4 w-4" />
                   Raw Data
                 </Button>
               </>
             )}
-            
-             <Button variant="outline" onClick={() => refetch()} disabled={isLoading} title="Odśwież status">
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </Button>
 
-            <Button variant="outline" onClick={handleRetry} title="Uruchom ponownie audyt">
+            <Button variant="outline" onClick={handleRetry} title="Uruchom nowy audyt dla tego URL">
                 <RefreshCw className="h-4 w-4 mr-2" /> Restart
             </Button>
 
             <AlertDialog>
                 <AlertDialogTrigger asChild>
-                     <Button variant="destructive" size="icon">
+                     <Button variant="destructive" size="icon" title="Usuń audyt">
                         <Trash className="h-4 w-4" />
                     </Button>
                 </AlertDialogTrigger>
