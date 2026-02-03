@@ -251,15 +251,15 @@ async def get_system_status():
         )
         
         if ps_result.returncode == 0 and "Up" in ps_result.stdout:
-            # Container is running, now verify SF executable responds
+            # Container is running, now verify SF executable exists
             sf_result = subprocess.run(
-                ["docker", "exec", "sitespector-screaming-frog", "sh", "-c", "command -v screamingfrogseospider"],
+                ["docker", "exec", "sitespector-screaming-frog", "test", "-f", "/usr/bin/screamingfrogseospider"],
                 capture_output=True,
                 text=True,
                 timeout=5
             )
             
-            is_online = sf_result.returncode == 0 and "screamingfrogseospider" in sf_result.stdout
+            is_online = sf_result.returncode == 0
             status["services"]["screaming_frog"] = {
                 "status": "online" if is_online else "offline",
                 "version": "Commercial/CLI" if is_online else None,
