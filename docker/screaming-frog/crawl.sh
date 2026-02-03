@@ -8,7 +8,8 @@ export DISPLAY=:99
 # Setup License if env vars provided
 # Env vars are passed from docker-compose
 if [ ! -z "$SCREAMING_FROG_USER" ] && [ ! -z "$SCREAMING_FROG_KEY" ]; then
-    echo "Setting up Screaming Frog license for user: $SCREAMING_FROG_USER"
+    # Redirect to stderr to not pollute CSV output
+    echo "Setting up Screaming Frog license for user: $SCREAMING_FROG_USER" >&2
     mkdir -p /root/.ScreamingFrogSEOSpider
     echo "$SCREAMING_FROG_USER" > /root/.ScreamingFrogSEOSpider/licence.txt
     echo "$SCREAMING_FROG_KEY" >> /root/.ScreamingFrogSEOSpider/licence.txt
@@ -25,11 +26,12 @@ fi
 URL=$1
 
 if [ -z "$URL" ]; then
-    echo "Usage: crawl.sh <url>"
+    echo "Usage: crawl.sh <url>" >&2
     exit 1
 fi
 
-echo "Starting Screaming Frog crawl for $URL..."
+# Redirect status to stderr so only CSV goes to stdout
+echo "Starting Screaming Frog crawl for $URL..." >&2
 
 # Run crawl
 # Using CSV format as JSON is not supported in CLI for this version
