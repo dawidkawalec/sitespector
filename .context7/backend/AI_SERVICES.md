@@ -10,6 +10,19 @@ SiteSpector uses **Google Gemini API** (gemini-3-flash) for AI-powered content a
 
 ---
 
+## ⚠️ CRITICAL: No Fallbacks Policy
+
+**As of 2025-02-03**: ALL fallback mechanisms have been removed from the system.
+
+- ✅ If Screaming Frog fails → audit fails (no HTTP fallback)
+- ✅ If Lighthouse fails → audit fails (no mock data)
+- ✅ If AI analysis fails → audit fails (no default responses)
+- ✅ If PDF generation fails → explicit error (no empty PDFs)
+
+**Philosophy**: Transparency over silent failures. Users must know exactly what failed.
+
+---
+
 ## AI Model Configuration
 
 ### Model
@@ -33,6 +46,106 @@ from app.config import settings
 genai.configure(api_key=settings.GEMINI_API_KEY)
 
 model = genai.GenerativeModel('gemini-3-flash')
+```
+
+---
+
+## PDF Generator
+
+**Location**: `backend/app/services/pdf_generator.py` + `backend/templates/report.html`
+
+**Status**: ✅ **FULLY COMPLETED** (2025-02-03)
+
+### Architecture
+
+1. **Data Extraction** (`_extract_report_data()`)
+   - NO FALLBACKS - raises exceptions if critical data missing
+   - Validates: results exist, crawl data exists, lighthouse data exists
+   - Aggregates recommendations from all AI sections
+   - Parses emoji prefixes (❌, ⚠️, ✅, 🤖) for color-coding
+
+2. **Template Rendering** (`report.html`)
+   - All 9 sections fully implemented
+   - NO `|default()` filters - shows actual data or explicit errors
+   - Color-coded recommendations by emoji
+   - Dynamic action plan based on real scores
+
+### PDF Sections
+
+**Section 1 - Executive Summary** ✅
+- Overall scores table
+- Local business detection
+
+**Section 2 - Table of Contents** ✅
+- Dynamic based on data availability
+
+**Section 3 - SEO Technical Analysis** ✅
+- Crawl metrics: pages_crawled, internal_links_count, total_images, images_without_alt
+- Meta tags table with validation
+- H1 structure display
+- Technical metrics: status_code, load_time, size_bytes, word_count
+
+**Section 4 - Performance Analysis** ✅
+- Desktop Core Web Vitals (7 metrics)
+- Mobile Core Web Vitals (7 metrics)
+- Performance recommendations with impact level
+- Color-coded issues
+
+**Section 5 - Content Analysis** ✅
+- Metrics table: quality_score, readability_score, word_count, has_title, has_meta_description, has_h1
+- AI summary
+- Color-coded recommendations (✅ green, ⚠️ yellow, ❌ red, 🤖 blue)
+
+**Section 6 - Local SEO** ✅ (conditional)
+- Shows only if is_local_business = true
+- has_schema_markup, has_nap indicators
+- Color-coded recommendations
+
+**Section 7 - Competitive Analysis** ✅ (conditional)
+- Handles "no competitors" case
+- Color-coded boxes: strengths (green), weaknesses (red), opportunities (blue), recommendations (yellow)
+
+**Section 8 - Action Plan** ✅
+- **Dynamic priorities** based on real scores:
+  - High: performance_score < 50, seo_score < 50, alt_missing > 50%
+  - Medium: content_score < 70, missing local SEO
+  - Low: continuous improvements
+- Aggregated recommendations from all sections
+- AI recommendations section
+
+**Section 9 - Appendix** ✅
+- Code examples (schema markup)
+- Contact information
+
+### Error Handling
+
+```python
+# _extract_report_data() validation
+if not results:
+    raise ValueError(f"Cannot generate PDF - audit has no results")
+
+if not crawl_data:
+    raise ValueError("Cannot generate PDF - missing Screaming Frog data")
+
+if not lighthouse_data:
+    raise ValueError("Cannot generate PDF - missing Lighthouse data")
+```
+
+### Data Aggregation
+
+```python
+# Aggregate all recommendations
+all_recommendations = []
+all_recommendations.extend(content_analysis.get("recommendations", []))
+all_recommendations.extend(performance_analysis.get("recommendations", []))
+all_recommendations.extend(local_seo.get("recommendations", []))
+all_recommendations.extend(competitive_analysis.get("recommendations", []))
+
+# Parse by emoji prefix
+critical_issues = [r for r in all_recommendations if r.startswith("❌")]
+warnings = [r for r in all_recommendations if r.startswith("⚠️")]
+successes = [r for r in all_recommendations if r.startswith("✅")]
+ai_recommendations = [r for r in all_recommendations if r.startswith("🤖")]
 ```
 
 ---
