@@ -225,6 +225,98 @@ async def get_backend_logs(lines: int = 100):
         )
 
 
+@app.get("/api/system/status", tags=["Monitoring"])
+async def get_system_status():
+    """
+    Check health of all critical services: Screaming Frog, Lighthouse, Worker, Database.
+    
+    Returns status for each service with timestamp.
+    """
+    import subprocess
+    
+    status = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "2.0.0",
+        "services": {}
+    }
+    
+    # Check Screaming Frog
+    try:
+        result = subprocess.run(
+            ["docker", "exec", "sitespector-screaming-frog", "screamingfrogseospider", "--version"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        status["services"]["screaming_frog"] = {
+            "status": "online" if result.returncode == 0 else "offline",
+            "version": result.stdout.strip() if result.returncode == 0 else None,
+            "error": result.stderr if result.returncode != 0 else None
+        }
+    except Exception as e:
+        status["services"]["screaming_frog"] = {
+            "status": "error",
+            "error": str(e)
+        }
+    
+    # Check Lighthouse
+    try:
+        result = subprocess.run(
+            ["docker", "exec", "sitespector-lighthouse", "lighthouse", "--version"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        status["services"]["lighthouse"] = {
+            "status": "online" if result.returncode == 0 else "offline",
+            "version": result.stdout.strip() if result.returncode == 0 else None,
+            "error": result.stderr if result.returncode != 0 else None
+        }
+    except Exception as e:
+        status["services"]["lighthouse"] = {
+            "status": "error",
+            "error": str(e)
+        }
+    
+    # Check Worker
+    try:
+        result = subprocess.run(
+            ["docker", "exec", "sitespector-worker", "pgrep", "-f", "worker.py"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        status["services"]["worker"] = {
+            "status": "online" if result.returncode == 0 else "offline",
+            "pid": result.stdout.strip() if result.returncode == 0 else None
+        }
+    except Exception as e:
+        status["services"]["worker"] = {
+            "status": "error",
+            "error": str(e)
+        }
+    
+    # Check Database
+    try:
+        result = subprocess.run(
+            ["docker", "exec", "sitespector-postgres", "pg_isready", "-U", "sitespector_user"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        status["services"]["database"] = {
+            "status": "online" if result.returncode == 0 else "offline",
+            "message": result.stdout.strip() if result.returncode == 0 else result.stderr
+        }
+    except Exception as e:
+        status["services"]["database"] = {
+            "status": "error",
+            "error": str(e)
+        }
+    
+    return status
+
+
 # Include routers
 app.include_router(auth.router, prefix="/api")
 app.include_router(audits.router, prefix="/api")

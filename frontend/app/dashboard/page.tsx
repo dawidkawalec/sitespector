@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { NewAuditDialog } from '@/components/NewAuditDialog'
+import { SystemStatus } from '@/components/SystemStatus'
 import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant, truncateUrl } from '@/lib/utils'
 import { Loader2, Plus, Trash, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
@@ -146,6 +147,9 @@ export default function DashboardPage() {
         </Card>
       </div>
       )}
+
+      {/* System Status */}
+      <SystemStatus />
 
       {/* Audits List */}
       <Card>
