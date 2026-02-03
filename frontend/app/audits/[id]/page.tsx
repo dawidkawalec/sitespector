@@ -56,7 +56,6 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   const {
     data: audit,
     isLoading,
-    refetch,
   } = useQuery({
     queryKey: ['audit', params.id],
     queryFn: () => auditsAPI.get(params.id),
