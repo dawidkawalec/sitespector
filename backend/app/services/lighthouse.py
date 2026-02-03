@@ -58,16 +58,16 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
         
         if process.returncode != 0:
             error_msg = stderr.decode()
-            logger.error(f"Lighthouse failed with code {process.returncode}: {error_msg}")
-            return _failed_audit_result(url, device, error_msg)
+            logger.error(f"❌ Lighthouse failed with code {process.returncode}: {error_msg}")
+            raise Exception(f"Lighthouse audit failed for {url} ({device}): {error_msg[:500]}")
             
         # Parse JSON output
         try:
             lh_result = json.loads(stdout.decode())
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse Lighthouse JSON: {e}")
+            logger.error(f"❌ Failed to parse Lighthouse JSON: {e}")
             logger.error(f"Output start: {stdout.decode()[:200]}...")
-            return _failed_audit_result(url, device, "Invalid JSON output")
+            raise Exception(f"Lighthouse returned invalid JSON for {url} ({device})")
             
         # Extract metrics
         categories = lh_result.get("categories", {})
@@ -109,13 +109,24 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
         return result
         
     except Exception as e:
-        logger.error(f"Error running Lighthouse audit: {e}", exc_info=True)
-        return _failed_audit_result(url, device, str(e))
+        logger.error(f"❌ Lighthouse error: {e}", exc_info=True)
+        raise  # Re-raise exception - NO FALLBACKS
 
 
 async def audit_both(url: str) -> Dict[str, Dict[str, Any]]:
     """
     Run performance audit for both desktop and mobile.
+    
+    NO FALLBACKS - If either audit fails, the entire process fails.
+    
+    Args:
+        url: Website URL to audit
+        
+    Returns:
+        Dictionary with desktop and mobile results
+        
+    Raises:
+        Exception: If either desktop or mobile audit fails
     """
     # Run parallel
     desktop_task = audit_url(url, "desktop")
@@ -126,23 +137,4 @@ async def audit_both(url: str) -> Dict[str, Dict[str, Any]]:
     return {
         "desktop": results[0],
         "mobile": results[1],
-    }
-
-
-def _failed_audit_result(url: str, device: str, error: str = "Unknown error") -> Dict[str, Any]:
-    """Return failed audit result."""
-    return {
-        "url": url,
-        "device": device,
-        "performance_score": 0,
-        "accessibility_score": 0,
-        "best_practices_score": 0,
-        "seo_score": 0,
-        "ttfb": 0,
-        "fcp": 0,
-        "lcp": 0,
-        "cls": 0,
-        "total_blocking_time": 0,
-        "speed_index": 0,
-        "error": error,
     }

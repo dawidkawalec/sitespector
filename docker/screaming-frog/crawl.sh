@@ -29,7 +29,8 @@ echo "Starting Screaming Frog crawl for $URL..."
 
 # Run crawl
 # Using CSV format as JSON is not supported in CLI for this version
-screamingfrogseospider --crawl "$URL" --headless --crawl-depth 1 --output-folder /tmp/crawls --export-tabs "Internal:All" --export-format "csv" --overwrite > /dev/null
+# NOTE: --crawl-depth does NOT exist in SF CLI - removed to prevent FATAL error
+screamingfrogseospider --crawl "$URL" --headless --output-folder /tmp/crawls --export-tabs "Internal:All" --export-format "csv" --overwrite > /dev/null
 
 # Find output
 LATEST_EXPORT=$(ls -t /tmp/crawls/internal_all.csv 2>/dev/null | head -n 1)
