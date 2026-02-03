@@ -39,6 +39,9 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   // State for Images tab
   const [imagesFilterAlt, setImagesFilterAlt] = useState('all')
   const [imagesCurrentPage, setImagesCurrentPage] = useState(1)
+  
+  // State for expandable rows
+  const [expandedPageRow, setExpandedPageRow] = useState<number | null>(null)
 
   // Check authentication (client-side only)
   useEffect(() => {
@@ -426,9 +429,86 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
       
       return (
           <div className="space-y-6">
+              {/* Info Boxes - Wyjaśnienia */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-900">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      Skąd pochodzi Quality Score?
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Wynik jakości treści jest obliczany automatycznie na podstawie:
+                    </p>
+                    <ul className="text-xs space-y-1.5">
+                      <li className="flex items-start gap-2">
+                        <span className="text-muted-foreground min-w-fit">•</span>
+                        <span><strong>Title tag (30-70 znaków):</strong> -20 pkt jeśli brak, -10 za krótki</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-muted-foreground min-w-fit">•</span>
+                        <span><strong>Meta description (120-170 znaków):</strong> -15 pkt jeśli brak</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-muted-foreground min-w-fit">•</span>
+                        <span><strong>Tag H1 (dokładnie 1):</strong> -15 pkt jeśli brak</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-muted-foreground min-w-fit">•</span>
+                        <span><strong>Obrazy z ALT:</strong> -2 pkt za każdy obraz bez ALT</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-muted-foreground min-w-fit">•</span>
+                        <span><strong>Liczba słów (min 300):</strong> -10 pkt jeśli mniej</span>
+                      </li>
+                    </ul>
+                    <p className="text-xs font-semibold mt-3 text-blue-900 dark:text-blue-100">
+                      Start: 100 punktów → odejmowane za każdy problem
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-900">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      Co to jest Readability Score?
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Wynik czytelności używa algorytmu <strong>Flesch Reading Ease</strong> (ze Screaming Frog):
+                    </p>
+                    <ul className="text-xs space-y-1.5">
+                      <li className="flex items-center gap-2">
+                        <Badge variant="default" className="text-xs">90-100</Badge>
+                        <span>Bardzo łatwy (dzieci 11 lat)</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">60-70</Badge>
+                        <span>Łatwy (uczniowie 13-15 lat)</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">30-50</Badge>
+                        <span>Trudny (studenci)</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Badge variant="destructive" className="text-xs">0-30</Badge>
+                        <span>Bardzo trudny (absolwenci)</span>
+                      </li>
+                    </ul>
+                    <p className="text-xs font-semibold mt-3 text-purple-900 dark:text-purple-100">
+                      Twój wynik: {content.readability_score || 'N/A'}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+              
               <Card>
                   <CardHeader>
-                      <CardTitle>Analiza Treści</CardTitle>
+                      <CardTitle>Metryki Treści</CardTitle>
                   </CardHeader>
                   <CardContent>
                       <div className="grid gap-4 md:grid-cols-3">
@@ -441,8 +521,8 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                               <div className="text-2xl font-bold mt-1">{content.word_count || 0}</div>
                           </div>
                           <div className="bg-card p-4 rounded-lg border">
-                              <div className="text-xs text-muted-foreground uppercase tracking-wider">Czytelność</div>
-                              <div className="text-2xl font-bold mt-1">{content.readability_score || 0}/100</div>
+                              <div className="text-xs text-muted-foreground uppercase tracking-wider">Czytelność (Flesch)</div>
+                              <div className="text-2xl font-bold mt-1">{content.readability_score || 0}</div>
                           </div>
                       </div>
                   </CardContent>
@@ -543,31 +623,187 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                   </thead>
                   <tbody>
                     {paginated.map((page: any, i: number) => (
-                      <tr key={i} className="border-b hover:bg-muted/50 transition-colors">
-                        <td className="p-3">
-                          <a 
-                            href={page.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline font-mono text-xs flex items-center gap-1 max-w-md truncate"
-                          >
-                            <span className="truncate">{page.url}</span>
-                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                          </a>
-                        </td>
-                        <td className="p-3 text-center">
-                          <Badge variant={page.status_code === 200 ? 'default' : page.status_code >= 400 ? 'destructive' : 'secondary'}>
-                            {page.status_code}
-                          </Badge>
-                        </td>
-                        <td className="p-3 max-w-xs truncate" title={page.title}>
-                          {page.title || <span className="text-muted-foreground italic">Brak title</span>}
-                        </td>
-                        <td className="p-3 text-center">{page.word_count}</td>
-                        <td className="p-3 text-center">{page.inlinks}</td>
-                        <td className="p-3 text-center">{Math.round(page.response_time * 1000)}</td>
-                        <td className="p-3 text-center">{Math.round(page.size_bytes / 1024)} KB</td>
-                      </tr>
+                      <>
+                        <tr 
+                          key={i} 
+                          className="border-b hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => setExpandedPageRow(expandedPageRow === i ? null : i)}
+                        >
+                          <td className="p-3">
+                            <a 
+                              href={page.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline font-mono text-xs flex items-center gap-1 max-w-md truncate"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <span className="truncate">{page.url || 'Brak URL'}</span>
+                              <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                            </a>
+                          </td>
+                          <td className="p-3 text-center">
+                            <Badge variant={page.status_code === 200 ? 'default' : page.status_code >= 400 ? 'destructive' : 'secondary'}>
+                              {page.status_code}
+                            </Badge>
+                          </td>
+                          <td className="p-3 max-w-xs truncate" title={page.title}>
+                            {page.title || <span className="text-muted-foreground italic">Brak title</span>}
+                          </td>
+                          <td className="p-3 text-center">{page.word_count}</td>
+                          <td className="p-3 text-center">{page.inlinks}</td>
+                          <td className="p-3 text-center">{Math.round(page.response_time * 1000)}</td>
+                          <td className="p-3 text-center">{Math.round(page.size_bytes / 1024)} KB</td>
+                        </tr>
+                        
+                        {/* Expanded details row */}
+                        {expandedPageRow === i && (
+                          <tr className="border-b bg-muted/30">
+                            <td colSpan={7} className="p-4">
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <p className="font-semibold text-xs uppercase text-muted-foreground mb-1">Meta Description</p>
+                                    <p className="text-sm">
+                                      {page.meta_description || <span className="text-red-600 font-semibold">BRAK - Dodaj opis!</span>}
+                                    </p>
+                                    {page.meta_description && (
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        Długość: {page.meta_description_length} znaków
+                                        {page.meta_description_length < 120 && ' (za krótka)'}
+                                        {page.meta_description_length > 170 && ' (za długa)'}
+                                      </p>
+                                    )}
+                                  </div>
+                                  
+                                  <div>
+                                    <p className="font-semibold text-xs uppercase text-muted-foreground mb-1">Nagłówki</p>
+                                    {page.h1 && (
+                                      <div className="mb-2">
+                                        <Badge className="mr-2">H1</Badge>
+                                        <span className="text-sm">{page.h1}</span>
+                                      </div>
+                                    )}
+                                    {page.h2 && (
+                                      <div>
+                                        <Badge variant="secondary" className="mr-2">H2</Badge>
+                                        <span className="text-sm">{page.h2}</span>
+                                      </div>
+                                    )}
+                                    {!page.h1 && !page.h2 && (
+                                      <span className="text-muted-foreground italic text-sm">Brak nagłówków</span>
+                                    )}
+                                  </div>
+                                  
+                                  <div>
+                                    <p className="font-semibold text-xs uppercase text-muted-foreground mb-1">Canonical URL</p>
+                                    {page.canonical ? (
+                                      <a href={page.canonical} target="_blank" className="text-blue-600 hover:underline text-xs break-all">
+                                        {page.canonical}
+                                      </a>
+                                    ) : (
+                                      <span className="text-yellow-600 font-semibold text-sm">BRAK - Dodaj canonical!</span>
+                                    )}
+                                  </div>
+                                  
+                                  <div>
+                                    <p className="font-semibold text-xs uppercase text-muted-foreground mb-1">Meta Robots</p>
+                                    <Badge variant={page.meta_robots?.includes('noindex') ? 'destructive' : 'default'}>
+                                      {page.meta_robots || 'brak'}
+                                    </Badge>
+                                    {page.indexability && (
+                                      <Badge variant="outline" className="ml-2">
+                                        {page.indexability}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  
+                                  <div>
+                                    <p className="font-semibold text-xs uppercase text-muted-foreground mb-1">Linki</p>
+                                    <div className="text-sm space-y-1">
+                                      <p>Outlinks: {page.outlinks}</p>
+                                      <p>External: {page.external_outlinks}</p>
+                                      <p>Internal: {page.outlinks - page.external_outlinks}</p>
+                                    </div>
+                                  </div>
+                                  
+                                  <div>
+                                    <p className="font-semibold text-xs uppercase text-muted-foreground mb-1">Czytelność</p>
+                                    {page.flesch_reading_ease ? (
+                                      <div>
+                                        <p className="text-sm font-bold">{page.flesch_reading_ease.toFixed(1)}</p>
+                                        <p className="text-xs text-muted-foreground">{page.readability || 'Flesch Reading Ease'}</p>
+                                      </div>
+                                    ) : (
+                                      <span className="text-muted-foreground italic text-sm">Brak danych</span>
+                                    )}
+                                  </div>
+                                  
+                                  {page.redirect_url && (
+                                    <div className="col-span-2">
+                                      <p className="font-semibold text-xs uppercase text-muted-foreground mb-1">Redirect Do</p>
+                                      <a href={page.redirect_url} target="_blank" className="text-blue-600 hover:underline text-xs break-all">
+                                        {page.redirect_url}
+                                      </a>
+                                      <Badge variant="secondary" className="ml-2">{page.redirect_type}</Badge>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* SEO Analysis for this page */}
+                                <div className="mt-4 p-3 bg-background rounded-lg border">
+                                  <p className="font-semibold text-xs uppercase text-muted-foreground mb-2">Analiza SEO tej strony</p>
+                                  <ul className="space-y-2 text-sm">
+                                    {!page.title && (
+                                      <li className="flex items-center gap-2 text-red-600">
+                                        <AlertCircle className="h-4 w-4" />
+                                        Brak title tag
+                                      </li>
+                                    )}
+                                    {page.title && page.title_length < 30 && (
+                                      <li className="flex items-center gap-2 text-yellow-600">
+                                        <AlertCircle className="h-4 w-4" />
+                                        Title za krótki ({page.title_length} znaków, zalecane 30-70)
+                                      </li>
+                                    )}
+                                    {!page.meta_description && (
+                                      <li className="flex items-center gap-2 text-red-600">
+                                        <AlertCircle className="h-4 w-4" />
+                                        Brak meta description
+                                      </li>
+                                    )}
+                                    {!page.canonical && page.status_code === 200 && (
+                                      <li className="flex items-center gap-2 text-yellow-600">
+                                        <AlertCircle className="h-4 w-4" />
+                                        Brak canonical tag
+                                      </li>
+                                    )}
+                                    {page.word_count < 300 && page.status_code === 200 && (
+                                      <li className="flex items-center gap-2 text-yellow-600">
+                                        <AlertCircle className="h-4 w-4" />
+                                        Za mało treści ({page.word_count} słów, zalecane min. 300)
+                                      </li>
+                                    )}
+                                    {page.response_time > 2 && (
+                                      <li className="flex items-center gap-2 text-red-600">
+                                        <AlertCircle className="h-4 w-4" />
+                                        Bardzo wolna strona ({Math.round(page.response_time * 1000)}ms, zalecane max 2000ms)
+                                      </li>
+                                    )}
+                                    {page.title && page.title_length >= 30 && page.title_length <= 70 && 
+                                     page.meta_description && page.canonical && 
+                                     page.word_count >= 300 && page.response_time <= 2 && (
+                                      <li className="flex items-center gap-2 text-green-600">
+                                        <CheckCircle className="h-4 w-4" />
+                                        Strona dobrze zoptymalizowana!
+                                      </li>
+                                    )}
+                                  </ul>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
                     ))}
                   </tbody>
                 </table>
@@ -857,15 +1093,30 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
           </Card>
         </div>
         
-        {brokenPages.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-red-600" />
-                Broken Links - Wymagają Naprawy! ({brokenPages.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {brokenPages.length > 0 ? (
+                <>
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  Broken Links - Wymagają Naprawy! ({brokenPages.length})
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  Broken Links ({brokenPages.length})
+                </>
+              )}
+            </CardTitle>
+            <CardDescription>
+              {brokenPages.length > 0 
+                ? 'Strony zwracające błędy 404+ - wymagają natychmiastowej naprawy' 
+                : 'Wszystkie linki działają poprawnie'
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {brokenPages.length > 0 ? (
               <div className="rounded-md border">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -890,17 +1141,35 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                   </table>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <div className="text-center py-8">
+                <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                <p className="text-lg font-semibold text-green-600">Brak broken links!</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Wszystkie strony zwracają poprawne statusy - świetna robota!
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
         
-        {redirectPages.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Redirects ({redirectPages.length})</CardTitle>
-              <CardDescription>Strony z przekierowaniami 301/302</CardDescription>
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {redirectPages.length > 10 ? (
+                <AlertCircle className="h-5 w-5 text-yellow-600" />
+              ) : (
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              )}
+              Redirects ({redirectPages.length})
+            </CardTitle>
+            <CardDescription>
+              Strony z przekierowaniami 301/302
+              {redirectPages.length > 10 && ' - rozważ redukcję łańcuchów redirectów'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {redirectPages.length > 0 ? (
               <div className="rounded-md border">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -914,12 +1183,18 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                     <tbody>
                       {redirectPages.slice(0, 50).map((page: any, i: number) => (
                         <tr key={i} className="border-b hover:bg-muted/50">
-                          <td className="p-3 font-mono text-xs max-w-sm truncate">{page.url}</td>
+                          <td className="p-3">
+                            <a href={page.url} target="_blank" className="font-mono text-xs text-blue-600 hover:underline max-w-sm truncate block">
+                              {page.url}
+                            </a>
+                          </td>
                           <td className="p-3 text-center">
                             <Badge variant="secondary">{page.status_code}</Badge>
                           </td>
-                          <td className="p-3 font-mono text-xs max-w-sm truncate">
-                            {page.redirect_url || '-'}
+                          <td className="p-3">
+                            <a href={page.redirect_url} target="_blank" className="font-mono text-xs text-blue-600 hover:underline max-w-sm truncate block">
+                              {page.redirect_url || '-'}
+                            </a>
                           </td>
                         </tr>
                       ))}
@@ -927,9 +1202,17 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                   </table>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <div className="text-center py-8">
+                <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                <p className="text-lg font-semibold text-green-600">Brak redirectów!</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Wszystkie strony zwracają finalne URL-e bez przekierowań
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -974,57 +1257,107 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
           </Card>
         </div>
         
-        {missingCanonical.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Strony Bez Canonical Tag ({missingCanonical.length})</CardTitle>
-              <CardDescription>Każda strona powinna mieć tag canonical aby uniknąć duplikacji</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="p-3 text-left font-medium">URL</th>
-                        <th className="p-3 text-center font-medium">Title</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {missingCanonical.slice(0, 50).map((page: any, i: number) => (
-                        <tr key={i} className="border-b hover:bg-muted/50">
-                          <td className="p-3 font-mono text-xs max-w-lg truncate">{page.url}</td>
-                          <td className="p-3 max-w-md truncate">{page.title || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-        
-        {noindexPages.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Strony NoIndex ({noindexPages.length})</CardTitle>
-              <CardDescription>Sprawdź czy te strony mają być wykluzone z indeksowania</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {noindexPages.slice(0, 20).map((page: any, i: number) => (
-                  <div key={i} className="p-3 bg-muted rounded-md">
-                    <div className="font-mono text-xs text-blue-600">{page.url}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Robots: {page.meta_robots}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {missingCanonical.length > 0 ? (
+                <>
+                  <AlertCircle className="h-5 w-5 text-yellow-600" />
+                  Strony Bez Canonical Tag ({missingCanonical.length})
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  Canonical Tags ({missingCanonical.length})
+                </>
+              )}
+            </CardTitle>
+            <CardDescription>
+              {missingCanonical.length} z {pages.length} stron ({((missingCanonical.length / pages.length) * 100).toFixed(1)}%)
+              {missingCanonical.length > 0 
+                ? ' - dodaj canonical tags aby uniknąć duplikacji treści'
+                : ' - wszystkie strony mają canonical tag!'
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {missingCanonical.length > 0 ? (
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {missingCanonical.slice(0, 100).map((page: any, i: number) => (
+                  <div key={i} className="p-3 bg-muted rounded-md flex justify-between items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <a 
+                        href={page.url} 
+                        target="_blank"
+                        className="font-mono text-xs text-blue-600 hover:underline block truncate"
+                      >
+                        {page.url}
+                      </a>
+                      <p className="text-xs text-muted-foreground mt-1 truncate">
+                        {page.title || 'Brak title'}
+                      </p>
                     </div>
+                    <Badge variant="secondary" className="flex-shrink-0">
+                      {page.status_code}
+                    </Badge>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <div className="text-center py-8">
+                <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                <p className="text-lg font-semibold text-green-600">Wszystkie strony mają canonical tag!</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Canonical tags pomagają wyszukiwarkom zidentyfikować główną wersję każdej strony
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-blue-600" />
+              Strony NoIndex ({noindexPages.length})
+            </CardTitle>
+            <CardDescription>
+              Strony wykluzone z indeksowania - sprawdź czy to zamierzone
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {noindexPages.length > 0 ? (
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {noindexPages.slice(0, 50).map((page: any, i: number) => (
+                  <div key={i} className="p-3 bg-yellow-50 dark:bg-yellow-950 rounded-md border border-yellow-200 dark:border-yellow-900">
+                    <a 
+                      href={page.url} 
+                      target="_blank"
+                      className="font-mono text-xs text-blue-600 hover:underline block break-all"
+                    >
+                      {page.url}
+                    </a>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="destructive" className="text-xs">NoIndex</Badge>
+                      <span className="text-xs text-muted-foreground">{page.meta_robots}</span>
+                    </div>
+                    {page.title && (
+                      <p className="text-xs text-muted-foreground mt-1">{page.title}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                <p className="text-lg font-semibold text-green-600">Brak stron NoIndex</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Wszystkie strony są dostępne dla wyszukiwarek
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -1192,35 +1525,225 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
+              {/* Executive Summary - 4 main scores */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Wynik Ogólny</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`text-4xl font-bold ${getScoreColor(audit.overall_score)}`}>
+                      {formatScore(audit.overall_score)}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {audit.overall_score >= 80 ? 'Bardzo dobry' : audit.overall_score >= 60 ? 'Dobry' : audit.overall_score >= 40 ? 'Średni' : 'Wymaga poprawy'}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>SEO</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`text-4xl font-bold ${getScoreColor(audit.seo_score)}`}>
+                      {formatScore(audit.seo_score)}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {audit.results?.crawl?.pages_crawled || 0} stron przeskanowanych
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Wydajność</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`text-4xl font-bold ${getScoreColor(audit.performance_score)}`}>
+                      {formatScore(audit.performance_score)}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      LCP: {audit.results?.lighthouse?.desktop?.lcp || 0}ms
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Treść</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`text-4xl font-bold ${getScoreColor(audit.content_score)}`}>
+                      {formatScore(audit.content_score)}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {audit.results?.crawl?.word_count || 0} słów
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">
+                      {audit.results?.crawl?.pages_crawled || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Przeskanowanych stron</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-2xl font-bold">
+                      {audit.results?.crawl?.images?.total || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Obrazów znalezionych</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className={`text-2xl font-bold ${(audit.results?.crawl?.links?.broken || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {audit.results?.crawl?.links?.broken || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Broken links</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className={`text-2xl font-bold ${(audit.results?.crawl?.images?.without_alt || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {audit.results?.crawl?.images?.without_alt || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Obrazów bez ALT</div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Top Priority Issues */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Podsumowanie audytu</CardTitle>
-                  <CardDescription>
-                    Kluczowe informacje i rekomendacje
-                  </CardDescription>
+                  <CardTitle>Top Priorytetowe Problemy</CardTitle>
+                  <CardDescription>Najważniejsze rzeczy do naprawienia</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {audit.is_local_business && (
-                      <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-900">
-                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                          🏢 Wykryto lokalną firmę
-                        </p>
-                        <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                          Strona wykazuje cechy biznesu lokalnego. Rekomendacje dla lokalnego SEO są dostępne w zakładce SEO.
-                        </p>
+                  <div className="space-y-3">
+                    {(audit.results?.crawl?.images?.without_alt || 0) > 0 && (
+                      <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-900">
+                        <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium text-red-900 dark:text-red-100">
+                            {audit.results.crawl.images.without_alt} obrazów bez ALT text
+                          </p>
+                          <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                            Krytyczne dla SEO i dostępności - dodaj opisy dla wszystkich obrazów
+                          </p>
+                        </div>
                       </div>
                     )}
                     
-                    {audit.results?.content_analysis?.summary && (
-                        <div className="prose dark:prose-invert max-w-none text-sm">
-                            <h4 className="text-sm font-bold uppercase text-muted-foreground mb-2">Wnioski z analizy AI</h4>
-                            <p>{audit.results.content_analysis.summary}</p>
+                    {(audit.results?.crawl?.links?.broken || 0) > 0 && (
+                      <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-900">
+                        <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium text-red-900 dark:text-red-100">
+                            {audit.results.crawl.links.broken} broken links (404)
+                          </p>
+                          <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                            Napraw wszystkie niedziałające linki - wpływają negatywnie na użytkowników i SEO
+                          </p>
                         </div>
+                      </div>
+                    )}
+                    
+                    {(audit.results?.crawl?.technical_seo?.missing_canonical || 0) > 0 && (
+                      <div className="flex items-start gap-3 p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-900">
+                        <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium text-yellow-900 dark:text-yellow-100">
+                            {audit.results.crawl.technical_seo.missing_canonical} stron bez canonical tag
+                          </p>
+                          <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                            Dodaj canonical tags aby uniknąć duplikacji treści
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {(audit.results?.lighthouse?.desktop?.performance_score || 100) < 50 && (
+                      <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-900">
+                        <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium text-red-900 dark:text-red-100">
+                            Niska wydajność ({audit.results.lighthouse.desktop.performance_score}/100)
+                          </p>
+                          <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                            Optymalizuj obrazy, zredukuj JavaScript, użyj cache - sprawdź zakładkę Wydajność
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {(audit.results?.crawl?.word_count || 0) < 300 && (
+                      <div className="flex items-start gap-3 p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-900">
+                        <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium text-yellow-900 dark:text-yellow-100">
+                            Za mało treści ({audit.results.crawl.word_count} słów)
+                          </p>
+                          <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                            Dodaj więcej wartościowej treści (zalecane minimum 300 słów)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* If everything is good */}
+                    {(audit.results?.crawl?.images?.without_alt || 0) === 0 && 
+                     (audit.results?.crawl?.links?.broken || 0) === 0 && 
+                     (audit.results?.crawl?.technical_seo?.missing_canonical || 0) === 0 &&
+                     (audit.results?.lighthouse?.desktop?.performance_score || 0) >= 50 &&
+                     (audit.results?.crawl?.word_count || 0) >= 300 && (
+                      <div className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-900">
+                        <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium text-green-900 dark:text-green-100">
+                            Świetna robota! Brak krytycznych problemów
+                          </p>
+                          <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                            Strona jest dobrze zoptymalizowana. Sprawdź pozostałe zakładki dla szczegółów.
+                          </p>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </CardContent>
               </Card>
+              
+              {/* AI Summary */}
+              {audit.results?.content_analysis?.summary && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Wnioski z Analizy AI</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="prose dark:prose-invert max-w-none">
+                      <p className="text-sm">{audit.results.content_analysis.summary}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {audit.is_local_business && (
+                <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-900">
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                    🏢 Wykryto lokalną firmę
+                  </p>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                    Strona wykazuje cechy biznesu lokalnego. Rekomendacje dla lokalnego SEO są dostępne w zakładce Treść.
+                  </p>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="seo" className="space-y-4">

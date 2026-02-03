@@ -135,7 +135,7 @@ async def analyze_content(content_data: Dict[str, Any]) -> Dict[str, Any]:
     
     return {
         "quality_score": max(0, quality_score),
-        "readability_score": 75,  # Mock for now
+        "readability_score": int(content_data.get("flesch_reading_ease", 0)) if content_data.get("flesch_reading_ease") else None,
         "recommendations": recommendations,
         "word_count": word_count,
         "has_title": bool(title),

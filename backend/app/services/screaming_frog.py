@@ -153,8 +153,8 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
                 'size_bytes': int(row.get('Size (bytes)', 0) or 0),
                 'format': content_type,
             })
-        elif content_type and ('text/html' in content_type.lower() or not content_type):
-            # HTML pages (or unspecified - default to HTML)
+        elif 'text/html' in (content_type or '').lower() or not content_type.strip():
+            # HTML pages (or unspecified content type - default to HTML)
             all_pages.append({
                 'url': page_url,
                 'title': row.get('Title 1', ''),
@@ -169,6 +169,8 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
                 'word_count': int(row.get('Word Count', 0) or 0),
                 'size_bytes': int(row.get('Size (bytes)', 0) or 0),
                 'response_time': float(row.get('Response Time', 0) or 0),
+                'flesch_reading_ease': float(row.get('Flesch Reading Ease Score', 0) or 0),
+                'readability': row.get('Readability', ''),
                 'inlinks': int(row.get('Unique Inlinks', 0) or 0),
                 'outlinks': int(row.get('Unique Outlinks', 0) or 0),
                 'external_outlinks': int(row.get('Unique External Outlinks', 0) or 0),
@@ -222,6 +224,7 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
         "images_without_alt": images_without_alt,
         "pages_crawled": len(all_pages),
         "has_sitemap": False,
+        "flesch_reading_ease": float(homepage.get('Flesch Reading Ease Score', 0) or 0),
         
         # NEW: Full data structures
         "all_pages": all_pages,  # Complete list of all pages
