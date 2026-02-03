@@ -250,6 +250,8 @@ async def get_system_status():
             timeout=5
         )
         
+        logger.debug(f"SF ps check: returncode={ps_result.returncode}, stdout='{ps_result.stdout}'")
+        
         if ps_result.returncode == 0 and "Up" in ps_result.stdout:
             # Container is running, now verify SF executable exists
             sf_result = subprocess.run(
@@ -259,19 +261,22 @@ async def get_system_status():
                 timeout=5
             )
             
+            logger.debug(f"SF test check: returncode={sf_result.returncode}")
+            
             is_online = sf_result.returncode == 0
             status["services"]["screaming_frog"] = {
                 "status": "online" if is_online else "offline",
                 "version": "Commercial/CLI" if is_online else None,
-                "error": None if is_online else "Executable not found"
+                "error": None if is_online else f"Test failed: returncode={sf_result.returncode}"
             }
         else:
             status["services"]["screaming_frog"] = {
                 "status": "offline",
                 "version": None,
-                "error": "Container not running"
+                "error": f"Container check failed: stdout='{ps_result.stdout}'"
             }
     except Exception as e:
+        logger.error(f"SF status check error: {e}", exc_info=True)
         status["services"]["screaming_frog"] = {
             "status": "error",
             "error": str(e)
