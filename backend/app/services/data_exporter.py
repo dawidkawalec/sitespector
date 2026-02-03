@@ -16,16 +16,27 @@ def export_raw_data(audit_id: str, audit_data: Dict[str, Any]) -> str:
     """
     Create a ZIP file containing all raw audit data.
     
+    NO FALLBACKS - if audit has no results, export fails.
+    
     Args:
         audit_id: Audit UUID
         audit_data: Complete audit data
         
     Returns:
         Path to generated ZIP file
+        
+    Raises:
+        ValueError: If audit has no results
     """
     logger.info(f"Exporting raw data for audit {audit_id}")
     
     try:
+        # Validate audit has results
+        results = audit_data.get("results")
+        if not results:
+            logger.error(f"❌ Cannot export raw data - audit has no results (status: {audit_data.get('status')})")
+            raise ValueError(f"Cannot export raw data - audit has no results (status: {audit_data.get('status')})")
+        
         zip_filename = f"audit_{audit_id}_raw.zip"
         zip_path = Path(settings.PDF_STORAGE_PATH) / zip_filename
         
@@ -34,50 +45,36 @@ def export_raw_data(audit_id: str, audit_data: Dict[str, Any]) -> str:
         
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             # 1. Main audit JSON
-            try:
-                zipf.writestr("audit_summary.json", json.dumps(audit_data, indent=2, default=str))
-            except Exception as e:
-                logger.error(f"Failed to write summary json: {e}")
+            zipf.writestr("audit_summary.json", json.dumps(audit_data, indent=2, default=str))
 
             # 2. Raw Crawl Data
-            try:
-                results = audit_data.get("results") or {}
-                if not isinstance(results, dict): results = {}
-                
-                crawl_data = results.get("crawl") or {}
+            crawl_data = results.get("crawl", {})
+            if crawl_data:
                 zipf.writestr("screaming_frog_crawl.json", json.dumps(crawl_data, indent=2, default=str))
-            except Exception as e:
-                logger.error(f"Failed to write crawl json: {e}")
+            else:
+                logger.warning("⚠️ No crawl data to export")
             
-            # 3. Lighthouse Data (Desktop)
-            try:
-                lighthouse = results.get("lighthouse") or {}
-                if not isinstance(lighthouse, dict): lighthouse = {}
+            # 3. Lighthouse Data
+            lighthouse = results.get("lighthouse", {})
+            if lighthouse:
+                lh_desktop = lighthouse.get("desktop", {})
+                if lh_desktop:
+                    zipf.writestr("lighthouse_desktop.json", json.dumps(lh_desktop, indent=2, default=str))
                 
-                lh_desktop = lighthouse.get("desktop") or {}
-                zipf.writestr("lighthouse_desktop.json", json.dumps(lh_desktop, indent=2, default=str))
-                
-                # 4. Lighthouse Data (Mobile)
-                lh_mobile = lighthouse.get("mobile") or {}
-                zipf.writestr("lighthouse_mobile.json", json.dumps(lh_mobile, indent=2, default=str))
-            except Exception as e:
-                logger.error(f"Failed to write lighthouse json: {e}")
+                lh_mobile = lighthouse.get("mobile", {})
+                if lh_mobile:
+                    zipf.writestr("lighthouse_mobile.json", json.dumps(lh_mobile, indent=2, default=str))
+            else:
+                logger.warning("⚠️ No Lighthouse data to export")
             
-            # 5. AI Analysis
-            try:
-                ai_data = {
-                    "content": results.get("content_analysis"),
-                    "local_seo": results.get("local_seo"),
-                    "performance": results.get("performance_analysis"),
-                    "competitive": results.get("competitive_analysis")
-                }
-                zipf.writestr("ai_analysis.json", json.dumps(ai_data, indent=2, default=str))
-            except Exception as e:
-                logger.error(f"Failed to write AI json: {e}")
-            
-            # 6. HTML Content (Placeholder for now, as we don't store raw HTML in DB)
-            # If we had it, we'd write it here:
-            # zipf.writestr("homepage.html", raw_html_content)
+            # 4. AI Analysis
+            ai_data = {
+                "content": results.get("content_analysis"),
+                "local_seo": results.get("local_seo"),
+                "performance": results.get("performance_analysis"),
+                "competitive": results.get("competitive_analysis")
+            }
+            zipf.writestr("ai_analysis.json", json.dumps(ai_data, indent=2, default=str))
             
         logger.info(f"✅ Raw data exported: {zip_path}")
         return str(zip_path)

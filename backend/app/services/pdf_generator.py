@@ -73,46 +73,77 @@ def _extract_report_data(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Extract and structure data for PDF report.
     
+    NO FALLBACKS - if critical data is missing, raise an exception.
+    PDF generation should ONLY happen for COMPLETED audits with full results.
+    
     Args:
         audit_data: Raw audit data from database
         
     Returns:
         Structured data for PDF template
+        
+    Raises:
+        ValueError: If audit has no results or missing critical data
     """
-    # Helper to safely get nested dicts
-    def get_safe(d, *keys):
-        for k in keys:
-            if not isinstance(d, dict): return {}
-            d = d.get(k, {})
-        return d
-
-    results = audit_data.get("results") or {}
+    results = audit_data.get("results")
     
-    # Default mock structures if data is missing to prevent template errors
-    default_seo = {
-        "title": "N/A", "meta_description": "N/A", "h1_tags": [], "status_code": 0,
-        "load_time": 0, "word_count": 0, "size_bytes": 0, "error": "No data"
-    }
+    # If audit has no results, we should NOT be generating a PDF
+    if not results:
+        logger.error(f"❌ Cannot generate PDF - audit has no results (status: {audit_data.get('status')})")
+        raise ValueError(f"Cannot generate PDF - audit has no results (status: {audit_data.get('status')})")
     
-    seo_data = results.get("crawl") or default_seo
+    # Extract required sections - fail if missing critical data
+    crawl_data = results.get("crawl")
+    if not crawl_data:
+        logger.error("❌ Cannot generate PDF - missing Screaming Frog crawl data")
+        raise ValueError("Cannot generate PDF - missing Screaming Frog crawl data")
     
-    lighthouse = results.get("lighthouse") or {}
-    desktop_data = lighthouse.get("desktop") or {}
-    mobile_data = lighthouse.get("mobile") or {}
+    lighthouse_data = results.get("lighthouse")
+    if not lighthouse_data:
+        logger.error("❌ Cannot generate PDF - missing Lighthouse data")
+        raise ValueError("Cannot generate PDF - missing Lighthouse data")
     
-    content_analysis = results.get("content_analysis") or {
-        "quality_score": 0, "readability_score": 0, "word_count": 0, 
-        "summary": "Analysis failed or incomplete.", "recommendations": []
-    }
+    desktop_data = lighthouse_data.get("desktop", {})
+    mobile_data = lighthouse_data.get("mobile", {})
+    
+    if not desktop_data:
+        logger.warning("⚠️ Missing desktop Lighthouse data")
+    if not mobile_data:
+        logger.warning("⚠️ Missing mobile Lighthouse data")
+    
+    # These sections can be empty (AI analysis might be skipped in some cases)
+    # but return the actual data or empty dict, don't fake it
+    content_analysis = results.get("content_analysis", {})
+    local_seo = results.get("local_seo", {})
+    performance_analysis = results.get("performance_analysis", {})
+    competitive_analysis = results.get("competitive_analysis", {})
+    
+    # Aggregate all recommendations from all sections for action plan
+    all_recommendations = []
+    all_recommendations.extend(content_analysis.get("recommendations", []))
+    all_recommendations.extend(performance_analysis.get("recommendations", []))
+    all_recommendations.extend(local_seo.get("recommendations", []))
+    all_recommendations.extend(competitive_analysis.get("recommendations", []))
+    
+    # Parse recommendations by priority (emoji prefix)
+    critical_issues = [r for r in all_recommendations if r.startswith("❌")]
+    warnings = [r for r in all_recommendations if r.startswith("⚠️")]
+    successes = [r for r in all_recommendations if r.startswith("✅")]
+    ai_recommendations = [r for r in all_recommendations if r.startswith("🤖")]
 
     return {
-        "seo_data": seo_data,
+        "seo_data": crawl_data,
         "performance_desktop": desktop_data,
         "performance_mobile": mobile_data,
         "content_analysis": content_analysis,
-        "local_seo": results.get("local_seo") or {},
-        "performance_analysis": results.get("performance_analysis") or {},
-        "competitive_analysis": results.get("competitive_analysis") or {},
+        "local_seo": local_seo,
+        "performance_analysis": performance_analysis,
+        "competitive_analysis": competitive_analysis,
+        "all_recommendations": all_recommendations,
+        "critical_issues": critical_issues,
+        "warnings": warnings,
+        "successes": successes,
+        "ai_recommendations": ai_recommendations,
     }
 
 

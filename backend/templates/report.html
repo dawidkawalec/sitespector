@@ -95,9 +95,10 @@
         <h1>3. Analiza SEO Technicznego</h1>
         
         <h2>3.1 Struktura Strony</h2>
-        <p>Liczba przeskanowanych stron: {{ seo_data.pages_crawled|default(0) }}</p>
-        <p>Linki wewnętrzne: {{ seo_data.internal_links|default(0) }}</p>
-        <p>Linki zewnętrzne: {{ seo_data.external_links|default(0) }}</p>
+        <p>Liczba przeskanowanych stron: {{ seo_data.pages_crawled }}</p>
+        <p>Linki wewnętrzne: {{ seo_data.internal_links_count }}</p>
+        <p>Obrazy ogółem: {{ seo_data.total_images }}</p>
+        <p>Obrazy bez ALT: {{ seo_data.images_without_alt }}</p>
 
         {% if seo_data.broken_links and seo_data.broken_links|length > 0 %}
         <div class="recommendation">
@@ -107,15 +108,48 @@
         {% endif %}
 
         <h2>3.2 Meta Tagi</h2>
-        <p>Status tagów title: {% if seo_data.title_tags %}✅ Znaleziono{% else %}❌ Brak{% endif %}</p>
-        <p>Status meta descriptions: {% if seo_data.meta_descriptions %}✅ Znaleziono{% else %}❌ Brak{% endif %}</p>
+        <table>
+            <tr>
+                <th>Element</th>
+                <th>Zawartość</th>
+                <th>Długość</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>Title</td>
+                <td>{{ seo_data.title }}</td>
+                <td>{{ seo_data.title_length }} znaków</td>
+                <td>{% if seo_data.title_length >= 30 and seo_data.title_length <= 70 %}✅ Optymalny{% elif seo_data.title_length > 0 %}⚠️ Do poprawy{% else %}❌ Brak{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Meta Description</td>
+                <td>{{ seo_data.meta_description }}</td>
+                <td>{{ seo_data.meta_description_length }} znaków</td>
+                <td>{% if seo_data.meta_description_length >= 120 and seo_data.meta_description_length <= 170 %}✅ Optymalny{% elif seo_data.meta_description_length > 0 %}⚠️ Do poprawy{% else %}❌ Brak{% endif %}</td>
+            </tr>
+        </table>
 
         <h2>3.3 Struktura Nagłówków</h2>
-        <p>Tagi H1: {% if seo_data.h1_tags %}✅ Znaleziono{% else %}❌ Brak{% endif %}</p>
+        <p>Liczba tagów H1: {{ seo_data.h1_count }}</p>
+        {% if seo_data.h1_tags and seo_data.h1_tags|length > 0 %}
+        <p><strong>Zawartość H1:</strong></p>
+        <ul>
+        {% for h1 in seo_data.h1_tags %}
+            <li>{{ h1 }}</li>
+        {% endfor %}
+        </ul>
+        {% else %}
+        <p class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
+            ❌ Brak tagów H1 - każda strona powinna mieć dokładnie jeden tag H1
+        </p>
+        {% endif %}
         
         <h2>3.4 Pliki Techniczne</h2>
-        <p>Sitemap: {% if seo_data.sitemap_url %}✅ {{ seo_data.sitemap_url }}{% else %}❌ Nie znaleziono{% endif %}</p>
-        <p>Robots.txt: {% if seo_data.robots_txt %}✅ Znaleziono{% else %}❌ Brak{% endif %}</p>
+        <p>Status Code: {{ seo_data.status_code }}</p>
+        <p>Czas ładowania: {{ "%.2f"|format(seo_data.load_time) }}s</p>
+        <p>Rozmiar strony: {{ (seo_data.size_bytes / 1024)|round|int }} KB</p>
+        <p>Liczba słów: {{ seo_data.word_count }}</p>
+        <p>Sitemap: {% if seo_data.has_sitemap %}✅ Znaleziono{% else %}❌ Nie znaleziono{% endif %}</p>
     </div>
 
     <!-- Performance Analysis -->
@@ -131,23 +165,38 @@
             </tr>
             <tr>
                 <td>Performance Score</td>
-                <td>{{ performance_desktop.performance_score|default(0) }}/100</td>
+                <td>{{ performance_desktop.performance_score }}/100</td>
                 <td>{% if performance_desktop.performance_score >= 90 %}✅ Dobry{% elif performance_desktop.performance_score >= 50 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
             </tr>
             <tr>
+                <td>FCP (First Contentful Paint)</td>
+                <td>{{ performance_desktop.fcp }} ms</td>
+                <td>{% if performance_desktop.fcp < 1800 %}✅ Dobry{% elif performance_desktop.fcp < 3000 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
                 <td>LCP (Largest Contentful Paint)</td>
-                <td>{{ performance_desktop.lcp|default(0) }} ms</td>
+                <td>{{ performance_desktop.lcp }} ms</td>
                 <td>{% if performance_desktop.lcp < 2500 %}✅ Dobry{% elif performance_desktop.lcp < 4000 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
             </tr>
             <tr>
                 <td>CLS (Cumulative Layout Shift)</td>
-                <td>{{ performance_desktop.cls|default(0) }}</td>
+                <td>{{ "%.3f"|format(performance_desktop.cls) }}</td>
                 <td>{% if performance_desktop.cls < 0.1 %}✅ Dobry{% elif performance_desktop.cls < 0.25 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
             </tr>
             <tr>
                 <td>TTFB (Time to First Byte)</td>
-                <td>{{ performance_desktop.ttfb|default(0) }} ms</td>
+                <td>{{ performance_desktop.ttfb }} ms</td>
                 <td>{% if performance_desktop.ttfb < 800 %}✅ Dobry{% elif performance_desktop.ttfb < 1800 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Speed Index</td>
+                <td>{{ performance_desktop.speed_index }} ms</td>
+                <td>{% if performance_desktop.speed_index < 3400 %}✅ Dobry{% elif performance_desktop.speed_index < 5800 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
+                <td>TBT (Total Blocking Time)</td>
+                <td>{{ performance_desktop.total_blocking_time }} ms</td>
+                <td>{% if performance_desktop.total_blocking_time < 200 %}✅ Dobry{% elif performance_desktop.total_blocking_time < 600 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
             </tr>
         </table>
 
@@ -160,21 +209,67 @@
             </tr>
             <tr>
                 <td>Performance Score</td>
-                <td>{{ performance_mobile.performance_score|default(0) }}/100</td>
+                <td>{{ performance_mobile.performance_score }}/100</td>
                 <td>{% if performance_mobile.performance_score >= 90 %}✅ Dobry{% elif performance_mobile.performance_score >= 50 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
+                <td>FCP (First Contentful Paint)</td>
+                <td>{{ performance_mobile.fcp }} ms</td>
+                <td>{% if performance_mobile.fcp < 1800 %}✅ Dobry{% elif performance_mobile.fcp < 3000 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
+                <td>LCP (Largest Contentful Paint)</td>
+                <td>{{ performance_mobile.lcp }} ms</td>
+                <td>{% if performance_mobile.lcp < 2500 %}✅ Dobry{% elif performance_mobile.lcp < 4000 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
+                <td>CLS (Cumulative Layout Shift)</td>
+                <td>{{ "%.3f"|format(performance_mobile.cls) }}</td>
+                <td>{% if performance_mobile.cls < 0.1 %}✅ Dobry{% elif performance_mobile.cls < 0.25 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
+                <td>TTFB (Time to First Byte)</td>
+                <td>{{ performance_mobile.ttfb }} ms</td>
+                <td>{% if performance_mobile.ttfb < 800 %}✅ Dobry{% elif performance_mobile.ttfb < 1800 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Speed Index</td>
+                <td>{{ performance_mobile.speed_index }} ms</td>
+                <td>{% if performance_mobile.speed_index < 3400 %}✅ Dobry{% elif performance_mobile.speed_index < 5800 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
+            </tr>
+            <tr>
+                <td>TBT (Total Blocking Time)</td>
+                <td>{{ performance_mobile.total_blocking_time }} ms</td>
+                <td>{% if performance_mobile.total_blocking_time < 200 %}✅ Dobry{% elif performance_mobile.total_blocking_time < 600 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
             </tr>
         </table>
 
         {% if performance_analysis.recommendations %}
         <h2>4.3 Rekomendacje Wydajności</h2>
-        {% for rec in performance_analysis.recommendations %}
-        <div class="recommendation">
-            <h3>{{ rec.title|default("Rekomendacja") }}</h3>
-            <p>{{ rec.description|default("") }}</p>
-            {% if rec.code_example %}
-            <p><strong>Przykład kodu:</strong></p>
-            <pre><code>{{ rec.code_example }}</code></pre>
+        {% if performance_analysis.impact %}
+        <p><strong>Poziom wpływu:</strong> 
+            {% if performance_analysis.impact == "high" %}🔴 Wysoki
+            {% elif performance_analysis.impact == "medium" %}🟡 Średni
+            {% else %}🟢 Niski
             {% endif %}
+        </p>
+        {% endif %}
+        
+        {% if performance_analysis.issues %}
+        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
+            <h3>Wykryte problemy:</h3>
+            <ul>
+            {% for issue in performance_analysis.issues %}
+                <li>{{ issue }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <h3>Zalecane działania:</h3>
+        {% for rec in performance_analysis.recommendations %}
+        <div class="recommendation{% if rec.startswith('❌') %}" style="background-color: #fef2f2; border-left-color: #dc2626;"{% elif rec.startswith('⚠️') %}" style="background-color: #fef9c3; border-left-color: #eab308;"{% elif rec.startswith('✅') %}" style="background-color: #f0fdf4; border-left-color: #16a34a;"{% endif %}">
+            <p>{{ rec }}</p>
         </div>
         {% endfor %}
         {% endif %}
@@ -184,17 +279,54 @@
     <div class="page-break">
         <h1>5. Analiza Treści</h1>
         
-        <h2>5.1 Jakość Treści</h2>
-        <p>Wynik jakości: {{ content_analysis.quality_score|default(0) }}/100</p>
+        <h2>5.1 Metryki Treści</h2>
+        <table>
+            <tr>
+                <th>Metryka</th>
+                <th>Wartość</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>Jakość treści</td>
+                <td>{{ content_analysis.quality_score }}/100</td>
+                <td>{% if content_analysis.quality_score >= 80 %}✅ Wysoka{% elif content_analysis.quality_score >= 60 %}⚠️ Średnia{% else %}❌ Niska{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Czytelność (Flesch)</td>
+                <td>{{ content_analysis.readability_score }}</td>
+                <td>{% if content_analysis.readability_score >= 60 %}✅ Łatwa{% elif content_analysis.readability_score >= 30 %}⚠️ Średnia{% else %}❌ Trudna{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Liczba słów</td>
+                <td>{{ content_analysis.word_count }}</td>
+                <td>{% if content_analysis.word_count >= 300 %}✅ Odpowiednia{% else %}⚠️ Za krótka{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Ma Title</td>
+                <td>{% if content_analysis.has_title %}✅ Tak{% else %}❌ Nie{% endif %}</td>
+                <td>{% if content_analysis.has_title %}✅{% else %}❌ Wymagane{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Ma Meta Description</td>
+                <td>{% if content_analysis.has_meta_description %}✅ Tak{% else %}❌ Nie{% endif %}</td>
+                <td>{% if content_analysis.has_meta_description %}✅{% else %}❌ Wymagane{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Ma H1</td>
+                <td>{% if content_analysis.has_h1 %}✅ Tak{% else %}❌ Nie{% endif %}</td>
+                <td>{% if content_analysis.has_h1 %}✅{% else %}❌ Wymagane{% endif %}</td>
+            </tr>
+        </table>
         
-        <h2>5.2 Czytelność</h2>
-        <p>Flesch Reading Ease: {{ content_analysis.readability_score|default(0) }}</p>
-        <p>Interpretacja: {% if content_analysis.readability_score >= 60 %}Łatwa do czytania{% elif content_analysis.readability_score >= 30 %}Średnia trudność{% else %}Trudna do czytania{% endif %}</p>
+        {% if content_analysis.summary %}
+        <h2>5.2 Podsumowanie AI</h2>
+        <p style="line-height: 1.8; margin: 1em 0;">{{ content_analysis.summary }}</p>
+        {% endif %}
 
         {% if content_analysis.recommendations %}
         <h2>5.3 Rekomendacje Treści</h2>
         {% for rec in content_analysis.recommendations %}
-        <div class="recommendation">
+        <div class="recommendation{% if rec.startswith('❌') %}" style="background-color: #fef2f2; border-left-color: #dc2626;"{% elif rec.startswith('⚠️') %}" style="background-color: #fef9c3; border-left-color: #eab308;"{% elif rec.startswith('✅') %}" style="background-color: #f0fdf4; border-left-color: #16a34a;"{% elif rec.startswith('🤖') %}" style="background-color: #eff6ff; border-left-color: #3b82f6;"{% endif %}">
             <p>{{ rec }}</p>
         </div>
         {% endfor %}
@@ -202,18 +334,33 @@
     </div>
 
     <!-- Local SEO (if applicable) -->
-    {% if audit.is_local_business %}
+    {% if audit.is_local_business or local_seo.is_local_business %}
     <div class="page-break">
         <h1>6. Lokalny SEO</h1>
         
         <h2>6.1 Sygnały Lokalnego Biznesu</h2>
-        <p>Schema markup LocalBusiness: {% if local_seo.schema_markup %}✅ Znaleziono{% else %}❌ Brak{% endif %}</p>
-        <p>Google My Business: {% if local_seo.google_my_business %}✅ Wykryto{% else %}⚠️ Nie wykryto{% endif %}</p>
+        <table>
+            <tr>
+                <th>Element</th>
+                <th>Status</th>
+                <th>Ocena</th>
+            </tr>
+            <tr>
+                <td>Schema markup LocalBusiness</td>
+                <td>{% if local_seo.has_schema_markup %}✅ Znaleziono{% else %}❌ Brak{% endif %}</td>
+                <td>{% if local_seo.has_schema_markup %}Prawidłowo{% else %}Wymagane{% endif %}</td>
+            </tr>
+            <tr>
+                <td>NAP (Name, Address, Phone)</td>
+                <td>{% if local_seo.has_nap %}✅ Wykryto{% else %}❌ Brak{% endif %}</td>
+                <td>{% if local_seo.has_nap %}Prawidłowo{% else %}Wymagane{% endif %}</td>
+            </tr>
+        </table>
 
         {% if local_seo.recommendations %}
         <h2>6.2 Rekomendacje Lokalnego SEO</h2>
         {% for rec in local_seo.recommendations %}
-        <div class="recommendation">
+        <div class="recommendation{% if rec.startswith('❌') %}" style="background-color: #fef2f2; border-left-color: #dc2626;"{% elif rec.startswith('⚠️') %}" style="background-color: #fef9c3; border-left-color: #eab308;"{% elif rec.startswith('✅') %}" style="background-color: #f0fdf4; border-left-color: #16a34a;"{% elif rec.startswith('ℹ️') %}" style="background-color: #eff6ff; border-left-color: #3b82f6;"{% endif %}">
             <p>{{ rec }}</p>
         </div>
         {% endfor %}
@@ -233,11 +380,18 @@
         {% endfor %}
         </ul>
 
+        {% if competitive_analysis.competitors_analyzed == 0 %}
+        <div class="recommendation" style="background-color: #eff6ff; border-left-color: #3b82f6;">
+            <h3>ℹ️ Brak danych konkurencji</h3>
+            <p>Konkurenci zostali dodani, ale analiza nie została jeszcze przeprowadzona lub zakończyła się błędem.</p>
+        </div>
+        {% else %}
+        
         {% if competitive_analysis.strengths %}
         <h2>7.1 Twoje Mocne Strony</h2>
         {% for strength in competitive_analysis.strengths %}
         <div class="recommendation" style="background-color: #f0fdf4; border-left-color: #16a34a;">
-            <p>{{ strength }}</p>
+            <p>✅ {{ strength }}</p>
         </div>
         {% endfor %}
         {% endif %}
@@ -246,9 +400,29 @@
         <h2>7.2 Obszary Do Poprawy</h2>
         {% for weakness in competitive_analysis.weaknesses %}
         <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
-            <p>{{ weakness }}</p>
+            <p>❌ {{ weakness }}</p>
         </div>
         {% endfor %}
+        {% endif %}
+        
+        {% if competitive_analysis.opportunities %}
+        <h2>7.3 Możliwości</h2>
+        {% for opportunity in competitive_analysis.opportunities %}
+        <div class="recommendation" style="background-color: #eff6ff; border-left-color: #3b82f6;">
+            <p>💡 {{ opportunity }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+        
+        {% if competitive_analysis.recommendations %}
+        <h2>7.4 Rekomendacje</h2>
+        {% for rec in competitive_analysis.recommendations %}
+        <div class="recommendation" style="background-color: #fef9c3; border-left-color: #eab308;">
+            <p>⚠️ {{ rec }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+        
         {% endif %}
     </div>
     {% endif %}
@@ -257,38 +431,92 @@
     <div class="page-break">
         <h1>8. Plan Działania</h1>
         
-        <h2>Priorytetowe Zadania</h2>
-        <p>Poniżej przedstawiamy rekomendacje uporządkowane według priorytetu:</p>
+        <p>Poniżej przedstawiamy rekomendacje uporządkowane według priorytetu, na podstawie rzeczywistych wyników audytu.</p>
 
-        <h3>Wysoki Priorytet (1-2 tygodnie)</h3>
+        <h2>8.1 Wysoki Priorytet (natychmiast)</h2>
+        <p><strong>Krytyczne problemy wymagające pilnej uwagi:</strong></p>
         <ol>
             {% if audit.performance_score < 50 %}
-            <li>Optymalizacja wydajności strony (Core Web Vitals)</li>
+            <li><strong>Optymalizacja wydajności strony (Core Web Vitals)</strong>
+                <p style="margin-left: 2em; color: #666;">Obecny wynik wydajności: {{ audit.performance_score|round|int }}/100 - wymaga pilnej poprawy</p>
+            </li>
             {% endif %}
+            
             {% if audit.seo_score < 50 %}
-            <li>Naprawa podstawowych błędów SEO</li>
+            <li><strong>Naprawa podstawowych błędów SEO</strong>
+                <p style="margin-left: 2em; color: #666;">Obecny wynik SEO: {{ audit.seo_score|round|int }}/100 - krytyczne braki</p>
+            </li>
             {% endif %}
-            {% if seo_data.broken_links and seo_data.broken_links|length > 0 %}
-            <li>Naprawa {{ seo_data.broken_links|length }} uszkodzonych linków</li>
+            
+            {% if seo_data.images_without_alt and seo_data.total_images %}
+            {% set alt_percent = (seo_data.images_without_alt / seo_data.total_images * 100)|round|int %}
+            {% if alt_percent > 50 %}
+            <li><strong>Dodanie atrybutów ALT do obrazów</strong>
+                <p style="margin-left: 2em; color: #666;">{{ seo_data.images_without_alt }} z {{ seo_data.total_images }} obrazów ({{ alt_percent }}%) bez opisów ALT</p>
+            </li>
+            {% endif %}
+            {% endif %}
+            
+            {% if not seo_data.h1_count or seo_data.h1_count == 0 %}
+            <li><strong>Dodanie tagu H1 do strony</strong>
+                <p style="margin-left: 2em; color: #666;">Brak nagłówka H1 - każda strona musi mieć dokładnie jeden tag H1</p>
+            </li>
+            {% endif %}
+            
+            {% if critical_issues %}
+            {% for issue in critical_issues[:3] %}
+            <li>{{ issue|replace('❌ ', '') }}</li>
+            {% endfor %}
             {% endif %}
         </ol>
 
-        <h3>Średni Priorytet (1 miesiąc)</h3>
+        <h2>8.2 Średni Priorytet (1-2 tygodnie)</h2>
+        <p><strong>Ważne ulepszenia dla lepszej widoczności:</strong></p>
         <ol>
             {% if audit.content_score < 70 %}
-            <li>Poprawa jakości treści</li>
+            <li><strong>Poprawa jakości treści</strong>
+                <p style="margin-left: 2em; color: #666;">Obecny wynik treści: {{ audit.content_score|round|int }}/100</p>
+            </li>
             {% endif %}
-            {% if audit.is_local_business and not local_seo.schema_markup %}
-            <li>Implementacja schema markup dla lokalnego biznesu</li>
+            
+            {% if audit.is_local_business and not local_seo.has_schema_markup %}
+            <li><strong>Implementacja schema markup dla lokalnego biznesu</strong>
+                <p style="margin-left: 2em; color: #666;">Brak strukturalnych danych - utrudnia wyświetlanie w wynikach Google</p>
+            </li>
+            {% endif %}
+            
+            {% if not seo_data.has_sitemap %}
+            <li><strong>Utworzenie i przesłanie sitemap.xml</strong>
+                <p style="margin-left: 2em; color: #666;">Sitemap nie został wykryty - utrudnia indeksację</p>
+            </li>
+            {% endif %}
+            
+            {% if warnings %}
+            {% for warning in warnings[:3] %}
+            <li>{{ warning|replace('⚠️ ', '') }}</li>
+            {% endfor %}
             {% endif %}
         </ol>
 
-        <h3>Niski Priorytet (ciągła praca)</h3>
+        <h2>8.3 Niski Priorytet (ciągła praca)</h2>
+        <p><strong>Długoterminowe ulepszenia i monitorowanie:</strong></p>
         <ol>
-            <li>Regularne monitorowanie wydajności</li>
-            <li>Aktualizacja treści</li>
-            <li>Analiza konkurencji</li>
+            <li>Regularne monitorowanie wydajności (co tydzień)</li>
+            <li>Aktualizacja i rozbudowa treści (co miesiąc)</li>
+            <li>Analiza konkurencji i trendów rynkowych</li>
+            <li>Budowanie profilu linków przychodzących</li>
+            <li>Optymalizacja dla nowych urządzeń i przeglądarek</li>
         </ol>
+        
+        {% if ai_recommendations %}
+        <h2>8.4 Rekomendacje AI</h2>
+        <p><strong>Dodatkowe sugestie oparte na analizie sztucznej inteligencji:</strong></p>
+        {% for rec in ai_recommendations %}
+        <div class="recommendation" style="background-color: #eff6ff; border-left-color: #3b82f6;">
+            <p>{{ rec }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
     </div>
 
     <!-- Appendix -->
