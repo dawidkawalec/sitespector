@@ -132,6 +132,26 @@ services:
       - sitespector-network
     restart: unless-stopped
 
+  # Dozzle - Docker Logs Viewer
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: sitespector-dozzle
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DOZZLE_LEVEL=info
+      - DOZZLE_TAILSIZE=300
+      - DOZZLE_FILTER=name=sitespector-*
+      - DOZZLE_NO_ANALYTICS=true
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # Nginx Reverse Proxy
   nginx:
     build:
@@ -146,6 +166,7 @@ services:
     depends_on:
       - frontend
       - backend
+      - dozzle
     networks:
       - sitespector-network
     restart: unless-stopped
