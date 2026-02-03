@@ -122,10 +122,14 @@ services:
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_API_URL=https://77.42.79.46
+        - NEXT_PUBLIC_SUPABASE_URL=https://ljimahizqgewhvrgqhyx.supabase.co
+        - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqaW1haGl6cWdld2h2cmdxaHl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNTUyNTIsImV4cCI6MjA4NTczMTI1Mn0.oiytWEKYE83nI7OGrsw8aCpMfuKOwhn2Dy3GHsyqfP8
     container_name: sitespector-frontend
     command: node server.js
     environment:
       - NEXT_PUBLIC_API_URL=https://77.42.79.46
+      - NEXT_PUBLIC_SUPABASE_URL=https://ljimahizqgewhvrgqhyx.supabase.co
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqaW1haGl6cWdld2h2cmdxaHl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNTUyNTIsImV4cCI6MjA4NTczMTI1Mn0.oiytWEKYE83nI7OGrsw8aCpMfuKOwhn2Dy3GHsyqfP8
       - HOSTNAME=0.0.0.0
     depends_on:
       - backend
