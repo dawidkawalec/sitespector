@@ -37,11 +37,16 @@ async def generate_pdf(audit_id: str, audit_data: Dict[str, Any]) -> str:
         # Load template
         template = jinja_env.get_template("report.html")
         
+        # Get current version info
+        current_time = datetime.utcnow()
+        
         # Prepare template context
         context = {
             "audit": audit_data,
-            "generated_date": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "generated_date": current_time.strftime("%Y-%m-%d %H:%M:%S UTC"),
             "app_name": settings.APP_NAME,
+            "system_version": "2.0.0",  # Version with no-fallbacks policy
+            "last_update": "2025-02-03 16:10 UTC",  # Update timestamp
             **_extract_report_data(audit_data),
         }
         
@@ -49,7 +54,7 @@ async def generate_pdf(audit_id: str, audit_data: Dict[str, Any]) -> str:
         html_content = template.render(context)
         
         # Generate PDF
-        pdf_filename = f"audit_{audit_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
+        pdf_filename = f"audit_{audit_id}_{current_time.strftime('%Y%m%d_%H%M%S')}.pdf"
         pdf_path = Path(settings.PDF_STORAGE_PATH) / pdf_filename
         
         # Ensure output directory exists

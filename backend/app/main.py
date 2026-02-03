@@ -149,10 +149,80 @@ async def health_check() -> dict:
     
     return {
         "status": "healthy",
-        "version": "0.1.0",
+        "version": "2.0.0",
         "database": database_status,
         "timestamp": datetime.utcnow()
     }
+
+
+@app.get("/api/logs/worker", tags=["Monitoring"])
+async def get_worker_logs(lines: int = 100):
+    """
+    Get recent worker logs for monitoring.
+    
+    Query params:
+        lines: Number of recent lines to return (default: 100, max: 1000)
+    """
+    import subprocess
+    
+    if lines > 1000:
+        lines = 1000
+    
+    try:
+        result = subprocess.run(
+            ["docker", "logs", "sitespector-worker", "--tail", str(lines)],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        return {
+            "service": "worker",
+            "lines": lines,
+            "logs": result.stdout + result.stderr,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Failed to get worker logs: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Failed to retrieve logs", "detail": str(e)}
+        )
+
+
+@app.get("/api/logs/backend", tags=["Monitoring"])
+async def get_backend_logs(lines: int = 100):
+    """
+    Get recent backend logs for monitoring.
+    
+    Query params:
+        lines: Number of recent lines to return (default: 100, max: 1000)
+    """
+    import subprocess
+    
+    if lines > 1000:
+        lines = 1000
+    
+    try:
+        result = subprocess.run(
+            ["docker", "logs", "sitespector-backend", "--tail", str(lines)],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        return {
+            "service": "backend",
+            "lines": lines,
+            "logs": result.stdout + result.stderr,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Failed to get backend logs: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Failed to retrieve logs", "detail": str(e)}
+        )
 
 
 # Include routers

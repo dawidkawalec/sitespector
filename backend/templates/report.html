@@ -3,6 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <title>SiteSpector - Raport Audytu Strony</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        h1 {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 0.5em;
+            page-break-after: avoid;
+        }
+        
+        h2 {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #222;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            page-break-after: avoid;
+        }
+        
+        h3 {
+            font-size: 14pt;
+            font-weight: 600;
+            color: #444;
+            margin-top: 1em;
+            margin-bottom: 0.3em;
+        }
+        
+        .score-high {
+            color: #16a34a;
+            font-weight: bold;
+        }
+        
+        .score-medium {
+            color: #ca8a04;
+            font-weight: bold;
+        }
+        
+        .score-low {
+            color: #dc2626;
+            font-weight: bold;
+        }
+        
+        .recommendation {
+            background-color: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 1em;
+            margin: 1em 0;
+            page-break-inside: avoid;
+        }
+        
+        code {
+            background-color: #f3f4f6;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+        }
+        
+        pre {
+            background-color: #1f2937;
+            color: #f3f4f6;
+            padding: 1em;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 9pt;
+            line-height: 1.4;
+            page-break-inside: avoid;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+            page-break-inside: avoid;
+        }
+        
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 0.5em;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+        }
+        
+        .cover-page {
+            page-break-after: always;
+            text-align: center;
+            padding-top: 30%;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 9pt;
+            color: #666;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        
+        ul, ol {
+            margin: 0.5em 0;
+            padding-left: 2em;
+        }
+        
+        li {
+            margin: 0.3em 0;
+        }
+    </style>
 </head>
 <body>
     <!-- Cover Page -->
@@ -549,10 +679,12 @@
     </div>
 
     <!-- Footer on last page -->
-    <div style="margin-top: 4em; text-align: center; color: #666; font-size: 10pt;">
+    <div style="margin-top: 4em; text-align: center; color: #666; font-size: 10pt; border-top: 2px solid #ddd; padding-top: 2em;">
         <p>Raport wygenerowany przez <strong>{{ app_name }}</strong></p>
-        <p>{{ generated_date }}</p>
-        <p>© 2025 SiteSpector. Wszystkie prawa zastrzeżone.</p>
+        <p>Data raportu: {{ generated_date }}</p>
+        <p style="margin-top: 1em;"><strong>Wersja systemu:</strong> {{ system_version }}</p>
+        <p style="font-size: 9pt; color: #999;">Ostatnia aktualizacja: {{ last_update }}</p>
+        <p style="margin-top: 1em;">© 2025 SiteSpector. Wszystkie prawa zastrzeżone.</p>
     </div>
 </body>
 </html>
