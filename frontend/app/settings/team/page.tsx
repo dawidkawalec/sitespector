@@ -15,7 +15,6 @@ import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -162,6 +161,10 @@ export default function TeamSettingsPage() {
         .eq('workspace_id', currentWorkspace!.id)
         .eq('user_id', user.id)
         .single()
+
+      if (existingMember) {
+        throw new Error('User is already a member of this workspace')
+      }
 
       // Generate invite token
       const token = crypto.randomUUID()

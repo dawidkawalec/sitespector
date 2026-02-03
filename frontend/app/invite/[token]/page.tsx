@@ -8,6 +8,8 @@
  * If not logged in: Redirect to register with return URL
  */
 
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'

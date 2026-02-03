@@ -110,7 +110,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     fetchWorkspaces()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, _session) => {
       if (event === 'SIGNED_IN') {
         fetchWorkspaces()
       } else if (event === 'SIGNED_OUT') {

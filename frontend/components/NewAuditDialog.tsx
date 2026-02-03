@@ -231,7 +231,7 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
             </Button>
             <Button 
               type="submit" 
-              disabled={loading || (subscription && auditsRemaining === 0)}
+              disabled={loading || (!!subscription && (auditsRemaining ?? 0) === 0)}
             >
               {loading ? 'Creating...' : 'Start Audit'}
             </Button>
