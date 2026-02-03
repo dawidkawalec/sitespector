@@ -145,6 +145,11 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
         page_url = row.get('Address', '')
         content_type = row.get('Content Type', '')
         
+        # DEBUG: Log first 3 rows to see what's happening
+        if len(all_pages) < 3 and 'text/html' in (content_type or '').lower():
+            logger.warning(f"DEBUG Row: Address key exists={('Address' in row)}, page_url={repr(page_url)}, content_type={repr(content_type)}")
+            logger.warning(f"DEBUG Keys sample: {list(row.keys())[:5]}")
+        
         # Classify by content type
         if 'image' in content_type.lower():
             images_data.append({
