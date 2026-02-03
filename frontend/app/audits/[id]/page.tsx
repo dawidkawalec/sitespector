@@ -1536,7 +1536,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                       {formatScore(audit.overall_score)}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {audit.overall_score >= 80 ? 'Bardzo dobry' : audit.overall_score >= 60 ? 'Dobry' : audit.overall_score >= 40 ? 'Średni' : 'Wymaga poprawy'}
+                      {(audit.overall_score ?? 0) >= 80 ? 'Bardzo dobry' : (audit.overall_score ?? 0) >= 60 ? 'Dobry' : (audit.overall_score ?? 0) >= 40 ? 'Średni' : 'Wymaga poprawy'}
                     </div>
                   </CardContent>
                 </Card>
