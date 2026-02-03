@@ -243,15 +243,17 @@ async def get_system_status():
     # Check Screaming Frog
     try:
         result = subprocess.run(
-            ["docker", "exec", "sitespector-screaming-frog", "screamingfrogseospider", "--version"],
+            ["docker", "exec", "sitespector-screaming-frog", "screamingfrogseospider", "--help"],
             capture_output=True,
             text=True,
             timeout=5
         )
+        # SF returns 0 if it's working, even with --help
+        is_online = result.returncode == 0 and "Usage: ScreamingFrogSEOSpider" in result.stdout
         status["services"]["screaming_frog"] = {
-            "status": "online" if result.returncode == 0 else "offline",
-            "version": result.stdout.strip() if result.returncode == 0 else None,
-            "error": result.stderr if result.returncode != 0 else None
+            "status": "online" if is_online else "offline",
+            "version": "Commercial/CLI" if is_online else None,
+            "error": result.stderr if not is_online else None
         }
     except Exception as e:
         status["services"]["screaming_frog"] = {
