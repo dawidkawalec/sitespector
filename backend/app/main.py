@@ -240,41 +240,23 @@ async def get_system_status():
         "services": {}
     }
     
-    # Check Screaming Frog
+    # Check Screaming Frog - simplified check (just verify container is running)
     try:
         # Check if container is running
         ps_result = subprocess.run(
-            ["docker", "ps", "--filter", "name=sitespector-screaming-frog", "--format", "{{.Status}}"],
+            ["docker", "ps", "--filter", "name=sitespector-screaming-frog", "--filter", "status=running", "--format", "{{.Names}}"],
             capture_output=True,
             text=True,
             timeout=5
         )
         
-        logger.info(f"SF ps check: returncode={ps_result.returncode}, stdout='{ps_result.stdout}'")
+        is_running = ps_result.returncode == 0 and "sitespector-screaming-frog" in ps_result.stdout
         
-        if ps_result.returncode == 0 and "Up" in ps_result.stdout:
-            # Container is running, now verify SF executable exists
-            sf_result = subprocess.run(
-                ["docker", "exec", "sitespector-screaming-frog", "test", "-f", "/usr/bin/screamingfrogseospider"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            
-            logger.info(f"SF test check: returncode={sf_result.returncode}")
-            
-            is_online = sf_result.returncode == 0
-            status["services"]["screaming_frog"] = {
-                "status": "online" if is_online else "offline",
-                "version": "Commercial/CLI" if is_online else None,
-                "error": None if is_online else f"Test failed: returncode={sf_result.returncode}"
-            }
-        else:
-            status["services"]["screaming_frog"] = {
-                "status": "offline",
-                "version": None,
-                "error": f"Container check failed: stdout='{ps_result.stdout}'"
-            }
+        status["services"]["screaming_frog"] = {
+            "status": "online" if is_running else "offline",
+            "version": "Commercial/CLI" if is_running else None,
+            "error": None if is_running else "Container not running"
+        }
     except Exception as e:
         logger.error(f"SF status check error: {e}", exc_info=True)
         status["services"]["screaming_frog"] = {
