@@ -1,0 +1,55 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                 🚀 SITESPECTOR - DOKUMENTACJA FRAMEWORK v1.1                 ║
+║                          ZACZNIJ TUTAJ! 👇                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+✅ 15 plików dokumentacji | 159 KB wiedzy | Instrukcje PL + EN
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      KROK 1: PRZECZYTAJ NAJPIERW                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📄 INSTRUKCJA_INSTALACJI_PL.md ⭐ ZACZNIJ TU!
+
+Szczegółowe kroki 1-5:
+✓ Co gdzie skopiować
+✓ Jak zainstalować Context7 MCP  
+✓ Jak skonfigurować Cursor
+✓ Jak przetestować setup
+
+Czas: 15 minut total
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         SZYBKA INSTALACJA                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+# Terminal:
+cd "/Users/dawid/Desktop/projekty nowe/sitespector"
+cp ~/Downloads/sitespector-docs-final/.cursorrules .
+cp -r ~/Downloads/sitespector-docs-final/.cursor .
+cp -r ~/Downloads/sitespector-docs-final/.context7 .
+cp -r ~/Downloads/sitespector-docs-final/docs .
+
+# Install Context7:
+npm install -g @context7/mcp-server
+
+# Configure Cursor: ~/.cursor/mcp.json (zobacz INSTRUKCJA krok 3)
+# Restart Cursor
+# Test: query-docs "project overview"
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                   PO INSTALACJI - PRZECZYTAJ                                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1️⃣  docs/CONTEXT7_UPDATE_WORKFLOW.md ⭐⭐⭐ NAJWAŻNIEJSZY!
+2️⃣  .context7/project/OVERVIEW.md
+3️⃣  .context7/frontend/MISSING_FEATURES.md
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      WIĘCEJ INFO W:                                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📄 MAPA_PLIKOW.txt - Wizualna mapa wszystkich plików
+📄 INSTRUKCJA_INSTALACJI_PL.md - Kompletna instrukcja (PL)
+
+Powodzenia! 🚀

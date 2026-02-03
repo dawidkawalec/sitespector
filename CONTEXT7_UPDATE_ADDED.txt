@@ -1,0 +1,118 @@
+# Context7 Update Instructions - ADDED
+
+Date: 2025-02-01
+In response to: User question about Context7 update/save instructions
+
+## What Was Missing
+
+Original package had:
+✓ General mentions of "update-docs" command
+✓ Examples of usage
+✓ Philosophy (query before, update after)
+
+But LACKED:
+✗ Detailed WHEN to update
+✗ Detailed HOW to write updates
+✗ Step-by-step workflow
+✗ Good vs bad examples
+✗ Which files to update for which changes
+
+## What Was Added
+
+NEW FILE: docs/CONTEXT7_UPDATE_WORKFLOW.md (17 KB)
+
+Contains:
+✅ WHEN to update (6 scenarios with examples)
+   - New feature implementation
+   - Bug fixes
+   - Architectural decisions
+   - API changes
+   - Database schema changes
+   - Deployment changes
+
+✅ WHEN NOT to update (trivial changes)
+   - Typo fixes
+   - Code formatting
+   - Dependency bumps
+
+✅ Complete 10-step workflow:
+   1. Implement feature
+   2. Test (if applicable)
+   3. Commit code
+   4. Update Context7 (MANDATORY)
+   5. Commit Context7 updates separately
+   6. Ask to push
+   7. Push (after confirmation)
+   8. Deploy to VPS
+   9. Verify on production
+   10. Update BUGS_AND_FIXES if issues found
+
+✅ How to write good updates (with examples):
+   - Good example (detailed, contextual)
+   - Bad example (too vague)
+
+✅ Which files to update (quick reference):
+   - MISSING_FEATURES.md → Feature completed
+   - COMPONENTS.md → New component/helper
+   - API.md → Endpoint changes
+   - WORKER.md → Worker logic changes
+   - DATABASE.md → Schema changes
+   - DOCKER.md → Container changes
+   - DECISIONS_LOG.md → Architectural decisions
+   - BUGS_AND_FIXES.md → Bug fixes
+
+✅ Agent instructions:
+   - Clear mandate: Context7 updates are NOT optional
+   - Process to follow
+   - Checklist before asking to push
+
+✅ Philosophy section:
+   - Why Context7 matters (with/without examples)
+   - Institutional knowledge importance
+
+✅ Quick commands reference
+
+## Changes to Existing Files
+
+Updated: docs/README.md
+- Added section pointing to CONTEXT7_UPDATE_WORKFLOW.md
+- Emphasized it's essential reading
+- Quick example of workflow
+
+## Total Files Now
+
+Package now contains 11 files (was 10):
+1. .cursorrules
+2. .cursor/rules/user-preferences.md
+3. .context7/project/OVERVIEW.md
+4. .context7/project/ARCHITECTURE.md
+5. .context7/frontend/MISSING_FEATURES.md
+6. docs/00-STARTUP-PROMPT.md
+7. docs/CONTEXT7_SETUP.md
+8. docs/CONTEXT7_UPDATE_WORKFLOW.md ← NEW
+9. docs/README.md (updated)
+10. INSTALLATION_CHECKLIST.md
+11. PACKAGE_SUMMARY.txt
+
+## Impact
+
+Agents (Claude, GPT, Gemini) now have:
+✅ Clear mandate to update Context7
+✅ Step-by-step workflow
+✅ Examples of what good updates look like
+✅ Knowledge of when to update which files
+
+Users now have:
+✅ Reference guide for maintaining Context7
+✅ Understanding of update workflow
+✅ Examples to follow when updating manually
+
+## Recommendation
+
+READ THIS FILE FIRST after installation:
+1. docs/INSTALLATION_CHECKLIST.md (setup)
+2. docs/CONTEXT7_UPDATE_WORKFLOW.md (how to maintain)
+3. docs/00-STARTUP-PROMPT.md (agent initialization)
+
+Context7 is only valuable if kept up-to-date. This workflow ensures it stays accurate.
+

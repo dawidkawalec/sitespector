@@ -1,0 +1,107 @@
+# SiteSpector Documentation Framework - Package Summary
+
+Generated: 2025-02-01
+For: Dawid (SiteSpector project)
+Time to install: ~15 minutes
+
+## What's Included
+
+1. Main Project Rules (.cursorrules)
+   - VPS-only workflow (NO local Docker)
+   - Git rules (auto-commit YES, auto-push ASK FIRST)
+   - Tech stack specifics (FastAPI, Next.js, PostgreSQL, Docker Compose)
+   - Context7 MCP usage guidelines
+   - Current priorities and status
+
+2. User Preferences (.cursor/rules/user-preferences.md)
+   - Personal coding style (macOS, Cursor, Claude Sonnet 4.5)
+   - AI model strategy (Sonnet primary, Gemini secondary)
+   - Communication preferences (English, moderate comments)
+   - VPS deployment workflow
+
+3. Context7 Documentation (.context7/)
+   - project/OVERVIEW.md - Complete project overview, current state
+   - project/ARCHITECTURE.md - 7 Docker containers, network flow
+   - frontend/MISSING_FEATURES.md - Critical TODO list (3 rendering functions)
+   - [More files will be added as you work on the project]
+
+4. Startup & Setup Guides (docs/)
+   - 00-STARTUP-PROMPT.md - Agent initialization (copy-paste to Claude)
+   - CONTEXT7_SETUP.md - Context7 MCP installation guide
+   - README.md - Complete documentation guide
+   - INSTALLATION_CHECKLIST.md - Step-by-step setup
+
+## Key Features
+
+✅ Customized for YOUR workflow:
+   - VPS-only development (no local Docker)
+   - Auto-commit allowed, auto-push always asks first
+   - Claude Sonnet 4.5 as primary AI model
+   - Solo developer setup (no team collaboration overhead)
+
+✅ Context7 MCP Integration:
+   - Single source of truth for all project knowledge
+   - Query docs before implementing
+   - Update docs after changes
+   - Persistent memory across AI sessions
+
+✅ Current Project State Documented:
+   - What works: Backend, Worker, Infrastructure, Frontend structure
+   - What's broken: Frontend detail rendering (3 functions missing), PDF generator (sections empty)
+   - Priorities: Fix frontend first, then PDF
+
+✅ Ready-to-use Agent Instructions:
+   - Complete startup prompt in docs/00-STARTUP-PROMPT.md
+   - Copy-paste into Cursor chat → agent has full context
+   - Test with real audit: 85d6ee6f-8c55-4c98-abd8-60dedfafa9df
+
+## Installation
+
+1. Copy files to SiteSpector project:
+   cp .cursorrules /path/to/sitespector/
+   cp -r .cursor /path/to/sitespector/
+   cp -r .context7 /path/to/sitespector/
+   cp -r docs /path/to/sitespector/
+
+2. Install Context7 MCP:
+   npm install -g @context7/mcp-server
+
+3. Configure Cursor:
+   Edit ~/.cursor/mcp.json (see INSTALLATION_CHECKLIST.md)
+
+4. Restart Cursor
+
+5. Test with: "query-docs project overview"
+
+## Next Steps After Installation
+
+1. Read docs/README.md for complete guide
+2. Initialize AI agent with docs/00-STARTUP-PROMPT.md
+3. Implement Priority 1: Frontend detail rendering (see .context7/frontend/MISSING_FEATURES.md)
+4. Deploy to VPS: ssh root@77.42.79.46
+5. Update Context7 docs after changes
+
+## Support
+
+- Installation help: See INSTALLATION_CHECKLIST.md
+- Context7 setup: See docs/CONTEXT7_SETUP.md
+- Project overview: See .context7/project/OVERVIEW.md
+- Workflow questions: See .cursorrules or docs/00-STARTUP-PROMPT.md
+
+## Customizations Applied
+
+This is NOT a generic template. It's specifically customized for SiteSpector:
+
+✓ VPS-only workflow (no local Docker mentions)
+✓ Real tech stack (FastAPI, Next.js 14, PostgreSQL 15, Gemini API)
+✓ Actual data structures (UUID as string, audit.results JSONB schema)
+✓ Real priorities (renderSeoResults, renderPerformanceResults, renderContentResults)
+✓ Actual test data (audit ID: 85d6ee6f-8c55-4c98-abd8-60dedfafa9df)
+✓ Your workflow (auto-commit yes, auto-push ask, Claude Sonnet 4.5)
+
+Every file references real SiteSpector code, not generic placeholders.
+
+---
+
+Ready to install? Start with INSTALLATION_CHECKLIST.md
+

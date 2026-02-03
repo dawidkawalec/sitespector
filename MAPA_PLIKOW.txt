@@ -1,0 +1,249 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    SITESPECTOR - MAPA PLIKÓW                                 ║
+║                        Pakiet Dokumentacji                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📁 sitespector-docs-final/
+│
+├── 📄 INSTRUKCJA_INSTALACJI_PL.md ⭐ ZACZNIJ TU! (po polsku)
+├── 📄 INSTALLATION_CHECKLIST.md (po angielsku, szczegółowa)
+├── 📄 PACKAGE_SUMMARY.txt (podsumowanie pakietu)
+├── 📄 CONTEXT7_UPDATE_ADDED.txt (co zostało dodane w wersji 1.1)
+├── 📄 MAPA_PLIKOW.txt (ten plik)
+│
+├── 📄 .cursorrules ⭐ GŁÓWNE ZASADY PROJEKTU
+│   ├─ VPS-only workflow (bez lokalnego Docker)
+│   ├─ Git rules (auto-commit YES, auto-push ASK)
+│   ├─ Tech stack (FastAPI, Next.js, PostgreSQL)
+│   ├─ Context7 usage guidelines
+│   └─ Current priorities
+│   📍 KOPIUJ DO: /twoj-projekt/.cursorrules
+│
+├── 📁 .cursor/
+│   └── 📁 rules/
+│       └── 📄 user-preferences.md ⭐ TWOJE PREFERENCJE
+│           ├─ macOS + Cursor setup
+│           ├─ AI model strategy (Sonnet 4.5 primary)
+│           ├─ Communication style (English, moderate comments)
+│           └─ VPS deployment workflow
+│           📍 KOPIUJ DO: /twoj-projekt/.cursor/rules/user-preferences.md
+│
+├── 📁 .context7/ ⭐ PAMIĘĆ AI (single source of truth)
+│   │
+│   ├── 📁 project/ (informacje wysokopoziomowe)
+│   │   ├── 📄 OVERVIEW.md
+│   │   │   ├─ Co robi SiteSpector
+│   │   │   ├─ Stan obecny (co działa ✅ / co nie działa ❌)
+│   │   │   ├─ Priorytety (frontend rendering → PDF generator)
+│   │   │   └─ Test data (audit ID: 85d6ee6f...)
+│   │   │
+│   │   └── 📄 ARCHITECTURE.md
+│   │       ├─ 7 Docker containers (nginx, frontend, backend, worker, postgres, screaming-frog, lighthouse)
+│   │       ├─ Network flow (HTTPS → Nginx → Frontend/Backend → Worker → Tools → DB)
+│   │       ├─ Data processing flow (User → API → Worker → Screaming Frog/Lighthouse/Gemini → DB)
+│   │       └─ Container communication
+│   │
+│   ├── 📁 backend/ (backend implementation - PUSTE, wypełnij podczas pracy)
+│   │   ├── API.md (dodaj endpointy: POST /audits, GET /audits/{id}, etc.)
+│   │   ├── MODELS.md (dodaj SQLAlchemy models: User, Audit, Competitor)
+│   │   ├── WORKER.md (dodaj worker process flow)
+│   │   └── AI_SERVICES.md (dodaj Gemini integration details)
+│   │
+│   ├── 📁 frontend/ (frontend implementation)
+│   │   ├── 📄 MISSING_FEATURES.md ⭐ TODO LISTA
+│   │   │   ├─ 🔴 Priority 1: 3 rendering functions (renderSeoResults, renderPerformanceResults, renderContentResults)
+│   │   │   ├─ 🟡 Priority 2: Competitive analysis tab improvements
+│   │   │   └─ 🟢 Priority 3: UI/UX improvements (retry, skeletons, empty states)
+│   │   │
+│   │   ├── COMPONENTS.md (PUSTE - dodaj React components podczas pracy)
+│   │   ├── API_CLIENT.md (PUSTE - dodaj frontend API client details)
+│   │   └── PAGES.md (PUSTE - dodaj Next.js pages documentation)
+│   │
+│   ├── 📁 infrastructure/ (DevOps & infrastructure - PUSTE, wypełnij podczas pracy)
+│   │   ├── DOCKER.md (dodaj Docker Compose services details)
+│   │   ├── NGINX.md (dodaj Nginx reverse proxy config)
+│   │   └── DATABASE.md (dodaj PostgreSQL schema, migrations)
+│   │
+│   └── 📁 decisions/ (decision log - PUSTE, wypełnij podczas pracy)
+│       ├── DECISIONS_LOG.md (dodaj architectural decisions z rationale)
+│       └── BUGS_AND_FIXES.md (dodaj known issues + solutions)
+│
+│   📍 KOPIUJ DO: /twoj-projekt/.context7/
+│
+└── 📁 docs/ ⭐ PRZEWODNIKI I INSTRUKCJE
+    │
+    ├── 📄 00-STARTUP-PROMPT.md ⭐ INICJALIZACJA AI
+    │   ├─ Pełny kontekst projektu
+    │   ├─ Critical rules (VPS workflow, Git rules)
+    │   ├─ Current priorities (frontend rendering, PDF generator)
+    │   ├─ Testing instructions (test audit, credentials)
+    │   ├─ Common commands (Docker logs, database access)
+    │   └─ Key files locations
+    │   📍 UŻYCIE: Skopiuj CAŁY plik do Cursor chat (za każdym razem na nowej sesji)
+    │
+    ├── 📄 CONTEXT7_SETUP.md
+    │   ├─ Context7 MCP installation (npm install -g @context7/mcp-server)
+    │   ├─ Cursor configuration (~/.cursor/mcp.json)
+    │   ├─ Directory structure explanation
+    │   └─ Troubleshooting
+    │   📍 UŻYCIE: Przeczytaj podczas instalacji (KROK 2-3)
+    │
+    ├── 📄 CONTEXT7_UPDATE_WORKFLOW.md ⭐⭐⭐ NAJWAŻNIEJSZY!
+    │   ├─ KIEDY aktualizować Context7 (6 scenariuszy + przykłady)
+    │   ├─ KIEDY NIE aktualizować (trivial changes)
+    │   ├─ 10-step workflow (implement → commit → UPDATE CONTEXT7 → commit docs → push → deploy)
+    │   ├─ JAK pisać dobre update'y (good vs bad examples)
+    │   ├─ KTÓRE pliki aktualizować (quick reference table)
+    │   ├─ Agent instructions (MANDATORY: update Context7 after implementing)
+    │   ├─ Philosophy (why Context7 matters)
+    │   └─ Quick commands reference
+    │   📍 UŻYCIE: Przeczytaj PO instalacji, PRZED rozpoczęciem kodowania!
+    │
+    └── 📄 README.md
+        ├─ Kompletny przewodnik użycia frameworku
+        ├─ Daily development workflow
+        ├─ Documentation structure explained
+        ├─ Current project state & priorities
+        ├─ Workflow: How to use this documentation
+        ├─ Testing (credentials, test audit)
+        ├─ Troubleshooting
+        └─ Maintenance (weekly tasks, after major features)
+        📍 UŻYCIE: Reference guide, przeczytaj po instalacji
+
+    📍 KOPIUJ DO: /twoj-projekt/docs/
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           KOLEJNOŚĆ AKCJI                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1️⃣  PRZECZYTAJ: INSTRUKCJA_INSTALACJI_PL.md (ten folder, po polsku)
+    └─ Czas: 5 min
+    └─ Zawiera: Szczegółowe kroki 1-5 instalacji
+
+2️⃣  INSTALUJ: Wykonaj kroki 1-5 z INSTRUKCJA_INSTALACJI_PL.md
+    └─ Czas: 10 min
+    └─ Kopiuj pliki → Instaluj Context7 → Konfiguruj Cursor → Restart → Test
+
+3️⃣  COMMITUJ: Dodaj dokumentację do Git (nie pushuj jeszcze)
+    └─ Czas: 2 min
+    └─ git add .cursorrules .cursor/ .context7/ docs/
+    └─ git commit -m "docs: add documentation framework"
+
+4️⃣  PRZECZYTAJ: docs/CONTEXT7_UPDATE_WORKFLOW.md ⭐⭐⭐
+    └─ Czas: 15 min
+    └─ NAJWAŻNIEJSZY plik - jak aktualizować Context7
+
+5️⃣  PRZECZYTAJ: .context7/project/OVERVIEW.md
+    └─ Czas: 10 min
+    └─ Stan projektu, co działa, co nie
+
+6️⃣  PRZECZYTAJ: .context7/frontend/MISSING_FEATURES.md
+    └─ Czas: 5 min
+    └─ Co jest do zrobienia (Priority 1: 3 funkcje renderowania)
+
+7️⃣  INICJALIZUJ AGENTA: docs/00-STARTUP-PROMPT.md
+    └─ Czas: 1 min
+    └─ Skopiuj CAŁY plik do Cursor chat
+
+8️⃣  ZACZNIJ KODOWAĆ! 🚀
+    └─ Query Context7 przed implementacją
+    └─ Update Context7 po implementacji
+    └─ Commit, deploy, test
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         GDZIE CO SKOPIOWAĆ                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+ŹRÓDŁO (pobrany folder)                    DOCELOWO (projekt SiteSpector)
+─────────────────────────────────────────  ─────────────────────────────────────
+
+.cursorrules                          →    .cursorrules
+.cursor/rules/user-preferences.md     →    .cursor/rules/user-preferences.md
+.context7/                            →    .context7/
+docs/                                 →    docs/
+
+INSTRUKCJA_INSTALACJI_PL.md           →    (opcjonalnie, dla referencji)
+INSTALLATION_CHECKLIST.md             →    (opcjonalnie, dla referencji)
+PACKAGE_SUMMARY.txt                   →    (opcjonalnie, dla referencji)
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      PLIKI NAJWAŻNIEJSZE (TOP 5)                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+⭐⭐⭐ docs/CONTEXT7_UPDATE_WORKFLOW.md
+    Dlaczego: Bez tego nie wiesz JAK i KIEDY aktualizować Context7
+    Przeczytaj: PO instalacji, PRZED kodowaniem
+
+⭐⭐ docs/00-STARTUP-PROMPT.md
+    Dlaczego: Inicjalizuje AI agenta z pełnym kontekstem
+    Użycie: Skopiuj do Cursor chat na początku każdej sesji
+
+⭐⭐ .cursorrules
+    Dlaczego: Główne zasady projektu, Cursor czyta automatycznie
+    Użycie: Kopiuj do root projektu, commituj do Git
+
+⭐⭐ .context7/frontend/MISSING_FEATURES.md
+    Dlaczego: TODO lista z priorytetami (co robić teraz)
+    Użycie: Sprawdzaj często, aktualizuj po każdym feature'ze
+
+⭐ .context7/project/OVERVIEW.md
+    Dlaczego: Pełny przegląd projektu, stan obecny
+    Użycie: Przeczytaj raz, refer back gdy potrzeba kontekstu
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           SZYBKIE KOMENDY                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╗
+
+# Context7 queries (w Cursor chat)
+query-docs "project overview"
+query-docs "missing features"
+query-docs "API endpoints"
+query-docs "worker process"
+
+# Context7 updates (agent robi automatycznie, ale możesz manualnie)
+update-docs ".context7/frontend/MISSING_FEATURES.md" "✅ Completed: renderSeoResults"
+update-docs ".context7/decisions/DECISIONS_LOG.md" "Decision: Use shadcn/ui"
+
+# Git workflow
+git commit -m "feat: implement feature"
+git commit -m "docs: update Context7"
+# NIE: git push (agent zapyta Cię o to)
+
+# VPS deploy
+ssh root@77.42.79.46
+cd /opt/sitespector
+git pull origin release
+docker compose -f docker-compose.prod.yml restart backend worker
+# LUB (frontend):
+docker compose -f docker-compose.prod.yml build --no-cache frontend
+docker compose -f docker-compose.prod.yml up -d frontend
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                             KONTAKT                                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Maintainer: Dawid (solo developer)
+AI Assistant: Claude Sonnet 4.5 (primary), Gemini 3 Pro (occasional)
+Project: SiteSpector (SEO Audit Platform)
+Status: MVP deployed, active development
+
+Pytania o framework?
+- Sprawdź docs/README.md
+- Sprawdź docs/CONTEXT7_UPDATE_WORKFLOW.md
+- Sprawdź INSTRUKCJA_INSTALACJI_PL.md
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                       WERSJA I DATA UTWORZENIA                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Wersja: 1.1
+Data utworzenia: 2025-02-02
+Język: Polski (instrukcje) + English (kod i docs)
+Plików: 12 (11 w głównym pakiecie + ta mapa)
+Rozmiar: ~160 KB
+
+Changelog:
+- v1.0 (2025-02-01): Initial release
+- v1.1 (2025-02-02): Added CONTEXT7_UPDATE_WORKFLOW.md + Polish instructions
+
+Powodzenia! 🚀
