@@ -16,16 +16,31 @@ class Settings(BaseSettings):
         description="PostgreSQL database URL",
     )
 
-    # Authentication
+    # Authentication (Legacy JWT - will be deprecated)
     JWT_SECRET: str = Field(
         default="change-this-to-a-secure-random-string-minimum-32-chars",
-        description="Secret key for JWT token generation",
+        description="Secret key for JWT token generation (legacy)",
     )
     JWT_ALGORITHM: str = Field(default="HS256", description="JWT algorithm")
     JWT_EXPIRATION_DAYS: int = Field(default=7, description="JWT token expiration in days")
     BCRYPT_COST: int = Field(default=12, description="Bcrypt hashing cost factor")
 
+    # Supabase (New Auth Provider)
+    SUPABASE_URL: str = Field(default="", description="Supabase project URL")
+    SUPABASE_ANON_KEY: str = Field(default="", description="Supabase anon/public key")
+    SUPABASE_SERVICE_KEY: str = Field(default="", description="Supabase service role key (secret)")
+
+    # Stripe Billing
+    STRIPE_SECRET_KEY: str = Field(default="", description="Stripe secret key")
+    STRIPE_PUBLISHABLE_KEY: str = Field(default="", description="Stripe publishable key")
+    STRIPE_WEBHOOK_SECRET: str = Field(default="", description="Stripe webhook signing secret")
+    STRIPE_PRICE_ID_PRO: str = Field(default="", description="Stripe price ID for Pro plan")
+    STRIPE_PRICE_ID_ENTERPRISE: str = Field(default="", description="Stripe price ID for Enterprise plan")
+
     GEMINI_API_KEY: str = Field(default="", description="Google Gemini API key")
+    
+    # Frontend URL (for redirects, Stripe)
+    FRONTEND_URL: str = Field(default="https://sitespector.app", description="Frontend URL")
     
     # Claude AI (Deprecated, kept for compatibility if needed)
     CLAUDE_API_KEY: str = Field(default="", description="Anthropic Claude API key")

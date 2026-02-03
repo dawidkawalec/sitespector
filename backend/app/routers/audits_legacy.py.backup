@@ -1,10 +1,5 @@
 """
 Audit endpoints: CRUD operations for website audits.
-
-Version: 2.0 (Workspace-based)
-- Audits now belong to workspaces (not users)
-- Subscription limits enforced per workspace
-- RLS-like access control via Supabase
 """
 
 import logging
@@ -25,8 +20,7 @@ from app.schemas import (
     AuditStatusResponse,
     AuditUpdate,
 )
-from app.auth_supabase import get_current_user, verify_workspace_access
-from app.lib.supabase import supabase, get_workspace_subscription, increment_audit_usage, check_audit_limit
+from app.auth import get_current_active_user
 from app.services.pdf_generator import generate_pdf
 from app.services.data_exporter import export_raw_data
 
@@ -38,47 +32,23 @@ router = APIRouter(prefix="/audits", tags=["Audits"])
 @router.post("", response_model=AuditResponse, status_code=status.HTTP_201_CREATED)
 async def create_audit(
     audit_data: AuditCreate,
-    workspace_id: str = Query(..., description="Workspace ID to create audit in"),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Audit:
     """
-    Create a new website audit in a workspace.
+    Create a new website audit.
     
     - **url**: Website URL to audit (required)
     - **competitors**: List of up to 3 competitor URLs (optional)
-    - **workspace_id**: Workspace to create audit in (required query param)
     
     The audit will be processed asynchronously by the worker.
     
     Returns:
         Created audit object with status='pending'
-    
-    Raises:
-        403: If user is not a member of the workspace
-        402: If workspace audit limit reached
     """
-    # 1. Verify workspace membership
-    has_access = await verify_workspace_access(current_user["id"], workspace_id)
-    if not has_access:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not a member of this workspace"
-        )
-    
-    # 2. Check subscription limits
-    can_create = await check_audit_limit(workspace_id)
-    if not can_create:
-        subscription = await get_workspace_subscription(workspace_id)
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Audit limit reached ({subscription['audit_limit']} audits/month). Upgrade to Pro for more audits."
-        )
-    
-    # 3. Create audit
+    # Create audit
     new_audit = Audit(
-        workspace_id=workspace_id,
-        user_id=None,  # Legacy field, not used for workspace-based audits
+        user_id=current_user.id,
         url=audit_data.url,
         status=AuditStatus.PENDING,
     )
@@ -86,7 +56,7 @@ async def create_audit(
     db.add(new_audit)
     await db.flush()  # Get audit ID
     
-    # 4. Create competitor records
+    # Create competitor records
     for competitor_url in audit_data.competitors:
         competitor = Competitor(
             audit_id=new_audit.id,
@@ -94,13 +64,13 @@ async def create_audit(
         )
         db.add(competitor)
     
+    # Increment user's audit count
+    current_user.audits_count += 1
+    
     await db.commit()
     await db.refresh(new_audit)
     
-    # 5. Increment workspace audit usage
-    await increment_audit_usage(workspace_id)
-    
-    # 6. Load competitors relationship
+    # Load competitors relationship
     result = await db.execute(
         select(Audit)
         .options(selectinload(Audit.competitors))
@@ -108,44 +78,29 @@ async def create_audit(
     )
     audit_with_competitors = result.scalar_one()
     
-    logger.info(f"✅ Created audit {new_audit.id} for workspace {workspace_id}")
-    
     return audit_with_competitors
 
 
 @router.get("", response_model=AuditListResponse)
 async def list_audits(
-    workspace_id: str = Query(..., description="Workspace ID to list audits from"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     status: Optional[AuditStatus] = Query(None, description="Filter by status"),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """
-    List all audits for a workspace with pagination.
+    List all audits for the current user with pagination.
     
-    - **workspace_id**: Workspace ID (required query param)
     - **page**: Page number (default: 1)
     - **page_size**: Items per page (default: 20, max: 100)
     - **status**: Filter by audit status (optional)
     
     Returns:
         Paginated list of audits
-    
-    Raises:
-        403: If user is not a member of the workspace
     """
-    # Verify workspace membership
-    has_access = await verify_workspace_access(current_user["id"], workspace_id)
-    if not has_access:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not a member of this workspace"
-        )
-    
     # Build query
-    query = select(Audit).where(Audit.workspace_id == workspace_id)
+    query = select(Audit).where(Audit.user_id == current_user.id)
     
     if status:
         query = query.where(Audit.status == status)
@@ -179,7 +134,7 @@ async def list_audits(
 @router.get("/{audit_id}", response_model=AuditResponse)
 async def get_audit(
     audit_id: UUID,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Audit:
     """
@@ -190,7 +145,7 @@ async def get_audit(
         
     Raises:
         404: If audit not found
-        403: If user is not a member of the workspace
+        403: If audit belongs to another user
     """
     result = await db.execute(
         select(Audit)
@@ -205,21 +160,12 @@ async def get_audit(
             detail="Audit not found"
         )
     
-    # Check workspace membership
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
-        if not has_access:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
-    else:
-        # Legacy audit (user_id based) - check user ownership
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
+    # Check ownership
+    if audit.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this audit"
+        )
     
     return audit
 
@@ -227,7 +173,7 @@ async def get_audit(
 @router.get("/{audit_id}/status", response_model=AuditStatusResponse)
 async def get_audit_status(
     audit_id: UUID,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """
@@ -241,7 +187,7 @@ async def get_audit_status(
         
     Raises:
         404: If audit not found
-        403: If user is not a member of the workspace
+        403: If audit belongs to another user
     """
     result = await db.execute(
         select(Audit).where(Audit.id == audit_id)
@@ -254,21 +200,12 @@ async def get_audit_status(
             detail="Audit not found"
         )
     
-    # Check workspace membership (same as get_audit)
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
-        if not has_access:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
-    else:
-        # Legacy audit
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
+    # Check ownership
+    if audit.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this audit"
+        )
     
     return {
         "id": audit.id,
@@ -282,18 +219,17 @@ async def get_audit_status(
 @router.delete("/{audit_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_audit(
     audit_id: UUID,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """
     Delete an audit.
     
     Cascades to delete associated competitors.
-    Only owners and admins can delete audits.
     
     Raises:
         404: If audit not found
-        403: If user is not authorized (needs admin/owner role)
+        403: If audit belongs to another user
     """
     result = await db.execute(
         select(Audit).where(Audit.id == audit_id)
@@ -306,25 +242,12 @@ async def delete_audit(
             detail="Audit not found"
         )
     
-    # Check workspace membership with admin role required
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(
-            current_user["id"], 
-            audit.workspace_id, 
-            required_role="admin"  # Need admin or owner to delete
+    # Check ownership
+    if audit.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete this audit"
         )
-        if not has_access:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to delete this audit (admin role required)"
-            )
-    else:
-        # Legacy audit
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to delete this audit"
-            )
     
     await db.delete(audit)
     await db.commit()
@@ -333,7 +256,7 @@ async def delete_audit(
 @router.get("/{audit_id}/raw")
 async def download_raw_data(
     audit_id: UUID,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> FileResponse:
     """
@@ -349,21 +272,12 @@ async def download_raw_data(
     if not audit:
         raise HTTPException(status_code=404, detail="Audit not found")
     
-    # Check workspace membership
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
-        if not has_access:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
-    else:
-        # Legacy audit
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
+    # Check ownership
+    if audit.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this audit"
+        )
         
     if audit.status != AuditStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Audit not completed yet")
@@ -407,7 +321,7 @@ async def download_raw_data(
 @router.get("/{audit_id}/pdf")
 async def download_audit_pdf(
     audit_id: UUID,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> FileResponse:
     """
@@ -423,21 +337,12 @@ async def download_audit_pdf(
     if not audit:
         raise HTTPException(status_code=404, detail="Audit not found")
     
-    # Check workspace membership
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
-        if not has_access:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
-    else:
-        # Legacy audit
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
+    # Check ownership
+    if audit.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this audit"
+        )
         
     if audit.status != AuditStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Audit not completed yet")

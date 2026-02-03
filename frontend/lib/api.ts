@@ -1,41 +1,31 @@
 /**
  * API client for SiteSpector backend
+ * 
+ * Version 2.0: Uses Supabase Auth tokens and workspace-based API
  */
+
+import { supabase } from './supabase'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-// Token management
-const TOKEN_KEY = 'sitespector_token'
-
-export const setAuthToken = (token: string) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(TOKEN_KEY, token)
-  }
+// Get Supabase session token
+async function getSupabaseToken(): Promise<string | null> {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.access_token || null
 }
 
-export const getAuthToken = (): string | null => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem(TOKEN_KEY)
-  }
-  return null
+// Check if user is authenticated
+export async function isAuthenticated(): Promise<boolean> {
+  const { data: { session } } = await supabase.auth.getSession()
+  return !!session
 }
 
-export const removeAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem(TOKEN_KEY)
-  }
-}
-
-export const isAuthenticated = (): boolean => {
-  return !!getAuthToken()
-}
-
-// API helper
+// API helper with Supabase token
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getAuthToken()
+  const token = await getSupabaseToken()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -56,6 +46,25 @@ async function apiRequest<T>(
   }
 
   return response.json()
+}
+
+// Legacy token management (deprecated, kept for backward compatibility)
+const TOKEN_KEY = 'sitespector_token'
+export const setAuthToken = (token: string) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(TOKEN_KEY, token)
+  }
+}
+export const getAuthToken = (): string | null => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(TOKEN_KEY)
+  }
+  return null
+}
+export const removeAuthToken = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(TOKEN_KEY)
+  }
 }
 
 // Types
@@ -119,8 +128,9 @@ export interface AuditListResponse {
   page_size: number
 }
 
-// Auth API
+// Auth API (Supabase Auth - most operations done via supabase client)
 export const authAPI = {
+  // Legacy endpoints (deprecated, kept for migration period)
   login: (data: LoginData) =>
     apiRequest<AuthResponse>('/api/auth/login', {
       method: 'POST',
@@ -136,14 +146,16 @@ export const authAPI = {
   me: () => apiRequest<User>('/api/auth/me'),
 }
 
-// Audits API
+// Audits API (Workspace-based)
 export const auditsAPI = {
-  list: () => apiRequest<AuditListResponse>('/api/audits'),
+  list: (workspaceId: string) => 
+    apiRequest<AuditListResponse>(`/api/audits?workspace_id=${workspaceId}`),
 
-  get: (id: string) => apiRequest<Audit>(`/api/audits/${id}`),
+  get: (id: string) => 
+    apiRequest<Audit>(`/api/audits/${id}`),
 
-  create: (data: CreateAuditData) =>
-    apiRequest<Audit>('/api/audits', {
+  create: (workspaceId: string, data: CreateAuditData) =>
+    apiRequest<Audit>(`/api/audits?workspace_id=${workspaceId}`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -154,7 +166,7 @@ export const auditsAPI = {
     }),
 
   downloadPDF: async (id: string): Promise<Blob> => {
-    const token = getAuthToken()
+    const token = await getSupabaseToken()
     const headers: Record<string, string> = {}
 
     if (token) {
@@ -167,6 +179,25 @@ export const auditsAPI = {
 
     if (!response.ok) {
       throw new Error('Failed to download PDF')
+    }
+
+    return response.blob()
+  },
+  
+  downloadRaw: async (id: string): Promise<Blob> => {
+    const token = await getSupabaseToken()
+    const headers: Record<string, string> = {}
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(`${API_URL}/api/audits/${id}/raw`, {
+      headers,
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to download raw data')
     }
 
     return response.blob()

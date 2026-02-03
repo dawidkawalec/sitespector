@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { auditsAPI, isAuthenticated, CreateAuditData } from '@/lib/api'
+import { auditsAPI, CreateAuditData } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
+import { useWorkspace } from '@/lib/WorkspaceContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -30,6 +32,7 @@ import {
 export default function AuditDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
+  const { currentWorkspace } = useWorkspace()
   
   // State for All Pages tab
   const [pagesSortBy, setPagesSortBy] = useState('url')
@@ -45,11 +48,14 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
   // Check authentication (client-side only)
   useEffect(() => {
-    const authStatus = isAuthenticated()
-    setIsAuth(authStatus)
-    if (!authStatus) {
-      router.push('/login')
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsAuth(!!session)
+      if (!session) {
+        router.push('/login')
+      }
     }
+    checkAuth()
   }, [router])
 
   // Fetch audit details
@@ -80,7 +86,8 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
   // Retry/Restart mutation (create new audit with same data)
   const retryMutation = useMutation({
-    mutationFn: (data: CreateAuditData) => auditsAPI.create(data),
+    mutationFn: (data: CreateAuditData) => 
+      auditsAPI.create(currentWorkspace?.id || '', data),
     onSuccess: (newAudit) => {
       router.push(`/audits/${newAudit.id}`)
     },
@@ -118,34 +125,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
   const downloadRawData = async () => {
     try {
-      const token = localStorage.getItem('access_token')
-      if (!token) {
-          alert('Błąd: Brak tokenu autoryzacji. Zaloguj się ponownie.')
-          return
-      }
-
-      // Using fetch to get blob with auth header
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/audits/${params.id}/raw`, {
-          headers: {
-              'Authorization': `Bearer ${token}`
-          }
-      })
-      
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Raw data download failed:', response.status, errorText)
-        
-        if (response.status === 404) {
-          alert('Błąd: Nie znaleziono danych audytu.')
-        } else if (response.status === 403) {
-          alert('Błąd: Brak uprawnień do pobrania danych.')
-        } else {
-          alert(`Błąd pobierania danych: ${response.status}`)
-        }
-        return
-      }
-      
-      const blob = await response.blob()
+      const blob = await auditsAPI.downloadRaw(params.id)
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url

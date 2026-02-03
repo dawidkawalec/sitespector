@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { auditsAPI, authAPI, isAuthenticated, removeAuthToken, CreateAuditData } from '@/lib/api'
+import { auditsAPI, CreateAuditData } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
+import { useWorkspace } from '@/lib/WorkspaceContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -28,37 +30,34 @@ export default function DashboardPage() {
   const router = useRouter()
   const [showNewAuditDialog, setShowNewAuditDialog] = useState(false)
   const [isAuth, setIsAuth] = useState(false)
+  const { currentWorkspace, isLoading: isWorkspaceLoading } = useWorkspace()
 
-  const handleLogout = () => {
-    removeAuthToken()
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
     router.push('/login')
   }
 
   // Check authentication
   useEffect(() => {
-    const auth = isAuthenticated()
-    setIsAuth(auth)
-    if (!auth) {
-      router.push('/login')
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsAuth(!!session)
+      if (!session) {
+        router.push('/login')
+      }
     }
+    checkAuth()
   }, [router])
 
-  // Fetch current user
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: authAPI.me,
-    enabled: isAuth,
-  })
-
-  // Fetch audits
+  // Fetch audits for current workspace
   const {
     data: auditsData,
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ['audits'],
-    queryFn: () => auditsAPI.list(),
-    enabled: isAuth,
+    queryKey: ['audits', currentWorkspace?.id],
+    queryFn: () => auditsAPI.list(currentWorkspace!.id),
+    enabled: isAuth && !!currentWorkspace,
     refetchInterval: 10000, // Poll every 10 seconds
   })
 
@@ -72,7 +71,8 @@ export default function DashboardPage() {
 
   // Retry/Restart mutation
   const retryMutation = useMutation({
-    mutationFn: (data: CreateAuditData) => auditsAPI.create(data),
+    mutationFn: (data: CreateAuditData) => 
+      auditsAPI.create(currentWorkspace!.id, data),
     onSuccess: (newAudit) => {
       router.push(`/audits/${newAudit.id}`)
     },
@@ -93,8 +93,30 @@ export default function DashboardPage() {
   }
 
   // Don't render anything on server or if not authenticated
-  if (!isAuth) {
-    return null
+  if (!isAuth || isWorkspaceLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!currentWorkspace) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>No Workspace</CardTitle>
+            <CardDescription>
+              You don't have access to any workspaces yet.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={handleLogout}>Sign out and try again</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -103,19 +125,17 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          {user && (
-            <p className="text-muted-foreground mt-1">
-              {user.email} • {user.subscription_tier} • {user.audits_count} audytów
-            </p>
-          )}
+          <p className="text-muted-foreground mt-1">
+            {currentWorkspace.name}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleLogout}>
-            Wyloguj się
+            Sign out
           </Button>
           <Button onClick={() => setShowNewAuditDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Nowy audyt
+            New Audit
           </Button>
         </div>
       </div>
@@ -125,13 +145,13 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-3 mb-8">
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Wszystkie audyty</CardDescription>
+            <CardDescription>Total Audits</CardDescription>
             <CardTitle className="text-4xl">{auditsData?.total || 0}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Ukończone</CardDescription>
+            <CardDescription>Completed</CardDescription>
             <CardTitle className="text-4xl">
               {auditsData?.items?.filter((a) => a.status === 'completed').length || 0}
             </CardTitle>
@@ -139,7 +159,7 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>W trakcie</CardDescription>
+            <CardDescription>Processing</CardDescription>
             <CardTitle className="text-4xl">
               {auditsData?.items?.filter((a) => a.status === 'processing').length || 0}
             </CardTitle>
@@ -154,9 +174,9 @@ export default function DashboardPage() {
       {/* Audits List */}
       <Card>
         <CardHeader>
-          <CardTitle>Twoje audyty</CardTitle>
+          <CardTitle>Your Audits</CardTitle>
           <CardDescription>
-            Lista wszystkich przeprowadzonych audytów
+            All audits in this workspace
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -166,13 +186,13 @@ export default function DashboardPage() {
             </div>
         ) : !auditsData || auditsData?.items?.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <p>Nie masz jeszcze żadnych audytów.</p>
+            <p>No audits yet in this workspace.</p>
             <Button
               variant="outline"
               className="mt-4"
               onClick={() => setShowNewAuditDialog(true)}
             >
-              Utwórz pierwszy audyt
+              Create your first audit
             </Button>
           </div>
         ) : (
@@ -185,10 +205,10 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <h3 className="font-medium truncate">{truncateUrl(audit.url, 50)}</h3>
                             <Badge variant={getStatusBadgeVariant(audit.status)}>
-                              {audit.status === 'pending' && 'Oczekujący'}
-                              {audit.status === 'processing' && 'W trakcie'}
-                              {audit.status === 'completed' && 'Ukończony'}
-                              {audit.status === 'failed' && 'Błąd'}
+                              {audit.status === 'pending' && 'Pending'}
+                              {audit.status === 'processing' && 'Processing'}
+                              {audit.status === 'completed' && 'Completed'}
+                              {audit.status === 'failed' && 'Failed'}
                             </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground">
@@ -202,7 +222,7 @@ export default function DashboardPage() {
                               {formatScore(audit.overall_score)}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              Wynik ogólny
+                              Overall Score
                             </div>
                           </div>
                         )}
@@ -215,7 +235,7 @@ export default function DashboardPage() {
                             variant="ghost" 
                             size="icon" 
                             onClick={(e) => handleRetry(e, audit)}
-                            title="Uruchom ponownie"
+                            title="Retry audit"
                             className="h-8 w-8"
                          >
                             <RefreshCw className="h-4 w-4" />
@@ -234,14 +254,14 @@ export default function DashboardPage() {
                             </AlertDialogTrigger>
                             <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                                 <AlertDialogHeader>
-                                    <AlertDialogTitle>Usuń audyt</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Czy na pewno chcesz usunąć audyt dla {audit.url}?
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Anuluj</AlertDialogCancel>
-                                    <AlertDialogAction onClick={(e) => handleDelete(e, audit.id)} className="bg-red-600">Usuń</AlertDialogAction>
+                            <AlertDialogTitle>Delete Audit</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Are you sure you want to delete audit for {audit.url}?
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={(e) => handleDelete(e, audit.id)} className="bg-red-600">Delete</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
