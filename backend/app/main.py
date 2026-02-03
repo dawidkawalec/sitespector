@@ -250,7 +250,7 @@ async def get_system_status():
             timeout=5
         )
         
-        logger.debug(f"SF ps check: returncode={ps_result.returncode}, stdout='{ps_result.stdout}'")
+        logger.info(f"SF ps check: returncode={ps_result.returncode}, stdout='{ps_result.stdout}'")
         
         if ps_result.returncode == 0 and "Up" in ps_result.stdout:
             # Container is running, now verify SF executable exists
@@ -261,7 +261,7 @@ async def get_system_status():
                 timeout=5
             )
             
-            logger.debug(f"SF test check: returncode={sf_result.returncode}")
+            logger.info(f"SF test check: returncode={sf_result.returncode}")
             
             is_online = sf_result.returncode == 0
             status["services"]["screaming_frog"] = {
