@@ -80,7 +80,7 @@ export default function AcceptInvitePage({ params }: { params: { token: string }
 
       setInvite({
         ...inviteData,
-        workspace_name: inviteData.workspaces.name,
+        workspace_name: (inviteData.workspaces as any)?.name || 'Unknown Workspace',
         invited_by_email: inviterData?.user?.email || 'Unknown'
       })
     } catch (error: any) {
