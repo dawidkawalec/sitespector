@@ -75,6 +75,10 @@ async def crawl_url(url: str) -> Dict[str, Any]:
         # Parse SF output (CSV format)
         output = stdout.decode().strip()
         
+        # Remove BOM if present (Screaming Frog adds UTF-8 BOM to CSV)
+        if output.startswith('\ufeff'):
+            output = output[1:]
+        
         # Check for error JSON
         if output.startswith('{'):
             try:
@@ -93,6 +97,24 @@ async def crawl_url(url: str) -> Dict[str, Any]:
         csv_io = io.StringIO(output)
         reader = csv.DictReader(csv_io)
         crawl_data = list(reader)
+        
+        # Clean BOM from field names if present
+        if crawl_data:
+            first_row = crawl_data[0]
+            # Check if first key has BOM or quotes
+            first_key = list(first_row.keys())[0]
+            if first_key.startswith('\ufeff') or first_key.startswith('"'):
+                logger.warning(f"🔧 Cleaning CSV keys - detected BOM/quotes: {repr(first_key)}")
+                cleaned_data = []
+                for row in crawl_data:
+                    cleaned_row = {}
+                    for key, value in row.items():
+                        # Remove BOM and quotes from key
+                        clean_key = key.lstrip('\ufeff').strip('"')
+                        cleaned_row[clean_key] = value
+                    cleaned_data.append(cleaned_row)
+                crawl_data = cleaned_data
+                logger.info(f"✅ CSV keys cleaned - first key now: {list(crawl_data[0].keys())[0]}")
         
         if not crawl_data:
             logger.error("❌ Screaming Frog returned empty CSV data")
@@ -144,11 +166,6 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
     for row in data:
         page_url = row.get('Address', '')
         content_type = row.get('Content Type', '')
-        
-        # DEBUG: Log first 3 rows to see what's happening
-        if len(all_pages) < 3 and 'text/html' in (content_type or '').lower():
-            logger.warning(f"DEBUG Row: Address key exists={('Address' in row)}, page_url={repr(page_url)}, content_type={repr(content_type)}")
-            logger.warning(f"DEBUG Keys sample: {list(row.keys())[:5]}")
         
         # Classify by content type
         if 'image' in content_type.lower():
