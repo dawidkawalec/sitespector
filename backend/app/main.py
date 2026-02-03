@@ -248,12 +248,12 @@ async def get_system_status():
             text=True,
             timeout=5
         )
-        # SF returns 0 if it's working, even with --help
-        is_online = result.returncode == 0 and "Usage: ScreamingFrogSEOSpider" in result.stdout
+        # SF returns exit code 1 with --help but it's actually working if we see Usage in output
+        is_online = "Usage: ScreamingFrogSEOSpider" in result.stdout or "Usage: ScreamingFrogSEOSpider" in result.stderr
         status["services"]["screaming_frog"] = {
             "status": "online" if is_online else "offline",
             "version": "Commercial/CLI" if is_online else None,
-            "error": result.stderr if not is_online else None
+            "error": None if is_online else (result.stderr or "Not responding")
         }
     except Exception as e:
         status["services"]["screaming_frog"] = {
