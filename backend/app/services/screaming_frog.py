@@ -123,9 +123,15 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
     if not isinstance(data, list) or not data:
         logger.error("❌ Invalid or empty Screaming Frog data")
         raise ValueError("No URLs found in Screaming Frog data")
+    
+    logger.warning(f"SF DEBUG: {len(data)} rows parsed")
+    logger.warning(f"SF DEBUG: First row keys sample: {list(data[0].keys())[:5]}")
+    logger.warning(f"SF DEBUG: Looking for URL: {url}")
         
     # Find homepage
     homepage = next((item for item in data if item.get('Address') == url or item.get('Address') == url + '/'), data[0])
+    logger.warning(f"SF DEBUG: Homepage Address: {homepage.get('Address')}")
+    logger.warning(f"SF DEBUG: Title 1 value: '{homepage.get('Title 1')}'")
     
     return {
         "url": url,
