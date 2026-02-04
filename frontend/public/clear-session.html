@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Supabase Session & Reload</title>
+    <script>
+        // Clear all localStorage (including Supabase session)
+        localStorage.clear();
+        
+        // Clear all sessionStorage
+        sessionStorage.clear();
+        
+        // Clear all cookies
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        // Redirect to login
+        window.location.href = '/login';
+    </script>
+</head>
+<body>
+    <p>Clearing session and redirecting to login...</p>
+</body>
+</html>
