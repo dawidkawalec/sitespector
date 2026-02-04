@@ -7,7 +7,7 @@
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileUser, Clock } from 'lucide-react'
+import { Clock, FileText } from 'lucide-react'
 
 export default function ClientReportPage() {
   return (
@@ -17,7 +17,7 @@ export default function ClientReportPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <FileUser className="h-6 w-6" />
+            <FileText className="h-6 w-6" />
             Wkrótce Dostępne
           </CardTitle>
           <CardDescription>

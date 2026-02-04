@@ -18,7 +18,7 @@ import {
   Network,
   Bug,
   FileDown,
-  FileUser,
+  FileText as FileUser,
   Target,
   Users,
   Zap,
