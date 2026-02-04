@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -19,6 +19,25 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [error, setError] = useState<string>('')
   const [loading, setLoading] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          router.push('/dashboard')
+        }
+      } catch (err) {
+        console.error('Error checking session:', err)
+      } finally {
+        setCheckingAuth(false)
+      }
+    }
+    
+    checkSession()
+  }, [router])
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,6 +102,20 @@ export default function RegisterPage() {
     } catch (err: any) {
       setError(err.message || 'OAuth registration failed')
     }
+  }
+
+  if (checkingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (

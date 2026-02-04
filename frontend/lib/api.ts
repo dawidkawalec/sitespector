@@ -8,10 +8,46 @@ import { supabase } from './supabase'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-// Get Supabase session token
+// Get Supabase session token (with auto-refresh)
 async function getSupabaseToken(): Promise<string | null> {
-  const { data: { session } } = await supabase.auth.getSession()
-  return session?.access_token || null
+  try {
+    // Try to refresh session first to ensure token is valid
+    const { data: { session }, error } = await supabase.auth.getSession()
+    
+    if (error) {
+      console.error('Error getting session:', error)
+      return null
+    }
+    
+    // If session exists but might be expired, try to refresh
+    if (session) {
+      const expiresAt = session.expires_at
+      const now = Math.floor(Date.now() / 1000)
+      
+      // If token expires in less than 5 minutes, refresh it
+      if (expiresAt && (expiresAt - now) < 300) {
+        console.log('🔄 Token expiring soon, refreshing...')
+        const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession()
+        
+        if (refreshError) {
+          console.error('Error refreshing session:', refreshError)
+          return session.access_token
+        }
+        
+        if (newSession) {
+          console.log('✅ Token refreshed successfully')
+          return newSession.access_token
+        }
+      }
+      
+      return session.access_token
+    }
+    
+    return null
+  } catch (err) {
+    console.error('Error in getSupabaseToken:', err)
+    return null
+  }
 }
 
 // Check if user is authenticated
