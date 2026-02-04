@@ -577,7 +577,9 @@ function MetricCard({ label, value, unit }: MetricCardProps) {
 
 ## Dark Mode Support
 
-**Status**: Tailwind configured for dark mode (not implemented in UI yet)
+**Status**: ✅ **IMPLEMENTED** (2025-02-04)
+
+**Package**: `next-themes` installed
 
 **Config** (`tailwind.config.ts`):
 ```typescript
@@ -585,6 +587,15 @@ export default {
   darkMode: ['class'],
   // ...
 }
+```
+
+**Provider** (`app/layout.tsx`):
+```tsx
+import { ThemeProvider } from 'next-themes'
+
+<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+  <Providers>{children}</Providers>
+</ThemeProvider>
 ```
 
 **Usage**:
@@ -596,7 +607,93 @@ export default {
 
 ---
 
-**Last Updated**: 2025-02-03  
+## Audit Navigation Components
+
+### ThemeToggle (`components/ThemeToggle.tsx`)
+
+**Purpose**: Toggle between light and dark mode
+
+**Usage**:
+```tsx
+import { ThemeToggle } from '@/components/ThemeToggle'
+
+<ThemeToggle />
+```
+
+**Features**:
+- Uses `next-themes` for theme management
+- Prevents hydration mismatch
+- Shows current theme (Jasny/Ciemny)
+- Icon changes based on theme
+
+---
+
+### AuditMenuItem (`components/audit/AuditMenuItem.tsx`)
+
+**Purpose**: Single menu item for audit navigation
+
+**Usage**:
+```tsx
+import { AuditMenuItem } from '@/components/audit/AuditMenuItem'
+import { FileText } from 'lucide-react'
+
+<AuditMenuItem 
+  href="/audits/123"
+  icon={FileText}
+  label="Podsumowanie"
+  badge="5"
+  disabled={false}
+/>
+```
+
+**Features**:
+- Active route highlighting
+- Optional badge
+- Disabled state for coming soon features
+- Icon support
+
+---
+
+### AuditSidebar (`components/audit/AuditSidebar.tsx`)
+
+**Purpose**: Main sidebar navigation for audit pages
+
+**Usage**:
+```tsx
+import { AuditSidebar } from '@/components/audit/AuditSidebar'
+
+<AuditSidebar auditId="123" />
+```
+
+**Features**:
+- 3 sections: Aktualny audyt, Narzędzia, System
+- Theme toggle at bottom
+- Scrollable sidebar
+- Disabled items for future features
+
+---
+
+### AuditMobileSidebar (`components/audit/AuditMobileSidebar.tsx`)
+
+**Purpose**: Mobile slide-in menu for audit pages
+
+**Usage**:
+```tsx
+import { AuditMobileSidebar } from '@/components/audit/AuditMobileSidebar'
+
+<AuditMobileSidebar auditId="123" />
+```
+
+**Features**:
+- Sheet component (slide from left)
+- Hamburger menu trigger
+- Hidden on desktop (lg+)
+- Contains full AuditSidebar
+
+---
+
+**Last Updated**: 2025-02-04  
 **Component library**: shadcn/ui  
 **Icon library**: Lucide React  
-**Styling**: Tailwind CSS 3.x
+**Styling**: Tailwind CSS 3.x  
+**Theme**: next-themes
