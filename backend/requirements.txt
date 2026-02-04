@@ -18,7 +18,7 @@ weasyprint==59.0
 pydyf==0.8.0
 python-multipart==0.0.6
 slowapi==0.1.9
-anthropic==0.18.1
+anthropic==0.50.0
 redis==5.0.1
 celery==5.3.6
 flower==2.0.1
