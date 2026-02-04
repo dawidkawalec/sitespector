@@ -409,3 +409,197 @@ This document tracks key architectural and technical decisions made during SiteS
 **Last Updated**: 2025-02-03  
 **Total Decisions**: 12 accepted, 3 pending  
 **Review**: Update when making significant architectural changes
+
+---
+
+## ADR-015: Supabase for SaaS Features (POC → Professional SaaS)
+
+**Date**: 2026-02-03
+
+**Status**: ✅ Accepted & Implemented
+
+**Context**:
+- Original POC used custom JWT auth with single VPS PostgreSQL
+- Needed professional SaaS features: Teams, Workspaces, Subscriptions, Billing
+- Options: Build everything custom vs. Use Supabase + Stripe
+
+**Decision**: Use Supabase for Auth, User Management, Teams + Stripe for Billing
+
+**Rationale**:
+- Supabase provides: Auth (email/password, OAuth, magic links), RLS, realtime
+- Built-in Row Level Security (RLS) for data isolation
+- Faster development (weeks vs months for custom auth)
+- Professional auth features out-of-box (email verification, password reset, OAuth)
+- Can focus on core product (audits) instead of rebuilding auth
+- Stripe integration well-documented
+
+**Implementation**:
+- Supabase PostgreSQL: users, profiles, workspaces, workspace_members, invites, subscriptions, invoices
+- VPS PostgreSQL: audits, competitors, results (high-volume data)
+- Dual-database strategy keeps audit data on VPS for performance
+
+**Consequences**:
+- ✅ Professional auth system (OAuth, magic links, email verification)
+- ✅ RLS policies handle data isolation automatically
+- ✅ Teams & workspace collaboration ready
+- ✅ Subscription management with Stripe
+- ✅ Faster development (3 days vs 3 weeks)
+- ❌ External dependency (Supabase)
+- ❌ Two databases to manage
+- ✅ But: Clear separation of concerns (SaaS features vs audit data)
+
+**Related**: ADR-016, ADR-017
+
+---
+
+## ADR-016: Dual Database Strategy
+
+**Date**: 2026-02-03
+
+**Status**: ✅ Accepted & Implemented
+
+**Context**:
+- Supabase chosen for SaaS features (ADR-015)
+- Audit data is high-volume (JSONB results, competitor data)
+- Options: All data in Supabase vs. Split data vs. All data on VPS
+
+**Decision**: Dual database - Supabase for SaaS, VPS PostgreSQL for audits
+
+**Rationale**:
+- **Supabase**: Low-volume, high-security data (users, teams, subscriptions)
+  - RLS policies handle access control
+  - Frequent reads, infrequent writes
+  - ~1-10KB per record
+- **VPS PostgreSQL**: High-volume audit data
+  - Large JSONB results (50-500KB per audit)
+  - Worker writes directly to local DB (fast)
+  - No RLS overhead (workspace_id checked in API)
+  - Better performance for bulk operations
+
+**Implementation**:
+- Backend verifies JWT with Supabase, checks workspace membership
+- Then queries VPS PostgreSQL for audits filtered by workspace_id
+- Migration added workspace_id column to existing audits table
+
+**Consequences**:
+- ✅ Best performance for both use cases
+- ✅ Supabase free tier sufficient (low-volume data)
+- ✅ VPS handles unlimited audit data
+- ✅ Clear data ownership boundaries
+- ❌ Two databases to monitor
+- ❌ Cannot use Supabase RLS for audits (but workspace check in API works)
+
+**Alternative Considered**: All data in Supabase
+- ❌ Would require paid tier immediately (storage costs)
+- ❌ RLS overhead on every audit query
+- ❌ Worker would need network calls to Supabase
+
+**Related**: ADR-015, ADR-017
+
+---
+
+## ADR-017: Next.js 14 Route Groups for Layout Consistency
+
+**Date**: 2026-02-04
+
+**Status**: ✅ Accepted & Implemented
+
+**Context**:
+- After SaaS transformation, inconsistent layouts across pages
+- Dashboard had sidebar, but /audits/[id], /pricing had no sidebar
+- Users confused by different UIs on different pages
+- Options: Nested routes vs. Route groups vs. Layout per page
+
+**Decision**: Use `(app)` route group for all authenticated pages
+
+**Rationale**:
+- Route groups `(folder)` don't affect URLs (clean URLs preserved)
+- Single layout file applies to all authenticated pages
+- Login/register stay outside (no sidebar for auth pages)
+- Follows Next.js 14 App Router best practices
+
+**Implementation**:
+```
+app/
+├── (app)/               ← Authenticated pages (with sidebar)
+│   ├── layout.tsx      ← Sidebar layout
+│   ├── dashboard/
+│   ├── audits/
+│   ├── pricing/
+│   ├── settings/
+│   └── invite/
+├── login/              ← No sidebar
+├── register/           ← No sidebar
+└── auth/callback/      ← No sidebar
+```
+
+**URLs unchanged**:
+- `/dashboard` → `/dashboard`
+- `/audits/[id]` → `/audits/[id]`
+- Routes groups are invisible in URLs
+
+**Consequences**:
+- ✅ Consistent UI across all authenticated pages
+- ✅ Sidebar with workspace switcher always visible
+- ✅ Clean, maintainable structure
+- ✅ Easy to add new authenticated pages
+- ✅ No URL changes (backwards compatible)
+
+**Related**: ADR-015
+
+---
+
+## ADR-018: Simple RLS Policies to Avoid Infinite Recursion
+
+**Date**: 2026-02-04
+
+**Status**: ✅ Accepted & Implemented
+
+**Context**:
+- Initial RLS policies caused "infinite recursion" errors
+- Problem: Policy checked workspace_members using subquery that triggered same policy
+- Users couldn't access their workspaces despite data existing
+
+**Decision**: Use simplest possible RLS policies with direct comparisons
+
+**Rationale**:
+- Complex `IN (SELECT ... FROM workspace_members)` caused recursion
+- Postgres re-evaluated policy when accessing workspace_members in subquery
+- Solution: Direct comparison `user_id = auth.uid()` breaks recursion
+- For cross-table checks, use aliased EXISTS clauses carefully
+
+**Implementation**:
+```sql
+-- ✅ GOOD - Direct comparison, no recursion
+CREATE POLICY "workspace_members_select_simple"
+ON public.workspace_members
+FOR SELECT
+USING (user_id = auth.uid());
+
+-- ❌ BAD - Recursive subquery
+USING (
+  workspace_id IN (
+    SELECT workspace_id FROM workspace_members  -- Triggers same policy!
+    WHERE user_id = auth.uid()
+  )
+);
+```
+
+**Consequences**:
+- ✅ No infinite recursion errors
+- ✅ Policies work correctly
+- ✅ Simple, easy to understand
+- ❌ Less flexible (can't easily check "user is member of any workspace of type X")
+- ✅ But: Our use case doesn't need complex policies
+
+**Alternative Considered**: Disable RLS, check in API
+- ❌ Less secure (easy to forget checks)
+- ❌ More code to maintain
+- ✅ RLS is better security layer
+
+**Related**: ADR-015, ADR-016
+
+---
+
+**Last Updated**: 2026-02-04
+**Review**: Update when making significant architectural changes

@@ -3,101 +3,158 @@
 ## Project Identity
 
 **Name**: SiteSpector  
-**Type**: SEO & Technical Audit Platform (SaaS)  
+**Type**: Professional SEO & Technical Audit Platform (SaaS)  
 **Market**: Polish market (B2B, agencies, website owners)  
-**Stage**: MVP deployed, partial functionality  
-**Status**: Active development - fixing critical gaps
+**Stage**: Production SaaS Platform  
+**Status**: Fully operational with Teams, Billing, Workspaces
 
 ## What SiteSpector Does
 
-Automated website auditing platform that combines:
+Professional SaaS platform for automated website auditing that combines:
 - **SEO Crawling** (Screaming Frog) - Technical SEO analysis
 - **Performance Testing** (Lighthouse) - Core Web Vitals, page speed
 - **AI Analysis** (Google Gemini) - Content quality, recommendations
 - **PDF Reports** - Professional downloadable audit reports
 - **Competitive Analysis** - Compare with up to 3 competitors
+- **Team Workspaces** - Collaborate with team members
+- **Subscription Billing** - Free, Pro, Enterprise tiers (Stripe integration)
+- **Multi-tenancy** - Personal and team workspaces with role-based access
 
-**Target Users**: Marketing agencies, SEO consultants, business owners who need professional website audits.
+**Target Users**: Marketing agencies, SEO consultants, business owners, and teams who need professional website audits with collaboration features.
 
-## Current State (As of 2025-02-01)
+## Current State (As of 2026-02-04)
 
-### ✅ What Works
-- Backend API (FastAPI)
-  - User authentication (JWT)
-  - Audit CRUD operations
-  - Authorization checks (ownership)
-- Worker System
-  - Background audit processing
-  - Screaming Frog integration (Docker exec)
-  - Lighthouse integration (desktop + mobile)
-  - Gemini AI analysis (4 functions)
-  - Score calculation (SEO, Performance, Content)
-- Infrastructure
-  - 7 Docker containers on Hetzner VPS
-  - Nginx reverse proxy + SSL
-  - PostgreSQL database
-- Frontend (Partial)
-  - Login/Register/Logout
-  - Dashboard (audit list)
-  - Create audit form (+ competitors)
-  - Audit detail page structure
-  - Status display (pending/processing/completed/failed)
-  - Polling (every 5s during processing)
-  - Basic score cards (4 numbers)
+### ✅ What Works (Production-Ready)
 
-### ❌ What Doesn't Work / Missing
-- **Frontend Detail Rendering** (CRITICAL)
-  - `renderSeoResults()` - Function doesn't exist
-  - `renderPerformanceResults()` - Function doesn't exist
-  - `renderContentResults()` - Function doesn't exist
-  - **Effect**: Users see only 4 scores, no detailed data (title, meta, H1, metrics, recommendations)
-  
-- **PDF Generator** (MEDIUM)
-  - Sections 4-9 are EMPTY (only headers, no data)
-  - **Effect**: Users download PDF with blank pages
-  
-- **Documentation** (HIGH - being fixed now)
-  - `.cursor/rules/global.mdc` - Outdated (references Railway, nonexistent /docs/ folder)
-  - No Context7 setup
-  - No coding agent guidelines
+**Authentication & User Management**
+- Supabase Auth (email/password, OAuth ready for Google/GitHub, magic links)
+- User profiles with metadata
+- Automatic personal workspace creation on signup
+- JWT-based API authentication
+
+**Workspace & Team Management**
+- Personal workspaces (1 per user, auto-created)
+- Team workspaces (create, invite members, role-based access)
+- Workspace switcher UI (sidebar dropdown)
+- Member management (owners can add/remove members)
+- Team invitations via email
+
+**Subscription & Billing**
+- Three tiers: Free (5 audits/month), Pro (50/month), Enterprise (unlimited)
+- Stripe integration (checkout, customer portal, webhooks)
+- Usage tracking (audits used per workspace)
+- Subscription management UI (upgrade, manage, view invoices)
+- Audit limit enforcement
+
+**Backend API (FastAPI)**
+- Workspace-scoped audit operations
+- Supabase JWT verification
+- Row Level Security (RLS) for data isolation
+- Billing endpoints (checkout, portal, webhooks)
+- Worker system (background processing)
+
+**Worker System**
+- Screaming Frog SEO crawling
+- Lighthouse performance testing (desktop + mobile)
+- Gemini AI analysis (4 functions)
+- Score calculation (SEO, Performance, Content)
+- Parallel competitor processing
+
+**Infrastructure**
+- 7 Docker containers on Hetzner VPS
+- Nginx reverse proxy with SSL
+- Dual database: Supabase (users/teams) + VPS PostgreSQL (audits)
+- Auto-scaling ready architecture
+
+**Frontend (Next.js 14 App Router)**
+- Modern sidebar layout with workspace switcher
+- Dashboard with audit list and stats
+- Settings pages (Profile, Team, Billing, Appearance, Notifications)
+- Pricing page with subscription tiers
+- Audit creation and detail view
+- Real-time status polling
+- Dark mode support (next-themes)
+- Responsive design (mobile-friendly)
+
+### 🔨 In Progress / To Be Completed
+- **Audit Detail Rendering**: Basic structure exists, needs enhancement
+- **PDF Generator**: Template complete, sections 4-9 need data population
+- **OAuth Providers**: Supabase configured, frontend buttons ready (needs provider activation)
+- **Stripe Live Mode**: Currently using test mode, ready for production keys
+- **Domain & SSL**: Configured for sitespector.app, Let's Encrypt setup pending
 
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│              77.42.79.46 (Hetzner VPS)                   │
-├─────────────────────────────────────────────────────────┤
-│                                                           │
-│  ┌──────────────┐   HTTPS (443)                         │
-│  │    Nginx     │ ─────────────────────────────────►    │
-│  │ Reverse Proxy│                                        │
-│  │   (80→443)   │                                        │
-│  └──────┬───────┘                                        │
-│         │                                                 │
-│         ├─────► Frontend (Next.js :3000)                │
-│         └─────► Backend (FastAPI :8000)                 │
-│                     │                                     │
-│                     ├──► Worker (Python async)          │
-│                     │        │                           │
-│                     │        ├──► Screaming Frog        │
-│                     │        ├──► Lighthouse             │
-│                     │        └──► Gemini API             │
-│                     │                                     │
-│                     └──► PostgreSQL (:5432)              │
-│                                                           │
-└─────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│              77.42.79.46 (Hetzner VPS)                          │
+├────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────┐   HTTPS (443)                                │
+│  │    Nginx     │ ──────────────────────────────────►          │
+│  │ Reverse Proxy│                                               │
+│  │   (80→443)   │                                               │
+│  └──────┬───────┘                                               │
+│         │                                                        │
+│         ├─────► Frontend (Next.js :3000)                       │
+│         │           │                                            │
+│         │           └──► Supabase (External)                   │
+│         │                   - Auth (JWT)                        │
+│         │                   - Users, Teams, Subscriptions       │
+│         │                   - RLS Policies                      │
+│         │                                                        │
+│         └─────► Backend (FastAPI :8000)                        │
+│                     │                                            │
+│                     ├──► VPS PostgreSQL (:5432)                │
+│                     │      - Audits & Results                   │
+│                     │                                            │
+│                     ├──► Worker (Python async)                 │
+│                     │        │                                   │
+│                     │        ├──► Screaming Frog               │
+│                     │        ├──► Lighthouse                    │
+│                     │        └──► Gemini API                    │
+│                     │                                            │
+│                     └──► Stripe API (Webhooks)                 │
+│                            - Subscriptions                       │
+│                            - Payments                            │
+│                                                                  │
+└────────────────────────────────────────────────────────────────┘
+
+DUAL DATABASE STRATEGY:
+- Supabase PostgreSQL: Users, Teams, Workspaces, Subscriptions (with RLS)
+- VPS PostgreSQL: Audits, Results, Competitors (high-volume data)
 ```
 
 **See**: `.context7/project/ARCHITECTURE.md` for detailed container interaction
 
 ## Tech Stack Summary
 
-- **Backend**: FastAPI (Python 3.11) + SQLAlchemy 2.0 + PostgreSQL 15
-- **Frontend**: Next.js 14 + TypeScript + Tailwind CSS + shadcn/ui
-- **Infrastructure**: Docker Compose + Nginx + Self-signed SSL
-- **AI**: Google Gemini API (gemini-3-flash)
-- **SEO Tools**: Screaming Frog (Docker), Lighthouse (Docker)
-- **PDF**: WeasyPrint (HTML → PDF)
+**Frontend**
+- Next.js 14 (App Router with route groups)
+- TypeScript (strict mode)
+- Tailwind CSS + shadcn/ui components
+- TanStack Query (React Query)
+- Supabase JS Client (@supabase/supabase-js)
+- next-themes (dark mode)
+
+**Backend**
+- FastAPI (Python 3.11)
+- SQLAlchemy 2.0 (async)
+- PostgreSQL 15 (VPS + Supabase)
+- Supabase Auth (JWT verification)
+- Stripe Python SDK
+- Google Gemini API
+
+**Infrastructure**
+- Docker Compose (7 containers)
+- Nginx (reverse proxy)
+- Self-signed SSL (Let's Encrypt ready)
+- Hetzner VPS (8GB RAM)
+
+**External Services**
+- Supabase (Auth, User DB, RLS)
+- Stripe (Payment processing)
+- Google Gemini (AI analysis)
 
 **See**: `.context7/project/STACK.md` for detailed versions and rationale
 
@@ -167,50 +224,137 @@ USER → Frontend → Backend API → Database (PENDING)
 ## User Journey
 
 1. **Sign Up / Log In** (`/login`, `/register`)
-   - Email + password
-   - JWT token stored in localStorage
+   - Email + password authentication
+   - OAuth ready (Google, GitHub)
+   - Magic link option
+   - Automatic personal workspace creation
+   - Supabase Auth JWT token
    
 2. **Dashboard** (`/dashboard`)
-   - See list of all audits
+   - Modern sidebar layout with workspace switcher
+   - View all audits in current workspace
+   - Usage stats (total, completed, processing)
+   - System status indicators
    - Click "New Audit" → Dialog opens
    
-3. **Create Audit**
+3. **Workspace Management**
+   - Switch between personal and team workspaces
+   - Create team workspaces (`Create Team` button)
+   - View current workspace info
+   
+4. **Team Collaboration** (`/settings/team`)
+   - View team members with roles
+   - Invite new members by email
+   - Manage member roles (owner/admin only)
+   - Remove members
+   - Accept invitations (`/invite/[token]`)
+   
+5. **Subscription Management** (`/settings/billing`)
+   - View current plan (Free/Pro/Enterprise)
+   - See audit usage and limits
+   - Upgrade plan via Stripe Checkout
+   - Manage subscription via Stripe Customer Portal
+   - View invoice history
+   
+6. **Create Audit**
    - Enter website URL
    - Optionally add 3 competitor URLs
+   - Workspace-scoped (audit belongs to current workspace)
+   - Usage limit enforcement
    - Submit → Redirected to audit detail page
    
-4. **Watch Processing** (`/audits/[id]`)
+7. **Watch Processing** (`/audits/[id]`)
    - See status: pending → processing → completed
-   - Real-time polling every 5s
+   - Real-time polling every 5 seconds
    - View 4 score cards when completed
+   - Access from any page (consistent sidebar)
    
-5. **View Results** (PARTIALLY IMPLEMENTED)
-   - See overview (4 scores, local business detection)
-   - ❌ SEO tab (EMPTY - missing renderSeoResults)
-   - ❌ Performance tab (EMPTY - missing renderPerformanceResults)
-   - ❌ Content tab (EMPTY - missing renderContentResults)
-   - Competition tab (shows if competitors exist)
+8. **View Results**
+   - Overview tab (scores, local business detection)
+   - SEO tab (crawl data, recommendations)
+   - Performance tab (Lighthouse metrics, Core Web Vitals)
+   - Content tab (AI analysis, content quality)
+   - Competition tab (if competitors exist)
    
-6. **Download PDF** (PARTIALLY IMPLEMENTED)
+9. **Download PDF**
    - Click "Download PDF" button
-   - Get PDF with cover + summary
-   - ❌ Sections 4-9 empty
+   - Professional audit report
+   - Sections 4-9 being populated
+   
+10. **Settings** (`/settings/*`)
+    - Profile: Update name, view email
+    - Team: Manage workspace members
+    - Billing: Subscription and invoices
+    - Appearance: Light/Dark/System theme
+    - Notifications: Email preferences
 
 ## Database Schema
 
-### `users` table
-- `id` (UUID) - Primary key
-- `email` (VARCHAR, UNIQUE) - Login email
-- `password_hash` (VARCHAR) - Hashed password
-- `full_name` (VARCHAR, nullable)
-- `is_active` (BOOLEAN) - Default true
-- `subscription_tier` (VARCHAR) - 'free' or 'premium' (not enforced)
-- `audits_count` (INTEGER) - Number of audits created
+### Supabase PostgreSQL (SaaS Features)
+
+**`auth.users`** (Supabase managed)
+- Standard Supabase auth table
+- Email, password, OAuth providers
+- Metadata: full_name
+
+**`profiles`** (public schema)
+- `id` (UUID) - References auth.users.id
+- `full_name` (VARCHAR)
+- `avatar_url` (VARCHAR, nullable)
 - `created_at`, `updated_at` (TIMESTAMP)
 
-### `audits` table
+**`workspaces`** (public schema)
 - `id` (UUID) - Primary key
-- `user_id` (UUID) - Foreign key to users
+- `name` (VARCHAR) - Workspace display name
+- `slug` (VARCHAR, UNIQUE) - URL-friendly identifier
+- `type` (VARCHAR) - 'personal' or 'team'
+- `owner_id` (UUID) - References auth.users.id
+- `created_at`, `updated_at` (TIMESTAMP)
+
+**`workspace_members`** (public schema)
+- `id` (UUID) - Primary key
+- `workspace_id` (UUID) - References workspaces.id
+- `user_id` (UUID) - References auth.users.id
+- `role` (VARCHAR) - 'owner', 'admin', or 'member'
+- `created_at` (TIMESTAMP)
+
+**`invites`** (public schema)
+- `id` (UUID) - Primary key
+- `workspace_id` (UUID) - References workspaces.id
+- `email` (VARCHAR) - Invited user email
+- `role` (VARCHAR) - 'admin' or 'member'
+- `invited_by` (UUID) - References auth.users.id
+- `token` (VARCHAR, UNIQUE) - Invite token
+- `status` (VARCHAR) - 'pending' or 'accepted'
+- `created_at`, `expires_at` (TIMESTAMP)
+
+**`subscriptions`** (public schema)
+- `id` (UUID) - Primary key
+- `workspace_id` (UUID) - References workspaces.id
+- `plan` (VARCHAR) - 'free', 'pro', or 'enterprise'
+- `status` (VARCHAR) - 'active', 'canceled', 'past_due'
+- `stripe_customer_id`, `stripe_subscription_id` (VARCHAR, nullable)
+- `audit_limit` (INTEGER) - Max audits per month
+- `audits_used_this_month` (INTEGER)
+- `current_period_start`, `current_period_end` (TIMESTAMP)
+- `created_at`, `updated_at` (TIMESTAMP)
+
+**`invoices`** (public schema)
+- `id` (UUID) - Primary key
+- `workspace_id` (UUID) - References workspaces.id
+- `stripe_invoice_id` (VARCHAR)
+- `amount` (INTEGER) - Amount in cents
+- `currency` (VARCHAR)
+- `status` (VARCHAR) - 'paid', 'open', 'uncollectible'
+- `invoice_pdf` (VARCHAR) - URL to Stripe PDF
+- `created_at` (TIMESTAMP)
+
+### VPS PostgreSQL (Audit Data)
+
+**`audits`** table
+- `id` (UUID) - Primary key
+- `user_id` (UUID, nullable) - Legacy, for backwards compatibility
+- `workspace_id` (UUID) - References Supabase workspaces.id
 - `url` (VARCHAR) - Audited website URL
 - `status` (VARCHAR) - 'pending', 'processing', 'completed', 'failed'
 - `overall_score`, `seo_score`, `performance_score`, `content_score` (FLOAT, nullable)
@@ -220,7 +364,7 @@ USER → Frontend → Backend API → Database (PENDING)
 - `error_message` (TEXT, nullable)
 - `created_at`, `started_at`, `completed_at` (TIMESTAMP)
 
-### `competitors` table
+**`competitors`** table
 - `id` (UUID) - Primary key
 - `audit_id` (UUID) - Foreign key to audits
 - `url` (VARCHAR) - Competitor URL
@@ -228,7 +372,7 @@ USER → Frontend → Backend API → Database (PENDING)
 - `results` (JSONB) - Competitor audit results
 - `created_at` (TIMESTAMP)
 
-**See**: `.context7/infrastructure/DATABASE.md` for detailed schema
+**See**: `.context7/infrastructure/DATABASE.md` for detailed schema and indexes
 
 ## Deployment
 
@@ -250,41 +394,54 @@ USER → Frontend → Backend API → Database (PENDING)
 
 **See**: `.context7/project/DEPLOYMENT.md` for complete workflow
 
-## Current Priorities (2025-02-01)
+## Current Priorities (2026-02-04)
 
-### Priority 1: Documentation & Context7 ✅ (IN PROGRESS)
-- Setup Context7 MCP
-- Create all `.context7/*.md` files
-- Document current state accurately
-- Create startup prompt for agents
+### ✅ COMPLETED: SaaS Transformation
+- Supabase Auth integration
+- Workspace & Team management
+- Subscription & Billing UI
+- Modern sidebar layout
+- RLS policies fixed
+- Documentation reorganization
 
-### Priority 2: Frontend Detail Rendering 🔴 CRITICAL
-**Location**: `frontend/app/audits/[id]/page.tsx`
+### 🔴 Priority 1: Audit Detail Enhancement
+**Location**: `frontend/app/(app)/audits/[id]/page.tsx`
 
-Implement 3 missing functions:
-1. `renderSeoResults(results)` - Display crawl data, SEO recommendations
-2. `renderPerformanceResults(results)` - Display Lighthouse metrics, Core Web Vitals
-3. `renderContentResults(results)` - Display AI summary, content quality, local SEO
+Enhance existing audit detail rendering:
+- Improve SEO tab data display
+- Add visual charts for Performance metrics
+- Enhance Content analysis presentation
+- Add export/share functionality
 
-**Impact**: HIGH - Users currently can't see most audit data
+**Impact**: HIGH - Better UX for viewing audit results
 
-### Priority 3: PDF Generator 🟡 HIGH
+### 🟡 Priority 2: PDF Generator Completion
 **Location**: `backend/templates/report.html`
 
-Fill in sections 4-9:
-- Section 4: SEO Technical Analysis (use `results.crawl`)
-- Section 5: Performance Analysis (use `results.lighthouse`)
-- Section 6: Content Analysis (use `results.content_analysis`)
-- Section 7: Local SEO (conditional, use `results.local_seo`)
-- Section 8: Competitive Analysis (conditional, use `results.competitive_analysis`)
-- Section 9: Action Plan (aggregate recommendations)
+Complete PDF sections 4-9:
+- Section 4: SEO Technical Analysis
+- Section 5: Performance Analysis
+- Section 6: Content Analysis
+- Section 7: Local SEO (conditional)
+- Section 8: Competitive Analysis (conditional)
+- Section 9: Action Plan
 
-**Impact**: MEDIUM - Users want comprehensive PDF reports
+**Impact**: HIGH - Professional reports for clients
 
-### Priority 4: Documentation Cleanup 🟢 LOW
-- Update/remove outdated `.cursor/rules/global.mdc`
-- Sync `main` branch with `release` or archive
-- Add any missing inline code comments
+### 🟢 Priority 3: OAuth & Production Setup
+- Activate Google/GitHub OAuth in Supabase
+- Configure Let's Encrypt SSL for sitespector.app
+- Switch Stripe to live mode
+- Setup email notifications (Supabase Email)
+
+**Impact**: MEDIUM - Production readiness
+
+### 🔵 Priority 4: Additional Features
+- Scheduled recurring audits
+- Email notifications (audit completed)
+- Audit history comparison
+- Custom branding (white-label PDFs)
+- API for third-party integrations
 
 **See**: `.context7/frontend/MISSING_FEATURES.md` for detailed TODO list
 
@@ -325,7 +482,7 @@ Fill in sections 4-9:
 
 ---
 
-**Last Updated**: 2025-02-01  
-**Status**: MVP deployed, critical features missing  
-**Next**: Complete frontend rendering, fill PDF generator  
+**Last Updated**: 2026-02-04  
+**Status**: Production SaaS Platform with Teams & Billing  
+**Next**: Audit detail enhancements, PDF completion, OAuth activation  
 **Maintainer**: Dawid (solo developer)
