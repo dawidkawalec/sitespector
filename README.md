@@ -145,7 +145,6 @@ Complete documentation in [`docs/`](docs/) and [`.context7/`](.context7/):
 ### Setup & Deployment
 - [`docs/DEPLOYMENT_GUIDE.md`](docs/DEPLOYMENT_GUIDE.md) - Complete deployment guide
 - [`docs/TESTING_CHECKLIST.md`](docs/TESTING_CHECKLIST.md) - Testing checklist
-- [`docs/PHASE0_SETUP_CHECKLIST.md`](docs/PHASE0_SETUP_CHECKLIST.md) - Supabase setup
 - [`supabase/README.md`](supabase/README.md) - Supabase configuration
 
 ### Architecture & Technical
@@ -156,8 +155,7 @@ Complete documentation in [`docs/`](docs/) and [`.context7/`](.context7/):
 - [`.context7/backend/MODELS.md`](.context7/backend/MODELS.md) - Database models
 
 ### Development
-- [`.cursor/rules/global.mdc`](.cursor/rules/global.mdc) - Project rules for AI agents
-- [`docs/KAWASAAS_COMPONENTS.md`](docs/KAWASAAS_COMPONENTS.md) - Component inventory
+- [`.kilocode/rules/project.md`](.kilocode/rules/project.md) - Project rules for AI agents
 - [`.context7/decisions/DECISIONS_LOG.md`](.context7/decisions/DECISIONS_LOG.md) - Architectural decisions
 
 ---
@@ -166,7 +164,7 @@ Complete documentation in [`docs/`](docs/) and [`.context7/`](.context7/):
 
 **Standard workflow** (VPS-only Docker):
 
-1. Edit code locally in Cursor
+1. Edit code locally in KiloCode
 2. Commit changes: `git commit -m "feat: description"`
 3. Push to remote: `git push origin release` (ask first!)
 4. SSH to VPS: `ssh root@77.42.79.46`

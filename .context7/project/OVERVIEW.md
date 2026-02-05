@@ -2,11 +2,26 @@
 
 ## Project Identity
 
-**Name**: SiteSpector  
-**Type**: Professional SEO & Technical Audit Platform (SaaS)  
-**Market**: Polish market (B2B, agencies, website owners)  
-**Stage**: Production SaaS Platform  
+**Name**: SiteSpector
+**Type**: Professional SEO & Technical Audit Platform (SaaS)
+**Market**: Polish market (B2B, agencies, website owners)
+**Stage**: Production SaaS Platform
 **Status**: Fully operational with Teams, Billing, Workspaces
+**IDE**: KiloCode (migrated from Cursor Feb 2026)
+
+## Migration Notes
+
+**Migrated from Cursor to KiloCode** (2026-02-04)
+
+**Archived**:
+- Old Cursor plans → `.archive/old-plans/`
+- Temporary documentation → `.archive/temp-docs/`
+- SQL fix files → `.archive/sql-fixes/`
+
+**Kept**:
+- `.context7/` - Complete technical documentation
+- `.cursor/rules/` - Personal preferences (for reference)
+- `docs/` - Deployment guides and checklists
 
 ## What SiteSpector Does
 
@@ -482,7 +497,7 @@ Complete PDF sections 4-9:
 
 ---
 
-**Last Updated**: 2026-02-04  
-**Status**: Production SaaS Platform with Teams & Billing  
-**Next**: Audit detail enhancements, PDF completion, OAuth activation  
+**Last Updated**: 2026-02-05
+**Status**: Production SaaS Platform with Teams & Billing
+**Next**: Audit detail enhancements, PDF completion, OAuth activation
 **Maintainer**: Dawid (solo developer)
