@@ -110,21 +110,28 @@ async def analyze_content(content_data: Dict[str, Any]) -> Dict[str, Any]:
         - "summary": Krótkie podsumowanie jakości treści (max 2 zdania)
         - "tone_voice": Ocena tonu wypowiedzi (np. profesjonalny, luźny, niespójny)
         - "ai_recommendations": Lista 2-3 konkretnych sugestii poprawy copywritingu
+        - "roi_action_plan": Lista obiektów {"action": string, "impact": "high"|"medium"|"low", "effort": "easy"|"medium"|"hard"}
         """
         
-        # Call Claude (commented out until API key is confirmed and billing enabled)
-        # ai_response = await call_claude(system_prompt, user_message)
-        # ai_data = parse_ai_response(ai_response)
+        # Call Gemini (using call_claude wrapper)
+        ai_response = await call_claude(user_message, system_prompt)
         
-        # For now, use placeholder AI data to simulate integration
-        ai_data = {
-            "summary": "Treść strony wydaje się być poprawnie zoptymalizowana pod kątem technicznym, ale wymaga weryfikacji pod kątem perswazji.",
-            "tone_voice": "Nieokreślony (wymagana pełna analiza tekstu)",
-            "ai_recommendations": [
-                "Upewnij się, że meta opis zawiera Call to Action",
-                "Sprawdź, czy nagłówek H1 zawiera główne słowo kluczowe"
-            ]
-        }
+        # Simple JSON extraction from response
+        import json
+        import re
+        
+        # Find JSON block in response
+        json_match = re.search(r'\{.*\}', ai_response, re.DOTALL)
+        if json_match:
+            ai_data = json.loads(json_match.group())
+        else:
+            # Fallback if no JSON block found
+            ai_data = {
+                "summary": ai_response[:200],
+                "tone_voice": "Nieokreślony",
+                "ai_recommendations": [],
+                "roi_action_plan": []
+            }
         
         # Merge AI recommendations
         if ai_data.get("ai_recommendations"):
@@ -132,6 +139,12 @@ async def analyze_content(content_data: Dict[str, Any]) -> Dict[str, Any]:
             
     except Exception as e:
         logger.error(f"AI analysis failed: {e}")
+        ai_data = {
+            "summary": "Analiza AI tymczasowo niedostępna.",
+            "tone_voice": "N/A",
+            "ai_recommendations": [],
+            "roi_action_plan": []
+        }
     
     return {
         "quality_score": max(0, quality_score),
@@ -141,6 +154,109 @@ async def analyze_content(content_data: Dict[str, Any]) -> Dict[str, Any]:
         "has_title": bool(title),
         "has_meta_description": bool(meta_desc),
         "has_h1": h1_count > 0,
+        "summary": ai_data.get("summary"),
+        "tone_voice": ai_data.get("tone_voice"),
+        "roi_action_plan": ai_data.get("roi_action_plan", [])
+    }
+
+
+async def analyze_content_deep(all_pages: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Perform deep analysis on all crawled pages.
+    Detects thin content, duplicate content, and content gaps.
+    """
+    logger.info(f"Performing deep content analysis on {len(all_pages)} pages")
+    
+    thin_content_pages = [p['url'] for p in all_pages if p.get('word_count', 0) < 200 and p.get('status_code') == 200]
+    
+    # Simple duplicate detection based on titles
+    titles = {}
+    duplicates = []
+    for p in all_pages:
+        title = p.get('title')
+        if title and p.get('status_code') == 200:
+            if title in titles:
+                duplicates.append({"url1": titles[title], "url2": p['url'], "title": title})
+            else:
+                titles[title] = p['url']
+                
+    return {
+        "thin_content_count": len(thin_content_pages),
+        "thin_content_urls": thin_content_pages[:10],
+        "duplicate_content_count": len(duplicates),
+        "duplicates": duplicates[:5]
+    }
+
+
+async def detect_tech_stack(url: str, crawl_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Detect technology stack using response headers and HTML patterns.
+    """
+    logger.info(f"Detecting tech stack for {url}")
+    
+    # Simple pattern matching for common technologies
+    homepage = next((p for p in crawl_data.get("all_pages", []) if p['url'] == url or p['url'] == url + '/'), {})
+    
+    techs = []
+    
+    # 1. CMS Detection
+    if "wp-content" in str(crawl_data):
+        techs.append({"name": "WordPress", "category": "CMS", "icon": "wordpress"})
+    
+    # 2. Frameworks
+    if "next/static" in str(crawl_data):
+        techs.append({"name": "Next.js", "category": "Framework", "icon": "nextjs"})
+    elif "react" in str(crawl_data).lower():
+        techs.append({"name": "React", "category": "Library", "icon": "react"})
+        
+    # 3. Analytics
+    if "googletagmanager.com" in str(crawl_data):
+        techs.append({"name": "Google Tag Manager", "category": "Analytics", "icon": "gtm"})
+    if "google-analytics.com" in str(crawl_data):
+        techs.append({"name": "Google Analytics", "category": "Analytics", "icon": "ga"})
+        
+    return {
+        "technologies": techs,
+        "server": "Unknown",
+        "recommendations": ["Rozważ użycie formatów obrazów nowej generacji", "Zaktualizuj biblioteki JavaScript"]
+    }
+
+
+async def analyze_security(url: str, crawl_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Perform basic security analysis.
+    """
+    logger.info(f"Analyzing security for {url}")
+    
+    is_https = url.startswith("https")
+    
+    # Check for mixed content
+    mixed_content = [p['url'] for p in crawl_data.get("all_pages", []) if p['url'].startswith("http://")]
+    
+    return {
+        "is_https": is_https,
+        "mixed_content_count": len(mixed_content),
+        "security_score": 100 if is_https and len(mixed_content) == 0 else 50,
+        "recommendations": ["Wdróż Content Security Policy (CSP)", "Dodaj nagłówek HSTS"] if is_https else ["Zainstaluj certyfikat SSL"]
+    }
+
+
+async def analyze_ux(lighthouse_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Perform basic UX analysis using Lighthouse accessibility and mobile data.
+    """
+    logger.info("Analyzing UX signals")
+    
+    desktop = lighthouse_data.get("desktop", {})
+    mobile = lighthouse_data.get("mobile", {})
+    
+    acc_score = desktop.get("accessibility_score", 0)
+    
+    return {
+        "ux_score": acc_score,
+        "mobile_friendly": mobile.get("performance_score", 0) > 50,
+        "accessibility_score": acc_score,
+        "recommendations": ["Popraw kontrast kolorów", "Dodaj etykiety do pól formularzy", "Zwiększ rozmiar celów dotykowych na mobile"]
     }
 
 

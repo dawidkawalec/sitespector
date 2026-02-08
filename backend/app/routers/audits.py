@@ -176,6 +176,41 @@ async def list_audits(
     }
 
 
+@router.get("/history", response_model=List[AuditResponse])
+async def get_audit_history(
+    url: str = Query(..., description="Website URL to get history for"),
+    workspace_id: str = Query(..., description="Workspace ID"),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[Audit]:
+    """
+    Get audit history for a specific URL in a workspace.
+    
+    Returns:
+        List of audits for the same URL, ordered by date desc
+    """
+    # Verify workspace membership
+    has_access = await verify_workspace_access(current_user["id"], workspace_id)
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not a member of this workspace"
+        )
+    
+    # Query audits for the same URL in the same workspace
+    result = await db.execute(
+        select(Audit)
+        .options(selectinload(Audit.competitors))
+        .where(Audit.workspace_id == workspace_id)
+        .where(Audit.url == url)
+        .where(Audit.status == AuditStatus.COMPLETED)
+        .order_by(desc(Audit.created_at))
+    )
+    audits = result.scalars().all()
+    
+    return audits
+
+
 @router.get("/{audit_id}", response_model=AuditResponse)
 async def get_audit(
     audit_id: UUID,

@@ -82,6 +82,10 @@ async def process_audit(audit_id: str) -> None:
             content_analysis = await ai_analysis.analyze_content(crawl_data)
             local_seo_analysis = await ai_analysis.analyze_local_seo(crawl_data)
             performance_analysis = await ai_analysis.analyze_performance(lighthouse_data)
+            content_deep_analysis = await ai_analysis.analyze_content_deep(crawl_data.get("all_pages", []))
+            tech_stack = await ai_analysis.detect_tech_stack(audit.url, crawl_data)
+            security_analysis = await ai_analysis.analyze_security(audit.url, crawl_data)
+            ux_analysis = await ai_analysis.analyze_ux(lighthouse_data)
             
             # Reload competitors with results
             result = await db.execute(
@@ -108,6 +112,10 @@ async def process_audit(audit_id: str) -> None:
                 "crawl": crawl_data,
                 "lighthouse": lighthouse_data,
                 "content_analysis": content_analysis,
+                "content_deep": content_deep_analysis,
+                "tech_stack": tech_stack,
+                "security": security_analysis,
+                "ux": ux_analysis,
                 "local_seo": local_seo_analysis,
                 "performance_analysis": performance_analysis,
                 "competitive_analysis": competitive_analysis,

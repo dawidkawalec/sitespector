@@ -238,4 +238,7 @@ export const auditsAPI = {
 
     return response.blob()
   },
+
+  getHistory: (workspaceId: string, url: string) =>
+    apiRequest<Audit[]>(`/api/audits/history?workspace_id=${workspaceId}&url=${encodeURIComponent(url)}`),
 }
