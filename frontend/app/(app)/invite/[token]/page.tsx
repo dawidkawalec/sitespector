@@ -101,7 +101,7 @@ export default function AcceptInvitePage({ params }: { params: { token: string }
 
       if (!user) {
         // Not logged in, redirect to register with return URL
-        router.push(`/register?returnTo=/invite/${params.token}`)
+        router.push(`/login?mode=register&returnTo=/invite/${params.token}`)
         return
       }
 

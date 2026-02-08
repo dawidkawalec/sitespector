@@ -12,18 +12,20 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ```
 app/
-├── layout.tsx              # Root layout (wraps all pages)
-├── globals.css             # Global styles
-├── page.tsx                # Homepage (/)
-├── login/
-│   └── page.tsx            # Login page (/login)
-├── register/
-│   └── page.tsx            # Register page (/register)
-├── dashboard/
-│   └── page.tsx            # Dashboard (/dashboard)
-└── audits/
-    └── [id]/
-        └── page.tsx        # Audit detail page (/audits/:id)
+├── layout.tsx                 # Root layout (wraps all pages)
+├── globals.css                # Global styles
+├── (public)/                  # Route group: navbar + footer + background
+│   ├── layout.tsx             # PublicNavbar, main (gradient bg), PublicFooter
+│   ├── page.tsx               # Homepage (/) – redirect when logged in
+│   ├── login/
+│   │   └── page.tsx           # Auth page (/login) – tabs: Zaloguj | Zarejestruj
+│   └── register/
+│       └── page.tsx           # Redirect to /login?mode=register
+├── (app)/                     # App with sidebar (dashboard, audits, settings)
+│   ├── dashboard/page.tsx
+│   ├── audits/[id]/...
+│   └── ...
+└── auth/callback/page.tsx    # OAuth callback
 ```
 
 ---

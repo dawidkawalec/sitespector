@@ -6,6 +6,46 @@ This document tracks key architectural and technical decisions made during SiteS
 
 ---
 
+## Public layout: auth + landing spójne z navbarem i stopką
+
+**Date**: 2026-02-08
+
+**Status**: ✅ Done
+
+**Context**: Strony logowania/rejestracji były pełnoekranowe bez navbara i stopki; landing (demosite) ma Topbar + Footer. Wymóg: jedna spójna wizualnie warstwa publiczna.
+
+**Decision**:
+- Route group `(public)` w `frontend/app/(public)/` z własnym layoutem: `PublicNavbar`, `main` (z tłem gradient + rozmyte kształty), `PublicFooter`.
+- Komponenty `PublicNavbar.tsx` i `PublicFooter.tsx` w `frontend/components/layout/` – Tailwind/shadcn, jeden CTA „Zaloguj się / Załóż konto” → `/login`.
+- Strona główna `/` i `/login`, `/register` obsługiwane z `(public)`; `/register` przekierowuje na `/login?mode=register`.
+- Jedna strona auth `/login` z tabami „Zaloguj się” | „Zarejestruj się” (OAuth + email/hasło + opcjonalnie magic link).
+- Zalogowani użytkownicy na `/` lub `/login` są przekierowywani na `/dashboard`.
+
+**Consequences**:
+- Spójny wygląd publiczny z landingiem; jeden przycisk CTA; mniej duplikacji formularzy.
+
+---
+
+## Domain migration to sitespector.app + Let's Encrypt SSL
+
+**Date**: 2026-02-08
+
+**Status**: ✅ Done
+
+**Context**: Production was served on IP (77.42.79.46) with self-signed cert. Domain sitespector.app purchased; DNS pointed to VPS.
+
+**Decision**:
+- Nginx `server_name`: `sitespector.app www.sitespector.app`
+- SSL: Let's Encrypt (`certbot certonly --standalone`). Certificates in `/etc/letsencrypt/live/sitespector.app/`
+- Nginx volume: mount full `/etc/letsencrypt:/etc/letsencrypt:ro` so symlinks (e.g. `fullchain.pem` → `../../archive/...`) resolve inside the container. Mounting only `live/sitespector.app` fails because archive is outside that dir.
+- Frontend `NEXT_PUBLIC_API_URL` and backend `CORS_ORIGINS` updated to `https://sitespector.app` (and www).
+
+**Consequences**:
+- Valid HTTPS; Certbot timer handles renewal.
+- Supabase Auth redirect URLs must include `https://sitespector.app` and `https://sitespector.app/**` in dashboard.
+
+---
+
 ## ADR-001: Use PostgreSQL with JSONB for Audit Results
 
 **Date**: 2024-12-01
