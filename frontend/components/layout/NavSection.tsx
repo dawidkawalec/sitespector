@@ -89,9 +89,9 @@ export function NavSection({
       >
         <div className="overflow-hidden">
           <div className="ml-4 border-l-2 border-border/40 pl-2 space-y-0.5">
-            {items.map((item) => (
+            {items.map((item, index) => (
               <NavItem
-                key={item.href}
+                key={`${value}-${item.href}-${index}`}
                 href={item.href}
                 icon={item.icon}
                 label={item.label}

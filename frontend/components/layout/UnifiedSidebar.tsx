@@ -69,37 +69,37 @@ const mainNavItems = [
 
 // Audit overview section items
 const auditOverviewItems = [
-  { href: '/audits/[id]', icon: FileText, label: 'Podsumowanie' },
-  { href: '/audits/[id]/seo', icon: Search, label: 'SEO' },
-  { href: '/audits/[id]/performance', icon: Gauge, label: 'Wydajność' },
-  { href: '/audits/[id]/ai-analysis', icon: Sparkles, label: 'Analiza AI' },
+  { href: '/audits/[id]', icon: FileText, label: 'Podsumowanie', id: 'overview' },
+  { href: '/audits/[id]/seo', icon: Search, label: 'SEO', id: 'seo' },
+  { href: '/audits/[id]/performance', icon: Gauge, label: 'Wydajność', id: 'performance' },
+  { href: '/audits/[id]/ai-analysis', icon: Sparkles, label: 'Analiza AI', id: 'ai' },
 ]
 
 // Audit reports section items
 const auditReportsItems = [
-  { href: '/audits/[id]/comparison', icon: ArrowLeftRight, label: 'Porównanie', disabled: true },
-  { href: '/audits/[id]/pdf', icon: FileDown, label: 'Raport PDF' },
-  { href: '/audits/[id]/client-report', icon: FileText, label: 'Raport dla klienta', disabled: true },
-  { href: '/audits/[id]/benchmark', icon: Target, label: 'Benchmark', disabled: true },
+  { href: '/audits/[id]/comparison', icon: ArrowLeftRight, label: 'Porównanie', disabled: true, id: 'comparison' },
+  { href: '/audits/[id]/pdf', icon: FileDown, label: 'Raport PDF', id: 'pdf' },
+  { href: '/audits/[id]/client-report', icon: FileText, label: 'Raport dla klienta', disabled: true, id: 'client-report' },
+  { href: '/audits/[id]/benchmark', icon: Target, label: 'Benchmark', disabled: true, id: 'benchmark' },
 ]
 
 // Audit advanced section items
 const auditAdvancedItems = [
-  { href: '/audits/[id]/architecture', icon: Network, label: 'Architektura', disabled: true },
-  { href: '/audits/[id]/competitors', icon: Users, label: 'Konkurencja' },
-  { href: '/audits/[id]/debug', icon: Bug, label: 'Debug' },
+  { href: '/audits/[id]/architecture', icon: Network, label: 'Architektura', disabled: true, id: 'architecture' },
+  { href: '/audits/[id]/competitors', icon: Users, label: 'Konkurencja', id: 'competitors' },
+  { href: '/audits/[id]/debug', icon: Bug, label: 'Debug', id: 'debug' },
 ]
 
 // Audit tools section items
 const auditToolsItems = [
-  { href: '/audits/[id]/quick-wins', icon: Zap, label: 'Quick Wins', disabled: true },
-  { href: '/audits/[id]/performance-tools', icon: Gauge, label: 'Performance', disabled: true },
-  { href: '/audits/[id]/seo-tools', icon: Search, label: 'SEO', disabled: true },
-  { href: '/audits/[id]/tech-stack', icon: Code2, label: 'Tech Stack', disabled: true },
-  { href: '/audits/[id]/security', icon: Shield, label: 'Security', disabled: true },
-  { href: '/audits/[id]/ai-content', icon: Sparkles, label: 'AI Content', disabled: true },
-  { href: '/audits/[id]/ux-check', icon: MousePointer, label: 'UX Check', disabled: true },
-  { href: '/audits/[id]/integrations', icon: Plug, label: 'Integracje', disabled: true },
+  { href: '/audits/[id]/quick-wins', icon: Zap, label: 'Quick Wins', disabled: true, id: 'quick-wins' },
+  { href: '/audits/[id]/performance-tools', icon: Gauge, label: 'Performance', disabled: true, id: 'performance-tools' },
+  { href: '/audits/[id]/seo-tools', icon: Search, label: 'SEO', disabled: true, id: 'seo-tools' },
+  { href: '/audits/[id]/tech-stack', icon: Code2, label: 'Tech Stack', disabled: true, id: 'tech-stack' },
+  { href: '/audits/[id]/security', icon: Shield, label: 'Security', disabled: true, id: 'security' },
+  { href: '/audits/[id]/ai-content', icon: Sparkles, label: 'AI Content', disabled: true, id: 'ai-content' },
+  { href: '/audits/[id]/ux-check', icon: MousePointer, label: 'UX Check', disabled: true, id: 'ux-check' },
+  { href: '/audits/[id]/integrations', icon: Plug, label: 'Integracje', disabled: true, id: 'integrations' },
 ]
 
 // Settings items (inside collapsible section)
