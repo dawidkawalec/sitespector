@@ -359,7 +359,7 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
-                className="w-full justify-between font-normal hover:bg-accent/50 transition-all duration-200 h-9"
+                className="w-full justify-between font-normal hover:bg-accent/50 transition-all duration-200 h-10"
               >
                 <div className="flex items-center">
                   <ActivityIcon className="mr-3 h-4 w-4 text-muted-foreground" />

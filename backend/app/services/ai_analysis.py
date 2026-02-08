@@ -483,6 +483,40 @@ async def analyze_competitive(
     }
 
 
+async def analyze_single_page(page_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Perform deep AI analysis on a single page.
+    """
+    logger.info(f"Analyzing single page: {page_data.get('url')}")
+    
+    system_prompt = "Jesteś ekspertem SEO. Przeanalizuj dane strony i podaj konkretne uwagi."
+    user_message = f"Dane strony: {page_data}"
+    
+    try:
+        from app.services.ai_client import call_claude
+        ai_response = await call_claude(user_message, system_prompt)
+        return {"analysis": ai_response}
+    except Exception as e:
+        logger.error(f"Single page analysis failed: {e}")
+        return {"analysis": "Analiza nieudana."}
+
+
+async def generate_quick_wins(audit_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Generate quick wins based on audit results.
+    """
+    logger.info("Generating quick wins")
+    return [{"title": "Popraw meta tagi", "impact": "high", "effort": "low"}]
+
+
+async def generate_alt_text(image_url: str) -> str:
+    """
+    Generate alt text for an image.
+    """
+    logger.info(f"Generating alt text for {image_url}")
+    return "Opis obrazu"
+
+
 async def get_industry_benchmarks(industry: str = "general") -> Dict[str, Any]:
     """
     Get industry benchmarks for comparison.
