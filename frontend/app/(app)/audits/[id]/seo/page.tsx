@@ -266,7 +266,9 @@ export default function SeoPage({ params }: { params: { id: string } }) {
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Analiza SEO</h1>
+        <h1 className="text-3xl font-bold text-primary">
+          <span className="text-line">Analiza SEO</span>
+        </h1>
         <Button variant="outline" onClick={exportToCSV}>
           <Download className="mr-2 h-4 w-4" /> Exportuj CSV
         </Button>

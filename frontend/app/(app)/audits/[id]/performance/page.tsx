@@ -98,7 +98,9 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-3xl font-bold">Analiza Wydajności</h1>
+        <h1 className="text-3xl font-bold text-primary">
+          <span className="text-line">Analiza Wydajności</span>
+        </h1>
         <Tabs value={device} onValueChange={(v: any) => setDevice(v)} className="w-full md:w-auto">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="desktop" className="flex items-center gap-2">

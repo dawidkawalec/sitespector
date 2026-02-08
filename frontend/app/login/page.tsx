@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
+import { RiSearchEyeFill } from 'react-icons/ri'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -145,15 +146,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-          <CardDescription>
-            Sign in to your SiteSpector account
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-[#fff9f5] to-[#f5f5f5] dark:from-[#141822] dark:to-[#0b363d] relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-3xl" />
+      
+      <Card className="w-full max-w-md relative z-10 border-none shadow-2xl">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 rounded-2xl bg-primary/5 text-accent">
+              <RiSearchEyeFill size={48} />
+            </div>
+          </div>
+          <CardTitle className="text-3xl font-black tracking-tight text-primary">SiteSpector</CardTitle>
+          <CardDescription className="text-base">
+            Witaj ponownie! Zaloguj się do swojego konta.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-4">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>

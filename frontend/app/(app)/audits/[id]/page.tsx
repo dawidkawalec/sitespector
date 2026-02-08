@@ -210,7 +210,9 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
           <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors">
             <ArrowLeft className="h-3 w-3" /> Powrót do listy
           </Link>
-          <h1 className="text-3xl font-bold break-all">{audit.url}</h1>
+          <h1 className="text-3xl font-bold break-all text-primary">
+            <span className="text-line">{audit.url}</span>
+          </h1>
           <div className="flex flex-wrap items-center gap-3">
             <Badge variant={getStatusBadgeVariant(audit.status)} className="px-3 py-1">
               {audit.status.toUpperCase()}

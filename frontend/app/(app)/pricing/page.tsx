@@ -123,11 +123,13 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="container mx-auto py-16 px-4">
+    <div className="container mx-auto py-16 px-4 bg-[#fff9f5]/30 dark:bg-transparent min-h-full">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Simple, transparent pricing</h1>
+        <h1 className="text-4xl font-black mb-4 text-primary tracking-tight">
+          Prosty i przejrzysty <span className="text-line">cennik</span>
+        </h1>
         <p className="text-xl text-muted-foreground">
-          Choose the plan that fits your needs. Cancel anytime.
+          Wybierz plan dopasowany do Twoich potrzeb. Możesz zrezygnować w dowolnym momencie.
         </p>
       </div>
 
@@ -136,44 +138,50 @@ export default function PricingPage() {
           <Card 
             key={plan.name} 
             className={cn(
-              'relative',
-              plan.popular && 'border-primary shadow-xl'
+              'relative border-none shadow-xl transition-all duration-300 hover:-translate-y-2',
+              plan.popular && 'ring-2 ring-accent shadow-accent/10'
             )}
           >
             {plan.popular && (
               <div className="absolute -top-4 left-0 right-0 flex justify-center">
-                <Badge className="px-4 py-1">Most Popular</Badge>
+                <Badge variant="accent" className="px-4 py-1 shadow-lg">Najpopularniejszy</Badge>
               </div>
             )}
             
-            <CardHeader className="text-center pb-8">
-              <CardTitle className="text-2xl">{plan.name}</CardTitle>
-              <CardDescription className="text-base mt-2">
+            <CardHeader className={cn(
+              "text-center pb-8 rounded-t-xl",
+              plan.popular ? "bg-primary text-white" : "bg-primary/5"
+            )}>
+              <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+              <CardDescription className={cn(
+                "text-base mt-2",
+                plan.popular ? "text-white/80" : "text-muted-foreground"
+              )}>
                 {plan.description}
               </CardDescription>
               <div className="mt-4">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                <span className="text-muted-foreground">/month</span>
+                <span className="text-4xl font-black">{plan.price}</span>
+                <span className={plan.popular ? "text-white/60" : "text-muted-foreground"}>/miesiąc</span>
               </div>
             </CardHeader>
             
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-8">
               <ul className="space-y-3">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
-                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <Check className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
                     <span className="text-sm">{feature}</span>
                   </li>
                 ))}
               </ul>
               
               {plan.limitations && (
-                <div className="pt-4 border-t">
-                  <p className="text-xs text-muted-foreground mb-2">Limitations:</p>
+                <div className="pt-4 border-t border-dashed">
+                  <p className="text-xs text-muted-foreground mb-2">Ograniczenia:</p>
                   <ul className="space-y-2">
                     {plan.limitations.map((limitation) => (
                       <li key={limitation} className="text-xs text-muted-foreground flex items-start gap-2">
-                        <span>•</span>
+                        <span className="text-muted-foreground/40">•</span>
                         <span>{limitation}</span>
                       </li>
                     ))}
@@ -182,15 +190,15 @@ export default function PricingPage() {
               )}
             </CardContent>
             
-            <CardFooter>
+            <CardFooter className="pb-8">
               <Button
-                className="w-full"
-                variant={plan.popular ? 'default' : 'outline'}
+                className="w-full rounded-xl"
+                variant={plan.popular ? 'accent' : 'outline'}
                 onClick={() => handleSubscribe(plan.priceId, plan.name)}
                 disabled={loading !== null}
               >
-                {loading === plan.name ? 'Loading...' : (
-                  plan.name === 'Free' ? 'Current Plan' : `Get ${plan.name}`
+                {loading === plan.name ? 'Ładowanie...' : (
+                  plan.name === 'Free' ? 'Twój obecny plan' : `Wybierz ${plan.name}`
                 )}
               </Button>
             </CardFooter>
@@ -199,8 +207,8 @@ export default function PricingPage() {
       </div>
 
       <div className="mt-16 text-center text-sm text-muted-foreground">
-        <p>All plans include a 7-day money-back guarantee.</p>
-        <p className="mt-2">Need a custom plan? <a href="mailto:support@sitespector.app" className="text-primary hover:underline">Contact us</a></p>
+        <p>Wszystkie plany zawierają 7-dniową gwarancję zwrotu pieniędzy.</p>
+        <p className="mt-2">Potrzebujesz planu niestandardowego? <a href="mailto:support@sitespector.app" className="text-accent hover:underline font-bold">Skontaktuj się z nami</a></p>
       </div>
     </div>
   )

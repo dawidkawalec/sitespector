@@ -120,15 +120,17 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-[525px] border-none shadow-2xl">
         <DialogHeader>
-          <DialogTitle>New Website Audit</DialogTitle>
+          <DialogTitle className="text-2xl font-black text-primary">
+            <span className="text-line">Nowy Audyt</span> Strony
+          </DialogTitle>
           <DialogDescription>
-            Enter the URL to analyze and optionally add up to 3 competitors
+            Wprowadź adres URL do analizy i opcjonalnie dodaj do 3 konkurentów.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -137,12 +139,12 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
 
           {/* Usage warning */}
           {subscription && auditsRemaining <= 2 && auditsRemaining > 0 && (
-            <Alert>
+            <Alert className="bg-accent/10 border-accent/20 text-accent">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                You have {auditsRemaining} {auditsRemaining === 1 ? 'audit' : 'audits'} remaining this month.{' '}
-                <Link href="/pricing" className="underline font-medium">
-                  Upgrade to Pro
+                Pozostało Ci {auditsRemaining} {auditsRemaining === 1 ? 'audyt' : 'audyty'} w tym miesiącu.{' '}
+                <Link href="/pricing" className="underline font-bold">
+                  Zwiększ limit
                 </Link>
               </AlertDescription>
             </Alert>
@@ -152,25 +154,26 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                You've reached your audit limit ({subscription.audit_limit}/month).{' '}
-                <Link href="/pricing" className="underline font-medium">
-                  Upgrade to continue
+                Osiągnięto limit audytów ({subscription.audit_limit}/miesiąc).{' '}
+                <Link href="/pricing" className="underline font-bold">
+                  Zwiększ plan, aby kontynuować
                 </Link>
               </AlertDescription>
             </Alert>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="url">Website URL *</Label>
+            <Label htmlFor="url" className="text-primary font-bold">Adres URL Strony *</Label>
             <Input
               id="url"
               type="text"
-              placeholder="https://example.com"
+              placeholder="https://twoja-strona.pl"
+              className="rounded-xl border-primary/10 focus:border-accent"
               {...register('url', {
-                required: 'URL is required',
+                required: 'URL jest wymagany',
                 pattern: {
                   value: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
-                  message: 'Invalid URL format',
+                  message: 'Nieprawidłowy format URL',
                 },
               })}
             />
@@ -181,15 +184,16 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Competitors (Optional)</Label>
+              <Label className="text-primary font-bold">Konkurenci (Opcjonalnie)</Label>
               {competitors.length < 3 && (
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={addCompetitor}
+                  className="h-7 text-[10px] rounded-lg"
                 >
-                  Add Competitor
+                  Dodaj Konkurenta
                 </Button>
               )}
             </div>
@@ -198,9 +202,10 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
               <div key={index} className="flex gap-2">
                 <Input
                   type="text"
-                  placeholder={`Competitor URL ${index + 1}`}
+                  placeholder={`URL Konkurenta ${index + 1}`}
                   value={competitor}
                   onChange={(e) => updateCompetitor(index, e.target.value)}
+                  className="rounded-xl border-primary/10"
                 />
                 {competitors.length > 1 && (
                   <Button
@@ -208,35 +213,39 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
                     variant="ghost"
                     size="icon"
                     onClick={() => removeCompetitor(index)}
+                    className="text-destructive hover:bg-destructive/5"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             ))}
-            <p className="text-xs text-muted-foreground">
-              You can add up to 3 competitors
+            <p className="text-[10px] text-muted-foreground italic">
+              Możesz dodać do 3 konkurentów dla porównania AI.
             </p>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex justify-end gap-2 pt-6">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => {
                 reset()
                 setCompetitors([''])
                 onOpenChange(false)
               }}
               disabled={loading}
+              className="rounded-xl"
             >
-              Cancel
+              Anuluj
             </Button>
             <Button 
               type="submit" 
+              variant="accent"
+              className="rounded-xl px-8 shadow-lg shadow-accent/20"
               disabled={loading || (!!subscription && (auditsRemaining ?? 0) === 0)}
             >
-              {loading ? 'Creating...' : 'Start Audit'}
+              {loading ? 'Uruchamianie...' : 'Rozpocznij Audyt'}
             </Button>
           </div>
         </form>

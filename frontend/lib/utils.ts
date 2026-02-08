@@ -28,10 +28,10 @@ export function formatScore(score: number | null | undefined): string {
 }
 
 export function getScoreColor(score: number | null | undefined): string {
-  if (score === null || score === undefined) return 'text-gray-500'
-  if (score >= 90) return 'text-green-600'
-  if (score >= 50) return 'text-yellow-600'
-  return 'text-red-600'
+  if (score === null || score === undefined) return 'text-muted-foreground'
+  if (score >= 90) return 'text-[#81d86f]'
+  if (score >= 50) return 'text-[#ff8945]'
+  return 'text-[#dc3545]'
 }
 
 // Status badge variants

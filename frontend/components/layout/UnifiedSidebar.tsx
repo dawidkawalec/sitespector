@@ -47,8 +47,25 @@ import {
   ChevronDown,
   ChevronUp,
   Globe,
-  Share2
+  Share2,
+  SearchIcon,
+  BarChart3,
+  ShieldCheck,
+  ZapIcon
 } from 'lucide-react'
+import { 
+  RiSearchEyeFill, 
+  RiDashboardFill, 
+  RiSettings4Fill, 
+  RiTeamFill, 
+  RiShieldFlashFill,
+  RiFileTextFill,
+  RiPieChartFill,
+  RiBarChartFill,
+  RiGlobalFill,
+  RiLogoutBoxRFill,
+  RiSparklingFill
+} from 'react-icons/ri'
 import { cn } from '@/lib/utils'
 import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher'
 import { Button } from '@/components/ui/button'
@@ -77,30 +94,30 @@ const mainNavItems = [
   { 
     name: 'Dashboard', 
     href: '/dashboard', 
-    icon: LayoutDashboard
+    icon: RiDashboardFill
   },
 ]
 
 // Audit overview section items
 const auditOverviewItems = [
-  { href: '/audits/[id]', icon: FileText, label: 'Podsumowanie', id: 'overview' },
-  { href: '/audits/[id]/seo', icon: Search, label: 'SEO', id: 'seo' },
-  { href: '/audits/[id]/performance', icon: Gauge, label: 'Wydajność', id: 'performance' },
-  { href: '/audits/[id]/ai-analysis', icon: Sparkles, label: 'Analiza AI', id: 'ai' },
+  { href: '/audits/[id]', icon: RiFileTextFill, label: 'Podsumowanie', id: 'overview' },
+  { href: '/audits/[id]/seo', icon: RiSearchEyeFill, label: 'SEO', id: 'seo' },
+  { href: '/audits/[id]/performance', icon: RiShieldFlashFill, label: 'Wydajność', id: 'performance' },
+  { href: '/audits/[id]/ai-analysis', icon: RiSparklingFill, label: 'Analiza AI', id: 'ai' },
 ]
 
 // Audit reports section items
 const auditReportsItems = [
   { href: '/audits/[id]/comparison', icon: ArrowLeftRight, label: 'Porównanie', id: 'comparison' },
   { href: '/audits/[id]/pdf', icon: FileDown, label: 'Raport PDF', id: 'pdf' },
-  { href: '/audits/[id]/client-report', icon: FileText, label: 'Raport dla klienta', id: 'client-report' },
-  { href: '/audits/[id]/benchmark', icon: Target, label: 'Benchmark', id: 'benchmark' },
+  { href: '/audits/[id]/client-report', icon: RiFileTextFill, label: 'Raport dla klienta', id: 'client-report' },
+  { href: '/audits/[id]/benchmark', icon: RiBarChartFill, label: 'Benchmark', id: 'benchmark' },
 ]
 
 // Audit advanced section items
 const auditAdvancedItems = [
   { href: '/audits/[id]/architecture', icon: Network, label: 'Architektura', id: 'architecture' },
-  { href: '/audits/[id]/competitors', icon: Users, label: 'Konkurencja', id: 'competitors' },
+  { href: '/audits/[id]/competitors', icon: RiTeamFill, label: 'Konkurencja', id: 'competitors' },
   { href: '/audits/[id]/debug', icon: Bug, label: 'Debug', id: 'debug' },
 ]
 
@@ -109,18 +126,18 @@ const auditToolsItems = [
   { href: '/audits/[id]/quick-wins', icon: Zap, label: 'Quick Wins', id: 'quick-wins' },
   { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki', id: 'links' },
   { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
-  { href: '#', icon: Globe, label: 'Widoczność (Senuto)', disabled: true, tooltip: 'Wymaga integracji z Senuto', id: 'senuto' },
+  { href: '#', icon: RiGlobalFill, label: 'Widoczność (Senuto)', disabled: true, tooltip: 'Wymaga integracji z Senuto', id: 'senuto' },
   { href: '#', icon: Share2, label: 'Backlinki (Ahrefs)', disabled: true, tooltip: 'Wymaga integracji z Ahrefs', id: 'ahrefs' },
 ]
 
 // Settings items (inside collapsible section)
 const settingsItems = [
-  { href: '/settings/profile', icon: User, label: 'Profile' },
-  { href: '/settings/team', icon: Users, label: 'Team' },
-  { href: '/settings/billing', icon: CreditCard, label: 'Billing' },
+  { href: '/settings/profile', icon: User, label: 'Profil' },
+  { href: '/settings/team', icon: RiTeamFill, label: 'Zespół' },
+  { href: '/settings/billing', icon: CreditCard, label: 'Płatności' },
   { href: '/settings/schedules', icon: Calendar, label: 'Automatyzacja' },
-  { href: '/settings/appearance', icon: Palette, label: 'Appearance' },
-  { href: '/settings/notifications', icon: Bell, label: 'Notifications' },
+  { href: '/settings/appearance', icon: Palette, label: 'Wygląd' },
+  { href: '/settings/notifications', icon: Bell, label: 'Powiadomienia' },
 ]
 
 function SystemStatusSection({ systemStatus, getStatusColor }: { systemStatus: any, getStatusColor: (status: string) => string }) {
@@ -246,19 +263,19 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
   }
 
   return (
-    <div className="flex h-screen w-64 flex-col border-r bg-white dark:bg-gray-950">
+    <div className="flex h-screen w-64 flex-col border-r bg-gradient-to-b from-[#0b363d] to-[#001113] text-white">
       {/* Logo */}
-      <div className="flex h-16 items-center px-6 border-b bg-gray-50/50 dark:bg-gray-900/50">
+      <div className="flex h-16 items-center px-6 border-b border-white/10 bg-black/10">
         <Link href="/dashboard" className="flex items-center gap-2 group" onClick={onAction}>
-          <div className="p-1.5 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
-            <Sparkles className="h-5 w-5" />
+          <div className="p-1.5 rounded-lg bg-accent/20 text-accent group-hover:bg-accent group-hover:text-white transition-all duration-300">
+            <RiSearchEyeFill className="h-5 w-5" />
           </div>
-          <span className="text-xl font-bold tracking-tight">SiteSpector</span>
+          <span className="text-xl font-bold tracking-tight text-white">SiteSpector</span>
         </Link>
       </div>
 
       {/* Workspace switcher */}
-      <div className="p-3 border-b bg-gray-50/30 dark:bg-gray-900/30">
+      <div className="p-3 border-b border-white/10 bg-black/5">
         <WorkspaceSwitcher />
       </div>
 
@@ -275,16 +292,16 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
                 <Button
                   variant="ghost"
                   className={cn(
-                    'group relative w-full justify-start font-normal hover:bg-accent/50 transition-all duration-200',
-                    isActive && 'bg-primary/5 text-primary font-medium hover:bg-primary/10'
+                    'group relative w-full justify-start font-normal text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200',
+                    isActive && 'bg-accent/10 text-accent font-medium hover:bg-accent/20 hover:text-accent'
                   )}
                 >
                   {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-accent rounded-r-full" />
                   )}
                   <Icon className={cn(
                     "mr-3 h-4 w-4 transition-colors",
-                    isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                    isActive ? "text-accent" : "text-white/50 group-hover:text-white"
                   )} />
                   {item.name}
                 </Button>
@@ -297,26 +314,26 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
         <div className="space-y-4">
           <div className="px-3">
             <div className="flex items-center gap-2 py-1">
-              <div className="h-px flex-1 bg-border" />
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em]">
+              <div className="h-px flex-1 bg-white/10" />
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
                 Aktualny audyt
               </p>
-              <div className="h-px flex-1 bg-border" />
+              <div className="h-px flex-1 bg-white/10" />
             </div>
             <div className="mt-2">
               <Select value={currentAuditId || ""} onValueChange={handleAuditChange}>
-                <SelectTrigger className="w-full h-9 text-xs bg-accent/30 border-border/50">
+                <SelectTrigger className="w-full h-9 text-xs bg-white/5 border-white/10 text-white placeholder:text-white/30">
                   <SelectValue placeholder="Wybierz audyt..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[#0b363d] border-white/10 text-white">
                   {audits.length === 0 ? (
                     <SelectItem value="none" disabled>Brak audytów</SelectItem>
                   ) : (
                     audits.map((audit) => (
-                      <SelectItem key={audit.id} value={audit.id}>
+                      <SelectItem key={audit.id} value={audit.id} className="focus:bg-white/10 focus:text-white">
                         <div className="flex flex-col">
                           <span className="font-medium truncate max-w-[180px]">{audit.url}</span>
-                          <span className="text-[10px] text-muted-foreground">{new Date(audit.created_at).toLocaleDateString()}</span>
+                          <span className="text-[10px] text-white/50">{new Date(audit.created_at).toLocaleDateString()}</span>
                         </div>
                       </SelectItem>
                     ))
@@ -336,6 +353,7 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
               variant="audit"
               onItemClick={onAction}
               disabled={isAuditDisabled}
+              className="text-white/70 hover:text-white"
             />
 
             <NavSection
@@ -346,6 +364,7 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
               variant="audit"
               onItemClick={onAction}
               disabled={isAuditDisabled}
+              className="text-white/70 hover:text-white"
             />
 
             <NavSection
@@ -356,6 +375,7 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
               variant="audit"
               onItemClick={onAction}
               disabled={isAuditDisabled}
+              className="text-white/70 hover:text-white"
             />
 
             <NavSection
@@ -366,6 +386,7 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
               variant="audit"
               onItemClick={onAction}
               disabled={isAuditDisabled}
+              className="text-white/70 hover:text-white"
             />
           </div>
 
@@ -374,7 +395,7 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
               <Link href="/dashboard" onClick={onAction}>
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start text-xs text-muted-foreground hover:text-foreground transition-colors group"
+                  className="w-full justify-start text-xs text-white/50 hover:text-white hover:bg-white/5 transition-colors group"
                 >
                   <ArrowLeft className="mr-2 h-3 w-3 transition-transform group-hover:-translate-x-1" />
                   Wróć do listy audytów
@@ -387,11 +408,11 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
         {/* Settings Section - Collapsible */}
         <div className="space-y-1">
           <div className="px-3 flex items-center gap-2 py-1">
-            <div className="h-px flex-1 bg-border" />
-            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em]">
+            <div className="h-px flex-1 bg-white/10" />
+            <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
               System
             </p>
-            <div className="h-px flex-1 bg-border" />
+            <div className="h-px flex-1 bg-white/10" />
           </div>
           <NavSection
             title="Ustawienia"
@@ -401,6 +422,7 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
             defaultOpen={isInSettings}
             onOpenChange={setSettingsOpen}
             onItemClick={onAction}
+            className="text-white/70 hover:text-white"
           />
 
           {/* System Status - matching NavSection style */}
@@ -409,23 +431,23 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
       </nav>
 
       {/* User section */}
-      <div className="border-t p-4 bg-gray-50/50 dark:bg-gray-900/50">
+      <div className="border-t border-white/10 p-4 bg-black/10">
         <div className="space-y-3">
           {currentWorkspace && (
-            <div className="px-3 py-2 rounded-lg bg-white dark:bg-gray-950 border border-border/50 shadow-sm">
-              <p className="text-sm font-semibold truncate text-foreground">{currentWorkspace.name}</p>
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mt-0.5">
+            <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 shadow-sm">
+              <p className="text-sm font-semibold truncate text-white">{currentWorkspace.name}</p>
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider mt-0.5">
                 {currentWorkspace.role}
               </p>
             </div>
           )}
           <Button
             variant="ghost"
-            className="w-full justify-start text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all duration-200 group"
+            className="w-full justify-start text-sm text-white/50 hover:text-accent hover:bg-accent/10 transition-all duration-200 group"
             onClick={handleLogout}
           >
-            <LogOut className="mr-3 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            Sign out
+            <RiLogoutBoxRFill className="mr-3 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            Wyloguj się
           </Button>
         </div>
       </div>

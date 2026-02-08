@@ -67,9 +67,9 @@ export function NavSection({
         disabled={disabled}
         className={cn(
           'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-          'text-muted-foreground hover:bg-accent hover:text-foreground',
-          isOpen && !disabled && 'bg-accent text-foreground',
-          disabled && 'cursor-not-allowed hover:bg-transparent hover:text-muted-foreground'
+          'text-white/70 hover:bg-white/10 hover:text-white',
+          isOpen && !disabled && 'bg-white/10 text-white',
+          disabled && 'cursor-not-allowed hover:bg-transparent hover:text-white/40'
         )}
       >
         <Icon className="h-4 w-4 flex-shrink-0" />
@@ -83,7 +83,7 @@ export function NavSection({
       </button>
 
       {isOpen && (
-        <div className="mt-1 ml-4 border-l-2 border-border/40 pl-2 space-y-0.5 animate-in slide-in-from-top-2 fade-in duration-200">
+        <div className="mt-1 ml-4 border-l-2 border-white/10 pl-2 space-y-0.5 animate-in slide-in-from-top-2 fade-in duration-200">
           {items.map((item, index) => (
             <NavItem
               key={item.id || `${value}-${index}`}
@@ -94,8 +94,8 @@ export function NavSection({
               disabled={item.disabled}
               tooltip={item.tooltip}
               activeClass={cn(
-                'bg-primary/10 text-primary font-medium',
-                variant === 'audit' && 'bg-primary/5'
+                'bg-accent/10 text-accent font-medium',
+                variant === 'audit' && 'bg-accent/5'
               )}
               onClick={onItemClick}
             />

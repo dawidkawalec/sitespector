@@ -26,19 +26,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  BarChart, 
+  Bar, 
+  Cell 
 } from 'recharts'
 import { motion, AnimatePresence } from 'framer-motion'
+import { RiDashboardFill, RiAddFill, RiHistoryFill, RiSearchEyeFill, RiShieldFlashFill, RiSparklingFill } from 'react-icons/ri'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -147,13 +148,13 @@ export default function DashboardPage() {
     : 0
 
   const barData = [
-    { name: 'SEO', value: avgSeo, color: '#3b82f6' },
-    { name: 'Performance', value: avgPerf, color: '#10b981' },
-    { name: 'Overall', value: avgOverall, color: '#8b5cf6' }
+    { name: 'SEO', value: avgSeo, color: '#ff8945' },
+    { name: 'Performance', value: avgPerf, color: '#0b363d' },
+    { name: 'Overall', value: avgOverall, color: '#81d86f' }
   ]
 
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
+    <div className="container mx-auto py-8 px-4 space-y-8 bg-[#fff9f5]/30 dark:bg-transparent min-h-full">
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
@@ -161,15 +162,15 @@ export default function DashboardPage() {
         className="flex flex-col md:flex-row md:items-center justify-between gap-4"
       >
         <div>
-          <h1 className="text-4xl font-black tracking-tight">Analytics Dashboard</h1>
+          <h1 className="text-4xl font-black tracking-tight text-primary">Panel Analityczny</h1>
           <p className="text-muted-foreground flex items-center gap-2 mt-1">
-            <Layout className="h-4 w-4" /> {currentWorkspace.name}
+            <RiDashboardFill className="h-4 w-4 text-accent" /> <span className="text-line">{currentWorkspace.name}</span>
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={handleLogout} className="rounded-full">Sign out</Button>
-          <Button onClick={() => setShowNewAuditDialog(true)} className="rounded-full shadow-lg shadow-primary/20">
-            <Plus className="mr-2 h-4 w-4" /> New Audit
+          <Button variant="outline" onClick={handleLogout} className="rounded-xl">Wyloguj się</Button>
+          <Button onClick={() => setShowNewAuditDialog(true)} variant="accent" className="rounded-xl shadow-lg shadow-accent/20">
+            <RiAddFill className="mr-2 h-5 w-5" /> Nowy Audyt
           </Button>
         </div>
       </motion.div>
@@ -177,20 +178,20 @@ export default function DashboardPage() {
       {/* Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Trend Chart */}
-        <Card className="lg:col-span-2 overflow-hidden border-none shadow-xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950">
+        <Card className="lg:col-span-2 overflow-hidden border-none shadow-xl bg-gradient-to-br from-white to-[#fff9f5] dark:from-slate-900 dark:to-slate-950">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" /> Workspace Trends
+            <CardTitle className="flex items-center gap-2 text-primary">
+              <TrendingUp className="h-5 w-5 text-accent" /> Trendy Workspace
             </CardTitle>
-            <CardDescription>Average scores across all audits in this workspace</CardDescription>
+            <CardDescription>Średnie wyniki wszystkich audytów w tym obszarze roboczym</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={timelineData}>
                 <defs>
                   <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#ff8945" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#ff8945" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -202,7 +203,7 @@ export default function DashboardPage() {
                 <Area 
                   type="monotone" 
                   dataKey="score" 
-                  stroke="#3b82f6" 
+                  stroke="#ff8945" 
                   strokeWidth={3}
                   fillOpacity={1} 
                   fill="url(#colorScore)" 
@@ -215,60 +216,75 @@ export default function DashboardPage() {
 
         {/* Quick Stats & Distribution */}
         <div className="space-y-6">
-          <Card className="border-none shadow-lg">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Average Health</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-5xl font-black text-primary mb-4">{avgOverall.toFixed(1)}%</div>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="flex items-center gap-1"><Search className="h-3 w-3" /> SEO</span>
-                  <span className="font-bold">{avgSeo.toFixed(0)}%</span>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="border-none shadow-lg bg-white dark:bg-slate-900 overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Średnia Kondycja</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-5xl font-black text-primary mb-4">{avgOverall.toFixed(1)}%</div>
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="flex items-center gap-1 font-medium"><RiSearchEyeFill className="h-3 w-3 text-accent" /> SEO</span>
+                    <span className="font-bold text-primary">{avgSeo.toFixed(0)}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${avgSeo}%` }}
+                      className="h-full bg-accent"
+                      transition={{ duration: 1, delay: 0.2 }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-sm pt-1">
+                    <span className="flex items-center gap-1 font-medium"><RiShieldFlashFill className="h-3 w-3 text-primary" /> Wydajność</span>
+                    <span className="font-bold text-primary">{avgPerf.toFixed(0)}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${avgPerf}%` }}
+                      className="h-full bg-primary"
+                      transition={{ duration: 1, delay: 0.4 }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${avgSeo}%` }}
-                    className="h-full bg-blue-500"
-                    transition={{ duration: 1, delay: 0.2 }}
-                  />
-                </div>
-                <div className="flex justify-between text-sm pt-1">
-                  <span className="flex items-center gap-1"><Gauge className="h-3 w-3" /> Performance</span>
-                  <span className="font-bold">{avgPerf.toFixed(0)}%</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${avgPerf}%` }}
-                    className="h-full bg-emerald-500"
-                    transition={{ duration: 1, delay: 0.4 }}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="border-none shadow-lg bg-primary text-primary-foreground">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider opacity-80">Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-end gap-2">
-                <div className="text-5xl font-black">{auditsData?.total || 0}</div>
-                <div className="text-sm mb-1 opacity-80">Total Audits</div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="border-none shadow-lg bg-primary text-white overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <RiHistoryFill size={80} />
               </div>
-              <div className="mt-4 flex gap-4 text-xs font-medium">
-                <div className="flex items-center gap-1">
-                  <div className="h-2 w-2 rounded-full bg-white" /> {completedAudits.length} Done
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold uppercase tracking-wider opacity-80">Aktywność</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-end gap-2">
+                  <div className="text-5xl font-black">{auditsData?.total || 0}</div>
+                  <div className="text-sm mb-1 opacity-80">Wszystkich Audytów</div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="h-2 w-2 rounded-full bg-white/40" /> {auditsData?.items?.filter(a => a.status === 'processing').length} Active
+                <div className="mt-4 flex gap-4 text-xs font-medium">
+                  <div className="flex items-center gap-1">
+                    <div className="h-2 w-2 rounded-full bg-accent" /> {completedAudits.length} Ukończonych
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="h-2 w-2 rounded-full bg-white/40" /> {auditsData?.items?.filter(a => a.status === 'processing').length} W toku
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
 
@@ -278,11 +294,11 @@ export default function DashboardPage() {
       {/* Audits List */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Activity className="h-6 w-6 text-primary" /> Recent Audits
+          <h2 className="text-2xl font-bold flex items-center gap-2 text-primary">
+            <Activity className="h-6 w-6 text-accent" /> Ostatnie Audyty
           </h2>
           <Button variant="ghost" size="sm" onClick={() => refetch()} className="text-muted-foreground">
-            <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} /> Refresh
+            <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} /> Odśwież
           </Button>
         </div>
 
@@ -296,7 +312,7 @@ export default function DashboardPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2, delay: index * 0.05 }}
               >
-                <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white dark:bg-slate-900">
                   <Link href={`/audits/${audit.id}`}>
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
@@ -309,7 +325,7 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </div>
-                      <CardTitle className="text-base truncate" title={audit.url}>
+                      <CardTitle className="text-base truncate text-primary" title={audit.url}>
                         {truncateUrl(audit.url, 40)}
                       </CardTitle>
                       <CardDescription className="text-[10px] uppercase tracking-wider font-bold">
@@ -320,14 +336,14 @@ export default function DashboardPage() {
                       <div className="flex gap-4 mt-2">
                         <div className="flex-1">
                           <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">SEO</p>
-                          <div className="h-1 w-full bg-slate-100 rounded-full">
-                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${audit.seo_score || 0}%` }} />
+                          <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full">
+                            <div className="h-full bg-accent rounded-full" style={{ width: `${audit.seo_score || 0}%` }} />
                           </div>
                         </div>
                         <div className="flex-1">
                           <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Perf</p>
-                          <div className="h-1 w-full bg-slate-100 rounded-full">
-                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${audit.performance_score || 0}%` }} />
+                          <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full">
+                            <div className="h-full bg-primary rounded-full" style={{ width: `${audit.performance_score || 0}%` }} />
                           </div>
                         </div>
                       </div>

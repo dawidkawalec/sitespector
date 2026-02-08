@@ -31,7 +31,7 @@ export function NavItem({
   badge, 
   disabled,
   tooltip,
-  activeClass = 'bg-primary/10 text-primary font-medium',
+  activeClass = 'bg-accent/10 text-accent font-medium',
   onClick
 }: NavItemProps) {
   const pathname = usePathname()
@@ -43,21 +43,21 @@ export function NavItem({
         'group relative flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all duration-200',
         isActive
           ? activeClass
-          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-        disabled && 'text-muted-foreground/50 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground/50'
+          : 'text-white/70 hover:bg-white/10 hover:text-white',
+        disabled && 'text-white/30 cursor-not-allowed hover:bg-transparent hover:text-white/30'
       )}
     >
       {isActive && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-accent rounded-r-full" />
       )}
       <Icon className={cn(
         "h-4 w-4 flex-shrink-0 transition-colors",
-        isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
-        disabled && "text-muted-foreground/30 group-hover:text-muted-foreground/30"
+        isActive ? "text-accent" : "text-white/40 group-hover:text-white",
+        disabled && "text-white/20 group-hover:text-white/20"
       )} />
       <span className="flex-1">{label}</span>
       {badge && (
-        <span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+        <span className="text-[10px] font-bold bg-accent/20 text-accent px-1.5 py-0.5 rounded-full uppercase tracking-wider">
           {badge}
         </span>
       )}

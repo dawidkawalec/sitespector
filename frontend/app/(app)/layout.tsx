@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header with menu */}
-        <header className="md:hidden h-16 border-b flex items-center px-4 bg-white dark:bg-gray-950 flex-shrink-0">
+        <header className="md:hidden h-16 border-b flex items-center px-4 bg-[#0b363d] text-white flex-shrink-0">
           <MobileSidebar />
           <h1 className="ml-4 text-xl font-bold">SiteSpector</h1>
         </header>

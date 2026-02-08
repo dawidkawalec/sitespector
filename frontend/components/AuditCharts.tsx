@@ -10,11 +10,11 @@ interface PageStatusChartProps {
 
 export function PageStatusChart({ statusData }: PageStatusChartProps) {
   const data = [
-    { name: '200 OK', value: statusData['200'] || 0, color: '#16a34a' },
-    { name: '301 Redirect', value: statusData['301'] || 0, color: '#ca8a04' },
-    { name: '302 Redirect', value: statusData['302'] || 0, color: '#eab308' },
-    { name: '404 Not Found', value: statusData['404'] || 0, color: '#dc2626' },
-    { name: 'Inne', value: statusData['other'] || 0, color: '#6b7280' },
+    { name: '200 OK', value: statusData['200'] || 0, color: '#81d86f' },
+    { name: '301 Redirect', value: statusData['301'] || 0, color: '#ff8945' },
+    { name: '302 Redirect', value: statusData['302'] || 0, color: '#eea47f' },
+    { name: '404 Not Found', value: statusData['404'] || 0, color: '#dc3545' },
+    { name: 'Inne', value: statusData['other'] || 0, color: '#616c6e' },
   ].filter(item => item.value > 0)  // Only show non-zero values
   
   if (data.length === 0) {
@@ -79,12 +79,14 @@ export function ResponseTimeChart({ pages }: ResponseTimeChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="value" fill="#3b82f6" name="Liczba stron" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12}} />
+        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} />
+        <Tooltip 
+          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+        />
+        <Legend iconType="circle" />
+        <Bar dataKey="value" fill="#0b363d" name="Liczba stron" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )
@@ -125,12 +127,14 @@ export function WordCountChart({ pages }: WordCountChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="value" fill="#8b5cf6" name="Liczba stron" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12}} />
+        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} />
+        <Tooltip 
+          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+        />
+        <Legend iconType="circle" />
+        <Bar dataKey="value" fill="#ff8945" name="Liczba stron" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )
@@ -171,12 +175,14 @@ export function ImageSizeChart({ images }: ImageSizeChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="value" fill="#ec4899" name="Liczba obrazów" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12}} />
+        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} />
+        <Tooltip 
+          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+        />
+        <Legend iconType="circle" />
+        <Bar dataKey="value" fill="#adefd1" name="Liczba obrazów" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )

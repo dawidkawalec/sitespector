@@ -77,8 +77,10 @@ export default function AIAnalysisPage({ params }: { params: { id: string } }) {
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
       <div className="flex items-center gap-3">
-        <Sparkles className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold">Analiza AI</h1>
+        <Sparkles className="h-8 w-8 text-accent" />
+        <h1 className="text-3xl font-bold text-primary">
+          <span className="text-line">Analiza AI</span>
+        </h1>
       </div>
       
       {/* Content Metrics & Info */}
