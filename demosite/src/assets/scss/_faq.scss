@@ -1,0 +1,15 @@
+.faq-section {
+  .faq-back {
+    h1 {
+      font-size: 300px;
+      position: absolute;
+      top: 40%;
+      left: 30%;
+      z-index: -1;
+      color: #f5f5f5;
+    }
+    @media (max-width: 1162px) {
+      display: none;
+    }
+  }
+}

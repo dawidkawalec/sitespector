@@ -115,6 +115,20 @@ services:
       - sitespector-network
     restart: unless-stopped
 
+  # Landing Page (Next.js)
+  landing:
+    build:
+      context: ./demosite
+      dockerfile: Dockerfile
+    container_name: sitespector-landing
+    command: node server.js
+    environment:
+      - HOSTNAME=0.0.0.0
+      - PORT=3001
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
   # Frontend (Next.js)
   frontend:
     build:
@@ -169,6 +183,7 @@ services:
     volumes:
       - ./ssl:/etc/nginx/ssl:ro
     depends_on:
+      - landing
       - frontend
       - backend
       - dozzle

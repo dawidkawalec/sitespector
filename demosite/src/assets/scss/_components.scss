@@ -1,0 +1,66 @@
+/* 
+// 03.COMPONENTS
+*/
+@each $color, $value in $theme-colors {
+  .bg-#{$color} {
+    background-color: #{$value} !important;
+  }
+
+  .text-#{$color} {
+    color: #{$value} !important;
+  }
+
+  .btn-#{$color} {
+    background-color: #{$value} !important;
+  }
+
+  .border-#{$color} {
+    border-color: #{$value} !important;
+  }
+  .btn-outline-#{$color} {
+    color: #{$value} !important;
+    border: 1px solid #{$value} !important;
+    &:hover {
+      background-color: #{$value} !important;
+      color: $light !important;
+    }
+    &:active {
+      background-color: #{$value} !important;
+      color: $light !important;
+    }
+    &:focus {
+      background-color: #{$value} !important;
+      color: $light !important;
+    }
+  }
+}
+
+.btn {
+  padding: 10px 28px;
+  border: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.5s;
+  border-radius: 3px;
+  &:focus {
+    border-color: transparent !important;
+  }
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 10px 10px -8px $primary;
+  }
+}
+.btn-lg {
+  padding: 15px 30px;
+  font-size: 16px;
+}
+.btn:focus {
+  box-shadow: 0 0 0 0.15rem rgba($primary, 0.5);
+}
+.btn-success:focus {
+  box-shadow: 0 0 0 0.15rem rgba($success, 0.5);
+}
+// .btn-gradient {
+//   background-image: linear-gradient(to right, #fd7e14 0%, #ffac66 30%, #ffa961 30%, #f76f00 73%, #ffac66 100%);
+
+// }

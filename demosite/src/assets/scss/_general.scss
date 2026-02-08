@@ -1,0 +1,106 @@
+/* 
+// 04.general
+*/
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+body {
+  font-family: 'Outfit', sans-serif;
+}
+a {
+  text-decoration: none;
+  font-size: 20px;
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+p {
+  font-size: 17px;
+  color: $gray-500;
+  font-weight: 400;
+}
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-weight: 400 !important;
+}
+h6 {
+  font-size: 18px !important;
+  font-weight: 400;
+}
+.logo {
+  i {
+    font-weight: normal !important;
+  }
+}
+
+.form-control {
+  box-shadow: none !important;
+}
+.bg-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(0, 41, 54, 0.91);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.bg-overlay-2 {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  // background-color: rgba(0 41 54 / 82%);
+  background-color: rgba(0, 41, 54, 0.71);
+  background-size: cover;
+  background-repeat: no-repeat;
+  backdrop-filter: blur(4px);
+}
+
+.section-title-border {
+  width: 50px;
+  height: 2px;
+  margin-right: auto;
+  margin-left: auto;
+  background-color: $success;
+}
+.title-sm {
+  span {
+    letter-spacing: 1px;
+    font-weight: 600;
+    font-size: 17px;
+    color: $orange;
+  }
+}
+.shape {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  svg {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.text-line {
+  position: relative;
+  z-index: 2;
+  padding: 0 10px;
+  &::after {
+    content: '';
+    background: rgba($orange, 0.2);
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 34%;
+    width: 100%;
+    z-index: -1;
+  }
+}

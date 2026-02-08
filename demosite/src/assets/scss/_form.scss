@@ -1,0 +1,90 @@
+.form-group {
+  margin-bottom: 1rem;
+  input {
+    &.form-control {
+      padding: 10px;
+    }
+    &::placeholder {
+      color: $gray-400;
+    }
+  }
+
+  p {
+    font-size: 14px;
+  }
+}
+label {
+  margin-bottom: 0.25rem;
+}
+.sign-up {
+  padding-top: 85px;
+}
+.reset-section {
+  padding-top: 150px;
+}
+.login-content {
+  position: relative;
+  background-image: url('../images/dashboard-img.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.login-section {
+  height: 100vh;
+
+  .login-icon {
+    li {
+      margin: 0 10px 0 10px;
+      i {
+        color: $gray-600;
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+.home-icon {
+  top: 5%;
+  left: 90%;
+  a {
+    font-size: 30px;
+    color: $primary;
+  }
+}
+
+.login-btn {
+  a {
+    padding: 10px 57px !important;
+    border-color: #dee2e6 !important;
+    @media (max-width: 991px) {
+      padding: 10px 28px !important;
+      margin-right: 5px !important;
+    }
+  }
+}
+.form-check {
+  a {
+    font-size: 15px;
+    font-weight: 500;
+  }
+}
+.line {
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed $secondary;
+    top: 15px;
+  }
+  small {
+    display: inline-block;
+    position: relative;
+    z-index: 9;
+    background-color: $white;
+    padding: 2px 16px;
+  }
+}

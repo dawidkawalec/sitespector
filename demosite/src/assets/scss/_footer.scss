@@ -1,0 +1,66 @@
+//
+// _footer.scss
+//
+
+.footer-part {
+  position: relative;
+  background: linear-gradient(to right, #0b363d, #001113);
+
+  p {
+    font-size: 17px;
+  }
+
+  li {
+    margin-bottom: 17px;
+    a {
+      font-size: 16px;
+      transition: all 0.5s;
+      &:hover {
+        color: $light !important;
+        margin: 5px;
+        i {
+          color: $light !important;
+        }
+      }
+    }
+  }
+
+  .form-button {
+    form {
+      position: relative;
+    }
+    input {
+      padding: 13px 10px;
+      box-shadow: none;
+      border-color: transparent;
+      background-color: rgba($primary, 0.9);
+      color: $light;
+      &::placeholder {
+        color: $light;
+      }
+    }
+    a {
+      background-color: $orange;
+      display: inline-block;
+      padding: 6px 28px;
+      border-radius: 5px;
+      color: $white;
+      position: absolute;
+      right: 0;
+      font-size: 17px;
+    }
+  }
+
+  .contact-f {
+    i {
+      font-size: 30px;
+      color: $white;
+      margin-right: 16px;
+      display: flex;
+      align-items: start;
+    }
+  }
+}
+.footer-copyright {
+  background-color: #032833 !important;
+}
