@@ -6,7 +6,62 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field, validator
-from app.models import SubscriptionTier, AuditStatus, CompetitorStatus
+from app.models import SubscriptionTier, AuditStatus, CompetitorStatus, ScheduleFrequency
+
+
+# ============================================
+# Audit Schedule Schemas
+# ============================================
+
+class AuditScheduleBase(BaseModel):
+    """Base audit schedule schema."""
+    url: str = Field(..., max_length=2048)
+    frequency: ScheduleFrequency
+    include_competitors: bool = True
+    competitors_urls: List[str] = Field(default=[], max_items=3)
+
+    @validator("url")
+    def validate_url(cls, v: str) -> str:
+        if not v.startswith(("http://", "https://")):
+            v = f"https://{v}"
+        return v
+
+    @validator("competitors_urls")
+    def validate_competitors(cls, v: List[str]) -> List[str]:
+        validated = []
+        for url in v:
+            if not url.startswith(("http://", "https://")):
+                url = f"https://{url}"
+            validated.append(url)
+        return validated
+
+
+class AuditScheduleCreate(AuditScheduleBase):
+    """Schema for creating audit schedule."""
+    workspace_id: UUID
+
+
+class AuditScheduleUpdate(BaseModel):
+    """Schema for updating audit schedule."""
+    frequency: Optional[ScheduleFrequency] = None
+    is_active: Optional[bool] = None
+    include_competitors: Optional[bool] = None
+    competitors_urls: Optional[List[str]] = None
+
+
+class AuditScheduleResponse(AuditScheduleBase):
+    """Schema for audit schedule response."""
+    id: UUID
+    user_id: UUID
+    workspace_id: UUID
+    is_active: bool
+    last_run_at: Optional[datetime] = None
+    next_run_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 # ============================================

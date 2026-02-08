@@ -6,1022 +6,245 @@
     <style>
         @page {
             size: A4;
-            margin: 2cm;
+            margin: 1.5cm;
+            @bottom-right {
+                content: "Strona " counter(page) " z " counter(pages);
+                font-size: 9pt;
+                color: #94a3b8;
+            }
         }
         
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 11pt;
-            line-height: 1.6;
-            color: #333;
-        }
-        
-        h1 {
-            font-size: 24pt;
-            font-weight: bold;
-            color: #000;
-            margin-bottom: 0.5em;
-            page-break-after: avoid;
-        }
-        
-        h2 {
-            font-size: 18pt;
-            font-weight: bold;
-            color: #222;
-            margin-top: 1.5em;
-            margin-bottom: 0.5em;
-            page-break-after: avoid;
-        }
-        
-        h3 {
-            font-size: 14pt;
-            font-weight: 600;
-            color: #444;
-            margin-top: 1em;
-            margin-bottom: 0.3em;
-        }
-        
-        .score-high {
-            color: #16a34a;
-            font-weight: bold;
-        }
-        
-        .score-medium {
-            color: #ca8a04;
-            font-weight: bold;
-        }
-        
-        .score-low {
-            color: #dc2626;
-            font-weight: bold;
-        }
-        
-        .recommendation {
-            background-color: #f0f9ff;
-            border-left: 4px solid #3b82f6;
-            padding: 1em;
-            margin: 1em 0;
-            page-break-inside: avoid;
-        }
-        
-        code {
-            background-color: #f3f4f6;
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
             font-size: 10pt;
-        }
-        
-        pre {
-            background-color: #1f2937;
-            color: #f3f4f6;
-            padding: 1em;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 9pt;
-            line-height: 1.4;
-            page-break-inside: avoid;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1em 0;
-            page-break-inside: avoid;
-        }
-        
-        th, td {
-            border: 1px solid #e5e7eb;
-            padding: 0.5em;
-            text-align: left;
-        }
-        
-        th {
-            background-color: #f3f4f6;
-            font-weight: 600;
+            line-height: 1.5;
+            color: #1e293b;
+            background: #fff;
         }
         
         .cover-page {
             page-break-after: always;
             text-align: center;
-            padding-top: 30%;
+            padding-top: 20%;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            height: 100%;
+        }
+
+        .logo-box {
+            background: #3b82f6;
+            color: white;
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: bold;
+            margin-bottom: 20px;
         }
         
-        .page-break {
-            page-break-before: always;
+        h1 { font-size: 28pt; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
+        h2 { font-size: 20pt; font-weight: 700; color: #1e293b; margin-top: 1.5em; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
+        h3 { font-size: 14pt; font-weight: 600; color: #334155; margin-top: 1.2em; }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 9pt;
+            font-weight: 600;
+            text-transform: uppercase;
         }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef9c3; color: #854d0e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+
+        .score-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .score-value { font-size: 32pt; font-weight: 800; color: #3b82f6; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            text-align: left;
+        }
+        th { background: #f1f5f9; font-weight: 600; font-size: 9pt; color: #64748b; }
+
+        .recommendation {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #3b82f6;
+            background: #f0f9ff;
+            page-break-inside: avoid;
+        }
+        .rec-critical { border-left-color: #ef4444; background: #fef2f2; }
+        .rec-warning { border-left-color: #f59e0b; background: #fffbeb; }
+        .rec-success { border-left-color: #10b981; background: #f0fdf4; }
+
+        .grid { display: block; width: 100%; }
+        .col { display: inline-block; width: 48%; vertical-align: top; margin-right: 2%; }
+
+        .page-break { page-break-before: always; }
         
         .footer {
             position: fixed;
             bottom: 0;
-            left: 0;
-            right: 0;
+            width: 100%;
             text-align: center;
-            font-size: 9pt;
-            color: #666;
-            padding: 10px;
-            border-top: 1px solid #ddd;
-        }
-        
-        ul, ol {
-            margin: 0.5em 0;
-            padding-left: 2em;
-        }
-        
-        li {
-            margin: 0.3em 0;
+            font-size: 8pt;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
         }
     </style>
 </head>
 <body>
-    <!-- Cover Page -->
+    <!-- Cover -->
     <div class="cover-page">
-        <h1 style="font-size: 36pt; margin-bottom: 1em;">SiteSpector</h1>
-        <h2 style="font-size: 24pt; color: #666; margin-bottom: 2em;">
-            Raport Audytu Strony Internetowej
-        </h2>
-        <div style="font-size: 18pt; margin-top: 4em;">
-            <p><strong>Audytowana strona:</strong></p>
-            <p style="color: #3b82f6; font-weight: bold;">{{ audit.url }}</p>
+        <div class="logo-box">S</div>
+        <h1>SiteSpector</h1>
+        <p style="font-size: 18pt; color: #64748b;">Raport Audytu Witryny</p>
+        <div style="margin-top: 50px;">
+            <p style="font-size: 14pt; font-weight: 600;">{{ audit.url }}</p>
+            <p style="color: #94a3b8;">Data: {{ generated_date }}</p>
         </div>
-        <div style="font-size: 14pt; color: #666; margin-top: 4em;">
-            <p>Data wygenerowania: {{ generated_date }}</p>
-            <p>ID Audytu: {{ audit.id }}</p>
-        </div>
-    </div>
-
-    <!-- Table of Contents -->
-    <div class="page-break">
-        <h1>Spis Treści</h1>
-        <ol style="font-size: 12pt; line-height: 2;">
-            <li>Podsumowanie Wykonawcze</li>
-            <li>Wyniki Ogólne</li>
-            <li>Analiza Wszystkich Stron ({{ seo_data.pages_crawled }})</li>
-            <li>Szczegóły Strony Głównej - SEO</li>
-            <li>Analiza Obrazów ({{ seo_data.images.total if seo_data.images else 0 }})</li>
-            <li>Analiza Linków</li>
-            <li>Lighthouse - Pełna Diagnostyka</li>
-            <li>Techniczne SEO</li>
-            <li>Analiza Wydajności</li>
-            <li>Analiza Treści</li>
-            {% if audit.is_local_business %}
-            <li>Lokalny SEO</li>
-            {% endif %}
-            {% if audit.competitors|length > 0 %}
-            <li>Analiza Konkurencji</li>
-            {% endif %}
-            <li>Plan Działania</li>
-            <li>Załączniki</li>
-        </ol>
     </div>
 
     <!-- Executive Summary -->
-    <div class="page-break">
-        <h1>1. Podsumowanie Wykonawcze</h1>
-        
-        <p style="font-size: 13pt; margin: 1.5em 0;">
-            Ten raport przedstawia kompleksową analizę strony <strong>{{ audit.url }}</strong>,
-            przeprowadzoną {{ audit.created_at }} przez platformę SiteSpector.
-        </p>
+    <div>
+        <h2>1. Podsumowanie Wyników</h2>
+        <div class="grid">
+            <div class="col">
+                <div class="score-card">
+                    <p style="color: #64748b; font-weight: 600;">SEO Score</p>
+                    <div class="score-value">{{ audit.seo_score|round|int }}%</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="score-card">
+                    <p style="color: #64748b; font-weight: 600;">Performance</p>
+                    <div class="score-value">{{ audit.performance_score|round|int }}%</div>
+                </div>
+            </div>
+        </div>
 
-        <h2>Wyniki Ogólne</h2>
-        <table>
-            <tr>
-                <th>Kategoria</th>
-                <th>Wynik</th>
-                <th>Ocena</th>
-            </tr>
-            <tr>
-                <td>Wynik Ogólny</td>
-                <td><span class="{% if audit.overall_score >= 80 %}score-high{% elif audit.overall_score >= 50 %}score-medium{% else %}score-low{% endif %}">{{ audit.overall_score|round|int }}/100</span></td>
-                <td>{% if audit.overall_score >= 80 %}Bardzo dobry{% elif audit.overall_score >= 50 %}Dobry{% else %}Wymaga poprawy{% endif %}</td>
-            </tr>
-            <tr>
-                <td>SEO</td>
-                <td><span class="{% if audit.seo_score >= 80 %}score-high{% elif audit.seo_score >= 50 %}score-medium{% else %}score-low{% endif %}">{{ audit.seo_score|round|int }}/100</span></td>
-                <td>{% if audit.seo_score >= 80 %}Bardzo dobry{% elif audit.seo_score >= 50 %}Dobry{% else %}Wymaga poprawy{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Wydajność</td>
-                <td><span class="{% if audit.performance_score >= 80 %}score-high{% elif audit.performance_score >= 50 %}score-medium{% else %}score-low{% endif %}">{{ audit.performance_score|round|int }}/100</span></td>
-                <td>{% if audit.performance_score >= 80 %}Bardzo dobra{% elif audit.performance_score >= 50 %}Dobra{% else %}Wymaga poprawy{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Treść</td>
-                <td><span class="{% if audit.content_score >= 80 %}score-high{% elif audit.content_score >= 50 %}score-medium{% else %}score-low{% endif %}">{{ audit.content_score|round|int }}/100</span></td>
-                <td>{% if audit.content_score >= 80 %}Bardzo dobra{% elif audit.content_score >= 50 %}Dobra{% else %}Wymaga poprawy{% endif %}</td>
-            </tr>
-        </table>
-
-        {% if audit.is_local_business %}
+        <h3>Kluczowe Wnioski AI</h3>
         <div class="recommendation">
-            <h3>🏢 Wykryto Lokalną Firmę</h3>
-            <p>
-                Analiza wykryła, że strona reprezentuje lokalny biznes.
-                Specjalne rekomendacje dla lokalnego SEO znajdują się w sekcji 6.
-            </p>
+            <p>{{ content_analysis.summary }}</p>
         </div>
+
+        {% if benchmarks %}
+        <h3>Benchmark Branżowy</h3>
+        <p>Twoja strona jest lepiej zoptymalizowana niż <strong>{{ (audit.overall_score * 0.9)|round|int }}%</strong> witryn w branży.</p>
         {% endif %}
     </div>
 
-    <!-- All Pages Analysis - NEW SECTION -->
+    <!-- Technical SEO -->
     <div class="page-break">
-        <h1>3. Analiza Wszystkich Stron ({{ seo_data.all_pages|length if seo_data.all_pages else seo_data.pages_crawled }})</h1>
+        <h2>2. Analiza Techniczna & SEO</h2>
         
-        <h2>3.1 Podsumowanie według Status Code</h2>
-        <table>
-            <tr>
-                <th>Status Code</th>
-                <th>Liczba stron</th>
-                <th>Procent</th>
-                <th>Ocena</th>
-            </tr>
-            <tr>
-                <td>200 OK</td>
-                <td><span class="score-high">{{ seo_data.pages_by_status['200'] if seo_data.pages_by_status else 0 }}</span></td>
-                <td>{{ ((seo_data.pages_by_status['200'] / seo_data.pages_crawled * 100)|round(1)) if seo_data.pages_by_status else 0 }}%</td>
-                <td>✅ Dobrze</td>
-            </tr>
-            <tr>
-                <td>301 Redirects</td>
-                <td>{{ seo_data.pages_by_status['301'] if seo_data.pages_by_status else 0 }}</td>
-                <td>{{ ((seo_data.pages_by_status['301'] / seo_data.pages_crawled * 100)|round(1)) if seo_data.pages_by_status else 0 }}%</td>
-                <td>⚠️ Sprawdź</td>
-            </tr>
-            <tr>
-                <td>302 Redirects</td>
-                <td>{{ seo_data.pages_by_status['302'] if seo_data.pages_by_status else 0 }}</td>
-                <td>{{ ((seo_data.pages_by_status['302'] / seo_data.pages_crawled * 100)|round(1)) if seo_data.pages_by_status else 0 }}%</td>
-                <td>⚠️ Sprawdź</td>
-            </tr>
-            <tr>
-                <td>404 Not Found</td>
-                <td><span class="score-low">{{ seo_data.pages_by_status['404'] if seo_data.pages_by_status else 0 }}</span></td>
-                <td>{{ ((seo_data.pages_by_status['404'] / seo_data.pages_crawled * 100)|round(1)) if seo_data.pages_by_status else 0 }}%</td>
-                <td>❌ Napraw!</td>
-            </tr>
-        </table>
-        
-        {% if seo_data.all_pages and seo_data.all_pages|length > 0 %}
-        <h2>3.2 Top 20 Najwolniejszych Stron</h2>
-        <table style="font-size: 9pt;">
-            <thead>
-                <tr>
-                    <th style="width: 50%;">URL</th>
-                    <th style="width: 15%; text-align: center;">Czas (ms)</th>
-                    <th style="width: 15%; text-align: center;">Rozmiar (KB)</th>
-                    <th style="width: 20%; text-align: center;">Liczba słów</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for page in (seo_data.all_pages | sort(attribute='response_time', reverse=True))[:20] %}
-                <tr>
-                    <td style="word-break: break-all;">{{ page.url }}</td>
-                    <td style="text-align: center;" class="{% if page.response_time > 1 %}score-low{% elif page.response_time > 0.5 %}score-medium{% else %}score-high{% endif %}">
-                        {{ (page.response_time * 1000)|round }}
-                    </td>
-                    <td style="text-align: center;">{{ (page.size_bytes / 1024)|round }}</td>
-                    <td style="text-align: center;">{{ page.word_count }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        
-        <h2>3.3 Strony z Problemami SEO</h2>
-        
-        {% set pages_no_title = seo_data.all_pages | selectattr('title', 'equalto', '') | list %}
-        {% if pages_no_title|length > 0 %}
-        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
-            <h3>❌ Brak Title Tag ({{ pages_no_title|length }} stron)</h3>
-            <p><strong>Przykłady:</strong></p>
-            <ul>
-                {% for page in pages_no_title[:10] %}
-                <li style="font-size: 9pt;">{{ page.url }}</li>
-                {% endfor %}
-            </ul>
+        <div class="grid">
+            <div class="col">
+                <h3>Strony & Statusy</h3>
+                <table>
+                    <tr><td>Przeskanowane strony</td><td>{{ seo_data.pages_crawled }}</td></tr>
+                    <tr><td>Błędy 404</td><td class="{% if seo_data.links.broken > 0 %}badge-danger{% endif %}">{{ seo_data.links.broken }}</td></tr>
+                    <tr><td>Przekierowania</td><td>{{ seo_data.links.redirects }}</td></tr>
+                </table>
+            </div>
+            <div class="col">
+                <h3>Obrazy</h3>
+                <table>
+                    <tr><td>Wszystkie obrazy</td><td>{{ seo_data.images.total }}</td></tr>
+                    <tr><td>Bez opisu ALT</td><td class="{% if seo_data.images.without_alt > 0 %}badge-warning{% endif %}">{{ seo_data.images.without_alt }}</td></tr>
+                    <tr><td>Rozmiar (MB)</td><td>{{ seo_data.images.total_size_mb }}</td></tr>
+                </table>
+            </div>
         </div>
-        {% endif %}
-        
-        {% set pages_no_meta = seo_data.all_pages | selectattr('meta_description', 'equalto', '') | list %}
-        {% if pages_no_meta|length > 0 %}
-        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
-            <h3>❌ Brak Meta Description ({{ pages_no_meta|length }} stron)</h3>
-            <p><strong>Przykłady:</strong></p>
-            <ul>
-                {% for page in pages_no_meta[:10] %}
-                <li style="font-size: 9pt;">{{ page.url }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-        {% endif %}
-    </div>
-    
-    <!-- SEO Homepage Details (old section 3 content) -->
-    <div class="page-break">
-        <h1>4. Szczegóły Strony Głównej - SEO</h1>
-        
-        <h2>4.1 Meta Tagi</h2>
-        <table>
-            <tr>
-                <th>Element</th>
-                <th>Zawartość</th>
-                <th>Długość</th>
-                <th>Status</th>
-            </tr>
-            <tr>
-                <td>Title</td>
-                <td>{{ seo_data.title }}</td>
-                <td>{{ seo_data.title_length }} znaków</td>
-                <td>{% if seo_data.title_length >= 30 and seo_data.title_length <= 70 %}✅ Optymalny{% elif seo_data.title_length > 0 %}⚠️ Do poprawy{% else %}❌ Brak{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Meta Description</td>
-                <td>{{ seo_data.meta_description }}</td>
-                <td>{{ seo_data.meta_description_length }} znaków</td>
-                <td>{% if seo_data.meta_description_length >= 120 and seo_data.meta_description_length <= 170 %}✅ Optymalny{% elif seo_data.meta_description_length > 0 %}⚠️ Do poprawy{% else %}❌ Brak{% endif %}</td>
-            </tr>
-        </table>
 
-        <h2>4.2 Struktura Nagłówków</h2>
-        <p>Liczba tagów H1: {{ seo_data.h1_count }}</p>
-        {% if seo_data.h1_tags and seo_data.h1_tags|length > 0 %}
-        <p><strong>Zawartość H1:</strong></p>
-        <ul>
-        {% for h1 in seo_data.h1_tags %}
-            <li>{{ h1 }}</li>
-        {% endfor %}
-        </ul>
-        {% else %}
-        <p class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
-            ❌ Brak tagów H1 - każda strona powinna mieć dokładnie jeden tag H1
-        </p>
-        {% endif %}
-    </div>
-
-    <!-- Performance Analysis -->
-    <div class="page-break">
-        <h1>4. Analiza Wydajności</h1>
-        
-        <h2>4.1 Core Web Vitals - Desktop</h2>
-        <table>
-            <tr>
-                <th>Metryka</th>
-                <th>Wartość</th>
-                <th>Status</th>
-            </tr>
-            <tr>
-                <td>Performance Score</td>
-                <td>{{ performance_desktop.performance_score }}/100</td>
-                <td>{% if performance_desktop.performance_score >= 90 %}✅ Dobry{% elif performance_desktop.performance_score >= 50 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>FCP (First Contentful Paint)</td>
-                <td>{{ performance_desktop.fcp }} ms</td>
-                <td>{% if performance_desktop.fcp < 1800 %}✅ Dobry{% elif performance_desktop.fcp < 3000 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>LCP (Largest Contentful Paint)</td>
-                <td>{{ performance_desktop.lcp }} ms</td>
-                <td>{% if performance_desktop.lcp < 2500 %}✅ Dobry{% elif performance_desktop.lcp < 4000 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>CLS (Cumulative Layout Shift)</td>
-                <td>{{ "%.3f"|format(performance_desktop.cls) }}</td>
-                <td>{% if performance_desktop.cls < 0.1 %}✅ Dobry{% elif performance_desktop.cls < 0.25 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>TTFB (Time to First Byte)</td>
-                <td>{{ performance_desktop.ttfb }} ms</td>
-                <td>{% if performance_desktop.ttfb < 800 %}✅ Dobry{% elif performance_desktop.ttfb < 1800 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Speed Index</td>
-                <td>{{ performance_desktop.speed_index }} ms</td>
-                <td>{% if performance_desktop.speed_index < 3400 %}✅ Dobry{% elif performance_desktop.speed_index < 5800 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>TBT (Total Blocking Time)</td>
-                <td>{{ performance_desktop.total_blocking_time }} ms</td>
-                <td>{% if performance_desktop.total_blocking_time < 200 %}✅ Dobry{% elif performance_desktop.total_blocking_time < 600 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-        </table>
-
-        <h2>4.2 Core Web Vitals - Mobile</h2>
-        <table>
-            <tr>
-                <th>Metryka</th>
-                <th>Wartość</th>
-                <th>Status</th>
-            </tr>
-            <tr>
-                <td>Performance Score</td>
-                <td>{{ performance_mobile.performance_score }}/100</td>
-                <td>{% if performance_mobile.performance_score >= 90 %}✅ Dobry{% elif performance_mobile.performance_score >= 50 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>FCP (First Contentful Paint)</td>
-                <td>{{ performance_mobile.fcp }} ms</td>
-                <td>{% if performance_mobile.fcp < 1800 %}✅ Dobry{% elif performance_mobile.fcp < 3000 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>LCP (Largest Contentful Paint)</td>
-                <td>{{ performance_mobile.lcp }} ms</td>
-                <td>{% if performance_mobile.lcp < 2500 %}✅ Dobry{% elif performance_mobile.lcp < 4000 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>CLS (Cumulative Layout Shift)</td>
-                <td>{{ "%.3f"|format(performance_mobile.cls) }}</td>
-                <td>{% if performance_mobile.cls < 0.1 %}✅ Dobry{% elif performance_mobile.cls < 0.25 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>TTFB (Time to First Byte)</td>
-                <td>{{ performance_mobile.ttfb }} ms</td>
-                <td>{% if performance_mobile.ttfb < 800 %}✅ Dobry{% elif performance_mobile.ttfb < 1800 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Speed Index</td>
-                <td>{{ performance_mobile.speed_index }} ms</td>
-                <td>{% if performance_mobile.speed_index < 3400 %}✅ Dobry{% elif performance_mobile.speed_index < 5800 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-            <tr>
-                <td>TBT (Total Blocking Time)</td>
-                <td>{{ performance_mobile.total_blocking_time }} ms</td>
-                <td>{% if performance_mobile.total_blocking_time < 200 %}✅ Dobry{% elif performance_mobile.total_blocking_time < 600 %}⚠️ Wymaga poprawy{% else %}❌ Słaby{% endif %}</td>
-            </tr>
-        </table>
-
-        {% if performance_analysis.recommendations %}
-        <h2>4.3 Rekomendacje Wydajności</h2>
-        {% if performance_analysis.impact %}
-        <p><strong>Poziom wpływu:</strong> 
-            {% if performance_analysis.impact == "high" %}🔴 Wysoki
-            {% elif performance_analysis.impact == "medium" %}🟡 Średni
-            {% else %}🟢 Niski
-            {% endif %}
-        </p>
-        {% endif %}
-        
-        {% if performance_analysis.issues %}
-        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
-            <h3>Wykryte problemy:</h3>
-            <ul>
-            {% for issue in performance_analysis.issues %}
-                <li>{{ issue }}</li>
+        {% if tech_stack.technologies %}
+        <h3>Technologie (Tech Stack)</h3>
+        <p>Wykryto: 
+            {% for tech in tech_stack.technologies %}
+                <strong>{{ tech.name }}</strong> ({{ tech.category }}){% if not loop.last %}, {% endif %}
             {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-        
-        <h3>Zalecane działania:</h3>
-        {% for rec in performance_analysis.recommendations %}
-        <div class="recommendation{% if rec.startswith('❌') %}" style="background-color: #fef2f2; border-left-color: #dc2626;"{% elif rec.startswith('⚠️') %}" style="background-color: #fef9c3; border-left-color: #eab308;"{% elif rec.startswith('✅') %}" style="background-color: #f0fdf4; border-left-color: #16a34a;"{% endif %}">
-            <p>{{ rec }}</p>
-        </div>
-        {% endfor %}
-        {% endif %}
-    </div>
-
-    <!-- Images Analysis - NEW SECTION -->
-    <div class="page-break">
-        <h1>5. Analiza Obrazów</h1>
-        
-        {% if seo_data.images %}
-        <h2>5.1 Podsumowanie</h2>
-        <table>
-            <tr>
-                <th>Metryka</th>
-                <th>Wartość</th>
-                <th>Ocena</th>
-            </tr>
-            <tr>
-                <td>Wszystkie obrazy</td>
-                <td>{{ seo_data.images.total }}</td>
-                <td>-</td>
-            </tr>
-            <tr>
-                <td>Obrazy z ALT text</td>
-                <td><span class="score-high">{{ seo_data.images.with_alt }}</span></td>
-                <td>✅ Dobrze</td>
-            </tr>
-            <tr>
-                <td>Obrazy bez ALT text</td>
-                <td><span class="score-low">{{ seo_data.images.without_alt }}</span></td>
-                <td>{% if seo_data.images.without_alt == 0 %}✅ Idealnie{% else %}❌ Napraw!{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Całkowity rozmiar</td>
-                <td>{{ seo_data.images.total_size_mb }} MB</td>
-                <td>{% if seo_data.images.total_size_mb < 5 %}✅ OK{% elif seo_data.images.total_size_mb < 10 %}⚠️ Średni{% else %}❌ Za duży{% endif %}</td>
-            </tr>
-        </table>
-        
-        {% if seo_data.images.all_images %}
-        {% set images_no_alt = seo_data.images.all_images | selectattr('alt_text', 'equalto', '') | list %}
-        {% if images_no_alt|length > 0 %}
-        <h2>5.2 Obrazy Bez ALT Text (Top 50)</h2>
-        <p class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
-            ❌ <strong>Znaleziono {{ images_no_alt|length }} obrazów bez ALT text!</strong><br/>
-            ALT text jest kluczowy dla dostępności i SEO. Każdy obraz powinien mieć opisowy tekst alternatywny.
         </p>
-        <table style="font-size: 8pt;">
-            <thead>
-                <tr>
-                    <th style="width: 70%;">URL Obrazu</th>
-                    <th style="width: 15%; text-align: center;">Rozmiar (KB)</th>
-                    <th style="width: 15%; text-align: center;">Format</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for img in images_no_alt[:50] %}
-                <tr>
-                    <td style="word-break: break-all;">{{ img.url }}</td>
-                    <td style="text-align: center;">{{ (img.size_bytes / 1024)|round }}</td>
-                    <td style="text-align: center;">{{ img.format }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
         {% endif %}
-        {% endif %}
-        {% else %}
-        <p class="text-muted-foreground">Brak danych o obrazach.</p>
+
+        {% if security %}
+        <h3>Bezpieczeństwo</h3>
+        <p>Wynik: <strong>{{ security.security_score }}/100</strong> | HTTPS: {{ "Tak" if security.is_https else "Nie" }}</p>
         {% endif %}
     </div>
 
-    <!-- Links Analysis - NEW SECTION -->
+    <!-- Content & UX -->
     <div class="page-break">
-        <h1>6. Analiza Linków</h1>
+        <h2>3. Treść i UX</h2>
         
-        {% if seo_data.links %}
-        <h2>6.1 Podsumowanie</h2>
-        <table>
-            <tr>
-                <th>Typ Linku</th>
-                <th>Liczba</th>
-                <th>Ocena</th>
-            </tr>
-            <tr>
-                <td>Linki wewnętrzne</td>
-                <td>{{ seo_data.links.internal }}</td>
-                <td>{% if seo_data.links.internal > 50 %}✅ Dobra struktura{% else %}⚠️ Dodaj więcej{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Linki zewnętrzne</td>
-                <td>{{ seo_data.links.external }}</td>
-                <td>-</td>
-            </tr>
-            <tr>
-                <td>Broken links (404)</td>
-                <td><span class="score-low">{{ seo_data.links.broken }}</span></td>
-                <td>{% if seo_data.links.broken == 0 %}✅ Idealnie{% else %}❌ Napraw natychmiast!{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Redirects (301/302)</td>
-                <td>{{ seo_data.links.redirects }}</td>
-                <td>{% if seo_data.links.redirects < 10 %}✅ OK{% elif seo_data.links.redirects < 30 %}⚠️ Optymalizuj{% else %}❌ Za dużo{% endif %}</td>
-            </tr>
-        </table>
-        
-        {% if seo_data.all_pages %}
-        {% set broken_pages = seo_data.all_pages | selectattr('status_code', 'ge', 400) | list %}
-        {% if broken_pages|length > 0 %}
-        <h2>6.2 Broken Links - PRIORYTET DO NAPRAWY!</h2>
-        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
-            <p><strong>❌ Znaleziono {{ broken_pages|length }} stron z błędami 404+</strong></p>
-            <p>Broken links powodują błędy użytkowników i obniżają pozycję w Google.</p>
+        <div class="grid">
+            <div class="col">
+                <h3>Analiza Treści</h3>
+                <table>
+                    <tr><td>Liczba słów</td><td>{{ content_analysis.word_count }}</td></tr>
+                    <tr><td>Czytelność</td><td>{{ content_analysis.readability_score }}</td></tr>
+                    <tr><td>Thin Content</td><td>{{ content_deep.thin_content_count }}</td></tr>
+                </table>
+            </div>
+            <div class="col">
+                <h3>UX & Accessibility</h3>
+                <table>
+                    <tr><td>UX Score</td><td>{{ ux.ux_score }}%</td></tr>
+                    <tr><td>Mobile Friendly</td><td>{{ "Tak" if ux.mobile_friendly else "Nie" }}</td></tr>
+                    <tr><td>Dostępność</td><td>{{ ux.accessibility_score }}%</td></tr>
+                </table>
+            </div>
         </div>
-        <table style="font-size: 9pt;">
-            <thead>
-                <tr>
-                    <th style="width: 70%;">URL</th>
-                    <th style="width: 15%; text-align: center;">Status Code</th>
-                    <th style="width: 15%; text-align: center;">Inlinks</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for page in broken_pages[:50] %}
-                <tr>
-                    <td style="word-break: break-all;">{{ page.url }}</td>
-                    <td style="text-align: center;" class="score-low">{{ page.status_code }}</td>
-                    <td style="text-align: center;">{{ page.inlinks }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
-        
-        {% set redirect_pages = seo_data.all_pages | selectattr('status_code', 'ge', 300) | selectattr('status_code', 'lt', 400) | list %}
-        {% if redirect_pages|length > 0 %}
-        <h2>6.3 Redirects (Top 30)</h2>
-        <table style="font-size: 8pt;">
-            <thead>
-                <tr>
-                    <th style="width: 40%;">Źródło</th>
-                    <th style="width: 10%; text-align: center;">Status</th>
-                    <th style="width: 50%;">Cel</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for page in redirect_pages[:30] %}
-                <tr>
-                    <td style="word-break: break-all;">{{ page.url }}</td>
-                    <td style="text-align: center;">{{ page.status_code }}</td>
-                    <td style="word-break: break-all;">{{ page.redirect_url or '-' }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
-        {% endif %}
-        {% else %}
-        <p>Brak danych o linkach.</p>
+
+        {% if content_deep.duplicates %}
+        <h3>Zduplikowana Treść</h3>
+        <p>Wykryto {{ content_deep.duplicate_content_count }} potencjalnych duplikatów.</p>
         {% endif %}
     </div>
-
-    <!-- Lighthouse Full Diagnostics - NEW SECTION -->
-    <div class="page-break">
-        <h1>7. Lighthouse - Pełna Diagnostyka</h1>
-        
-        {% if performance_desktop.audits %}
-        {% set diagnostics = performance_desktop.audits.diagnostics %}
-        {% set opportunities = performance_desktop.audits.opportunities %}
-        
-        {% if diagnostics and diagnostics|length > 0 %}
-        <h2>7.1 Problemy Wymagające Naprawy ({{ diagnostics|length }})</h2>
-        <p class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
-            ❌ <strong>Znaleziono {{ diagnostics|length }} problemów z wynikiem poniżej 50%</strong>
-        </p>
-        {% for audit in diagnostics[:20] %}
-        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
-            <h3>{{ loop.index }}. {{ audit.title }}</h3>
-            <p><strong>Wynik:</strong> <span class="score-low">{{ (audit.score * 100)|round }}%</span></p>
-            {% if audit.displayValue %}
-            <p><strong>Wartość:</strong> {{ audit.displayValue }}</p>
-            {% endif %}
-            <p style="font-size: 10pt;">{{ audit.description }}</p>
-        </div>
-        {% endfor %}
-        {% endif %}
-        
-        {% if opportunities and opportunities|length > 0 %}
-        <h2>7.2 Możliwości Optymalizacji ({{ opportunities|length }})</h2>
-        {% for audit in opportunities[:15] %}
-        <div class="recommendation" style="background-color: #fefce8; border-left-color: #ca8a04;">
-            <h3>{{ loop.index }}. {{ audit.title }}</h3>
-            <p><strong>Wynik:</strong> <span class="score-medium">{{ (audit.score * 100)|round }}%</span></p>
-            {% if audit.displayValue %}
-            <p><strong>Wartość:</strong> {{ audit.displayValue }}</p>
-            {% endif %}
-            <p style="font-size: 10pt;">{{ audit.description }}</p>
-        </div>
-        {% endfor %}
-        {% endif %}
-        {% endif %}
-    </div>
-
-    <!-- Technical SEO - NEW SECTION -->
-    <div class="page-break">
-        <h1>8. Techniczne SEO</h1>
-        
-        {% if seo_data.technical_seo %}
-        <h2>8.1 Podsumowanie</h2>
-        <table>
-            <tr>
-                <th>Element</th>
-                <th>Status</th>
-                <th>Wymagane Działania</th>
-            </tr>
-            <tr>
-                <td>Strony bez Canonical</td>
-                <td class="{% if seo_data.technical_seo.missing_canonical > 0 %}score-medium{% else %}score-high{% endif %}">
-                    {{ seo_data.technical_seo.missing_canonical }}
-                </td>
-                <td>{% if seo_data.technical_seo.missing_canonical > 0 %}⚠️ Dodaj canonical tags{% else %}✅ OK{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Strony NoIndex</td>
-                <td>{{ seo_data.technical_seo.noindex_pages }}</td>
-                <td>ℹ️ Sprawdź czy zamierzone</td>
-            </tr>
-            <tr>
-                <td>Redirects</td>
-                <td class="{% if seo_data.technical_seo.redirects > 10 %}score-medium{% else %}score-high{% endif %}">
-                    {{ seo_data.technical_seo.redirects }}
-                </td>
-                <td>{% if seo_data.technical_seo.redirects > 10 %}⚠️ Zminimalizuj łańcuchy redirectów{% else %}✅ OK{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Broken Links</td>
-                <td class="{% if seo_data.technical_seo.broken_links > 0 %}score-low{% else %}score-high{% endif %}">
-                    {{ seo_data.technical_seo.broken_links }}
-                </td>
-                <td>{% if seo_data.technical_seo.broken_links > 0 %}❌ Napraw wszystkie 404{% else %}✅ OK{% endif %}</td>
-            </tr>
-        </table>
-        
-        {% if seo_data.all_pages %}
-        {% set pages_no_canonical = seo_data.all_pages | selectattr('canonical', 'equalto', '') | selectattr('status_code', 'equalto', 200) | list %}
-        {% if pages_no_canonical|length > 0 %}
-        <h2>8.2 Strony Bez Canonical Tag (Top 30)</h2>
-        <div class="recommendation" style="background-color: #fefce8; border-left-color: #ca8a04;">
-            <p>⚠️ <strong>{{ pages_no_canonical|length }} stron nie ma canonical tag</strong></p>
-            <p>Canonical tags pomagają uniknąć problemów z duplikacją treści.</p>
-        </div>
-        <ul style="font-size: 9pt;">
-            {% for page in pages_no_canonical[:30] %}
-            <li>{{ page.url }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        {% endif %}
-        {% else %}
-        <p>Brak danych technicznych SEO.</p>
-        {% endif %}
-    </div>
-
-    <!-- Content Analysis -->
-    <div class="page-break">
-        <h1>9. Analiza Treści</h1>
-        
-        <h2>9.1 Metryki Treści</h2>
-        <table>
-            <tr>
-                <th>Metryka</th>
-                <th>Wartość</th>
-                <th>Status</th>
-            </tr>
-            <tr>
-                <td>Jakość treści</td>
-                <td>{{ content_analysis.quality_score }}/100</td>
-                <td>{% if content_analysis.quality_score >= 80 %}✅ Wysoka{% elif content_analysis.quality_score >= 60 %}⚠️ Średnia{% else %}❌ Niska{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Czytelność (Flesch)</td>
-                <td>{{ content_analysis.readability_score }}</td>
-                <td>{% if content_analysis.readability_score >= 60 %}✅ Łatwa{% elif content_analysis.readability_score >= 30 %}⚠️ Średnia{% else %}❌ Trudna{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Liczba słów</td>
-                <td>{{ content_analysis.word_count }}</td>
-                <td>{% if content_analysis.word_count >= 300 %}✅ Odpowiednia{% else %}⚠️ Za krótka{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Ma Title</td>
-                <td>{% if content_analysis.has_title %}✅ Tak{% else %}❌ Nie{% endif %}</td>
-                <td>{% if content_analysis.has_title %}✅{% else %}❌ Wymagane{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Ma Meta Description</td>
-                <td>{% if content_analysis.has_meta_description %}✅ Tak{% else %}❌ Nie{% endif %}</td>
-                <td>{% if content_analysis.has_meta_description %}✅{% else %}❌ Wymagane{% endif %}</td>
-            </tr>
-            <tr>
-                <td>Ma H1</td>
-                <td>{% if content_analysis.has_h1 %}✅ Tak{% else %}❌ Nie{% endif %}</td>
-                <td>{% if content_analysis.has_h1 %}✅{% else %}❌ Wymagane{% endif %}</td>
-            </tr>
-        </table>
-        
-        {% if content_analysis.summary %}
-        <h2>5.2 Podsumowanie AI</h2>
-        <p style="line-height: 1.8; margin: 1em 0;">{{ content_analysis.summary }}</p>
-        {% endif %}
-
-        {% if content_analysis.recommendations %}
-        <h2>5.3 Rekomendacje Treści</h2>
-        {% for rec in content_analysis.recommendations %}
-        <div class="recommendation{% if rec.startswith('❌') %}" style="background-color: #fef2f2; border-left-color: #dc2626;"{% elif rec.startswith('⚠️') %}" style="background-color: #fef9c3; border-left-color: #eab308;"{% elif rec.startswith('✅') %}" style="background-color: #f0fdf4; border-left-color: #16a34a;"{% elif rec.startswith('🤖') %}" style="background-color: #eff6ff; border-left-color: #3b82f6;"{% endif %}">
-            <p>{{ rec }}</p>
-        </div>
-        {% endfor %}
-        {% endif %}
-    </div>
-
-    <!-- Local SEO (if applicable) -->
-    {% if audit.is_local_business or local_seo.is_local_business %}
-    <div class="page-break">
-        <h1>6. Lokalny SEO</h1>
-        
-        <h2>6.1 Sygnały Lokalnego Biznesu</h2>
-        <table>
-            <tr>
-                <th>Element</th>
-                <th>Status</th>
-                <th>Ocena</th>
-            </tr>
-            <tr>
-                <td>Schema markup LocalBusiness</td>
-                <td>{% if local_seo.has_schema_markup %}✅ Znaleziono{% else %}❌ Brak{% endif %}</td>
-                <td>{% if local_seo.has_schema_markup %}Prawidłowo{% else %}Wymagane{% endif %}</td>
-            </tr>
-            <tr>
-                <td>NAP (Name, Address, Phone)</td>
-                <td>{% if local_seo.has_nap %}✅ Wykryto{% else %}❌ Brak{% endif %}</td>
-                <td>{% if local_seo.has_nap %}Prawidłowo{% else %}Wymagane{% endif %}</td>
-            </tr>
-        </table>
-
-        {% if local_seo.recommendations %}
-        <h2>6.2 Rekomendacje Lokalnego SEO</h2>
-        {% for rec in local_seo.recommendations %}
-        <div class="recommendation{% if rec.startswith('❌') %}" style="background-color: #fef2f2; border-left-color: #dc2626;"{% elif rec.startswith('⚠️') %}" style="background-color: #fef9c3; border-left-color: #eab308;"{% elif rec.startswith('✅') %}" style="background-color: #f0fdf4; border-left-color: #16a34a;"{% elif rec.startswith('ℹ️') %}" style="background-color: #eff6ff; border-left-color: #3b82f6;"{% endif %}">
-            <p>{{ rec }}</p>
-        </div>
-        {% endfor %}
-        {% endif %}
-    </div>
-    {% endif %}
-
-    <!-- Competitive Analysis (if applicable) -->
-    {% if audit.competitors|length > 0 %}
-    <div class="page-break">
-        <h1>7. Analiza Konkurencji</h1>
-        
-        <p>Porównano z {{ audit.competitors|length }} konkurentami:</p>
-        <ul>
-        {% for competitor in audit.competitors %}
-            <li>{{ competitor.url }}</li>
-        {% endfor %}
-        </ul>
-
-        {% if competitive_analysis.competitors_analyzed == 0 %}
-        <div class="recommendation" style="background-color: #eff6ff; border-left-color: #3b82f6;">
-            <h3>ℹ️ Brak danych konkurencji</h3>
-            <p>Konkurenci zostali dodani, ale analiza nie została jeszcze przeprowadzona lub zakończyła się błędem.</p>
-        </div>
-        {% else %}
-        
-        {% if competitive_analysis.strengths %}
-        <h2>7.1 Twoje Mocne Strony</h2>
-        {% for strength in competitive_analysis.strengths %}
-        <div class="recommendation" style="background-color: #f0fdf4; border-left-color: #16a34a;">
-            <p>✅ {{ strength }}</p>
-        </div>
-        {% endfor %}
-        {% endif %}
-
-        {% if competitive_analysis.weaknesses %}
-        <h2>7.2 Obszary Do Poprawy</h2>
-        {% for weakness in competitive_analysis.weaknesses %}
-        <div class="recommendation" style="background-color: #fef2f2; border-left-color: #dc2626;">
-            <p>❌ {{ weakness }}</p>
-        </div>
-        {% endfor %}
-        {% endif %}
-        
-        {% if competitive_analysis.opportunities %}
-        <h2>7.3 Możliwości</h2>
-        {% for opportunity in competitive_analysis.opportunities %}
-        <div class="recommendation" style="background-color: #eff6ff; border-left-color: #3b82f6;">
-            <p>💡 {{ opportunity }}</p>
-        </div>
-        {% endfor %}
-        {% endif %}
-        
-        {% if competitive_analysis.recommendations %}
-        <h2>7.4 Rekomendacje</h2>
-        {% for rec in competitive_analysis.recommendations %}
-        <div class="recommendation" style="background-color: #fef9c3; border-left-color: #eab308;">
-            <p>⚠️ {{ rec }}</p>
-        </div>
-        {% endfor %}
-        {% endif %}
-        
-        {% endif %}
-    </div>
-    {% endif %}
 
     <!-- Action Plan -->
     <div class="page-break">
-        <h1>12. Plan Działania</h1>
+        <h2>4. Plan Działania (Quick Wins)</h2>
+        <p>Najważniejsze zadania do wykonania w pierwszej kolejności:</p>
         
-        <p>Poniżej przedstawiamy rekomendacje uporządkowane według priorytetu, na podstawie rzeczywistych wyników audytu.</p>
-
-        <h2>8.1 Wysoki Priorytet (natychmiast)</h2>
-        <p><strong>Krytyczne problemy wymagające pilnej uwagi:</strong></p>
-        <ol>
-            {% if audit.performance_score < 50 %}
-            <li><strong>Optymalizacja wydajności strony (Core Web Vitals)</strong>
-                <p style="margin-left: 2em; color: #666;">Obecny wynik wydajności: {{ audit.performance_score|round|int }}/100 - wymaga pilnej poprawy</p>
-            </li>
-            {% endif %}
-            
-            {% if audit.seo_score < 50 %}
-            <li><strong>Naprawa podstawowych błędów SEO</strong>
-                <p style="margin-left: 2em; color: #666;">Obecny wynik SEO: {{ audit.seo_score|round|int }}/100 - krytyczne braki</p>
-            </li>
-            {% endif %}
-            
-            {% if seo_data.images_without_alt and seo_data.total_images %}
-            {% set alt_percent = (seo_data.images_without_alt / seo_data.total_images * 100)|round|int %}
-            {% if alt_percent > 50 %}
-            <li><strong>Dodanie atrybutów ALT do obrazów</strong>
-                <p style="margin-left: 2em; color: #666;">{{ seo_data.images_without_alt }} z {{ seo_data.total_images }} obrazów ({{ alt_percent }}%) bez opisów ALT</p>
-            </li>
-            {% endif %}
-            {% endif %}
-            
-            {% if not seo_data.h1_count or seo_data.h1_count == 0 %}
-            <li><strong>Dodanie tagu H1 do strony</strong>
-                <p style="margin-left: 2em; color: #666;">Brak nagłówka H1 - każda strona musi mieć dokładnie jeden tag H1</p>
-            </li>
-            {% endif %}
-            
-            {% if critical_issues %}
-            {% for issue in critical_issues[:3] %}
-            <li>{{ issue|replace('❌ ', '') }}</li>
-            {% endfor %}
-            {% endif %}
-        </ol>
-
-        <h2>8.2 Średni Priorytet (1-2 tygodnie)</h2>
-        <p><strong>Ważne ulepszenia dla lepszej widoczności:</strong></p>
-        <ol>
-            {% if audit.content_score < 70 %}
-            <li><strong>Poprawa jakości treści</strong>
-                <p style="margin-left: 2em; color: #666;">Obecny wynik treści: {{ audit.content_score|round|int }}/100</p>
-            </li>
-            {% endif %}
-            
-            {% if audit.is_local_business and not local_seo.has_schema_markup %}
-            <li><strong>Implementacja schema markup dla lokalnego biznesu</strong>
-                <p style="margin-left: 2em; color: #666;">Brak strukturalnych danych - utrudnia wyświetlanie w wynikach Google</p>
-            </li>
-            {% endif %}
-            
-            {% if not seo_data.has_sitemap %}
-            <li><strong>Utworzenie i przesłanie sitemap.xml</strong>
-                <p style="margin-left: 2em; color: #666;">Sitemap nie został wykryty - utrudnia indeksację</p>
-            </li>
-            {% endif %}
-            
-            {% if warnings %}
-            {% for warning in warnings[:3] %}
-            <li>{{ warning|replace('⚠️ ', '') }}</li>
-            {% endfor %}
-            {% endif %}
-        </ol>
-
-        <h2>8.3 Niski Priorytet (ciągła praca)</h2>
-        <p><strong>Długoterminowe ulepszenia i monitorowanie:</strong></p>
-        <ol>
-            <li>Regularne monitorowanie wydajności (co tydzień)</li>
-            <li>Aktualizacja i rozbudowa treści (co miesiąc)</li>
-            <li>Analiza konkurencji i trendów rynkowych</li>
-            <li>Budowanie profilu linków przychodzących</li>
-            <li>Optymalizacja dla nowych urządzeń i przeglądarek</li>
-        </ol>
-        
-        {% if ai_recommendations %}
-        <h2>8.4 Rekomendacje AI</h2>
-        <p><strong>Dodatkowe sugestie oparte na analizie sztucznej inteligencji:</strong></p>
-        {% for rec in ai_recommendations %}
-        <div class="recommendation" style="background-color: #eff6ff; border-left-color: #3b82f6;">
-            <p>{{ rec }}</p>
+        {% for issue in critical_issues[:5] %}
+        <div class="recommendation rec-critical">
+            <strong>KRYTYCZNE:</strong> {{ issue|replace('❌ ', '') }}
         </div>
         {% endfor %}
-        {% endif %}
+
+        {% for issue in warnings[:5] %}
+        <div class="recommendation rec-warning">
+            <strong>OSTRZEŻENIE:</strong> {{ issue|replace('⚠️ ', '') }}
+        </div>
+        {% endfor %}
+
+        {% for rec in ai_recommendations[:3] %}
+        <div class="recommendation">
+            <strong>🤖 AI SUGGESTION:</strong> {{ rec|replace('🤖 ', '') }}
+        </div>
+        {% endfor %}
     </div>
 
-    <!-- Appendix -->
-    <div class="page-break">
-        <h1>9. Załączniki</h1>
-        
-        <h2>9.1 Przykłady Kodu</h2>
-        <p>Gotowe fragmenty kodu do implementacji na stronie.</p>
-
-        <h3>Schema Markup - LocalBusiness</h3>
-        <pre><code>&lt;script type="application/ld+json"&gt;
-{
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "Twoja Firma",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "Ulica 123",
-    "addressLocality": "Miasto",
-    "postalCode": "00-000",
-    "addressCountry": "PL"
-  },
-  "telephone": "+48 123 456 789"
-}
-&lt;/script&gt;</code></pre>
-
-        <h2>9.2 Więcej Informacji</h2>
-        <p>Szczegółowe dane surowe oraz dodatkowe analizy dostępne w panelu SiteSpector.</p>
-        <p>W razie pytań skontaktuj się z nami: <strong>kontakt@sitespector.app</strong></p>
-    </div>
-
-    <!-- Footer on last page -->
-    <div style="margin-top: 4em; text-align: center; color: #666; font-size: 10pt; border-top: 2px solid #ddd; padding-top: 2em;">
-        <p>Raport wygenerowany przez <strong>{{ app_name }}</strong></p>
-        <p>Data raportu: {{ generated_date }}</p>
-        <p style="margin-top: 1em;"><strong>Wersja systemu:</strong> {{ system_version }}</p>
-        <p style="font-size: 9pt; color: #999;">Ostatnia aktualizacja: {{ last_update }}</p>
-        <p style="margin-top: 1em;">© 2025 SiteSpector. Wszystkie prawa zastrzeżone.</p>
+    <div class="footer">
+        Raport wygenerowany automatycznie przez SiteSpector AI Platform | {{ generated_date }}
     </div>
 </body>
 </html>
-

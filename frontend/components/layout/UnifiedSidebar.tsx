@@ -106,6 +106,7 @@ const settingsItems = [
   { href: '/settings/profile', icon: User, label: 'Profile' },
   { href: '/settings/team', icon: Users, label: 'Team' },
   { href: '/settings/billing', icon: CreditCard, label: 'Billing' },
+  { href: '/settings/schedules', icon: Calendar, label: 'Automatyzacja' },
   { href: '/settings/appearance', icon: Palette, label: 'Appearance' },
   { href: '/settings/notifications', icon: Bell, label: 'Notifications' },
 ]

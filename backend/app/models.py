@@ -38,6 +38,13 @@ class AuditStatus(str, enum.Enum):
     FAILED = "failed"
 
 
+class ScheduleFrequency(str, enum.Enum):
+    """Frequency for scheduled audits."""
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+
+
 class CompetitorStatus(str, enum.Enum):
     """Competitor analysis status."""
     PENDING = "pending"
@@ -154,4 +161,34 @@ class Competitor(Base):
 
     def __repr__(self) -> str:
         return f"<Competitor(id={self.id}, url={self.url}, status={self.status})>"
+
+
+class AuditSchedule(Base):
+    """Model for scheduling recurring audits."""
+
+    __tablename__ = "audit_schedules"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    workspace_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    url = Column(String(2048), nullable=False)
+    frequency = Column(SQLEnum(ScheduleFrequency), nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Configuration
+    include_competitors = Column(Boolean, default=True)
+    competitors_urls = Column(JSONB, nullable=True) # List of strings
+    
+    # Tracking
+    last_run_at = Column(DateTime(timezone=True), nullable=True)
+    next_run_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User")
+
+    def __repr__(self) -> str:
+        return f"<AuditSchedule(id={self.id}, url={self.url}, freq={self.frequency})>"
 

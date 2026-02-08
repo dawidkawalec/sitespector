@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import AsyncSessionLocal
-from app.models import Audit, AuditStatus, Competitor, CompetitorStatus
+from app.models import Audit, AuditStatus, Competitor, CompetitorStatus, AuditSchedule, ScheduleFrequency
 from app.config import settings
 from app.services import screaming_frog, lighthouse, ai_analysis
 
@@ -232,7 +232,7 @@ def calculate_seo_score(crawl_data: dict, lighthouse_seo: dict) -> float:
 
 async def worker_loop() -> None:
     """
-    Main worker loop that polls for pending audits.
+    Main worker loop that polls for pending audits and schedules.
     """
     logger.info("🚀 Starting SiteSpector worker...")
     logger.info(f"Poll interval: {settings.WORKER_POLL_INTERVAL}s")
@@ -243,7 +243,49 @@ async def worker_loop() -> None:
     while True:
         try:
             async with AsyncSessionLocal() as db:
-                # Find pending audits
+                # 1. Check for scheduled audits that need to run
+                now = datetime.utcnow()
+                result = await db.execute(
+                    select(AuditSchedule)
+                    .where(AuditSchedule.is_active == True)
+                    .where(AuditSchedule.next_run_at <= now)
+                )
+                due_schedules = result.scalars().all()
+                
+                for schedule in due_schedules:
+                    logger.info(f"⏰ Triggering scheduled audit for {schedule.url}")
+                    
+                    # Create new audit
+                    new_audit = Audit(
+                        workspace_id=schedule.workspace_id,
+                        user_id=schedule.user_id,
+                        url=schedule.url,
+                        status=AuditStatus.PENDING,
+                    )
+                    db.add(new_audit)
+                    await db.flush()
+                    
+                    # Add competitors if configured
+                    if schedule.include_competitors and schedule.competitors_urls:
+                        for comp_url in schedule.competitors_urls:
+                            competitor = Competitor(
+                                audit_id=new_audit.id,
+                                url=comp_url,
+                            )
+                            db.add(competitor)
+                    
+                    # Update schedule next run
+                    schedule.last_run_at = now
+                    if schedule.frequency == ScheduleFrequency.DAILY:
+                        schedule.next_run_at = now + timedelta(days=1)
+                    elif schedule.frequency == ScheduleFrequency.WEEKLY:
+                        schedule.next_run_at = now + timedelta(weeks=1)
+                    elif schedule.frequency == ScheduleFrequency.MONTHLY:
+                        schedule.next_run_at = now + timedelta(days=30)
+                    
+                    await db.commit()
+
+                # 2. Find pending audits
                 result = await db.execute(
                     select(Audit)
                     .where(Audit.status == AuditStatus.PENDING)

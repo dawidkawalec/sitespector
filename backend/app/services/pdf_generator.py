@@ -119,6 +119,11 @@ def _extract_report_data(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     # These sections can be empty (AI analysis might be skipped in some cases)
     # but return the actual data or empty dict, don't fake it
     content_analysis = results.get("content_analysis", {})
+    content_deep = results.get("content_deep", {})
+    tech_stack = results.get("tech_stack", {})
+    security = results.get("security", {})
+    ux = results.get("ux", {})
+    benchmarks = results.get("benchmarks", {})
     local_seo = results.get("local_seo", {})
     performance_analysis = results.get("performance_analysis", {})
     competitive_analysis = results.get("competitive_analysis", {})
@@ -129,6 +134,9 @@ def _extract_report_data(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     all_recommendations.extend(performance_analysis.get("recommendations", []))
     all_recommendations.extend(local_seo.get("recommendations", []))
     all_recommendations.extend(competitive_analysis.get("recommendations", []))
+    all_recommendations.extend(tech_stack.get("recommendations", []))
+    all_recommendations.extend(security.get("recommendations", []))
+    all_recommendations.extend(ux.get("recommendations", []))
     
     # Parse recommendations by priority (emoji prefix)
     critical_issues = [r for r in all_recommendations if r.startswith("❌")]
@@ -141,6 +149,11 @@ def _extract_report_data(audit_data: Dict[str, Any]) -> Dict[str, Any]:
         "performance_desktop": desktop_data,
         "performance_mobile": mobile_data,
         "content_analysis": content_analysis,
+        "content_deep": content_deep,
+        "tech_stack": tech_stack,
+        "security": security,
+        "ux": ux,
+        "benchmarks": benchmarks,
         "local_seo": local_seo,
         "performance_analysis": performance_analysis,
         "competitive_analysis": competitive_analysis,

@@ -241,4 +241,14 @@ export const auditsAPI = {
 
   getHistory: (workspaceId: string, url: string) =>
     apiRequest<Audit[]>(`/api/audits/history?workspace_id=${workspaceId}&url=${encodeURIComponent(url)}`),
+  
+  // Schedules
+  listSchedules: (workspaceId: string) =>
+    apiRequest<any[]>(`/api/schedules?workspace_id=${workspaceId}`),
+  createSchedule: (data: any) =>
+    apiRequest<any>('/api/schedules', { method: 'POST', body: JSON.stringify(data) }),
+  updateSchedule: (id: string, data: any) =>
+    apiRequest<any>(`/api/schedules/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteSchedule: (id: string) =>
+    apiRequest<void>(`/api/schedules/${id}`, { method: 'DELETE' }),
 }
