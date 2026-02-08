@@ -29,6 +29,7 @@ interface NavSectionProps {
   onOpenChange?: (open: boolean) => void
   variant?: 'default' | 'audit'
   onItemClick?: () => void
+  disabled?: boolean
 }
 
 export function NavSection({
@@ -39,25 +40,34 @@ export function NavSection({
   value,
   onOpenChange,
   variant = 'default',
-  onItemClick
+  onItemClick,
+  disabled = false
 }: NavSectionProps) {
   const [isOpen, setIsOpen] = React.useState(defaultOpen)
 
+  // Keep isOpen in sync with defaultOpen if it changes (e.g. when audit is selected)
+  React.useEffect(() => {
+    setIsOpen(defaultOpen)
+  }, [defaultOpen])
+
   const handleToggle = () => {
+    if (disabled) return
     const newState = !isOpen
     setIsOpen(newState)
     onOpenChange?.(newState)
   }
 
   return (
-    <div className="mb-1">
+    <div className={cn("mb-1 transition-opacity duration-200", disabled && "opacity-50")}>
       {/* Section Header - Clickable to toggle */}
       <button
         onClick={handleToggle}
+        disabled={disabled}
         className={cn(
           'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
           'text-muted-foreground hover:bg-accent hover:text-foreground',
-          isOpen && 'bg-accent text-foreground'
+          isOpen && 'bg-accent text-foreground',
+          disabled && 'cursor-not-allowed hover:bg-transparent hover:text-muted-foreground'
         )}
       >
         <Icon className="h-4 w-4 flex-shrink-0" />

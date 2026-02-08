@@ -14,8 +14,8 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { 
+  User, 
   LayoutDashboard, 
-  FileSearch, 
   Settings, 
   Users, 
   CreditCard,
@@ -32,14 +32,14 @@ import {
   Palette,
   Bell,
   ArrowLeft,
-  User,
   Zap,
   Code2,
   Shield,
   MousePointer,
   Plug,
   Activity,
-  ListTodo
+  ListTodo,
+  Check
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher'
@@ -48,6 +48,15 @@ import { NavItem } from './NavItem'
 import { NavSection } from './NavSection'
 import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
+import { useQuery } from '@tanstack/react-query'
+import { auditsAPI } from '@/lib/api'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 // Main navigation items (always visible)
 const mainNavItems = [
@@ -107,6 +116,15 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
   const router = useRouter()
   const { currentWorkspace } = useWorkspace()
 
+  // Fetch audits for the select
+  const { data: auditsData } = useQuery({
+    queryKey: ['audits', currentWorkspace?.id],
+    queryFn: () => auditsAPI.list(currentWorkspace!.id),
+    enabled: !!currentWorkspace?.id
+  })
+
+  const audits = auditsData?.items || []
+
   // Extract audit ID from current pathname
   const auditMatch = pathname.match(/\/audits\/([^\/]+)/)
   const currentAuditId = auditMatch?.[1]
@@ -114,15 +132,12 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
   // Determine which sections should be expanded based on pathname
   const isInSettings = pathname.startsWith('/settings')
   const isInAudit = pathname.startsWith('/audits')
-  const isAuditOverview = pathname === `/audits/${currentAuditId}`
   
   const [settingsOpen, setSettingsOpen] = React.useState(isInSettings)
-  const [auditOpen, setAuditOpen] = React.useState(isInAudit)
 
   // Update expanded state when pathname changes
   React.useEffect(() => {
     setSettingsOpen(pathname.startsWith('/settings'))
-    setAuditOpen(pathname.startsWith('/audits'))
   }, [pathname])
 
   const handleLogout = async () => {
@@ -130,17 +145,24 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
     router.push('/login')
   }
 
+  const handleAuditChange = (value: string) => {
+    router.push(`/audits/${value}`)
+    onAction?.()
+  }
+
   // Helper to replace [id] placeholder with actual audit ID
   const replaceAuditId = (href: string) => {
-    if (!currentAuditId) return href
+    if (!currentAuditId) return '#'
     return href.replace('[id]', currentAuditId)
   }
+
+  const isAuditDisabled = !currentAuditId
 
   return (
     <div className="flex h-screen w-64 flex-col border-r bg-white dark:bg-gray-950">
       {/* Logo */}
       <div className="flex h-16 items-center px-6 border-b bg-gray-50/50 dark:bg-gray-900/50">
-        <Link href="/dashboard" className="flex items-center gap-2 group">
+        <Link href="/dashboard" className="flex items-center gap-2 group" onClick={onAction}>
           <div className="p-1.5 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
             <Sparkles className="h-5 w-5" />
           </div>
@@ -184,68 +206,87 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
           })}
         </div>
 
-        {/* Audit Navigation - Only show when viewing an audit */}
-        {currentAuditId && (
-          <div className="space-y-4">
-            <div className="px-3">
-              <div className="flex items-center gap-2 py-1">
-                <div className="h-px flex-1 bg-border" />
-                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em]">
-                  Aktualny audyt
-                </p>
-                <div className="h-px flex-1 bg-border" />
-              </div>
-              <div className="mt-2 p-2 rounded-lg bg-accent/30 border border-border/50">
-                <p className="text-xs font-medium truncate text-foreground/80">
-                  {currentAuditId.slice(0, 8)}...
-                </p>
-              </div>
+        {/* Audit Navigation - Always show */}
+        <div className="space-y-4">
+          <div className="px-3">
+            <div className="flex items-center gap-2 py-1">
+              <div className="h-px flex-1 bg-border" />
+              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em]">
+                Aktualny audyt
+              </p>
+              <div className="h-px flex-1 bg-border" />
             </div>
-
-            <div className="space-y-1">
-              {/* Overview Section */}
-              <NavSection
-                title="Przegląd"
-                icon={FileText}
-                items={auditOverviewItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
-                value="audit-overview"
-                defaultOpen={true}
-                variant="audit"
-                onItemClick={onAction}
-              />
-
-              {/* Reports Section */}
-              <NavSection
-                title="Raporty"
-                icon={FileDown}
-                items={auditReportsItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
-                value="audit-reports"
-                variant="audit"
-                onItemClick={onAction}
-              />
-
-              {/* Advanced Section */}
-              <NavSection
-                title="Zaawansowane"
-                icon={Network}
-                items={auditAdvancedItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
-                value="audit-advanced"
-                variant="audit"
-                onItemClick={onAction}
-              />
-
-              {/* Tools Section */}
-              <NavSection
-                title="Narzędzia"
-                icon={Zap}
-                items={auditToolsItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
-                value="audit-tools"
-                variant="audit"
-                onItemClick={onAction}
-              />
+            <div className="mt-2">
+              <Select value={currentAuditId || ""} onValueChange={handleAuditChange}>
+                <SelectTrigger className="w-full h-9 text-xs bg-accent/30 border-border/50">
+                  <SelectValue placeholder="Wybierz audyt..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {audits.length === 0 ? (
+                    <SelectItem value="none" disabled>Brak audytów</SelectItem>
+                  ) : (
+                    audits.map((audit) => (
+                      <SelectItem key={audit.id} value={audit.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium truncate max-w-[180px]">{audit.url}</span>
+                          <span className="text-[10px] text-muted-foreground">{new Date(audit.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
+          </div>
 
-            {/* Back to audits link */}
+          <div className={cn("space-y-1 transition-opacity duration-200", isAuditDisabled && "opacity-50 pointer-events-none")}>
+            {/* Overview Section */}
+            <NavSection
+              title="Przegląd"
+              icon={FileText}
+              items={auditOverviewItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
+              value="audit-overview"
+              defaultOpen={!isAuditDisabled}
+              variant="audit"
+              onItemClick={onAction}
+              disabled={isAuditDisabled}
+            />
+
+            {/* Reports Section */}
+            <NavSection
+              title="Raporty"
+              icon={FileDown}
+              items={auditReportsItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
+              value="audit-reports"
+              variant="audit"
+              onItemClick={onAction}
+              disabled={isAuditDisabled}
+            />
+
+            {/* Advanced Section */}
+            <NavSection
+              title="Zaawansowane"
+              icon={Network}
+              items={auditAdvancedItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
+              value="audit-advanced"
+              variant="audit"
+              onItemClick={onAction}
+              disabled={isAuditDisabled}
+            />
+
+            {/* Tools Section */}
+            <NavSection
+              title="Narzędzia"
+              icon={Zap}
+              items={auditToolsItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
+              value="audit-tools"
+              variant="audit"
+              onItemClick={onAction}
+              disabled={isAuditDisabled}
+            />
+          </div>
+
+          {currentAuditId && (
             <div className="px-1">
               <Link href="/dashboard" onClick={onAction}>
                 <Button 
@@ -257,8 +298,8 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
                 </Button>
               </Link>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Settings Section - Collapsible */}
         <div className="space-y-1">
