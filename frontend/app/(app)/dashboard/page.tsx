@@ -295,7 +295,7 @@ export default function DashboardPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold flex items-center gap-2 text-primary">
-            <Activity className="h-6 w-6 text-accent" /> Ostatnie Audyty
+            <RiHistoryFill className="h-6 w-6 text-accent" /> Ostatnie Audyty
           </h2>
           <Button variant="ghost" size="sm" onClick={() => refetch()} className="text-muted-foreground">
             <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} /> Odśwież
@@ -307,10 +307,10 @@ export default function DashboardPage() {
             {auditsData?.items?.map((audit, index) => (
               <motion.div
                 key={audit.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
               >
                 <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white dark:bg-slate-900">
                   <Link href={`/audits/${audit.id}`}>
@@ -335,15 +335,29 @@ export default function DashboardPage() {
                     <CardContent>
                       <div className="flex gap-4 mt-2">
                         <div className="flex-1">
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">SEO</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1 flex items-center gap-1">
+                            <RiSearchEyeFill className="h-2 w-2" /> SEO
+                          </p>
                           <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full">
-                            <div className="h-full bg-accent rounded-full" style={{ width: `${audit.seo_score || 0}%` }} />
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${audit.seo_score || 0}%` }}
+                              className="h-full bg-accent rounded-full" 
+                              transition={{ duration: 1, delay: 0.5 + (index * 0.1) }}
+                            />
                           </div>
                         </div>
                         <div className="flex-1">
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Perf</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1 flex items-center gap-1">
+                            <RiShieldFlashFill className="h-2 w-2" /> Perf
+                          </p>
                           <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full">
-                            <div className="h-full bg-primary rounded-full" style={{ width: `${audit.performance_score || 0}%` }} />
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${audit.performance_score || 0}%` }}
+                              className="h-full bg-primary rounded-full" 
+                              transition={{ duration: 1, delay: 0.6 + (index * 0.1) }}
+                            />
                           </div>
                         </div>
                       </div>

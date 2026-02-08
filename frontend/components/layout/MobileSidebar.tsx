@@ -24,7 +24,7 @@ export function MobileSidebar() {
           <span className="sr-only">Toggle menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="p-0 w-72">
+      <SheetContent side="left" className="p-0 w-72 bg-[#0b363d] border-white/10">
         <UnifiedSidebar onAction={() => setOpen(false)} />
       </SheetContent>
     </Sheet>

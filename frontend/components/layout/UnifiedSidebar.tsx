@@ -148,9 +148,8 @@ function SystemStatusSection({ systemStatus, getStatusColor }: { systemStatus: a
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-          'text-muted-foreground hover:bg-accent hover:text-foreground',
-          isOpen && 'bg-accent text-foreground'
+          'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors text-white/70 hover:bg-white/10 hover:text-white',
+          isOpen && 'bg-white/10 text-white'
         )}
       >
         <ActivityIcon className="h-4 w-4 flex-shrink-0" />
@@ -167,13 +166,13 @@ function SystemStatusSection({ systemStatus, getStatusColor }: { systemStatus: a
         </div>
       </button>
       {isOpen && (
-        <div className="mt-1 ml-4 border-l-2 border-border/40 pl-2 space-y-0.5 animate-in slide-in-from-top-2 fade-in duration-200">
+        <div className="mt-1 ml-4 border-l-2 border-white/10 pl-2 space-y-0.5 animate-in slide-in-from-top-2 fade-in duration-200">
           <TooltipProvider delayDuration={0}>
             {systemStatus?.services && Object.entries(systemStatus.services).map(([name, data]: [string, any]) => (
               <Tooltip key={name}>
                 <TooltipTrigger asChild>
-                  <div className="flex items-center justify-between px-3 py-1.5 rounded-md hover:bg-accent/30 transition-colors cursor-help">
-                    <span className="text-xs font-medium capitalize text-muted-foreground">
+                  <div className="flex items-center justify-between px-3 py-1.5 rounded-md hover:bg-white/10 transition-colors cursor-help">
+                    <span className="text-xs font-medium capitalize text-white/60">
                       {name.replace('_', ' ')}
                     </span>
                     <div className={cn(
@@ -182,7 +181,7 @@ function SystemStatusSection({ systemStatus, getStatusColor }: { systemStatus: a
                     )} />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="text-[10px] p-2">
+                <TooltipContent side="right" className="text-[10px] p-2 bg-[#0b363d] border-white/10 text-white">
                   <div className="space-y-1">
                     <p className="font-bold capitalize">{name.replace('_', ' ')}</p>
                     <p>Status: <span className="capitalize">{data.status}</span></p>
@@ -263,7 +262,7 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
   }
 
   return (
-    <div className="flex h-screen w-64 flex-col border-r bg-gradient-to-b from-[#0b363d] to-[#001113] text-white">
+    <div className="flex h-screen w-64 flex-col border-r border-white/10 bg-gradient-to-b from-[#0b363d] to-[#001113] text-white">
       {/* Logo */}
       <div className="flex h-16 items-center px-6 border-b border-white/10 bg-black/10">
         <Link href="/dashboard" className="flex items-center gap-2 group" onClick={onAction}>
