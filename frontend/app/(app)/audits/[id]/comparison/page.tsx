@@ -86,6 +86,8 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
     enabled: !!currentAudit?.url && !!currentWorkspace?.id,
   })
 
+  const [comparisonId, setComparisonId] = useState<string | null>(null)
+
   if (!isAuth || isLoadingCurrent || isLoadingHistory) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -114,7 +116,6 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
   }
 
   const audits = history || []
-  const [comparisonId, setComparisonId] = useState<string | null>(null)
   
   // Set default comparison audit (the one before current)
   useEffect(() => {
