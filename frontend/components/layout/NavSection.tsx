@@ -80,7 +80,7 @@ export function NavSection({
       </button>
 
       {isOpen && (
-        <div className="mt-1 ml-4 border-l-2 border-border/40 pl-2 space-y-0.5">
+        <div className="mt-1 ml-4 border-l-2 border-border/40 pl-2 space-y-0.5 animate-in slide-in-from-top-2 fade-in duration-200">
           {items.map((item, index) => (
             <NavItem
               key={item.id || `${value}-${index}`}
