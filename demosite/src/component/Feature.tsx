@@ -52,7 +52,7 @@ const Feature = () => {
                 ))}
               </Row>
               <div className="feature-link mt-5">
-                <Link href="/register" className="btn btn-primary">
+                <Link href="/login" className="btn btn-primary">
                   Poznaj pełną specyfikację
                 </Link>
               </div>

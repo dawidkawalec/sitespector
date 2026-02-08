@@ -26,6 +26,26 @@ This document tracks key architectural and technical decisions made during SiteS
 
 ---
 
+## Login/Register w demosite (LP) – identyczna nawigacja 1:1
+
+**Date**: 2026-02-08
+
+**Status**: Done
+
+**Context**: Nawigacja i stopka na loginie w frontendzie były tylko „podobne” do LP; wymóg identyczności 1:1.
+
+**Decision**:
+- Strony **logowania i rejestracji** są w **demosite** (tej samej aplikacji co landing).
+- W demosite: `app/login/page.tsx` (Topbar + formularz Supabase + Footer), `app/register/page.tsx` → redirect na `/login?mode=register`.
+- Użyte te same komponenty: `Topbar`, `Footer` – identyczne 1:1 z landingiem.
+- W demosite dodany Supabase (`lib/supabase.ts`), env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_APP_URL` (URL aplikacji SaaS).
+- Po logowaniu w demosite: OAuth → redirect do `NEXT_PUBLIC_APP_URL/auth/callback`; email/hasło → redirect do `APP_URL/auth/callback#access_token=...&refresh_token=...`. Frontend w `auth/callback` obsługuje hash i wywołuje `setSession`, potem redirect na dashboard.
+- Hero, Feature, Pricing: linki z `/register` na `/login`.
+
+**Deploy**: Aby użytkownik widział ten sam LP i login: serwować demosite pod tym samym domenem co aplikacja (np. nginx: `/`, `/login`, `/register` → demosite; `/dashboard`, `/auth`, `/audits` → frontend) albo demosite na subdomenie (np. www) z `NEXT_PUBLIC_APP_URL` ustawionym na domenę frontendu.
+
+---
+
 ## Domain migration to sitespector.app + Let's Encrypt SSL
 
 **Date**: 2026-02-08

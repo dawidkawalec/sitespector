@@ -11,6 +11,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
     "@lordicon/react": "^1.11.0",
     "bootstrap": "^5.3.7",
     "lord-icon-element": "^4.1.2",

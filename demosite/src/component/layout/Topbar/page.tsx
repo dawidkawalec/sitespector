@@ -20,10 +20,12 @@ const Topbar = () => {
   const [activeSection, setActiveSection] = useState('home');
   const pathname = usePathname();
   const { scrollY } = useScrollEvent();
+  const isAuthPage = pathname === '/login' || pathname === '/register';
 
   const isLightHeader = ['/home-3', '/home-5', '/home-6'].includes(pathname);
 
   useEffect(() => {
+    if (isAuthPage) return;
     for (let section of sections) {
       const el = document.getElementById(section.id);
       if (el) {
@@ -34,7 +36,7 @@ const Topbar = () => {
         }
       }
     }
-  }, [scrollY]);
+  }, [scrollY, isAuthPage]);
 
   return (
     <header>
@@ -72,8 +74,8 @@ const Topbar = () => {
                 {sections.map(sec => (
                   <li className="nav-item" key={sec.id}>
                     <Link
-                      className={`nav-link ${activeSection === sec.id ? 'active' : ''}`}
-                      href={`#${sec.id}`}
+                      className={`nav-link ${!isAuthPage && activeSection === sec.id ? 'active' : ''}`}
+                      href={isAuthPage ? `/#${sec.id}` : `#${sec.id}`}
                     >
                       {sec.label}
                     </Link>

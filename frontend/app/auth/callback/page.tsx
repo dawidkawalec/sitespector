@@ -19,26 +19,38 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get the session from URL hash/query
+        // Hash z tokenami (np. przekierowanie z LP/demosite po logowaniu email/hasło)
+        if (typeof window !== 'undefined' && window.location.hash) {
+          const params = new URLSearchParams(window.location.hash.slice(1))
+          const access_token = params.get('access_token')
+          const refresh_token = params.get('refresh_token')
+          if (access_token && refresh_token) {
+            const { error: setError_ } = await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            })
+            if (setError_) throw setError_
+            window.history.replaceState(null, '', window.location.pathname)
+            router.push('/dashboard')
+            return
+          }
+        }
+
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-        
+
         if (sessionError) {
-          console.error('Session error:', sessionError)
           setError(sessionError.message)
           setTimeout(() => router.push('/login'), 3000)
           return
         }
 
         if (session) {
-          // Successfully authenticated, redirect to dashboard
           router.push('/dashboard')
         } else {
-          // No session, redirect to login
           router.push('/login')
         }
-      } catch (err: any) {
-        console.error('Callback error:', err)
-        setError(err.message || 'Authentication failed')
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Authentication failed')
         setTimeout(() => router.push('/login'), 3000)
       }
     }

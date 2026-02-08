@@ -19,7 +19,7 @@ const Hero = () => {
                 Kompleksowa platforma do audytów SEO, analizy wydajności i monitorowania konkurencji. Wykrywaj błędy, optymalizuj treści z pomocą AI i generuj profesjonalne raporty PDF w kilka minut.
               </p>
               <div className="main-btn my-5">
-                <Link href="/register" className="btn btn-primary my-2">
+                <Link href="/login" className="btn btn-primary my-2">
                   Rozpocznij Darmowy Audyt
                 </Link>
                 <Link href="#about" className="btn btn-outline-primary ms-2">

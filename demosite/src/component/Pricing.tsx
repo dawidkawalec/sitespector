@@ -25,7 +25,7 @@ export const pricingPlans: PricingPlan[] = [
     features: ['5 Audytów miesięcznie', 'Podstawowa analiza SEO', '1 Użytkownik', 'Brak historii audytów'],
     button: {
       label: 'Rozpocznij',
-      link: '/register',
+      link: '/login',
       variant: 'outline-primary',
     },
   },
@@ -38,7 +38,7 @@ export const pricingPlans: PricingPlan[] = [
     features: ['50 Audytów miesięcznie', 'Pełna analiza AI + PDF', '3 Konkurentów na audyt', 'Priorytetowe przetwarzanie'],
     button: {
       label: 'Rozpocznij',
-      link: '/register',
+      link: '/login',
       variant: 'primary',
     },
   },
@@ -50,7 +50,7 @@ export const pricingPlans: PricingPlan[] = [
     features: ['Nielimitowane Audyty', 'API Access', 'Nielimitowani Użytkownicy', 'Dedykowane wsparcie'],
     button: {
       label: 'Rozpocznij',
-      link: '/register',
+      link: '/login',
       variant: 'outline-primary',
     },
   },
