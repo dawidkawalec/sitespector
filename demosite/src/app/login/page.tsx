@@ -138,16 +138,18 @@ export default function LoginPage() {
     return (
       <>
         <Topbar />
-        <section className="sign-up login-section">
+        <section className="auth-hero-section">
           <Container>
             <Row className="justify-content-center">
-              <Col md={6} className="text-center">
+              <Col xs={12} md={8} lg={6} className="auth-card text-center">
                 <div className="mb-4">
                   <RiSearchEyeFill size={48} className="text-orange" />
                 </div>
-                <h2 className="text-primary">Sprawdź e-mail</h2>
-                <p className="text-secondary mt-2">Link do logowania wysłany na {email}</p>
-                <Button variant="outline-primary" onClick={() => { setMagicSent(false); }}>Wróć</Button>
+                <h2 className="auth-heading">Sprawdź e-mail</h2>
+                <p className="auth-subheading mt-2">Link do logowania wysłany na <strong>{email}</strong></p>
+                <div className="mt-4">
+                  <Button variant="outline-primary" className="px-4" onClick={() => setMagicSent(false)}>Wróć</Button>
+                </div>
               </Col>
             </Row>
           </Container>
@@ -160,17 +162,17 @@ export default function LoginPage() {
   return (
     <>
       <Topbar />
-      <section className="sign-up login-section">
+      <section className="auth-hero-section">
         <Container>
           <Row className="justify-content-center">
-            <Col md={6} lg={5}>
+            <Col xs={12} sm={10} md={8} lg={5} className="auth-card">
               <div className="text-center mb-4">
                 <RiSearchEyeFill size={48} className="text-orange" />
-                <h1 className="h3 text-primary mt-2">SiteSpector</h1>
-                <p className="text-secondary">Zaloguj się lub załóż konto, aby kontynuować.</p>
+                <h1 className="auth-heading mt-2">SiteSpector</h1>
+                <p className="auth-subheading">Zaloguj się lub załóż konto, aby kontynuować.</p>
               </div>
 
-              <Nav variant="pills" className="mb-4 justify-content-center">
+              <Nav variant="pills" className="nav-pills mb-4 justify-content-center flex-nowrap">
                 <Nav.Item>
                   <Nav.Link active={mode === 'login'} onClick={() => setMode('login')}>Zaloguj się</Nav.Link>
                 </Nav.Item>
@@ -179,52 +181,54 @@ export default function LoginPage() {
                 </Nav.Item>
               </Nav>
 
-              {error && <div className="alert alert-danger">{error}</div>}
+              {error && <div className="alert alert-danger text-start">{error}</div>}
 
               <div className="d-grid gap-2 mb-3">
-                <Button variant="outline-secondary" onClick={() => handleOAuth('google')}>
+                <Button variant="outline-primary" className="d-flex align-items-center justify-content-center" onClick={() => handleOAuth('google')}>
                   <GoogleIcon /> Kontynuuj z Google
                 </Button>
-                <Button variant="outline-secondary" onClick={() => handleOAuth('github')}>
+                <Button variant="outline-primary" className="d-flex align-items-center justify-content-center" onClick={() => handleOAuth('github')}>
                   <GitHubIcon /> Kontynuuj z GitHub
                 </Button>
               </div>
-              <p className="text-center text-secondary small">lub e-mail</p>
+              <p className="auth-divider">lub e-mail</p>
 
               {mode === 'login' ? (
                 <Form onSubmit={handleLogin}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Email</Form.Label>
+                    <Form.Label className="form-label">Email</Form.Label>
                     <Form.Control type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="twoj@email.com" required />
                   </Form.Group>
                   <Form.Group className="mb-3">
-                    <Form.Label>Hasło</Form.Label>
+                    <Form.Label className="form-label">Hasło</Form.Label>
                     <Form.Control type="password" value={password} onChange={e => setPassword(e.target.value)} required />
                   </Form.Group>
                   <Button type="submit" className="btn-orange text-light w-100 mb-2" disabled={loading}>
                     {loading ? 'Logowanie...' : 'Zaloguj się'}
                   </Button>
-                  <Button variant="link" className="small text-secondary" onClick={handleMagicLink} type="button">
-                    Zaloguj się linkiem magicznym
-                  </Button>
+                  <div className="text-center">
+                    <button type="button" className="auth-link-btn small" onClick={handleMagicLink}>
+                      Zaloguj się linkiem magicznym
+                    </button>
+                  </div>
                 </Form>
               ) : (
                 <Form onSubmit={handleRegister}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Imię i nazwisko (opcjonalnie)</Form.Label>
+                    <Form.Label className="form-label">Imię i nazwisko (opcjonalnie)</Form.Label>
                     <Form.Control type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Jan Kowalski" />
                   </Form.Group>
                   <Form.Group className="mb-3">
-                    <Form.Label>Email</Form.Label>
+                    <Form.Label className="form-label">Email</Form.Label>
                     <Form.Control type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="twoj@email.com" required />
                   </Form.Group>
                   <Form.Group className="mb-3">
-                    <Form.Label>Hasło</Form.Label>
+                    <Form.Label className="form-label">Hasło</Form.Label>
                     <Form.Control type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-                    <Form.Text className="text-muted">Min. 8 znaków, wielka i mała litera, cyfra</Form.Text>
+                    <Form.Text className="text-muted small">Min. 8 znaków, wielka i mała litera, cyfra</Form.Text>
                   </Form.Group>
                   <Form.Group className="mb-3">
-                    <Form.Label>Potwierdź hasło</Form.Label>
+                    <Form.Label className="form-label">Potwierdź hasło</Form.Label>
                     <Form.Control type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
                   </Form.Group>
                   <Button type="submit" className="btn-orange text-light w-100" disabled={loading}>
@@ -233,11 +237,11 @@ export default function LoginPage() {
                 </Form>
               )}
 
-              <p className="text-center mt-3 text-secondary small">
+              <p className="auth-link-row">
                 {mode === 'login' ? (
-                  <>Nie masz konta? <button type="button" className="btn btn-link p-0 text-primary" onClick={() => setMode('register')}>Zarejestruj się</button></>
+                  <>Nie masz konta? <button type="button" className="auth-link-btn" onClick={() => setMode('register')}>Zarejestruj się</button></>
                 ) : (
-                  <>Masz konto? <button type="button" className="btn btn-link p-0 text-primary" onClick={() => setMode('login')}>Zaloguj się</button></>
+                  <>Masz konto? <button type="button" className="auth-link-btn" onClick={() => setMode('login')}>Zaloguj się</button></>
                 )}
               </p>
             </Col>
