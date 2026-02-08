@@ -88,16 +88,17 @@ export default function CompetitorsPage({ params }: { params: { id: string } }) 
       performance: audit.performance_score || 0,
       seo: audit.seo_score || 0,
       content: audit.content_score || 0,
-      isMain: true
+      isMain: true,
+      status: audit.status
     },
     ...competitors
-      .filter((c: any) => c.status === 'completed' && c.results?.lighthouse?.desktop)
       .map((c: any) => ({
         name: c.url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0],
-        performance: c.results.lighthouse.desktop.performance_score || 0,
-        seo: c.results.lighthouse.desktop.seo_score || 0,
-        content: c.results.lighthouse.desktop.best_practices_score || 0, // Fallback for content
-        isMain: false
+        performance: c.results?.lighthouse?.desktop?.performance_score || 0,
+        seo: c.results?.lighthouse?.desktop?.seo_score || 0,
+        content: c.results?.lighthouse?.desktop?.best_practices_score || 0, // Fallback for content
+        isMain: false,
+        status: c.status
       }))
   ]
 
@@ -161,10 +162,22 @@ export default function CompetitorsPage({ params }: { params: { id: string } }) 
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[200px]">Metryka</TableHead>
-                      <TableHead className="text-center bg-primary/5 font-bold">Twoja Strona</TableHead>
+                      <TableHead className="text-center bg-primary/5 font-bold">
+                        <div className="flex flex-col items-center">
+                          <span>Twoja Strona</span>
+                          <Badge variant={getStatusBadgeVariant(audit.status)} className="mt-1 text-[8px] h-4">
+                            {audit.status}
+                          </Badge>
+                        </div>
+                      </TableHead>
                       {competitors.map((c: any) => (
                         <TableHead key={c.id} className="text-center truncate max-w-[150px]">
-                          {c.url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
+                          <div className="flex flex-col items-center">
+                            <span className="truncate w-full">{c.url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}</span>
+                            <Badge variant={getStatusBadgeVariant(c.status)} className="mt-1 text-[8px] h-4">
+                              {c.status}
+                            </Badge>
+                          </div>
                         </TableHead>
                       ))}
                     </TableRow>

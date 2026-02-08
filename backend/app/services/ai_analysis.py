@@ -506,7 +506,72 @@ async def generate_quick_wins(audit_data: Dict[str, Any]) -> List[Dict[str, Any]
     Generate quick wins based on audit results.
     """
     logger.info("Generating quick wins")
-    return [{"title": "Popraw meta tagi", "impact": "high", "effort": "low"}]
+    results = audit_data.get("results", {})
+    crawl = results.get("crawl", {})
+    lighthouse = results.get("lighthouse", {}).get("desktop", {})
+    
+    quick_wins = []
+    
+    # 1. Broken Links
+    broken_links = crawl.get("links", {}).get("broken", 0)
+    if broken_links > 0:
+        quick_wins.append({
+            "title": f"Napraw {broken_links} uszkodzonych linków",
+            "description": "Wykryto linki prowadzące do stron 404. Ich naprawa poprawi indeksowanie i UX.",
+            "impact": "high",
+            "effort": "low"
+        })
+        
+    # 2. Performance - LCP
+    lcp = lighthouse.get("lcp", 0)
+    if lcp > 2500:
+        quick_wins.append({
+            "title": "Zoptymalizuj LCP (Largest Contentful Paint)",
+            "description": f"Obecny wynik to {lcp}ms. Skup się na kompresji obrazów i priorytetyzacji zasobów.",
+            "impact": "high",
+            "effort": "medium"
+        })
+        
+    # 3. Performance - TTFB
+    ttfb = lighthouse.get("ttfb", 0)
+    if ttfb > 600:
+        quick_wins.append({
+            "title": "Popraw czas odpowiedzi serwera (TTFB)",
+            "description": f"Obecny wynik to {ttfb}ms. Rozważ wdrożenie cachowania lub zmianę hostingu.",
+            "impact": "high",
+            "effort": "medium"
+        })
+        
+    # 4. SEO - Missing H1
+    h1_count = crawl.get("h1_count", 0)
+    if h1_count == 0:
+        quick_wins.append({
+            "title": "Dodaj brakujący nagłówek H1",
+            "description": "Strona główna nie posiada nagłówka H1, co jest kluczowe dla hierarchii treści.",
+            "impact": "high",
+            "effort": "low"
+        })
+        
+    # 5. SEO - Missing ALT tags
+    images_without_alt = crawl.get("images", {}).get("without_alt", 0)
+    if images_without_alt > 0:
+        quick_wins.append({
+            "title": f"Uzupełnij ALT dla {images_without_alt} obrazów",
+            "description": "Opisy alternatywne pomagają w pozycjonowaniu w Google Images i poprawiają dostępność.",
+            "impact": "medium",
+            "effort": "low"
+        })
+
+    # Fallback if no specific issues found
+    if not quick_wins:
+        quick_wins.append({
+            "title": "Optymalizacja Meta Tagów",
+            "description": "Regularnie odświeżaj tytuły i opisy, aby utrzymać wysoki współczynnik klikalności (CTR).",
+            "impact": "medium",
+            "effort": "low"
+        })
+        
+    return quick_wins
 
 
 async def generate_alt_text(image_url: str) -> str:

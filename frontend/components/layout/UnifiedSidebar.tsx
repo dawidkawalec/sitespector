@@ -107,13 +107,8 @@ const auditAdvancedItems = [
 // Audit tools section items
 const auditToolsItems = [
   { href: '/audits/[id]/quick-wins', icon: Zap, label: 'Quick Wins', id: 'quick-wins' },
-  { href: '/audits/[id]/seo', icon: Search, label: 'SEO Techniczne', id: 'seo-tech' },
-  { href: '/audits/[id]/performance', icon: Gauge, label: 'Wydajność', id: 'performance-tech' },
-  { href: '/audits/[id]/ai-analysis', icon: Sparkles, label: 'Analiza AI', id: 'ai-tech' },
   { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki', id: 'links' },
   { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
-  { href: '/audits/[id]/comparison', icon: ArrowLeftRight, label: 'Porównanie', id: 'comparison' },
-  { href: '/audits/[id]/client-report', icon: FileText, label: 'Raport dla klienta', id: 'client-report' },
   { href: '#', icon: Globe, label: 'Widoczność (Senuto)', disabled: true, tooltip: 'Wymaga integracji z Senuto', id: 'senuto' },
   { href: '#', icon: Share2, label: 'Backlinki (Ahrefs)', disabled: true, tooltip: 'Wymaga integracji z Ahrefs', id: 'ahrefs' },
 ]

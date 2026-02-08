@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import { useReactToPrint } from 'react-to-print'
 import { formatScore, cn } from '@/lib/utils'
+import { useWorkspace } from '@/lib/WorkspaceContext'
 import {
   Select,
   SelectContent,
@@ -339,19 +340,21 @@ export default function ClientReportPage({ params }: { params: { id: string } })
                   <CheckCircle2 className="h-6 w-6 text-primary" /> Rekomendacje "Quick Wins"
                 </h3>
                 <div className="space-y-4">
-                  {[
-                    { t: 'Optymalizacja Meta Tagów', d: 'Poprawa tytułów i opisów dla kluczowych podstron zwiększy CTR.' },
-                    { t: 'Kompresja Obrazów', d: 'Zmniejszenie wagi zdjęć o 40% skróci czas ładowania o ok. 1.2s.' },
-                    { t: 'Naprawa Linków 404', d: 'Wykryto 3 uszkodzone linki wewnętrzne, które osłabiają autorytet strony.' }
-                  ].map((win, i) => (
-                    <div key={i} className="flex gap-4 p-4 border rounded-lg bg-slate-50">
-                      <div className="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">{i+1}</div>
-                      <div>
-                        <p className="font-bold text-slate-800">{win.t}</p>
-                        <p className="text-sm text-slate-500">{win.d}</p>
+                  {audit.results?.quick_wins && audit.results.quick_wins.length > 0 ? (
+                    audit.results.quick_wins.map((win: any, i: number) => (
+                      <div key={i} className="flex gap-4 p-4 border rounded-lg bg-slate-50">
+                        <div className="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">{i+1}</div>
+                        <div>
+                          <p className="font-bold text-slate-800">{win.title}</p>
+                          <p className="text-sm text-slate-500">{win.description}</p>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="p-6 bg-slate-50 rounded-xl text-center border border-slate-100">
+                      <p className="text-sm text-muted-foreground italic">Brak krytycznych problemów wymagających natychmiastowej poprawy.</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </section>
             )}

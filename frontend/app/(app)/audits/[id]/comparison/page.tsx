@@ -19,6 +19,7 @@ import {
   ChevronDown, ArrowRight, CheckCircle2, AlertCircle, Sparkles, Layout
 } from 'lucide-react'
 import { formatScore, getScoreColor, formatDate, cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -79,7 +80,7 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
   })
 
   // 2. Get history for this URL
-  const { data: history, isLoading: isLoadingHistory } = useQuery({
+  const { data: history, isLoading: isLoadingHistory, isError: isErrorHistory, refetch: refetchHistory } = useQuery({
     queryKey: ['audit-history', currentAudit?.url, currentWorkspace?.id],
     queryFn: () => auditsAPI.getHistory(currentWorkspace!.id, currentAudit!.url),
     enabled: !!currentAudit?.url && !!currentWorkspace?.id,
@@ -89,6 +90,17 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (isErrorHistory) {
+    return (
+      <div className="container mx-auto py-12 text-center space-y-4">
+        <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
+        <h2 className="text-xl font-bold">Błąd ładowania historii</h2>
+        <p className="text-muted-foreground">Nie udało się pobrać poprzednich audytów dla tego adresu URL.</p>
+        <Button onClick={() => refetchHistory()}>Spróbuj ponownie</Button>
       </div>
     )
   }
