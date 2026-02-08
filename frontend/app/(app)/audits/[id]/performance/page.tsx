@@ -20,6 +20,7 @@ import { Loader2, Zap, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Moni
 import { formatScore, getScoreColor } from '@/lib/utils'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Accordion,
