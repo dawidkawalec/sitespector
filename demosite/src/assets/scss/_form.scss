@@ -42,12 +42,15 @@ label {
   }
 }
 
-// Sekcja logowania – gradient jak hero (ciepły jasny)
+// Sekcja logowania – to samo tło co hero (banner-2)
 .auth-hero-section {
   position: relative;
   min-height: 70vh;
   padding: 120px 0 80px;
-  background: linear-gradient(135deg, #fff9f5 0%, #fef8f3 40%, #f5f0eb 100%);
+  background-image: url('../images/banner-2.jpg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
   @media (max-width: 991px) {
     padding: 100px 16px 60px;
   }
