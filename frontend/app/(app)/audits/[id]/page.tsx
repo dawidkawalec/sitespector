@@ -38,6 +38,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function AuditDetailsPage({ params }: { params: { id: string } }) {
