@@ -1,13 +1,6 @@
 'use client'
 
-/**
- * Audit Overview Page
- * 
- * Main audit detail page showing executive summary.
- * Enriched with more metrics and quick navigation.
- */
-
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { auditsAPI, CreateAuditData } from '@/lib/api'
@@ -22,7 +15,8 @@ import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { 
   ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle, 
   FileJson, CheckCircle, Search, Gauge, Sparkles, ImageIcon, 
-  Link as LinkIcon, Users, Clock, ShieldCheck, Zap, ChevronDown, ChevronRight, ExternalLink
+  Link as LinkIcon, Users, Clock, ShieldCheck, Zap, ChevronDown, ChevronRight, ExternalLink,
+  Terminal, Activity, Check, Timer
 } from 'lucide-react'
 import Link from 'next/link'
 import { PageStatusChart } from '@/components/AuditCharts'
@@ -44,11 +38,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function AuditDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
   const { currentWorkspace } = useWorkspace()
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   // Check authentication (client-side only)
   useEffect(() => {
@@ -72,13 +68,20 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     enabled: isAuth,
     refetchInterval: (query) => {
       const data = query?.state?.data as Audit | undefined
-      // Poll every 5 seconds if processing
+      // Poll every 3 seconds if processing or pending
       if (data?.status === 'processing' || data?.status === 'pending') {
-        return 5000
+        return 3000
       }
       return false
     },
   })
+
+  // Auto-scroll logs to bottom
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [audit?.processing_logs])
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -173,6 +176,27 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     ? Math.round((new Date(audit.completed_at).getTime() - new Date(audit.started_at).getTime()) / 1000)
     : null
 
+  // Progress dashboard steps
+  const steps = [
+    { id: 'crawl', label: 'Crawling strony (Screaming Frog)', icon: Search },
+    { id: 'lighthouse', label: 'Analiza Desktop & Mobile (Lighthouse)', icon: Gauge },
+    { id: 'competitors', label: 'Analiza konkurencji', icon: Users },
+    { id: 'ai_content', label: 'Analiza AI - Treść', icon: Sparkles },
+    { id: 'ai_perf_tech', label: 'Analiza AI - Wydajność i Tech', icon: Zap },
+    { id: 'ai_strategic', label: 'Analiza AI - Strategia i Bezpieczeństwo', icon: ShieldCheck },
+  ]
+
+  const getStepStatus = (stepId: string) => {
+    if (!audit.processing_logs) return 'pending'
+    const stepLogs = audit.processing_logs.filter((l: any) => l.step === stepId || (stepId === 'lighthouse' && (l.step === 'lighthouse_desktop' || l.step === 'lighthouse_mobile')))
+    if (stepLogs.some((l: any) => l.status === 'error')) return 'error'
+    if (stepLogs.some((l: any) => l.status === 'success')) return 'success'
+    if (stepLogs.some((l: any) => l.status === 'running')) return 'running'
+    return 'pending'
+  }
+
+  const isTechnicalDone = audit.results?.crawl && audit.results?.lighthouse
+
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
       {/* Header */}
@@ -229,18 +253,160 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
         </div>
       </div>
 
-      {audit.status === 'completed' ? (
+      {audit.status === 'processing' || audit.status === 'pending' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Progress Dashboard */}
+          <Card className="lg:col-span-2 border-primary/20 shadow-lg">
+            <CardHeader className="bg-primary/5 border-b pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-primary animate-pulse" />
+                    Analiza w toku...
+                  </CardTitle>
+                  <CardDescription>
+                    SiteSpector sprawdza Twoją stronę pod kątem technicznym i AI.
+                  </CardDescription>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-primary">{audit.progress_percent || 0}%</div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground">Postęp</div>
+                </div>
+              </div>
+              <Progress value={audit.progress_percent || 5} className="h-2 mt-4" />
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {steps.map((step) => {
+                  const status = getStepStatus(step.id)
+                  return (
+                    <div key={step.id} className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                      status === 'running' ? 'bg-primary/5 border-primary/30' : 
+                      status === 'success' ? 'bg-green-50/50 dark:bg-green-950/10 border-green-200/50' : 'bg-muted/30 border-transparent'
+                    }`}>
+                      <div className={`p-2 rounded-full ${
+                        status === 'running' ? 'bg-primary text-primary-foreground animate-pulse' :
+                        status === 'success' ? 'bg-green-500 text-white' :
+                        status === 'error' ? 'bg-red-500 text-white' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {status === 'success' ? <Check className="h-4 w-4" /> : 
+                         status === 'running' ? <Loader2 className="h-4 w-4 animate-spin" /> :
+                         status === 'error' ? <AlertCircle className="h-4 w-4" /> :
+                         <step.icon className="h-4 w-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{step.label}</div>
+                        <div className="text-[10px] text-muted-foreground uppercase font-bold">
+                          {status === 'running' ? 'Przetwarzanie...' : 
+                           status === 'success' ? 'Ukończono' :
+                           status === 'error' ? 'Błąd' : 'Oczekiwanie'}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Live Logs Terminal */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-muted-foreground uppercase px-1">
+                  <div className="flex items-center gap-1">
+                    <Terminal className="h-3 w-3" /> Logi systemowe
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Timer className="h-3 w-3" /> ETA: ~3-5 min
+                  </div>
+                </div>
+                <div className="bg-slate-950 rounded-lg p-4 font-mono text-[11px] text-slate-300 border border-slate-800 shadow-inner h-[200px] overflow-hidden flex flex-col">
+                  <ScrollArea className="flex-1" ref={scrollRef}>
+                    <div className="space-y-1">
+                      {audit.processing_logs?.map((log: any, i: number) => (
+                        <div key={i} className="flex gap-3 border-b border-slate-900/50 pb-1 last:border-0">
+                          <span className="text-slate-600 shrink-0">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
+                          <span className={`shrink-0 font-bold ${
+                            log.status === 'success' ? 'text-green-400' : 
+                            log.status === 'error' ? 'text-red-400' : 'text-blue-400'
+                          }`}>
+                            {log.step.toUpperCase()}
+                          </span>
+                          <span className="break-words">{log.message}</span>
+                          {log.duration_ms && <span className="text-slate-600 ml-auto shrink-0">{log.duration_ms}ms</span>}
+                        </div>
+                      ))}
+                      {(audit.status === 'processing' || audit.status === 'pending') && (
+                        <div className="flex gap-2 items-center text-primary animate-pulse">
+                          <span>_</span>
+                          <span className="h-3 w-1 bg-primary"></span>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sidebar Info */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">O analizie</CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs text-muted-foreground space-y-4">
+                <p>
+                  SiteSpector przeprowadza teraz pełny audyt Twojej witryny. Proces ten jest podzielony na dwie fazy:
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <div className="h-4 w-4 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">1</div>
+                    <div><strong>Faza Techniczna:</strong> Crawling strony, analiza wydajności Lighthouse i sprawdzenie konkurencji.</div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="h-4 w-4 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">2</div>
+                    <div><strong>Faza AI:</strong> Wykorzystanie Gemini 3.0 do głębokiej analizy treści, strategii i UX.</div>
+                  </div>
+                </div>
+                <p className="italic">
+                  Wyniki techniczne pojawią się na tej stronie natychmiast po ukończeniu pierwszej fazy, nawet jeśli analiza AI będzie jeszcze trwała.
+                </p>
+              </CardContent>
+            </Card>
+            
+            {audit.status === 'pending' && (
+              <Alert className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
+                <Clock className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-xs text-blue-800 dark:text-blue-300">
+                  Audyt oczekuje w kolejce. Zostanie uruchomiony automatycznie, gdy tylko zwolni się miejsce w systemie.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Results Display (shown if completed OR if technical results are available during AI phase) */}
+      {(audit.status === 'completed' || isTechnicalDone) && (
         <>
+          {audit.ai_status === 'processing' && (
+            <Alert className="bg-primary/5 border-primary/20 animate-pulse mb-8">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <AlertDescription className="flex items-center justify-between w-full">
+                <span className="text-sm font-medium">Analiza AI jest w toku... Wyniki techniczne są już dostępne poniżej.</span>
+                <Badge variant="outline" className="ml-2">{audit.progress_percent}%</Badge>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Main Scores Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Wynik Ogólny', score: audit.overall_score, icon: ShieldCheck, tooltipId: 'overall_score' },
-              { label: 'SEO', score: audit.seo_score, icon: Search, tooltipId: 'seo_score' },
-              { label: 'Wydajność', score: audit.performance_score, icon: Gauge, tooltipId: 'performance_score' },
-              { label: 'Treść', score: audit.content_score, icon: Sparkles, tooltipId: 'content_score' },
+              { label: 'Wynik Ogólny', score: audit.overall_score, icon: ShieldCheck, tooltipId: 'overall_score', loading: audit.ai_status === 'processing' },
+              { label: 'SEO', score: audit.seo_score, icon: Search, tooltipId: 'seo_score', loading: false },
+              { label: 'Wydajność', score: audit.performance_score, icon: Gauge, tooltipId: 'performance_score', loading: false },
+              { label: 'Treść', score: audit.content_score, icon: Sparkles, tooltipId: 'content_score', loading: audit.ai_status === 'processing' },
             ].map((item, i) => (
               <Card key={i} className="relative overflow-hidden group">
-                <div className={`absolute top-0 left-0 w-1 h-full ${getScoreColor(item.score).replace('text-', 'bg-')}`} />
+                <div className={`absolute top-0 left-0 w-1 h-full ${item.loading ? 'bg-muted animate-pulse' : getScoreColor(item.score).replace('text-', 'bg-')}`} />
                 <CardHeader className="pb-2">
                   <CardDescription className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-2">
@@ -250,9 +416,13 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-4xl font-bold ${getScoreColor(item.score)}`}>
-                    {formatScore(item.score)}
-                  </div>
+                  {item.loading ? (
+                    <div className="h-10 w-16 bg-muted animate-pulse rounded" />
+                  ) : (
+                    <div className={`text-4xl font-bold ${getScoreColor(item.score)}`}>
+                      {formatScore(item.score)}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -394,18 +564,26 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
               </Card>
 
               {/* AI Summary */}
-              {ai?.summary && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-primary" /> Wnioski AI
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+              <Card className={audit.ai_status === 'processing' ? 'opacity-50 grayscale' : ''}>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" /> Wnioski AI
+                    {audit.ai_status === 'processing' && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {audit.ai_status === 'processing' ? (
+                    <div className="space-y-2">
+                      <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                      <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+                    </div>
+                  ) : ai?.summary ? (
                     <p className="text-sm leading-relaxed italic text-muted-foreground">"{ai.summary}"</p>
-                  </CardContent>
-                </Card>
-              )}
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">Brak podsumowania AI.</p>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
             {/* Sidebar Stats */}
@@ -454,44 +632,6 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             </div>
           </div>
         </>
-      ) : (
-        <Card>
-          <CardContent className="py-16 text-center space-y-6 max-w-md mx-auto">
-            <div className="relative">
-              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-primary/50" />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold tracking-tight">Analiza w toku...</h2>
-              <p className="text-sm text-muted-foreground">
-                To może potrwać kilka minut (zwykle 3-8 min). Odświeżymy stronę automatycznie.
-              </p>
-            </div>
-
-            <div className="space-y-4 pt-4">
-              <div className="flex justify-between text-xs font-medium mb-1">
-                <span>Postęp analizy</span>
-                <span className="text-primary">{audit.processing_step || 'Inicjalizacja...'}</span>
-              </div>
-              <Progress 
-                value={
-                  audit.processing_step?.includes('Crawling') ? 20 :
-                  audit.processing_step?.includes('Performance') ? 40 :
-                  audit.processing_step?.includes('Competitor') ? 60 :
-                  audit.processing_step?.includes('AI') ? 80 :
-                  audit.processing_step?.includes('Finalizing') ? 95 : 10
-                } 
-                className="h-2"
-              />
-              <p className="text-[10px] text-muted-foreground italic">
-                Jeśli analiza trwa dłużej niż 10 minut, zostanie oznaczona jako nieudana.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
       )}
     </div>
   )

@@ -54,7 +54,13 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
             stderr=asyncio.subprocess.PIPE
         )
         
-        stdout, stderr = await process.communicate()
+        from app.config import settings
+        try:
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=settings.LIGHTHOUSE_TIMEOUT)
+        except asyncio.TimeoutError:
+            process.kill()
+            logger.error(f"❌ Lighthouse audit TIMEOUT for {url} ({device})")
+            raise Exception(f"Lighthouse audit timed out after {settings.LIGHTHOUSE_TIMEOUT}s for {url} ({device})")
         
         if process.returncode != 0:
             error_msg = stderr.decode()

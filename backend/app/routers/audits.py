@@ -317,7 +317,38 @@ async def get_audit_status(
         "overall_score": audit.overall_score,
         "error_message": audit.error_message,
         "completed_at": audit.completed_at,
+        "processing_logs": audit.processing_logs,
+        "ai_status": audit.ai_status,
+        "progress_percent": _calculate_progress(audit.processing_step, audit.status)
     }
+
+def _calculate_progress(step: Optional[str], status: AuditStatus) -> int:
+    """Calculate progress percentage based on step and status."""
+    if status == AuditStatus.COMPLETED:
+        return 100
+    if status == AuditStatus.FAILED:
+        return 0
+    if not step:
+        return 5
+    
+    progress_map = {
+        "crawl:start": 10,
+        "crawl:done": 25,
+        "lighthouse:start": 30,
+        "lighthouse:done": 50,
+        "competitors:start": 55,
+        "competitors:done": 65,
+        "ai_content:start": 70,
+        "ai_content:done": 80,
+        "ai_perf_tech:start": 82,
+        "ai_perf_tech:done": 88,
+        "ai_strategic:start": 90,
+        "ai_strategic:done": 95,
+        "finalizing": 98,
+        "completed": 100
+    }
+    
+    return progress_map.get(step, 10)
 
 
 @router.delete("/{audit_id}", status_code=status.HTTP_204_NO_CONTENT)

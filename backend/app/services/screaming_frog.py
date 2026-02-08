@@ -65,7 +65,12 @@ async def crawl_url(url: str) -> Dict[str, Any]:
             stderr=asyncio.subprocess.PIPE
         )
         
-        stdout, stderr = await process.communicate()
+        try:
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
+        except asyncio.TimeoutError:
+            process.kill()
+            logger.error(f"❌ Screaming Frog crawl TIMEOUT for {url}")
+            raise Exception(f"Screaming Frog crawl timed out after 300s for {url}")
         
         if process.returncode != 0:
             error = stderr.decode()

@@ -269,6 +269,9 @@ class AuditStatusResponse(BaseModel):
     overall_score: Optional[float] = None
     error_message: Optional[str] = None
     completed_at: Optional[datetime] = None
+    processing_logs: Optional[List[Dict[str, Any]]] = None
+    ai_status: Optional[str] = None
+    progress_percent: Optional[int] = None
 
 
 # ============================================

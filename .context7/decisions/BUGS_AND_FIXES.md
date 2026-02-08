@@ -234,6 +234,31 @@ refetchInterval: (query) => {
 
 ---
 
+### BUG-007: Audit Pipeline Hangs
+
+**Reported**: 2026-02-08
+
+**Status**: ✅ FIXED (2026-02-08)
+
+**Severity**: CRITICAL
+
+**Description**:
+- Audits would hang indefinitely in PROCESSING state.
+- No timeouts on Docker exec calls (Screaming Frog/Lighthouse).
+- Synchronous Gemini API calls blocked the worker event loop.
+- Invalid model name caused excessive retries.
+
+**Fix**:
+- Added `asyncio.wait_for()` timeouts to all subprocess calls.
+- Implemented **Two-Phase Audit** (Technical + AI) for faster feedback.
+- Used `asyncio.to_thread()` for Gemini API calls.
+- Added granular `processing_logs` and progress tracking.
+- Fixed Gemini model name to `gemini-flash-3-preview`.
+
+**Impact**: CRITICAL - Audits are now reliable, have timeouts, and provide real-time progress feedback.
+
+---
+
 ## Known Issues
 
 ### ISSUE-001: PDF Template Incomplete

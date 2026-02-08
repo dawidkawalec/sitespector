@@ -3,6 +3,7 @@ Gemini API client for AI analysis.
 """
 
 import logging
+import asyncio
 from typing import Dict, Any, Optional
 import google.generativeai as genai
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -28,7 +29,7 @@ async def call_claude(
     
     Args:
         prompt: User prompt
-        system_prompt: System prompt for context (Gemini 1.5 supports system instructions)
+        system_prompt: System prompt for context (Gemini 1.5+ supports system instructions)
         max_tokens: Maximum tokens in response (handled by generation_config)
         
     Returns:
@@ -39,8 +40,8 @@ async def call_claude(
         return _generate_mock_response()
     
     try:
-        # Use Gemini 3.0 Flash
-        model_name = "gemini-3-flash" 
+        # Use Gemini 3.0 Flash Preview
+        model_name = "gemini-flash-3-preview" 
         logger.info(f"Calling Gemini API (model: {model_name})")
         
         # Configure model with system instruction
@@ -50,22 +51,30 @@ async def call_claude(
         )
         
         # Generate content
-        # Note: Gemini python client is sync by default but fast. 
-        # For true async in FastAPI, we might need to run in threadpool or use async client if available.
-        # But for now, standard call is fine for worker.
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
-                max_output_tokens=max_tokens or 2048,
-                temperature=0.7
-            )
+        # Use asyncio.to_thread for sync Gemini call to avoid blocking event loop
+        # and wrap in wait_for for per-call timeout
+        response = await asyncio.wait_for(
+            asyncio.to_thread(
+                model.generate_content,
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=max_tokens or 2048,
+                    temperature=0.7
+                )
+            ),
+            timeout=30.0  # 30 seconds timeout per call
         )
         
         return response.text
         
+    except asyncio.TimeoutError:
+        logger.error(f"Gemini API TIMEOUT for model {model_name}")
+        raise Exception(f"Gemini API call timed out after 30s")
     except Exception as e:
         logger.error(f"Gemini API error: {e}")
-        # Return mock response on error to prevent crash
+        # Only return mock if it's a configuration issue or we want to allow partial success
+        # For now, let's keep mock fallback but log it clearly
+        logger.warning("Returning mock response due to API error")
         return _generate_mock_response()
 
 

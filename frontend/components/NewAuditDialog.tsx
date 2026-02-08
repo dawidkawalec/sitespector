@@ -98,11 +98,14 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
     try {
       const auditData: CreateAuditData = {
         url: data.url,
+        competitors: competitors.filter(c => c.trim() !== ''),
       }
 
-      await auditsAPI.create(currentWorkspace.id, auditData)
+      const newAudit = await auditsAPI.create(currentWorkspace.id, auditData)
       reset()
       setCompetitors([''])
+      onOpenChange(false)
+      router.push(`/audits/${newAudit.id}`)
       onSuccess()
     } catch (err: any) {
       setError(err.message || 'Failed to create audit')

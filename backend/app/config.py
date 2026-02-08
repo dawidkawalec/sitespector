@@ -98,7 +98,7 @@ class Settings(BaseSettings):
     LIGHTHOUSE_CONTAINER: str = Field(
         default="lighthouse", description="Lighthouse container name"
     )
-    LIGHTHOUSE_TIMEOUT: int = Field(default=60, description="Lighthouse timeout in seconds")
+    LIGHTHOUSE_TIMEOUT: int = Field(default=90, description="Lighthouse timeout in seconds")
 
     # File Storage
     PDF_STORAGE_PATH: str = Field(default="/tmp/audits", description="PDF storage path")

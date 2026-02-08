@@ -122,6 +122,12 @@ class Audit(Base):
     # Error tracking
     error_message = Column(Text, nullable=True)
 
+    # Processing logs (JSONB list of objects)
+    processing_logs = Column(JSONB, nullable=True, default=list)
+
+    # AI status (None, "processing", "completed", "failed")
+    ai_status = Column(String(20), nullable=True)
+
     # Timestamps
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
