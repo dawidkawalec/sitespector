@@ -29,7 +29,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
       - ENVIRONMENT=production
       - DEBUG=false
-      - CORS_ORIGINS=["https://77.42.79.46","http://77.42.79.46"]
+      - CORS_ORIGINS=["https://sitespector.app","https://www.sitespector.app","https://77.42.79.46"]
     env_file:
       - .env
     volumes:
@@ -135,13 +135,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=https://77.42.79.46
+        - NEXT_PUBLIC_API_URL=https://sitespector.app
         - NEXT_PUBLIC_SUPABASE_URL=https://ljimahizqgewhvrgqhyx.supabase.co
         - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqaW1haGl6cWdld2h2cmdxaHl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNTUyNTIsImV4cCI6MjA4NTczMTI1Mn0.oiytWEKYE83nI7OGrsw8aCpMfuKOwhn2Dy3GHsyqfP8
     container_name: sitespector-frontend
     command: node server.js
     environment:
-      - NEXT_PUBLIC_API_URL=https://77.42.79.46
+      - NEXT_PUBLIC_API_URL=https://sitespector.app
       - NEXT_PUBLIC_SUPABASE_URL=https://ljimahizqgewhvrgqhyx.supabase.co
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqaW1haGl6cWdld2h2cmdxaHl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNTUyNTIsImV4cCI6MjA4NTczMTI1Mn0.oiytWEKYE83nI7OGrsw8aCpMfuKOwhn2Dy3GHsyqfP8
       - HOSTNAME=0.0.0.0
@@ -176,7 +176,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./ssl:/etc/nginx/ssl:ro
+      - /etc/letsencrypt/live/sitespector.app:/etc/nginx/ssl:ro
     depends_on:
       - landing
       - frontend
