@@ -143,11 +143,51 @@ def _extract_report_data(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     all_recommendations.extend(security.get("recommendations", []))
     all_recommendations.extend(ux.get("recommendations", []))
     
+    # Extract SEO tech issues from crawl data if available
+    technical_seo = crawl_data.get("technical_seo", {})
+    if technical_seo.get("missing_canonical", 0) > 0:
+        all_recommendations.append(f"⚠️ Brak tagu canonical na {technical_seo['missing_canonical']} stronach")
+    if technical_seo.get("missing_description", 0) > 0:
+        all_recommendations.append(f"⚠️ Brak meta description na {technical_seo['missing_description']} stronach")
+    if crawl_data.get("links", {}).get("broken", 0) > 0:
+        all_recommendations.append(f"❌ Wykryto {crawl_data['links']['broken']} uszkodzonych linków (404)")
+
     # Parse recommendations by priority (emoji prefix)
     critical_issues = [r for r in all_recommendations if r.startswith("❌")]
     warnings = [r for r in all_recommendations if r.startswith("⚠️")]
     successes = [r for r in all_recommendations if r.startswith("✅")]
     ai_recommendations = [r for r in all_recommendations if r.startswith("🤖")]
+
+    # Extract ROI action plan from AI content analysis
+    roi_action_plan = content_analysis.get("roi_action_plan", [])
+    if not roi_action_plan and not quick_wins:
+        # Create quick wins from critical issues and warnings if no ROI plan
+        for issue in critical_issues[:3]:
+            quick_wins.append({
+                "title": issue.replace("❌ ", ""),
+                "description": "To krytyczny błąd wymagający natychmiastowej uwagi.",
+                "impact": "high",
+                "effort": "medium",
+                "category": "Techniczne SEO"
+            })
+        for issue in warnings[:2]:
+            quick_wins.append({
+                "title": issue.replace("⚠️ ", ""),
+                "description": "Zalecana poprawa dla lepszej widoczności.",
+                "impact": "medium",
+                "effort": "low",
+                "category": "SEO / Treść"
+            })
+    elif roi_action_plan:
+        # Map ROI action plan to quick wins format
+        for item in roi_action_plan:
+            quick_wins.append({
+                "title": item.get("action", "Zalecenie AI"),
+                "description": "Zalecenie wygenerowane przez AI na podstawie analizy treści.",
+                "impact": item.get("impact", "medium"),
+                "effort": item.get("effort", "medium"),
+                "category": "AI / Copywriting"
+            })
 
     return {
         "seo_data": crawl_data,

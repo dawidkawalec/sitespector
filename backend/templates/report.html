@@ -163,9 +163,10 @@
                 <li><a href="#tech-seo">2. Analiza Techniczna & SEO <span>....................................</span></a></li>
                 <li><a href="#performance">3. Wydajność & Core Web Vitals <span>....................................</span></a></li>
                 <li><a href="#content-ux">4. Treść, UX & Bezpieczeństwo <span>....................................</span></a></li>
-                <li><a href="#quick-wins">5. Plan Działania (Quick Wins) <span>....................................</span></a></li>
-                <li><a href="#pages-list">6. Pełna Lista Stron <span>....................................</span></a></li>
-                <li><a href="#images-list">7. Lista Zasobów Graficznych <span>....................................</span></a></li>
+                <li><a href="#competitive">5. Analiza Konkurencji <span>....................................</span></a></li>
+                <li><a href="#quick-wins">6. Plan Działania (Quick Wins) <span>....................................</span></a></li>
+                <li><a href="#pages-list">7. Pełna Lista Stron <span>....................................</span></a></li>
+                <li><a href="#images-list">8. Lista Zasobów Graficznych <span>....................................</span></a></li>
             </ul>
         </div>
     </div>
@@ -205,6 +206,9 @@
         <h3>Podsumowanie Strategiczne AI</h3>
         <div class="recommendation rec-ai">
             <p style="font-style: italic; color: #5b21b6;">{{ content_analysis.summary or "Analiza AI wygenerowała strategiczne wnioski dotyczące Twojej witryny, skupiając się na autorytecie treści i optymalizacji konwersji." }}</p>
+            {% if content_analysis.tone_voice %}
+                <p style="margin-top: 10px; font-size: 9pt;"><strong>Ton wypowiedzi:</strong> {{ content_analysis.tone_voice }}</p>
+            {% endif %}
         </div>
 
         {% if benchmarks %}
@@ -308,7 +312,7 @@
                 <h3>Jakość Treści</h3>
                 <table>
                     <tr><td>Średnia liczba słów</td><td class="text-bold">{{ content_analysis.word_count }}</td></tr>
-                    <tr><td>Czytelność (Flesch)</td><td class="text-bold">{{ content_analysis.readability_score }}</td></tr>
+                    <tr><td>Czytelność (Flesch)</td><td class="text-bold">{{ content_analysis.readability_score or 'N/A' }}</td></tr>
                     <tr><td>Thin Content (podstrony)</td><td class="text-bold">{{ content_deep.thin_content_count or 0 }}</td></tr>
                     <tr><td>Duplikaty wewnętrzne</td><td class="text-bold">{{ content_deep.duplicate_content_count or 0 }}</td></tr>
                 </table>
@@ -324,6 +328,18 @@
             </div>
         </div>
 
+        {% if local_seo.is_local_business %}
+        <h3>Lokalne SEO</h3>
+        <div class="recommendation rec-success">
+            <strong>Wykryto sygnały lokalne:</strong> Twoja strona posiada elementy istotne dla pozycjonowania lokalnego.
+            <ul style="margin-top: 10px; font-size: 9pt;">
+                {% for rec in local_seo.recommendations %}
+                    <li>{{ rec }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         {% if security.vulnerabilities %}
         <h3>Wykryte Zagrożenia</h3>
         {% for vuln in security.vulnerabilities %}
@@ -334,9 +350,43 @@
         {% endif %}
     </div>
 
+    <!-- Competitive Analysis -->
+    <div id="competitive" class="page-break">
+        <h2>5. Analiza Konkurencji</h2>
+        
+        {% if competitive_analysis.competitors_analyzed > 0 %}
+            <p class="mb-4">Porównanie Twojej witryny z {{ competitive_analysis.competitors_analyzed }} głównymi konkurentami:</p>
+            
+            <h3>Mocne Strony</h3>
+            {% for strength in competitive_analysis.strengths %}
+                <div class="recommendation rec-success">
+                    {{ strength }}
+                </div>
+            {% endfor %}
+
+            <h3>Obszary do Poprawy</h3>
+            {% for weakness in competitive_analysis.weaknesses %}
+                <div class="recommendation rec-critical">
+                    {{ weakness }}
+                </div>
+            {% endfor %}
+
+            <h3>Szanse (Opportunities)</h3>
+            {% for opportunity in competitive_analysis.opportunities %}
+                <div class="recommendation rec-ai">
+                    {{ opportunity }}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="recommendation">
+                <strong>Brak danych konkurencji:</strong> Dodaj adresy URL konkurentów w panelu SiteSpector, aby otrzymać szczegółowe porównanie rynkowe.
+            </div>
+        {% endif %}
+    </div>
+
     <!-- Action Plan -->
     <div id="quick-wins" class="page-break">
-        <h2>5. Plan Działania (Quick Wins)</h2>
+        <h2>6. Plan Działania (Quick Wins)</h2>
         <p class="mb-4">Poniższa lista zawiera zadania o najwyższym priorytecie, wygenerowane przez AI SiteSpector:</p>
         
         {% if quick_wins %}

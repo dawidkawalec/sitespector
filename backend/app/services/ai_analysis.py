@@ -110,7 +110,7 @@ async def analyze_content(content_data: Dict[str, Any]) -> Dict[str, Any]:
         - "summary": Krótkie podsumowanie jakości treści (max 2 zdania)
         - "tone_voice": Ocena tonu wypowiedzi (np. profesjonalny, luźny, niespójny)
         - "ai_recommendations": Lista 2-3 konkretnych sugestii poprawy copywritingu
-        - "roi_action_plan": Lista obiektów {"action": string, "impact": "high"|"medium"|"low", "effort": "easy"|"medium"|"hard"}
+        - "roi_action_plan": Lista obiektów {{"action": string, "impact": "high"|"medium"|"low", "effort": "easy"|"medium"|"hard"}}
         """
         
         # Call Gemini (using call_claude wrapper)
