@@ -12,12 +12,15 @@ import { ChevronDown, LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { NavItem } from './NavItem'
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+
 interface NavSectionItem {
   href: string
   icon: LucideIcon
   label: string
   badge?: string | number
   disabled?: boolean
+  tooltip?: string
   id?: string
 }
 
@@ -89,6 +92,7 @@ export function NavSection({
               label={item.label}
               badge={item.badge}
               disabled={item.disabled}
+              tooltip={item.tooltip}
               activeClass={cn(
                 'bg-primary/10 text-primary font-medium',
                 variant === 'audit' && 'bg-primary/5'

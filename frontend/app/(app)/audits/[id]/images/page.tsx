@@ -7,7 +7,7 @@
  * - Summary metrics (total, with/without alt, size)
  * - Image size distribution chart
  * - Full image list with filtering
- * - Optimization score
+ * - AI ALT text generation
  */
 
 import { useEffect, useState } from 'react'
@@ -17,7 +17,7 @@ import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Image as ImageIcon, AlertCircle, CheckCircle2, XCircle, Search, Filter, HardDrive, Download } from 'lucide-react'
+import { Loader2, Image as ImageIcon, AlertCircle, CheckCircle2, XCircle, Search, Filter, HardDrive, Download, Sparkles, Wand2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   Table,
@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/select"
 import { ImageSizeChart } from '@/components/AuditCharts'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 import type { Audit } from '@/lib/api'
 
 export default function ImagesPage({ params }: { params: { id: string } }) {
@@ -43,14 +44,14 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
   const [isAuth, setIsAuth] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState('all')
+  const [generatingAlt, setGeneratingAlt] = useState<Record<string, boolean>>({})
+  const [aiAlts, setAiAlts] = useState<Record<string, string>>({})
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setIsAuth(!!session)
-      if (!session) {
-        router.push('/login')
-      }
+      if (!session) router.push('/login')
     }
     checkAuth()
   }, [router])
@@ -88,22 +89,20 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
 
   const allImages = imagesData.all_images || []
   
-  // Filter images
   const filteredImages = allImages.filter((img: any) => {
     const matchesSearch = img.url.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          (img.alt_text && img.alt_text.toLowerCase().includes(searchTerm.toLowerCase()))
     
     const matchesFilter = filter === 'all' || 
                          (filter === 'no-alt' && !img.alt_text) ||
-                         (filter === 'large' && img.size_bytes > 512000) || // > 500KB
-                         (filter === 'huge' && img.size_bytes > 1048576)    // > 1MB
+                         (filter === 'large' && img.size_bytes > 512000) ||
+                         (filter === 'huge' && img.size_bytes > 1048576)
     
     return matchesSearch && matchesFilter
   })
 
-  // Calculate optimization score (simplified)
-  const altTextScore = imagesData.total > 0 ? (imagesData.with_alt / imagesData.total) * 100 : 100
   const largeImagesCount = allImages.filter((img: any) => img.size_bytes > 512000).length
+  const altTextScore = imagesData.total > 0 ? (imagesData.with_alt / imagesData.total) * 100 : 100
   const sizeScore = imagesData.total > 0 ? Math.max(0, 100 - (largeImagesCount / imagesData.total) * 200) : 100
   const optimizationScore = Math.round((altTextScore + sizeScore) / 2)
 
@@ -113,6 +112,19 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const handleGenerateAlt = async (imageUrl: string) => {
+    setGeneratingAlt(prev => ({ ...prev, [imageUrl]: true }))
+    try {
+      const res = await auditsAPI.generateAlt(params.id, imageUrl)
+      setAiAlts(prev => ({ ...prev, [imageUrl]: res.alt_text }))
+      toast.success('Wygenerowano tekst ALT')
+    } catch (error) {
+      toast.error('Błąd generowania tekstu ALT')
+    } finally {
+      setGeneratingAlt(prev => ({ ...prev, [imageUrl]: false }))
+    }
   }
 
   return (
@@ -135,7 +147,6 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
         </div>
       </div>
       
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -179,7 +190,6 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Optimization Tips */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Rekomendacje dla Obrazów</CardTitle>
@@ -190,10 +200,10 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
               {imagesData.without_alt > 0 && (
                 <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-100 dark:border-red-900/30">
                   <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm font-semibold">Uzupełnij brakujące teksty alternatywne (ALT)</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {imagesData.without_alt} obrazów nie posiada opisu. Atrybut ALT pomaga wyszukiwarkom zrozumieć treść obrazu i jest kluczowy dla dostępności (screen readery).
+                      {imagesData.without_alt} obrazów nie posiada opisu. Możesz użyć naszej sztucznej inteligencji, aby wygenerować brakujące teksty ALT na podstawie zawartości obrazu.
                     </p>
                   </div>
                 </div>
@@ -210,23 +220,10 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
                   </div>
                 </div>
               )}
-
-              {imagesData.total > 0 && imagesData.without_alt === 0 && largeImagesCount === 0 && (
-                <div className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100 dark:border-green-900/30">
-                  <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold">Świetna optymalizacja obrazów!</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Wszystkie obrazy mają teksty ALT i żaden nie przekracza zalecanego rozmiaru.
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Size Distribution Chart */}
         <Card>
           <CardHeader>
             <CardTitle>Rozkład Rozmiarów</CardTitle>
@@ -238,13 +235,12 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
         </Card>
       </div>
 
-      {/* Images Table */}
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <CardTitle>Wszystkie Obrazy</CardTitle>
-              <CardDescription>Szczegółowa lista wszystkich wykrytych zasobów graficznych</CardDescription>
+              <CardDescription>Szczegółowa lista z opcją generowania ALT przez AI</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative w-full md:w-64">
@@ -276,12 +272,12 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">Podgląd</TableHead>
-                  <TableHead className="w-[300px]">URL</TableHead>
-                  <TableHead>ALT Text</TableHead>
+                  <TableHead className="w-[80px]">Podgląd</TableHead>
+                  <TableHead className="w-[250px]">URL</TableHead>
+                  <TableHead className="min-w-[200px]">ALT Text / AI Suggestion</TableHead>
                   <TableHead>Rozmiar</TableHead>
                   <TableHead>Format</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Akcje</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -289,7 +285,7 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
                   filteredImages.slice(0, 50).map((img: any, idx: number) => (
                     <TableRow key={idx}>
                       <TableCell>
-                        <div className="w-12 h-12 rounded border bg-accent/20 overflow-hidden flex items-center justify-center">
+                        <div className="w-12 h-12 rounded border bg-accent/20 overflow-hidden flex items-center justify-center relative group">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
                             src={img.url} 
@@ -303,31 +299,51 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
                           <ImageIcon className="h-4 w-4 text-muted-foreground hidden" />
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium truncate max-w-[300px]" title={img.url}>
-                        <a href={img.url} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
-                          {img.url} <ExternalLink className="h-3 w-3" />
+                      <TableCell className="font-medium truncate max-w-[250px]" title={img.url}>
+                        <a href={img.url} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1 text-xs">
+                          {img.url} <ExternalLink className="h-3 w-3 shrink-0" />
                         </a>
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate" title={img.alt_text}>
-                        {img.alt_text ? (
-                          img.alt_text
+                      <TableCell>
+                        {aiAlts[img.url] ? (
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1 text-[10px] text-blue-600 font-bold uppercase">
+                              <Sparkles className="h-3 w-3" /> AI Suggestion
+                            </div>
+                            <p className="text-sm italic text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-100 dark:border-blue-800/30">
+                              {aiAlts[img.url]}
+                            </p>
+                          </div>
+                        ) : img.alt_text ? (
+                          <span className="text-sm">{img.alt_text}</span>
                         ) : (
                           <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Brak ALT</Badge>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <span className={img.size_bytes > 512000 ? 'text-yellow-600 font-medium' : ''}>
+                      <TableCell className="text-xs">
+                        <span className={img.size_bytes > 512000 ? 'text-yellow-600 font-bold' : ''}>
                           {formatBytes(img.size_bytes)}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{img.format?.toUpperCase() || 'N/A'}</Badge>
+                        <Badge variant="outline" className="text-[10px]">{img.format?.toUpperCase() || 'N/A'}</Badge>
                       </TableCell>
-                      <TableCell>
-                        {img.alt_text && img.size_bytes < 512000 ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <AlertCircle className={`h-4 w-4 ${img.size_bytes > 512000 ? 'text-yellow-600' : 'text-red-600'}`} />
+                      <TableCell className="text-right">
+                        {!img.alt_text && !aiAlts[img.url] && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            onClick={() => handleGenerateAlt(img.url)}
+                            disabled={generatingAlt[img.url]}
+                          >
+                            {generatingAlt[img.url] ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Wand2 className="h-3.5 w-3.5 mr-1.5" />
+                            )}
+                            Generuj ALT
+                          </Button>
                         )}
                       </TableCell>
                     </TableRow>
@@ -342,11 +358,6 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
               </TableBody>
             </Table>
           </div>
-          {filteredImages.length > 50 && (
-            <p className="text-xs text-muted-foreground mt-4 text-center">
-              Pokazano 50 z {filteredImages.length} obrazów.
-            </p>
-          )}
         </CardContent>
       </Card>
     </div>

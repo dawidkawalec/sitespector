@@ -14,8 +14,24 @@ import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, ArrowLeftRight, TrendingUp, TrendingDown, Minus, Calendar, ExternalLink } from 'lucide-react'
-import { formatScore, getScoreColor, formatDate } from '@/lib/utils'
+import { 
+  Loader2, ArrowLeftRight, TrendingUp, TrendingDown, Minus, Calendar, ExternalLink, 
+  ChevronDown, ArrowRight, CheckCircle2, AlertCircle, Sparkles, Layout
+} from 'lucide-react'
+import { formatScore, getScoreColor, formatDate, cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
 import {
   LineChart,
   Line,
@@ -86,7 +102,22 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
   }
 
   const audits = history || []
-  const previousAudit = audits.length > 1 ? audits[1] : null // audits[0] is the current one if it's completed
+  const [comparisonId, setComparisonId] = useState<string | null>(null)
+  
+  // Set default comparison audit (the one before current)
+  useEffect(() => {
+    if (audits.length > 1 && !comparisonId) {
+      const idx = audits.findIndex(a => a.id === currentAudit.id)
+      if (idx !== -1 && audits[idx + 1]) {
+        setComparisonId(audits[idx + 1].id)
+      } else if (idx !== 0) {
+        setComparisonId(audits[0].id)
+      }
+    }
+  }, [audits, currentAudit.id, comparisonId])
+
+  const comparisonAudit = audits.find(a => a.id === comparisonId) || (audits.length > 1 ? audits[1] : null)
+  const previousAudit = comparisonAudit // for backward compatibility in existing code
 
   // Prepare chart data (chronological order)
   const chartData = [...audits]
@@ -113,9 +144,30 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
-      <div className="flex items-center gap-3">
-        <ArrowLeftRight className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold">Porównanie Audytów</h1>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <ArrowLeftRight className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold">Porównanie Audytów</h1>
+        </div>
+        
+        {audits.length > 1 && (
+          <div className="flex items-center gap-3 bg-accent/30 p-2 rounded-lg border">
+            <span className="text-xs font-medium text-muted-foreground">Porównaj z:</span>
+            <Select value={comparisonId || ""} onValueChange={setComparisonId}>
+              <SelectTrigger className="w-[220px] h-9 text-xs bg-white dark:bg-gray-950">
+                <SelectValue placeholder="Wybierz audyt..." />
+              </SelectTrigger>
+              <SelectContent>
+                {audits.filter(a => a.id !== currentAudit.id).map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    <span className="font-medium">{formatDate(a.created_at).split(',')[0]}</span>
+                    <span className="ml-2 text-[10px] text-muted-foreground">Score: {Math.round(a.overall_score || 0)}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       {audits.length < 2 ? (
@@ -183,6 +235,185 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
               </Card>
             ))}
           </div>
+
+          {/* Side-by-Side Detail Comparison */}
+          <Tabs defaultValue="scores" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+              <TabsTrigger value="scores">Wyniki</TabsTrigger>
+              <TabsTrigger value="technical">Techniczne</TabsTrigger>
+              <TabsTrigger value="issues">Problemy</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="scores" className="space-y-6 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Current Audit Scores */}
+                <Card className="border-primary/20">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Badge>BIEŻĄCY</Badge>
+                      {formatDate(currentAudit.created_at)}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {[
+                      { label: 'SEO', score: currentAudit.seo_score },
+                      { label: 'Wydajność', score: currentAudit.performance_score },
+                      { label: 'Treść', score: currentAudit.content_score },
+                    ].map((s, i) => (
+                      <div key={i} className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span>{s.label}</span>
+                          <span className="font-bold">{formatScore(s.score)}</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                          <div className={cn("h-full", getScoreColor(s.score).replace('text-', 'bg-'))} style={{ width: `${s.score}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {/* Comparison Audit Scores */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-muted-foreground">
+                      <Badge variant="outline">POPRZEDNI</Badge>
+                      {comparisonAudit ? formatDate(comparisonAudit.created_at) : 'Brak danych'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {comparisonAudit ? [
+                      { label: 'SEO', score: comparisonAudit.seo_score },
+                      { label: 'Wydajność', score: comparisonAudit.performance_score },
+                      { label: 'Treść', score: comparisonAudit.content_score },
+                    ].map((s, i) => (
+                      <div key={i} className="space-y-1 opacity-70">
+                        <div className="flex justify-between text-xs">
+                          <span>{s.label}</span>
+                          <span className="font-bold">{formatScore(s.score)}</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                          <div className="h-full bg-muted-foreground/40" style={{ width: `${s.score}%` }} />
+                        </div>
+                      </div>
+                    )) : (
+                      <div className="h-full flex items-center justify-center py-10 text-xs text-muted-foreground italic">
+                        Wybierz audyt do porównania
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="technical" className="space-y-6 pt-4">
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Metryka</TableHead>
+                        <TableHead className="text-center">{comparisonAudit ? formatDate(comparisonAudit.created_at).split(',')[0] : 'Poprzedni'}</TableHead>
+                        <TableHead className="text-center">Bieżący</TableHead>
+                        <TableHead className="text-right">Zmiana</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {[
+                        { label: 'Liczba stron', cur: currentAudit.results?.crawl?.pages_crawled, prev: comparisonAudit?.results?.crawl?.pages_crawled },
+                        { label: 'Błędy 404', cur: currentAudit.results?.crawl?.links?.broken, prev: comparisonAudit?.results?.crawl?.links?.broken, inverse: true },
+                        { label: 'Brak Canonical', cur: currentAudit.results?.crawl?.technical_seo?.missing_canonical, prev: comparisonAudit?.results?.crawl?.technical_seo?.missing_canonical, inverse: true },
+                        { label: 'LCP (ms)', cur: currentAudit.results?.lighthouse?.desktop?.lcp, prev: comparisonAudit?.results?.lighthouse?.desktop?.lcp, inverse: true },
+                        { label: 'TTFB (ms)', cur: currentAudit.results?.lighthouse?.desktop?.ttfb, prev: comparisonAudit?.results?.lighthouse?.desktop?.ttfb, inverse: true },
+                        { label: 'Word Count (avg)', cur: currentAudit.results?.content_analysis?.word_count, prev: comparisonAudit?.results?.content_analysis?.word_count },
+                      ].map((row, i) => {
+                        const delta = getDelta(row.cur, row.prev)
+                        const isGood = row.inverse ? (delta !== null && delta < 0) : (delta !== null && delta > 0)
+                        const isBad = row.inverse ? (delta !== null && delta > 0) : (delta !== null && delta < 0)
+                        
+                        return (
+                          <TableRow key={i}>
+                            <TableCell className="text-xs font-medium">{row.label}</TableCell>
+                            <TableCell className="text-center text-xs text-muted-foreground">{row.prev ?? '-'}</TableCell>
+                            <TableCell className="text-center text-xs font-bold">{row.cur ?? '-'}</TableCell>
+                            <TableCell className="text-right">
+                              {delta !== null ? (
+                                <Badge variant="outline" className={cn(
+                                  "text-[10px]",
+                                  isGood && "text-green-600 border-green-200 bg-green-50",
+                                  isBad && "text-red-600 border-red-200 bg-red-50"
+                                )}>
+                                  {delta > 0 ? `+${delta}` : delta}
+                                </Badge>
+                              ) : '-'}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="issues" className="space-y-6 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Fixed Issues */}
+                <Card className="border-green-200 bg-green-50/30">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-green-700">
+                      <CheckCircle2 className="h-4 w-4" /> Naprawione problemy
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {/* Simplified logic for demo: compare broken links and missing canonical */}
+                    {(comparisonAudit?.results?.crawl?.links?.broken || 0) > (currentAudit.results?.crawl?.links?.broken || 0) && (
+                      <div className="text-xs p-2 bg-white rounded border border-green-100 flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                        Naprawiono {(comparisonAudit?.results?.crawl?.links?.broken || 0) - (currentAudit.results?.crawl?.links?.broken || 0)} uszkodzonych linków
+                      </div>
+                    )}
+                    {(comparisonAudit?.results?.crawl?.technical_seo?.missing_canonical || 0) > (currentAudit.results?.crawl?.technical_seo?.missing_canonical || 0) && (
+                      <div className="text-xs p-2 bg-white rounded border border-green-100 flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                        Dodano {(comparisonAudit?.results?.crawl?.technical_seo?.missing_canonical || 0) - (currentAudit.results?.crawl?.technical_seo?.missing_canonical || 0)} tagów kanonicznych
+                      </div>
+                    )}
+                    {/* Fallback if no specific improvements detected */}
+                    <div className="text-xs text-muted-foreground italic p-4 text-center">
+                      Kontynuuj optymalizację aby zobaczyć listę naprawionych błędów.
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* New Issues */}
+                <Card className="border-red-200 bg-red-50/30">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-red-700">
+                      <AlertCircle className="h-4 w-4" /> Nowe problemy
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {(currentAudit.results?.crawl?.links?.broken || 0) > (comparisonAudit?.results?.crawl?.links?.broken || 0) && (
+                      <div className="text-xs p-2 bg-white rounded border border-red-100 flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                        Pojawiło się {(currentAudit.results?.crawl?.links?.broken || 0) - (comparisonAudit?.results?.crawl?.links?.broken || 0)} nowych błędów 404
+                      </div>
+                    )}
+                    {(currentAudit.results?.lighthouse?.desktop?.performance_score || 0) < (comparisonAudit?.results?.lighthouse?.desktop?.performance_score || 0) - 5 && (
+                      <div className="text-xs p-2 bg-white rounded border border-red-100 flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                        Spadek wydajności o {Math.round((comparisonAudit?.results?.lighthouse?.desktop?.performance_score || 0) - (currentAudit.results?.lighthouse?.desktop?.performance_score || 0))} pkt
+                      </div>
+                    )}
+                    <div className="text-xs text-muted-foreground italic p-4 text-center">
+                      Brak nowych krytycznych regresji.
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           {/* Audit History Table */}
           <Card>

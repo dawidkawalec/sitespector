@@ -16,15 +16,23 @@ import { useWorkspace } from '@/lib/WorkspaceContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant } from '@/lib/utils'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { 
   ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle, 
   FileJson, CheckCircle, Search, Gauge, Sparkles, ImageIcon, 
-  Link as LinkIcon, Users, Clock, ShieldCheck, Zap
+  Link as LinkIcon, Users, Clock, ShieldCheck, Zap, ChevronDown, ChevronRight, ExternalLink
 } from 'lucide-react'
 import Link from 'next/link'
 import { PageStatusChart } from '@/components/AuditCharts'
 import type { Audit } from '@/lib/api'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -226,16 +234,19 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
           {/* Main Scores Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Wynik Ogólny', score: audit.overall_score, icon: ShieldCheck },
-              { label: 'SEO', score: audit.seo_score, icon: Search },
-              { label: 'Wydajność', score: audit.performance_score, icon: Gauge },
-              { label: 'Treść', score: audit.content_score, icon: Sparkles },
+              { label: 'Wynik Ogólny', score: audit.overall_score, icon: ShieldCheck, tooltipId: 'overall_score' },
+              { label: 'SEO', score: audit.seo_score, icon: Search, tooltipId: 'seo_score' },
+              { label: 'Wydajność', score: audit.performance_score, icon: Gauge, tooltipId: 'performance_score' },
+              { label: 'Treść', score: audit.content_score, icon: Sparkles, tooltipId: 'content_score' },
             ].map((item, i) => (
               <Card key={i} className="relative overflow-hidden group">
                 <div className={`absolute top-0 left-0 w-1 h-full ${getScoreColor(item.score).replace('text-', 'bg-')}`} />
                 <CardHeader className="pb-2">
-                  <CardDescription className="flex items-center gap-2">
-                    <item.icon className="h-3 w-3" /> {item.label}
+                  <CardDescription className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <item.icon className="h-3 w-3" /> {item.label}
+                    </span>
+                    <InfoTooltip id={item.tooltipId as any} />
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -293,30 +304,92 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                   <CardTitle className="text-lg">Krytyczne Problemy</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {(crawl?.links?.broken || 0) > 0 && (
-                    <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-100">
-                      <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                      <p className="text-sm">Wykryto <strong>{crawl.links.broken}</strong> niedziałających linków. Napraw je, aby poprawić UX i SEO.</p>
-                    </div>
-                  )}
-                  {lh?.performance_score < 50 && (
-                    <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-100">
-                      <Gauge className="h-5 w-5 text-red-600 mt-0.5" />
-                      <p className="text-sm">Bardzo niska wydajność (<strong>{lh.performance_score}/100</strong>). Strona ładuje się zbyt wolno.</p>
-                    </div>
-                  )}
-                  {crawl?.images?.without_alt > 0 && (
-                    <div className="flex items-start gap-3 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-100">
-                      <ImageIcon className="h-5 w-5 text-yellow-600 mt-0.5" />
-                      <p className="text-sm"><strong>{crawl.images.without_alt}</strong> obrazów nie posiada tekstu alternatywnego ALT.</p>
-                    </div>
-                  )}
-                  {(!crawl?.links?.broken && lh?.performance_score >= 50 && !crawl?.images?.without_alt) && (
-                    <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100">
-                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                      <p className="text-sm font-medium">Brak krytycznych problemów technicznych. Dobra robota!</p>
-                    </div>
-                  )}
+                  <Accordion type="single" collapsible className="w-full space-y-3">
+                    {(crawl?.links?.broken || 0) > 0 && (
+                      <AccordionItem value="broken-links" className="border-none">
+                        <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-100">
+                          <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm">Wykryto <strong>{crawl.links.broken}</strong> niedziałających linków.</p>
+                              <AccordionTrigger className="py-0 h-auto hover:no-underline" />
+                            </div>
+                            <AccordionContent className="pt-3 space-y-3">
+                              <p className="text-xs text-muted-foreground">
+                                Uszkodzone linki (404) negatywnie wpływają na doświadczenie użytkownika i indeksowanie strony przez roboty.
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                <Link href={`/audits/${params.id}/links?filter=broken`}>
+                                  <Button size="sm" variant="outline" className="h-7 text-[10px]">
+                                    Zobacz wszystkie <ChevronRight className="ml-1 h-3 w-3" />
+                                  </Button>
+                                </Link>
+                              </div>
+                            </AccordionContent>
+                          </div>
+                        </div>
+                      </AccordionItem>
+                    )}
+                    
+                    {lh?.performance_score < 50 && (
+                      <AccordionItem value="low-perf" className="border-none">
+                        <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-100">
+                          <Gauge className="h-5 w-5 text-red-600 mt-0.5" />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm">Bardzo niska wydajność (<strong>{lh.performance_score}/100</strong>).</p>
+                              <AccordionTrigger className="py-0 h-auto hover:no-underline" />
+                            </div>
+                            <AccordionContent className="pt-3 space-y-3">
+                              <p className="text-xs text-muted-foreground">
+                                Strona ładuje się zbyt wolno, co może powodować wysoki współczynnik odrzuceń i spadek pozycji w Google.
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                <Link href={`/audits/${params.id}/performance`}>
+                                  <Button size="sm" variant="outline" className="h-7 text-[10px]">
+                                    Analiza wydajności <ChevronRight className="ml-1 h-3 w-3" />
+                                  </Button>
+                                </Link>
+                              </div>
+                            </AccordionContent>
+                          </div>
+                        </div>
+                      </AccordionItem>
+                    )}
+
+                    {crawl?.images?.without_alt > 0 && (
+                      <AccordionItem value="missing-alt" className="border-none">
+                        <div className="flex items-start gap-3 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-100">
+                          <ImageIcon className="h-5 w-5 text-yellow-600 mt-0.5" />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm"><strong>{crawl.images.without_alt}</strong> obrazów bez tekstu ALT.</p>
+                              <AccordionTrigger className="py-0 h-auto hover:no-underline" />
+                            </div>
+                            <AccordionContent className="pt-3 space-y-3">
+                              <p className="text-xs text-muted-foreground">
+                                Brak opisów ALT utrudnia dostępność strony dla osób niedowidzących i pozbawia stronę dodatkowych sygnałów SEO.
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                <Link href={`/audits/${params.id}/images?filter=no-alt`}>
+                                  <Button size="sm" variant="outline" className="h-7 text-[10px]">
+                                    Napraw obrazy <ChevronRight className="ml-1 h-3 w-3" />
+                                  </Button>
+                                </Link>
+                              </div>
+                            </AccordionContent>
+                          </div>
+                        </div>
+                      </AccordionItem>
+                    )}
+
+                    {(!crawl?.links?.broken && lh?.performance_score >= 50 && !crawl?.images?.without_alt) && (
+                      <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100">
+                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                        <p className="text-sm font-medium text-green-800 dark:text-green-400">Brak krytycznych problemów technicznych. Dobra robota!</p>
+                      </div>
+                    )}
+                  </Accordion>
                 </CardContent>
               </Card>
 
@@ -383,10 +456,40 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
         </>
       ) : (
         <Card>
-          <CardContent className="py-20 text-center">
-            <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary mb-4" />
-            <h2 className="text-xl font-medium">Analiza w toku...</h2>
-            <p className="text-muted-foreground mt-2">To może potrwać kilka minut. Odświeżymy stronę automatycznie.</p>
+          <CardContent className="py-16 text-center space-y-6 max-w-md mx-auto">
+            <div className="relative">
+              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-primary/50" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">Analiza w toku...</h2>
+              <p className="text-sm text-muted-foreground">
+                To może potrwać kilka minut (zwykle 3-8 min). Odświeżymy stronę automatycznie.
+              </p>
+            </div>
+
+            <div className="space-y-4 pt-4">
+              <div className="flex justify-between text-xs font-medium mb-1">
+                <span>Postęp analizy</span>
+                <span className="text-primary">{audit.processing_step || 'Inicjalizacja...'}</span>
+              </div>
+              <Progress 
+                value={
+                  audit.processing_step?.includes('Crawling') ? 20 :
+                  audit.processing_step?.includes('Performance') ? 40 :
+                  audit.processing_step?.includes('Competitor') ? 60 :
+                  audit.processing_step?.includes('AI') ? 80 :
+                  audit.processing_step?.includes('Finalizing') ? 95 : 10
+                } 
+                className="h-2"
+              />
+              <p className="text-[10px] text-muted-foreground italic">
+                Jeśli analiza trwa dłużej niż 10 minut, zostanie oznaczona jako nieudana.
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -42,7 +42,12 @@ import {
   Check,
   Calendar,
   Image as ImageIcon,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Activity as ActivityIcon,
+  ChevronDown,
+  ChevronUp,
+  Globe,
+  Share2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher'
@@ -52,7 +57,7 @@ import { NavSection } from './NavSection'
 import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import { useQuery } from '@tanstack/react-query'
-import { auditsAPI } from '@/lib/api'
+import { auditsAPI, systemAPI } from '@/lib/api'
 import {
   Select,
   SelectContent,
@@ -60,6 +65,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 // Main navigation items (always visible)
 const mainNavItems = [
@@ -96,12 +112,15 @@ const auditAdvancedItems = [
 // Audit tools section items
 const auditToolsItems = [
   { href: '/audits/[id]/quick-wins', icon: Zap, label: 'Quick Wins', id: 'quick-wins' },
-  { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
+  { href: '/audits/[id]/seo', icon: Search, label: 'SEO Techniczne', id: 'seo-tech' },
+  { href: '/audits/[id]/performance', icon: Gauge, label: 'Wydajność', id: 'performance-tech' },
+  { href: '/audits/[id]/ai-analysis', icon: Sparkles, label: 'Analiza AI', id: 'ai-tech' },
   { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki', id: 'links' },
-  { href: '/audits/[id]/security', icon: Shield, label: 'Security', id: 'security' },
-  { href: '/audits/[id]/ai-content', icon: Sparkles, label: 'AI Content', id: 'ai-content' },
-  { href: '/audits/[id]/ux-check', icon: MousePointer, label: 'UX Check', id: 'ux-check' },
-  { href: '/audits/[id]/integrations', icon: Plug, label: 'Integracje', disabled: true, id: 'integrations' },
+  { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
+  { href: '/audits/[id]/comparison', icon: ArrowLeftRight, label: 'Porównanie', id: 'comparison' },
+  { href: '/audits/[id]/client-report', icon: FileText, label: 'Raport dla klienta', id: 'client-report' },
+  { href: '#', icon: Globe, label: 'Widoczność (Senuto)', disabled: true, tooltip: 'Wymaga integracji z Senuto', id: 'senuto' },
+  { href: '#', icon: Share2, label: 'Backlinki (Ahrefs)', disabled: true, tooltip: 'Wymaga integracji z Ahrefs', id: 'ahrefs' },
 ]
 
 // Settings items (inside collapsible section)
@@ -160,6 +179,22 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
   }
 
   const isAuditDisabled = !currentAuditId
+
+  // System status query
+  const { data: systemStatus } = useQuery({
+    queryKey: ['system-status'],
+    queryFn: () => systemAPI.getStatus(),
+    refetchInterval: 30000, // Refresh every 30 seconds
+  })
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'online': return 'bg-green-500'
+      case 'offline': return 'bg-red-500'
+      case 'error': return 'bg-yellow-500'
+      default: return 'bg-gray-500'
+    }
+  }
 
   return (
     <div className="flex h-screen w-64 flex-col border-r bg-white dark:bg-gray-950">
@@ -318,6 +353,55 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
             onOpenChange={setSettingsOpen}
             onItemClick={onAction}
           />
+
+          {/* System Status - Collapsible */}
+          <Collapsible className="px-1">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-between font-normal hover:bg-accent/50 transition-all duration-200 h-9"
+              >
+                <div className="flex items-center">
+                  <ActivityIcon className="mr-3 h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">System Status</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    "h-2 w-2 rounded-full animate-pulse",
+                    systemStatus ? "bg-green-500" : "bg-gray-400"
+                  )} />
+                  <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform duration-200" />
+                </div>
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 px-2 py-1">
+              <TooltipProvider delayDuration={0}>
+                {systemStatus?.services && Object.entries(systemStatus.services).map(([name, data]: [string, any]) => (
+                  <Tooltip key={name}>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center justify-between px-3 py-1.5 rounded-md hover:bg-accent/30 transition-colors cursor-help">
+                        <span className="text-[11px] font-medium capitalize text-muted-foreground">
+                          {name.replace('_', ' ')}
+                        </span>
+                        <div className={cn(
+                          "h-1.5 w-1.5 rounded-full",
+                          getStatusColor(data.status)
+                        )} />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="text-[10px] p-2">
+                      <div className="space-y-1">
+                        <p className="font-bold capitalize">{name.replace('_', ' ')}</p>
+                        <p>Status: <span className="capitalize">{data.status}</span></p>
+                        {data.version && <p>Version: {data.version}</p>}
+                        {data.error && <p className="text-red-500">Error: {data.error}</p>}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </nav>
 

@@ -17,7 +17,7 @@ import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Link as LinkIcon, AlertCircle, CheckCircle2, XCircle, Search, Filter, ExternalLink, ArrowRight, Link2Off } from 'lucide-react'
+import { Loader2, Link as LinkIcon, AlertCircle, CheckCircle2, XCircle, Search, Filter, ExternalLink, ArrowRight, Link2Off, Info } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   Table,
@@ -104,6 +104,18 @@ export default function LinksPage({ params }: { params: { id: string } }) {
         <LinkIcon className="h-8 w-8 text-primary" />
         <h1 className="text-3xl font-bold">Analiza Linków</h1>
       </div>
+
+      <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900/30">
+        <CardContent className="py-4 flex items-start gap-3">
+          <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-blue-900 dark:text-blue-200">Źródło danych: Screaming Frog SEO Spider</p>
+            <p className="text-xs text-blue-800 dark:text-blue-300">
+              Obecne dane pochodzą z technicznego skanowania witryny (crawlingu). Analiza linków zewnętrznych (backlinków) oraz autorytetu domeny będzie dostępna po integracji z Senuto/Ahrefs.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

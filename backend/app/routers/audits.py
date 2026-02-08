@@ -24,11 +24,16 @@ from app.schemas import (
     AuditListResponse,
     AuditStatusResponse,
     AuditUpdate,
+    FixSuggestionRequest,
+    FixSuggestionResponse,
+    PageAnalysisRequest,
+    PageAnalysisResponse,
 )
 from app.auth_supabase import get_current_user, verify_workspace_access
 from app.lib.supabase import supabase, get_workspace_subscription, increment_audit_usage, check_audit_limit
 from app.services.pdf_generator import generate_pdf
 from app.services.data_exporter import export_raw_data
+from app.services.ai_analysis import generate_fix_suggestion, analyze_single_page, generate_quick_wins, generate_alt_text
 
 logger = logging.getLogger(__name__)
 
@@ -308,6 +313,7 @@ async def get_audit_status(
     return {
         "id": audit.id,
         "status": audit.status,
+        "processing_step": audit.processing_step,
         "overall_score": audit.overall_score,
         "error_message": audit.error_message,
         "completed_at": audit.completed_at,
@@ -512,4 +518,144 @@ async def download_audit_pdf(
     except Exception as e:
         logger.error(f"PDF generation error: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate PDF")
+
+
+@router.post("/{audit_id}/fix-suggestion", response_model=FixSuggestionResponse)
+async def get_fix_suggestion(
+    audit_id: UUID,
+    request: FixSuggestionRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Get AI-generated fix suggestion for a specific SEO issue.
+    """
+    # Verify access
+    result = await db.execute(select(Audit).where(Audit.id == audit_id))
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    
+    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
+    if not has_access:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    return await generate_fix_suggestion(request.issue_type, request.urls)
+
+
+@router.post("/{audit_id}/analyze-pages", response_model=Dict[int, PageAnalysisResponse])
+async def analyze_audit_pages(
+    audit_id: UUID,
+    request: PageAnalysisRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Perform deep AI analysis on specific pages of an audit.
+    """
+    # Verify access
+    result = await db.execute(select(Audit).where(Audit.id == audit_id))
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    
+    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
+    if not has_access:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if not audit.results or "crawl" not in audit.results or "all_pages" not in audit.results["crawl"]:
+        raise HTTPException(status_code=400, detail="Audit data missing")
+    
+    all_pages = audit.results["crawl"]["all_pages"]
+    analyses = {}
+    
+    # Limit to 10 pages per request for performance/cost
+    indices = request.page_indices[:10]
+    
+    for idx in indices:
+        if 0 <= idx < len(all_pages):
+            page_data = all_pages[idx]
+            analyses[idx] = await analyze_single_page(page_data)
+            
+    # Save results back to audit (caching)
+    if "page_analyses" not in audit.results:
+        audit.results["page_analyses"] = {}
+    
+    for idx, analysis in analyses.items():
+        audit.results["page_analyses"][str(idx)] = analysis
+        
+    # Mark as modified for SQLAlchemy
+    from sqlalchemy.orm.attributes import flag_modified
+    audit.results = dict(audit.results)
+    flag_modified(audit, "results")
+    
+    await db.commit()
+    
+    return analyses
+
+
+@router.get("/{audit_id}/quick-wins", response_model=List[Dict[str, Any]])
+async def get_quick_wins(
+    audit_id: UUID,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[dict]:
+    """
+    Get AI-prioritized Quick Wins for an audit.
+    """
+    # Verify access
+    result = await db.execute(select(Audit).where(Audit.id == audit_id))
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    
+    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
+    if not has_access:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Check if already generated in results
+    if audit.results and "quick_wins" in audit.results:
+        return audit.results["quick_wins"]
+    
+    # Generate new ones
+    audit_data = {
+        "results": audit.results
+    }
+    quick_wins = await generate_quick_wins(audit_data)
+    
+    # Cache them
+    if not audit.results:
+        audit.results = {}
+    audit.results["quick_wins"] = quick_wins
+    
+    from sqlalchemy.orm.attributes import flag_modified
+    audit.results = dict(audit.results)
+    flag_modified(audit, "results")
+    await db.commit()
+    
+    return quick_wins
+
+
+@router.post("/{audit_id}/generate-alt", response_model=AltTextResponse)
+async def post_generate_alt(
+    audit_id: UUID,
+    request: AltTextRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Generate ALT text for an image using AI.
+    """
+    # Verify access
+    result = await db.execute(select(Audit).where(Audit.id == audit_id))
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    
+    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
+    if not has_access:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    alt_text = await generate_alt_text(request.image_url)
+    return {"alt_text": alt_text}
 

@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Loader2, AlertCircle, Sparkles, MapPin, Zap, Users, CheckCircle2, XCircle, BarChart3 } from 'lucide-react'
 import { WordCountChart } from '@/components/AuditCharts'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 import type { Audit } from '@/lib/api'
 
 export default function AIAnalysisPage({ params }: { params: { id: string } }) {
@@ -90,18 +91,27 @@ export default function AIAnalysisPage({ params }: { params: { id: string } }) {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-3">
-                <div className="bg-card p-4 rounded-lg border flex flex-col items-center text-center">
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Quality Score</div>
+                <div className="bg-card p-4 rounded-lg border flex flex-col items-center text-center relative">
+                  <div className="flex items-center gap-1 mb-1">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider">Quality Score</div>
+                    <InfoTooltip id="overall_score" iconClassName="h-3 w-3" />
+                  </div>
                   <div className={`text-3xl font-bold ${content.quality_score >= 80 ? 'text-green-600' : content.quality_score >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
                     {content.quality_score || 0}/100
                   </div>
                 </div>
-                <div className="bg-card p-4 rounded-lg border flex flex-col items-center text-center">
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Liczba Słów</div>
+                <div className="bg-card p-4 rounded-lg border flex flex-col items-center text-center relative">
+                  <div className="flex items-center gap-1 mb-1">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider">Liczba Słów</div>
+                    <InfoTooltip id="word_count" iconClassName="h-3 w-3" />
+                  </div>
                   <div className="text-3xl font-bold">{content.word_count || 0}</div>
                 </div>
-                <div className="bg-card p-4 rounded-lg border flex flex-col items-center text-center">
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Czytelność (Flesch)</div>
+                <div className="bg-card p-4 rounded-lg border flex flex-col items-center text-center relative">
+                  <div className="flex items-center gap-1 mb-1">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider">Czytelność (Flesch)</div>
+                    <InfoTooltip id="readability" iconClassName="h-3 w-3" />
+                  </div>
                   <div className="text-3xl font-bold">{content.readability_score || 0}</div>
                 </div>
               </div>

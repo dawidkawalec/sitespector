@@ -242,6 +242,27 @@ export const auditsAPI = {
   getHistory: (workspaceId: string, url: string) =>
     apiRequest<Audit[]>(`/api/audits/history?workspace_id=${workspaceId}&url=${encodeURIComponent(url)}`),
   
+  getFixSuggestion: (auditId: string, issueType: string, urls: string[]) =>
+    apiRequest<any>(`/api/audits/${auditId}/fix-suggestion`, {
+      method: 'POST',
+      body: JSON.stringify({ issue_type: issueType, urls }),
+    }),
+
+  analyzePages: (auditId: string, pageIndices: number[]) =>
+    apiRequest<Record<number, any>>(`/api/audits/${auditId}/analyze-pages`, {
+      method: 'POST',
+      body: JSON.stringify({ page_indices: pageIndices }),
+    }),
+
+  getQuickWins: (auditId: string) =>
+    apiRequest<any[]>(`/api/audits/${auditId}/quick-wins`),
+
+  generateAlt: (auditId: string, imageUrl: string) =>
+    apiRequest<{ alt_text: string }>(`/api/audits/${auditId}/generate-alt`, {
+      method: 'POST',
+      body: JSON.stringify({ image_url: imageUrl }),
+    }),
+
   // Schedules
   listSchedules: (workspaceId: string) =>
     apiRequest<any[]>(`/api/schedules?workspace_id=${workspaceId}`),
@@ -251,4 +272,9 @@ export const auditsAPI = {
     apiRequest<any>(`/api/schedules/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteSchedule: (id: string) =>
     apiRequest<void>(`/api/schedules/${id}`, { method: 'DELETE' }),
+}
+
+// System API
+export const systemAPI = {
+  getStatus: () => apiRequest<any>('/api/system/status'),
 }

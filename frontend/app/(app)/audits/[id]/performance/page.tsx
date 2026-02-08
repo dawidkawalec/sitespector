@@ -16,8 +16,9 @@ import { useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Zap, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Monitor, Smartphone, Activity } from 'lucide-react'
+import { Loader2, Zap, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Monitor, Smartphone, Activity, ExternalLink, Lightbulb } from 'lucide-react'
 import { formatScore, getScoreColor } from '@/lib/utils'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -113,7 +114,10 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-t-4 border-t-primary">
           <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-bold uppercase tracking-wider">Performance</CardDescription>
+            <div className="flex items-center justify-between">
+              <CardDescription className="text-xs font-bold uppercase tracking-wider">Performance</CardDescription>
+              <InfoTooltip id="performance_score" />
+            </div>
             <CardTitle className={`text-4xl ${getScoreColor(lh.performance_score)}`}>
               {formatScore(lh.performance_score)}
             </CardTitle>
@@ -192,7 +196,10 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
               {metrics.map((metric, i) => (
                 <div key={i} className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted-foreground">{metric.label}</span>
+                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      {metric.label}
+                      <InfoTooltip id={metric.id as any} side="right" />
+                    </span>
                     <Badge variant="outline" className="font-mono">{metric.value}</Badge>
                   </div>
                   <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
@@ -237,14 +244,29 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
                   <AccordionItem key={idx} value={`opt-${idx}`}>
                     <AccordionTrigger className="hover:no-underline py-3">
                       <div className="flex items-center justify-between w-full pr-4">
-                        <span className="text-sm font-semibold text-left">{opt.title}</span>
-                        <Badge variant="secondary" className="ml-2 whitespace-nowrap">
-                          {opt.displayValue}
-                        </Badge>
+                        <div className="flex flex-col items-start gap-1">
+                          <span className="text-sm font-semibold text-left">{opt.title}</span>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={opt.score === 0 ? 'destructive' : 'default'} className="h-4 text-[8px] uppercase">
+                              {opt.score === 0 ? 'High Priority' : 'Medium Priority'}
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground">Oszczędność: {opt.displayValue}</span>
+                          </div>
+                        </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="text-xs text-muted-foreground leading-relaxed">
-                      {opt.description}
+                    <AccordionContent className="text-xs text-muted-foreground leading-relaxed space-y-3">
+                      <p>{opt.description}</p>
+                      <div className="flex items-center gap-2 pt-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-[10px]"
+                          onClick={() => window.open('https://web.dev/learn/performance/', '_blank')}
+                        >
+                          <ExternalLink className="mr-1 h-3 w-3" /> Dokumentacja Google
+                        </Button>
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 ))
@@ -293,32 +315,56 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
       </div>
 
       {/* Passed Audits */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-green-600">
-            <CheckCircle2 className="h-5 w-5" />
-            Zaliczone Audyty ({passed.length})
-          </CardTitle>
-          <CardDescription>Elementy, które są już dobrze zoptymalizowane</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="passed-list">
-              <AccordionTrigger className="text-sm font-medium">Pokaż wszystkie zaliczone audyty</AccordionTrigger>
-              <AccordionContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
-                  {passed.map((p: any, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2 p-2 rounded border bg-accent/10 text-[11px]">
-                      <CheckCircle2 className="h-3 w-3 text-green-600 flex-shrink-0" />
-                      <span className="truncate" title={p.title}>{p.title}</span>
-                    </div>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle2 className="h-5 w-5" />
+              Zaliczone Audyty ({passed.length})
+            </CardTitle>
+            <CardDescription>Elementy, które są już dobrze zoptymalizowane</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="passed-list">
+                <AccordionTrigger className="text-sm font-medium">Pokaż wszystkie zaliczone audyty</AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
+                    {passed.map((p: any, idx: number) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded border bg-accent/10 text-[11px]">
+                        <CheckCircle2 className="h-3 w-3 text-green-600 flex-shrink-0" />
+                        <span className="truncate" title={p.title}>{p.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+        </Card>
+
+        {/* Top Fixes Panel */}
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-primary" />
+              Top 3 do naprawy
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {opportunities.slice(0, 3).map((opt: any, i: number) => (
+              <div key={i} className="p-2 bg-white dark:bg-gray-950 rounded border text-[11px] shadow-sm">
+                <p className="font-bold mb-1">{opt.title}</p>
+                <p className="text-muted-foreground line-clamp-2 mb-2">{opt.description}</p>
+                <Badge variant="secondary" className="h-4 text-[8px]">Impact: {opt.displayValue}</Badge>
+              </div>
+            ))}
+            {opportunities.length === 0 && (
+              <p className="text-xs text-muted-foreground italic text-center py-4">Brak krytycznych uwag.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Comparison Table */}
       {lhDesktop && lhMobile && (

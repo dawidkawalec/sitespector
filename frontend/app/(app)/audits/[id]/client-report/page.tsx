@@ -28,10 +28,21 @@ import {
   Type, 
   Image as ImageIcon,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ArrowLeftRight,
+  TrendingUp,
+  TrendingDown,
+  Minus
 } from 'lucide-react'
 import { useReactToPrint } from 'react-to-print'
-import { formatScore } from '@/lib/utils'
+import { formatScore, cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function ClientReportPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -45,7 +56,11 @@ export default function ClientReportPage({ params }: { params: { id: string } })
   const [showTechnical, setShowTechnical] = useState(true)
   const [showAI, setShowAI] = useState(true)
   const [showQuickWins, setShowQuickWins] = useState(true)
+  const [showComparison, setShowComparison] = useState(false)
+  const [comparisonId, setComparisonId] = useState<string | null>(null)
   const [customNote, setCustomNote] = useState('')
+
+  const { currentWorkspace } = useWorkspace()
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -61,6 +76,15 @@ export default function ClientReportPage({ params }: { params: { id: string } })
     queryFn: () => auditsAPI.get(params.id),
     enabled: isAuth,
   })
+
+  // Fetch history for comparison
+  const { data: history } = useQuery({
+    queryKey: ['audit-history', audit?.url, currentWorkspace?.id],
+    queryFn: () => auditsAPI.getHistory(currentWorkspace!.id, audit!.url),
+    enabled: !!audit?.url && !!currentWorkspace?.id && showComparison,
+  })
+
+  const comparisonAudit = history?.find(a => a.id === comparisonId)
 
   const handlePrint = useReactToPrint({
     content: () => reportRef.current,
@@ -143,7 +167,29 @@ export default function ClientReportPage({ params }: { params: { id: string } })
                   <Checkbox id="wins" checked={showQuickWins} onCheckedChange={(v) => setShowQuickWins(!!v)} />
                   <label htmlFor="wins" className="text-sm font-medium leading-none cursor-pointer">Quick Wins</label>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="compare" checked={showComparison} onCheckedChange={(v) => setShowComparison(!!v)} />
+                  <label htmlFor="compare" className="text-sm font-medium leading-none cursor-pointer">Porównanie Przed/Po</label>
+                </div>
               </div>
+
+              {showComparison && (
+                <div className="space-y-2 pt-2">
+                  <Label className="text-[10px] uppercase font-bold text-muted-foreground">Wybierz audyt do porównania</Label>
+                  <Select value={comparisonId || ""} onValueChange={setComparisonId}>
+                    <SelectTrigger className="w-full h-9 text-xs">
+                      <SelectValue placeholder="Wybierz poprzedni audyt..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {history?.filter(a => a.id !== audit.id).map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {new Date(a.created_at).toLocaleDateString()} (Score: {Math.round(a.overall_score || 0)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Separator />
               <div className="space-y-2">
                 <Label htmlFor="note">Wstęp / Notatka od Autora</Label>
@@ -182,6 +228,51 @@ export default function ClientReportPage({ params }: { params: { id: string } })
               <div className="mb-12 p-6 bg-slate-50 border-l-4 border-slate-300 italic text-slate-700">
                 {customNote}
               </div>
+            )}
+
+            {/* Comparison Section */}
+            {showComparison && comparisonAudit && (
+              <section className="mb-12 animate-in fade-in duration-500">
+                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <ArrowLeftRight className="h-6 w-6 text-primary" /> Postępy Optymalizacji
+                </h3>
+                <div className="bg-primary/5 rounded-xl border border-primary/10 p-8">
+                  <div className="grid grid-cols-2 gap-12">
+                    <div>
+                      <p className="text-sm font-bold text-slate-400 uppercase mb-4">Stan Początkowy ({new Date(comparisonAudit.created_at).toLocaleDateString()})</p>
+                      <div className="text-5xl font-black text-slate-400">{Math.round(comparisonAudit.overall_score || 0)}%</div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-primary uppercase mb-4">Stan Obecny ({new Date(audit.created_at).toLocaleDateString()})</p>
+                      <div className="flex items-center gap-4">
+                        <div className="text-5xl font-black text-primary">{Math.round(audit.overall_score || 0)}%</div>
+                        <div className="flex items-center gap-1 text-green-600 bg-green-100 px-3 py-1 rounded-full text-lg font-bold">
+                          <TrendingUp className="h-5 w-5" />
+                          +{Math.round((audit.overall_score || 0) - (comparisonAudit.overall_score || 0))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-8 pt-8 border-t border-primary/10 grid grid-cols-3 gap-4">
+                    {[
+                      { label: 'SEO', cur: audit.seo_score, prev: comparisonAudit.seo_score },
+                      { label: 'Wydajność', cur: audit.performance_score, prev: comparisonAudit.performance_score },
+                      { label: 'Treść', cur: audit.content_score, prev: comparisonAudit.content_score },
+                    ].map((s, i) => {
+                      const delta = Math.round((s.cur || 0) - (s.prev || 0))
+                      return (
+                        <div key={i} className="text-center">
+                          <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">{s.label}</p>
+                          <p className={cn("text-sm font-bold", delta > 0 ? "text-green-600" : delta < 0 ? "text-red-600" : "text-slate-400")}>
+                            {delta > 0 ? `+${delta}` : delta}%
+                          </p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </section>
             )}
 
             {/* Main Scores */}

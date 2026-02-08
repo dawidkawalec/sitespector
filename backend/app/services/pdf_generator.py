@@ -127,6 +127,11 @@ def _extract_report_data(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     local_seo = results.get("local_seo", {})
     performance_analysis = results.get("performance_analysis", {})
     competitive_analysis = results.get("competitive_analysis", {})
+    quick_wins = results.get("quick_wins", [])
+    
+    # Extract all pages for detailed list
+    all_pages = crawl_data.get("all_pages", [])
+    all_images = crawl_data.get("images", {}).get("all_images", [])
     
     # Aggregate all recommendations from all sections for action plan
     all_recommendations = []
@@ -162,6 +167,9 @@ def _extract_report_data(audit_data: Dict[str, Any]) -> Dict[str, Any]:
         "warnings": warnings,
         "successes": successes,
         "ai_recommendations": ai_recommendations,
+        "quick_wins": quick_wins,
+        "all_pages": all_pages,
+        "all_images": all_images,
     }
 
 

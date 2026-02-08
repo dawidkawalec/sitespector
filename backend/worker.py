@@ -53,15 +53,26 @@ async def process_audit(audit_id: str) -> None:
             # Update status to processing
             audit.status = AuditStatus.PROCESSING
             audit.started_at = datetime.utcnow()
+            audit.processing_step = "Crawling (Screaming Frog)"
             await db.commit()
             
             # Step 1: Screaming Frog crawl
             logger.info(f"[{audit_id}] Running Screaming Frog crawl...")
             crawl_data = await screaming_frog.crawl_url(audit.url)
             
+            # Update step
+            audit.processing_step = "Performance Analysis (Lighthouse Desktop)"
+            await db.commit()
+            
             # Step 2: Lighthouse audits
             logger.info(f"[{audit_id}] Running Lighthouse audits...")
+            # Note: lighthouse.audit_both runs desktop and mobile in parallel
+            # but we update step to reflect progress
             lighthouse_data = await lighthouse.audit_both(audit.url)
+            
+            # Update step
+            audit.processing_step = "Competitor Analysis"
+            await db.commit()
             
             # Step 3: Process competitors (parallel)
             result = await db.execute(
@@ -76,6 +87,10 @@ async def process_audit(audit_id: str) -> None:
                     competitor_tasks.append(process_competitor(comp, db))
                 await asyncio.gather(*competitor_tasks, return_exceptions=True)
             
+            # Update step
+            audit.processing_step = "AI Strategic Analysis"
+            await db.commit()
+            
             # Step 4: AI Analysis
             logger.info(f"[{audit_id}] Running AI analysis...")
             
@@ -86,6 +101,10 @@ async def process_audit(audit_id: str) -> None:
             tech_stack = await ai_analysis.detect_tech_stack(audit.url, crawl_data)
             security_analysis = await ai_analysis.analyze_security(audit.url, crawl_data)
             ux_analysis = await ai_analysis.analyze_ux(lighthouse_data)
+            
+            # Update step
+            audit.processing_step = "Finalizing results"
+            await db.commit()
             
             # Reload competitors with results
             result = await db.execute(
@@ -126,6 +145,7 @@ async def process_audit(audit_id: str) -> None:
             
             # Step 7: Update audit with results
             audit.status = AuditStatus.COMPLETED
+            audit.processing_step = "Completed"
             audit.overall_score = overall_score
             audit.seo_score = seo_score
             audit.performance_score = performance_score

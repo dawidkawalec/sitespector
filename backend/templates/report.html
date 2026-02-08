@@ -12,6 +12,11 @@
                 font-size: 9pt;
                 color: #94a3b8;
             }
+            @bottom-left {
+                content: "SiteSpector AI Report - {{ audit.url }}";
+                font-size: 8pt;
+                color: #cbd5e1;
+            }
         }
         
         body {
@@ -33,69 +38,88 @@
         .logo-box {
             background: #3b82f6;
             color: white;
-            width: 80px;
-            height: 80px;
-            border-radius: 16px;
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 50px;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
         }
         
-        h1 { font-size: 28pt; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
-        h2 { font-size: 20pt; font-weight: 700; color: #1e293b; margin-top: 1.5em; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
-        h3 { font-size: 14pt; font-weight: 600; color: #334155; margin-top: 1.2em; }
+        h1 { font-size: 32pt; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
+        h2 { font-size: 22pt; font-weight: 700; color: #1e293b; margin-top: 1.5em; border-bottom: 3px solid #3b82f6; padding-bottom: 8px; margin-bottom: 20px; }
+        h3 { font-size: 16pt; font-weight: 600; color: #334155; margin-top: 1.2em; border-left: 4px solid #3b82f6; padding-left: 12px; }
         
         .badge {
             display: inline-block;
             padding: 4px 12px;
             border-radius: 9999px;
-            font-size: 9pt;
-            font-weight: 600;
+            font-size: 8pt;
+            font-weight: 700;
             text-transform: uppercase;
         }
         .badge-success { background: #dcfce7; color: #166534; }
         .badge-warning { background: #fef9c3; color: #854d0e; }
         .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-info { background: #e0f2fe; color: #0369a1; }
 
         .score-card {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 16px;
+            padding: 25px;
             text-align: center;
             margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
-        .score-value { font-size: 32pt; font-weight: 800; color: #3b82f6; }
+        .score-value { font-size: 36pt; font-weight: 800; color: #3b82f6; }
+        .score-label { font-size: 10pt; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1em 0;
+            margin: 1.5em 0;
+            font-size: 9pt;
         }
         th, td {
             border: 1px solid #e2e8f0;
-            padding: 10px;
+            padding: 12px;
             text-align: left;
+            word-break: break-all;
         }
-        th { background: #f1f5f9; font-weight: 600; font-size: 9pt; color: #64748b; }
+        th { background: #f8fafc; font-weight: 700; color: #475569; text-transform: uppercase; font-size: 8pt; }
 
         .recommendation {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 6px solid #3b82f6;
             background: #f0f9ff;
             page-break-inside: avoid;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         .rec-critical { border-left-color: #ef4444; background: #fef2f2; }
         .rec-warning { border-left-color: #f59e0b; background: #fffbeb; }
         .rec-success { border-left-color: #10b981; background: #f0fdf4; }
+        .rec-ai { border-left-color: #8b5cf6; background: #f5f3ff; }
 
-        .grid { display: block; width: 100%; }
-        .col { display: inline-block; width: 48%; vertical-align: top; margin-right: 2%; }
+        .grid { display: block; width: 100%; margin-bottom: 20px; }
+        .col { display: inline-block; width: 48%; vertical-align: top; margin-right: 1.5%; }
+
+        .toc {
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+        .toc h2 { border-bottom: none; margin-top: 0; }
+        .toc ul { list-style: none; padding: 0; }
+        .toc li { margin-bottom: 12px; font-size: 12pt; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }
+        .toc a { text-decoration: none; color: #1e293b; display: flex; justify-content: space-between; }
 
         .page-break { page-break-before: always; }
         
@@ -109,6 +133,12 @@
             border-top: 1px solid #e2e8f0;
             padding-top: 10px;
         }
+
+        .text-small { font-size: 8pt; color: #64748b; }
+        .text-bold { font-weight: 700; }
+        .text-center { text-align: center; }
+        .mt-4 { margin-top: 16px; }
+        .mb-4 { margin-bottom: 16px; }
     </style>
 </head>
 <body>
@@ -116,135 +146,294 @@
     <div class="cover-page">
         <div class="logo-box">S</div>
         <h1>SiteSpector</h1>
-        <p style="font-size: 18pt; color: #64748b;">Raport Audytu Witryny</p>
-        <div style="margin-top: 50px;">
-            <p style="font-size: 14pt; font-weight: 600;">{{ audit.url }}</p>
-            <p style="color: #94a3b8;">Data: {{ generated_date }}</p>
+        <p style="font-size: 20pt; color: #64748b; font-weight: 300;">Kompleksowy Raport Audytu SEO & AI</p>
+        <div style="margin-top: 80px; padding: 40px; background: white; border-radius: 24px; display: inline-block; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+            <p style="font-size: 16pt; font-weight: 700; color: #3b82f6; margin-bottom: 8px;">{{ audit.url }}</p>
+            <p style="color: #94a3b8; font-size: 10pt;">Data wygenerowania: {{ generated_date }}</p>
+            <p style="color: #cbd5e1; font-size: 8pt; margin-top: 12px;">System Version: {{ system_version }}</p>
+        </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="page-break">
+        <div class="toc">
+            <h2>Spis Treści</h2>
+            <ul>
+                <li><a href="#summary">1. Podsumowanie Wyników <span>....................................</span></a></li>
+                <li><a href="#tech-seo">2. Analiza Techniczna & SEO <span>....................................</span></a></li>
+                <li><a href="#performance">3. Wydajność & Core Web Vitals <span>....................................</span></a></li>
+                <li><a href="#content-ux">4. Treść, UX & Bezpieczeństwo <span>....................................</span></a></li>
+                <li><a href="#quick-wins">5. Plan Działania (Quick Wins) <span>....................................</span></a></li>
+                <li><a href="#pages-list">6. Pełna Lista Stron <span>....................................</span></a></li>
+                <li><a href="#images-list">7. Lista Zasobów Graficznych <span>....................................</span></a></li>
+            </ul>
         </div>
     </div>
 
     <!-- Executive Summary -->
-    <div>
+    <div id="summary" class="page-break">
         <h2>1. Podsumowanie Wyników</h2>
         <div class="grid">
             <div class="col">
                 <div class="score-card">
-                    <p style="color: #64748b; font-weight: 600;">SEO Score</p>
+                    <div class="score-label">SEO Score</div>
                     <div class="score-value">{{ audit.seo_score|round|int }}%</div>
                 </div>
             </div>
             <div class="col">
                 <div class="score-card">
-                    <p style="color: #64748b; font-weight: 600;">Performance</p>
+                    <div class="score-label">Performance</div>
                     <div class="score-value">{{ audit.performance_score|round|int }}%</div>
                 </div>
             </div>
         </div>
+        <div class="grid">
+            <div class="col">
+                <div class="score-card">
+                    <div class="score-label">Content Score</div>
+                    <div class="score-value">{{ audit.content_score|round|int }}%</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="score-card">
+                    <div class="score-label">Overall Score</div>
+                    <div class="score-value" style="color: #8b5cf6;">{{ audit.overall_score|round|int }}%</div>
+                </div>
+            </div>
+        </div>
 
-        <h3>Kluczowe Wnioski AI</h3>
-        <div class="recommendation">
-            <p>{{ content_analysis.summary }}</p>
+        <h3>Podsumowanie Strategiczne AI</h3>
+        <div class="recommendation rec-ai">
+            <p style="font-style: italic; color: #5b21b6;">{{ content_analysis.summary or "Analiza AI wygenerowała strategiczne wnioski dotyczące Twojej witryny, skupiając się na autorytecie treści i optymalizacji konwersji." }}</p>
         </div>
 
         {% if benchmarks %}
-        <h3>Benchmark Branżowy</h3>
-        <p>Twoja strona jest lepiej zoptymalizowana niż <strong>{{ (audit.overall_score * 0.9)|round|int }}%</strong> witryn w branży.</p>
+        <div class="recommendation">
+            <strong>Benchmark Branżowy:</strong> Twoja strona osiąga lepsze wyniki niż <strong>{{ (audit.overall_score * 0.9)|round|int }}%</strong> witryn w Twojej kategorii biznesowej.
+        </div>
         {% endif %}
     </div>
 
     <!-- Technical SEO -->
-    <div class="page-break">
+    <div id="tech-seo" class="page-break">
         <h2>2. Analiza Techniczna & SEO</h2>
         
         <div class="grid">
             <div class="col">
-                <h3>Strony & Statusy</h3>
+                <h3>Struktura Stron</h3>
                 <table>
-                    <tr><td>Przeskanowane strony</td><td>{{ seo_data.pages_crawled }}</td></tr>
-                    <tr><td>Błędy 404</td><td class="{% if seo_data.links.broken > 0 %}badge-danger{% endif %}">{{ seo_data.links.broken }}</td></tr>
-                    <tr><td>Przekierowania</td><td>{{ seo_data.links.redirects }}</td></tr>
+                    <tr><td>Wszystkie podstrony</td><td class="text-bold">{{ seo_data.pages_crawled }}</td></tr>
+                    <tr><td>Błędy 404 (Broken)</td><td class="text-bold {% if seo_data.links.broken > 0 %}badge-danger{% endif %}">{{ seo_data.links.broken }}</td></tr>
+                    <tr><td>Przekierowania (3xx)</td><td class="text-bold">{{ seo_data.links.redirects }}</td></tr>
+                    <tr><td>Brak tagu Canonical</td><td class="text-bold">{{ seo_data.technical_seo.missing_canonical or 0 }}</td></tr>
+                    <tr><td>Brak Meta Description</td><td class="text-bold">{{ seo_data.technical_seo.missing_description or 0 }}</td></tr>
                 </table>
             </div>
             <div class="col">
-                <h3>Obrazy</h3>
+                <h3>Linkowanie</h3>
                 <table>
-                    <tr><td>Wszystkie obrazy</td><td>{{ seo_data.images.total }}</td></tr>
-                    <tr><td>Bez opisu ALT</td><td class="{% if seo_data.images.without_alt > 0 %}badge-warning{% endif %}">{{ seo_data.images.without_alt }}</td></tr>
-                    <tr><td>Rozmiar (MB)</td><td>{{ seo_data.images.total_size_mb }}</td></tr>
+                    <tr><td>Linki wewnętrzne</td><td class="text-bold">{{ seo_data.links.internal }}</td></tr>
+                    <tr><td>Linki zewnętrzne</td><td class="text-bold">{{ seo_data.links.external }}</td></tr>
+                    <tr><td>Głębokość crawl (max)</td><td class="text-bold">{{ seo_data.technical_seo.max_depth or 1 }}</td></tr>
+                    <tr><td>Protokół HTTPS</td><td class="text-bold">{{ "Zabezpieczone" if security.is_https else "Brak HTTPS" }}</td></tr>
                 </table>
             </div>
         </div>
 
         {% if tech_stack.technologies %}
-        <h3>Technologie (Tech Stack)</h3>
-        <p>Wykryto: 
+        <h3>Stack Technologiczny</h3>
+        <p class="text-small mb-4">Wykryte technologie napędzające Twoją witrynę:</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
             {% for tech in tech_stack.technologies %}
-                <strong>{{ tech.name }}</strong> ({{ tech.category }}){% if not loop.last %}, {% endif %}
+                <span class="badge badge-info" style="margin-bottom: 4px;">{{ tech.name }} ({{ tech.category }})</span>
             {% endfor %}
-        </p>
+        </div>
         {% endif %}
+    </div>
 
-        {% if security %}
-        <h3>Bezpieczeństwo</h3>
-        <p>Wynik: <strong>{{ security.security_score }}/100</strong> | HTTPS: {{ "Tak" if security.is_https else "Nie" }}</p>
+    <!-- Performance -->
+    <div id="performance" class="page-break">
+        <h2>3. Wydajność & Core Web Vitals</h2>
+        
+        <div class="grid">
+            <div class="col">
+                <h3>Core Web Vitals (Desktop)</h3>
+                <table>
+                    <tr>
+                        <td>LCP (Largest Contentful Paint)</td>
+                        <td class="text-bold">{{ performance_desktop.lcp }}s</td>
+                    </tr>
+                    <tr>
+                        <td>CLS (Cumulative Layout Shift)</td>
+                        <td class="text-bold">{{ performance_desktop.cls }}</td>
+                    </tr>
+                    <tr>
+                        <td>FCP (First Contentful Paint)</td>
+                        <td class="text-bold">{{ performance_desktop.fcp }}s</td>
+                    </tr>
+                    <tr>
+                        <td>TBT (Total Blocking Time)</td>
+                        <td class="text-bold">{{ performance_desktop.tbt }}ms</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col">
+                <div class="score-card" style="margin-top: 20px;">
+                    <div class="score-label">Performance Score</div>
+                    <div class="score-value" style="color: {% if audit.performance_score >= 90 %}#10b981{% elif audit.performance_score >= 50 %}#f59e0b{% else %}#ef4444{% endif %};">
+                        {{ audit.performance_score|round|int }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3>Kluczowe Możliwości Optymalizacji</h3>
+        {% if performance_desktop.audits and performance_desktop.audits.opportunities %}
+            {% for opt in performance_desktop.audits.opportunities[:3] %}
+            <div class="recommendation {% if opt.score < 0.5 %}rec-warning{% endif %}">
+                <strong>{{ opt.title }}:</strong> {{ opt.description|striptags }}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-small">Brak krytycznych uwag dotyczących wydajności.</p>
         {% endif %}
     </div>
 
     <!-- Content & UX -->
-    <div class="page-break">
-        <h2>3. Treść i UX</h2>
+    <div id="content-ux" class="page-break">
+        <h2>4. Treść, UX & Bezpieczeństwo</h2>
         
         <div class="grid">
             <div class="col">
-                <h3>Analiza Treści</h3>
+                <h3>Jakość Treści</h3>
                 <table>
-                    <tr><td>Liczba słów</td><td>{{ content_analysis.word_count }}</td></tr>
-                    <tr><td>Czytelność</td><td>{{ content_analysis.readability_score }}</td></tr>
-                    <tr><td>Thin Content</td><td>{{ content_deep.thin_content_count }}</td></tr>
+                    <tr><td>Średnia liczba słów</td><td class="text-bold">{{ content_analysis.word_count }}</td></tr>
+                    <tr><td>Czytelność (Flesch)</td><td class="text-bold">{{ content_analysis.readability_score }}</td></tr>
+                    <tr><td>Thin Content (podstrony)</td><td class="text-bold">{{ content_deep.thin_content_count or 0 }}</td></tr>
+                    <tr><td>Duplikaty wewnętrzne</td><td class="text-bold">{{ content_deep.duplicate_content_count or 0 }}</td></tr>
                 </table>
             </div>
             <div class="col">
-                <h3>UX & Accessibility</h3>
+                <h3>UX & Dostępność</h3>
                 <table>
-                    <tr><td>UX Score</td><td>{{ ux.ux_score }}%</td></tr>
-                    <tr><td>Mobile Friendly</td><td>{{ "Tak" if ux.mobile_friendly else "Nie" }}</td></tr>
-                    <tr><td>Dostępność</td><td>{{ ux.accessibility_score }}%</td></tr>
+                    <tr><td>UX Score</td><td class="text-bold">{{ ux.ux_score or 0 }}%</td></tr>
+                    <tr><td>Accessibility Score</td><td class="text-bold">{{ ux.accessibility_score or 0 }}%</td></tr>
+                    <tr><td>Mobile Friendly</td><td class="text-bold">{{ "Tak" if ux.mobile_friendly else "Nie" }}</td></tr>
+                    <tr><td>Security Score</td><td class="text-bold">{{ security.security_score or 0 }}/100</td></tr>
                 </table>
             </div>
         </div>
 
-        {% if content_deep.duplicates %}
-        <h3>Zduplikowana Treść</h3>
-        <p>Wykryto {{ content_deep.duplicate_content_count }} potencjalnych duplikatów.</p>
+        {% if security.vulnerabilities %}
+        <h3>Wykryte Zagrożenia</h3>
+        {% for vuln in security.vulnerabilities %}
+            <div class="recommendation rec-critical">
+                <strong>{{ vuln.type }}:</strong> {{ vuln.description }}
+            </div>
+        {% endfor %}
         {% endif %}
     </div>
 
     <!-- Action Plan -->
-    <div class="page-break">
-        <h2>4. Plan Działania (Quick Wins)</h2>
-        <p>Najważniejsze zadania do wykonania w pierwszej kolejności:</p>
+    <div id="quick-wins" class="page-break">
+        <h2>5. Plan Działania (Quick Wins)</h2>
+        <p class="mb-4">Poniższa lista zawiera zadania o najwyższym priorytecie, wygenerowane przez AI SiteSpector:</p>
         
-        {% for issue in critical_issues[:5] %}
-        <div class="recommendation rec-critical">
-            <strong>KRYTYCZNE:</strong> {{ issue|replace('❌ ', '') }}
-        </div>
-        {% endfor %}
+        {% if quick_wins %}
+            {% for win in quick_wins %}
+            <div class="recommendation {% if win.impact == 'high' %}rec-critical{% elif win.impact == 'medium' %}rec-warning{% else %}rec-success{% endif %}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong style="font-size: 11pt;">{{ win.title }}</strong>
+                    <span class="badge {% if win.impact == 'high' %}badge-danger{% elif win.impact == 'medium' %}badge-warning{% else %}badge-success{% endif %}">
+                        Impact: {{ win.impact }}
+                    </span>
+                </div>
+                <p>{{ win.description }}</p>
+                <p class="text-small mt-4">Kategoria: <strong>{{ win.category }}</strong> | Trudność: <strong>{{ win.effort }}</strong></p>
+            </div>
+            {% endfor %}
+        {% else %}
+            {% for issue in critical_issues[:5] %}
+            <div class="recommendation rec-critical">
+                <strong>KRYTYCZNE:</strong> {{ issue|replace('❌ ', '') }}
+            </div>
+            {% endfor %}
+            {% for issue in warnings[:5] %}
+            <div class="recommendation rec-warning">
+                <strong>OSTRZEŻENIE:</strong> {{ issue|replace('⚠️ ', '') }}
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-        {% for issue in warnings[:5] %}
-        <div class="recommendation rec-warning">
-            <strong>OSTRZEŻENIE:</strong> {{ issue|replace('⚠️ ', '') }}
-        </div>
-        {% endfor %}
+    <!-- Pages List -->
+    <div id="pages-list" class="page-break">
+        <h2>6. Pełna Lista Stron</h2>
+        <p class="text-small mb-4">Wykaz wszystkich zaindeksowanych i przeskanowanych podstron w domenie:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60%;">URL</th>
+                    <th>Status</th>
+                    <th>Inlinks</th>
+                    <th>Outlinks</th>
+                    <th>Size</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in all_pages[:100] %}
+                <tr>
+                    <td style="font-size: 8pt;">{{ page.url }}</td>
+                    <td class="text-center"><span class="badge {% if page.status_code == 200 %}badge-success{% else %}badge-danger{% endif %}">{{ page.status_code }}</span></td>
+                    <td class="text-center">{{ page.inlinks or 0 }}</td>
+                    <td class="text-center">{{ page.outlinks or 0 }}</td>
+                    <td class="text-center text-small">{{ (page.size_bytes / 1024)|round(1) }} KB</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if all_pages|length > 100 %}
+        <p class="text-center text-small italic">Pokazano pierwsze 100 z {{ all_pages|length }} stron. Pełna lista dostępna w panelu online.</p>
+        {% endif %}
+    </div>
 
-        {% for rec in ai_recommendations[:3] %}
-        <div class="recommendation">
-            <strong>🤖 AI SUGGESTION:</strong> {{ rec|replace('🤖 ', '') }}
-        </div>
-        {% endfor %}
+    <!-- Images List -->
+    <div id="images-list" class="page-break">
+        <h2>7. Lista Zasobów Graficznych</h2>
+        <p class="text-small mb-4">Analiza obrazów pod kątem SEO (atrybuty ALT) oraz wydajności (rozmiar pliku):</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50%;">URL Obrazu</th>
+                    <th style="width: 30%;">Tekst ALT</th>
+                    <th>Rozmiar</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for img in all_images[:100] %}
+                <tr>
+                    <td style="font-size: 7pt;">{{ img.url }}</td>
+                    <td style="font-size: 8pt;">{{ img.alt_text or '<span style="color: #ef4444; font-weight: bold;">BRAK ALT</span>'|safe }}</td>
+                    <td class="text-center text-small">{{ (img.size_bytes / 1024)|round(1) }} KB</td>
+                    <td class="text-center">
+                        {% if not img.alt_text or img.size_bytes > 512000 %}
+                            <span class="badge badge-warning">!</span>
+                        {% else %}
+                            <span class="badge badge-success">OK</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if all_images|length > 100 %}
+        <p class="text-center text-small italic">Pokazano pierwsze 100 z {{ all_images|length }} obrazów. Pełna lista dostępna w panelu online.</p>
+        {% endif %}
     </div>
 
     <div class="footer">
-        Raport wygenerowany automatycznie przez SiteSpector AI Platform | {{ generated_date }}
+        Raport wygenerowany przez SiteSpector AI Platform | {{ generated_date }} | Strona poufna
     </div>
 </body>
 </html>

@@ -188,6 +188,64 @@ async def analyze_content_deep(all_pages: List[Dict[str, Any]]) -> Dict[str, Any
     }
 
 
+async def generate_fix_suggestion(issue_type: str, urls: List[str]) -> Dict[str, Any]:
+    """
+    Generate concrete fix suggestions for a specific SEO issue using AI.
+    """
+    logger.info(f"Generating fix suggestion for {issue_type}")
+    
+    issues_map = {
+        "broken_links": "uszkodzone linki (404)",
+        "missing_canonical": "brakujące tagi kanoniczne",
+        "noindex_pages": "strony wykluczone z indeksowania (noindex)",
+        "duplicate_titles": "duplikaty tytułów meta",
+        "thin_content": "zbyt mała ilość treści (thin content)"
+    }
+    
+    issue_desc = issues_map.get(issue_type, issue_type)
+    urls_str = "\n".join(urls[:10])
+    if len(urls) > 10:
+        urls_str += f"\n... i {len(urls) - 10} więcej"
+        
+    system_prompt = "Jesteś ekspertem technicznym SEO. Twoim zadaniem jest podanie konkretnych, technicznych kroków naprawczych dla zgłoszonego problemu."
+    
+    user_message = f"""
+    Problem: {issue_desc}
+    Dotknięte adresy URL:
+    {urls_str}
+    
+    Podaj:
+    1. Dlaczego to jest ważne dla SEO?
+    2. Konkretne kroki techniczne, aby to naprawić (np. co zmienić w kodzie, CMS lub serwerze).
+    3. Jak sprawdzić, czy zostało to poprawnie naprawione?
+    
+    Twoja odpowiedź powinna być w formacie JSON:
+    {{
+        "importance": "krótkie wyjaśnienie (max 2 zdania)",
+        "steps": ["krok 1", "krok 2", ...],
+        "verification": "jak sprawdzić poprawność",
+        "ai_tip": "dodatkowa wskazówka od AI"
+    }}
+    """
+    
+    try:
+        ai_response = await call_claude(user_message, system_prompt)
+        import json
+        import re
+        json_match = re.search(r'\{.*\}', ai_response, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group())
+    except Exception as e:
+        logger.error(f"Failed to generate fix suggestion: {e}")
+        
+    return {
+        "importance": "Ten problem wpływa negatywnie na indeksowanie i widoczność strony.",
+        "steps": ["Zidentyfikuj przyczynę problemu w CMS lub kodzie strony.", "Zastosuj odpowiednie poprawki techniczne."],
+        "verification": "Użyj narzędzi takich jak Google Search Console lub ponownie uruchom audyt.",
+        "ai_tip": "Regularne audyty techniczne pomagają unikać takich problemów w przyszłości."
+    }
+
+
 async def detect_tech_stack(url: str, crawl_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Detect technology stack using response headers and HTML patterns.

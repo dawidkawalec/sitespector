@@ -225,6 +225,34 @@ class AuditResponse(AuditBase):
         from_attributes = True
 
 
+class FixSuggestionRequest(BaseModel):
+    """Request for AI fix suggestion."""
+    issue_type: str
+    urls: List[str]
+
+
+class FixSuggestionResponse(BaseModel):
+    """Response for AI fix suggestion."""
+    importance: str
+    steps: List[str]
+    verification: str
+    ai_tip: Optional[str] = None
+
+
+class PageAnalysisRequest(BaseModel):
+    """Request for AI page analysis."""
+    page_indices: List[int]
+
+
+class PageAnalysisResponse(BaseModel):
+    """Response for AI page analysis."""
+    page_score: int
+    summary: str
+    issues: List[str]
+    recommendations: List[str]
+    impact: str
+
+
 class AuditListResponse(BaseModel):
     """Schema for paginated audit list."""
     total: int
@@ -237,6 +265,7 @@ class AuditStatusResponse(BaseModel):
     """Schema for audit status check."""
     id: UUID
     status: AuditStatus
+    processing_step: Optional[str] = None
     overall_score: Optional[float] = None
     error_message: Optional[str] = None
     completed_at: Optional[datetime] = None

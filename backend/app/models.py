@@ -116,6 +116,9 @@ class Audit(Base):
     # PDF export
     pdf_url = Column(String(2048), nullable=True)
 
+    # Processing step (for progress bar)
+    processing_step = Column(String(100), nullable=True)
+
     # Error tracking
     error_message = Column(Text, nullable=True)
 
