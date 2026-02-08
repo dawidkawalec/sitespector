@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { NewAuditDialog } from '@/components/NewAuditDialog'
 import { SystemStatus } from '@/components/SystemStatus'
-import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant, truncateUrl } from '@/lib/utils'
+import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant, truncateUrl, cn } from '@/lib/utils'
 import { Loader2, Plus, Trash, RefreshCw, TrendingUp, Activity, Search, Gauge, Sparkles, Layout } from 'lucide-react'
 import Link from 'next/link'
 import {
