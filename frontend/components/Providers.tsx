@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { ThemeProvider } from 'next-themes'
 import { WorkspaceProvider } from '@/lib/WorkspaceContext'
+import { Toaster } from '@/components/ui/sonner'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -23,6 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <WorkspaceProvider>
           {children}
+          <Toaster />
         </WorkspaceProvider>
       </ThemeProvider>
     </QueryClientProvider>

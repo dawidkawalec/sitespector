@@ -18,10 +18,28 @@ import { useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Loader2, AlertCircle, CheckCircle2, XCircle, Info, ExternalLink, Download, Search, Filter, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Eye } from 'lucide-react'
+import {
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  Info,
+  ExternalLink,
+  Download,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Eye,
+  Lightbulb,
+  Sparkles
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
 import {
   Table,
   TableBody,
@@ -190,7 +208,7 @@ export default function SeoPage({ params }: { params: { id: string } }) {
 
         {isLoading && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
-            <Spinner className="h-3 w-3 animate-spin" /> Generowanie sugestii przez AI...
+            <Loader2 className="h-3 w-3 animate-spin" /> Generowanie sugestii przez AI...
           </div>
         )}
 
