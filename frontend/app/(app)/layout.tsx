@@ -7,7 +7,7 @@
  * - Main content area
  */
 
-import { Sidebar } from '@/components/layout/Sidebar'
+import { UnifiedSidebar } from '@/components/layout/UnifiedSidebar'
 import { MobileSidebar } from '@/components/layout/MobileSidebar'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex h-screen overflow-hidden">
       {/* Desktop sidebar - hidden on mobile */}
       <div className="hidden md:block">
-        <Sidebar />
+        <UnifiedSidebar />
       </div>
 
       {/* Main content area */}

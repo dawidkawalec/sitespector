@@ -601,5 +601,43 @@ USING (
 
 ---
 
-**Last Updated**: 2026-02-04
+## ADR-019: Unified Context-Aware Sidebar
+
+**Date**: 2026-02-08
+
+**Status**: ✅ Accepted & Implemented
+
+**Context**:
+- Previously, the application had separate sidebars for the main dashboard, settings, and individual audits.
+- Navigating to an audit would completely swap the sidebar, losing global context.
+- Settings pages had their own sidebar or were inconsistently integrated.
+- Duplicated navigation items (e.g., "Dashboard" and "Audits" both leading to the same page).
+
+**Decision**: Implement a single `UnifiedSidebar` that handles all navigation contexts within one collapsible panel.
+
+**Rationale**:
+- **Consistency**: The user always sees the same sidebar structure, reducing cognitive load.
+- **Context-Awareness**: The sidebar automatically expands or shows audit-specific tools based on the current URL path.
+- **Smooth UX**: Transitioning between a global view and an audit view happens within the same UI element, using smooth CSS animations for expanding sections.
+- **Maintenance**: One component to maintain instead of three separate sidebar implementations.
+
+**Implementation**:
+- **`UnifiedSidebar.tsx`**: The core component that detects context via `usePathname`.
+- **`NavSection.tsx`**: A reusable collapsible section component with CSS grid animations for height transitions.
+- **`NavItem.tsx`**: Individual links with active state indicators (vertical bar) and badges.
+- **Mobile Support**: `MobileSidebar` wraps the unified sidebar and handles closing on navigation via a callback.
+- **Audit Tools**: Re-integrated "Tools" (Quick Wins, etc.) as disabled items to maintain the full feature roadmap visibility.
+
+**Consequences**:
+- ✅ Spatially consistent navigation.
+- ✅ Eliminated duplicate menu items.
+- ✅ Improved visual hierarchy with clear section separators.
+- ✅ Better mobile experience with unified logic.
+- ✅ Clearer roadmap visibility (disabled tools are visible but inactive).
+
+**Related**: ADR-017
+
+---
+
+**Last Updated**: 2026-02-08
 **Review**: Update when making significant architectural changes

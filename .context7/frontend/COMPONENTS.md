@@ -609,6 +609,47 @@ import { ThemeProvider } from 'next-themes'
 
 ## Audit Navigation Components
 
+### UnifiedSidebar (`components/layout/UnifiedSidebar.tsx`)
+
+**Purpose**: Single sidebar for the entire application, context-aware.
+
+**Features**:
+- **Main Navigation**: Dashboard and core links.
+- **Audit Context**: Automatically shows audit-specific sections (Overview, Reports, Advanced, Tools) when on an audit route.
+- **Collapsible Sections**: Uses `NavSection` with smooth CSS grid animations for expanding/collapsing.
+- **Visual Indicators**: Active state with a vertical primary-color indicator and subtle background highlights.
+- **Mobile Support**: Integration with `MobileSidebar` using an `onAction` callback to close the drawer on navigation.
+
+---
+
+### NavSection (`components/layout/NavSection.tsx`)
+
+**Purpose**: Collapsible navigation group.
+
+**Features**:
+- **Smooth Animations**: Uses CSS `grid-template-rows` for height transitions.
+- **Accessibility**: Semantic button trigger with chevron indicator.
+- **Variants**: Supports 'default' and 'audit' styling.
+
+---
+
+### NavItem (`components/layout/NavItem.tsx`)
+
+**Purpose**: Individual navigation link.
+
+**Features**:
+- **Active State**: Visual indicator bar and primary color text.
+- **Badges**: Small, uppercase tracking-wider badges for status or counts.
+- **Disabled State**: Muted styling for upcoming features.
+
+---
+
+### MobileSidebar (`components/layout/MobileSidebar.tsx`)
+
+**Purpose**: Mobile slide-in menu using `UnifiedSidebar`.
+
+---
+
 ### ThemeToggle (`components/ThemeToggle.tsx`)
 
 **Purpose**: Toggle between light and dark mode
