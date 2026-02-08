@@ -165,10 +165,10 @@ export default function LoginPage() {
   if (checkingAuth) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md border-[#0b363d]/12 bg-white shadow-2xl">
           <CardContent className="pt-6">
             <div className="flex justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0b363d] border-t-transparent" />
             </div>
           </CardContent>
         </Card>
@@ -179,21 +179,21 @@ export default function LoginPage() {
   if (magicLinkSent) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center p-4">
-        <Card className="w-full max-w-md border-none shadow-2xl">
+        <Card className="w-full max-w-md border-[#0b363d]/12 bg-white shadow-2xl">
           <CardHeader>
-            <CardTitle>Sprawdź e-mail</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-[#0b363d]">Sprawdź e-mail</CardTitle>
+            <CardDescription className="text-[#616c6e]">
               Wysłaliśmy link do logowania na adres {email}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-sm text-muted-foreground">
+            <p className="mb-4 text-sm text-[#616c6e]">
               Kliknij link w wiadomości, aby się zalogować. Możesz zamknąć tę
               stronę.
             </p>
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full border-[#0b363d] text-[#0b363d] hover:bg-[#0b363d]/6"
               onClick={() => {
                 setMagicLinkSent(false)
                 setShowMagicLink(false)
@@ -208,18 +208,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-[60vh] items-center justify-center py-12 px-4">
-      <Card className="w-full max-w-md border-none shadow-2xl relative z-10">
+    <div className="flex min-h-[60vh] items-center justify-center px-4 py-12">
+      <Card className="public-card w-full max-w-md border shadow-2xl relative z-10 bg-white">
         <CardHeader className="space-y-1 text-center">
           <div className="mb-4 flex justify-center">
-            <div className="rounded-2xl bg-primary/10 p-3 text-accent">
+            <div className="rounded-2xl bg-[#0b363d]/10 p-3 text-[#ff8945]">
               <RiSearchEyeFill size={48} />
             </div>
           </div>
-          <CardTitle className="text-3xl font-black tracking-tight text-primary">
+          <CardTitle className="text-3xl font-black tracking-tight text-[#0b363d]">
             SiteSpector
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="public-card-muted text-base text-[#616c6e]">
             Zaloguj się lub załóż konto, aby kontynuować.
           </CardDescription>
         </CardHeader>
@@ -235,9 +235,13 @@ export default function LoginPage() {
             onValueChange={(v) => setActiveTab(v as 'login' | 'register')}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Zaloguj się</TabsTrigger>
-              <TabsTrigger value="register">Zarejestruj się</TabsTrigger>
+            <TabsList className="public-tabs-bg grid w-full grid-cols-2 bg-[#0b363d]/8">
+              <TabsTrigger value="login" className="public-tabs-trigger data-[state=active]:bg-white data-[state=active]:text-[#0b363d] data-[state=inactive]:text-[#616c6e]">
+                Zaloguj się
+              </TabsTrigger>
+              <TabsTrigger value="register" className="public-tabs-trigger data-[state=active]:bg-white data-[state=active]:text-[#0b363d] data-[state=inactive]:text-[#616c6e]">
+                Zarejestruj się
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="login" className="space-y-4 pt-4">
@@ -246,7 +250,7 @@ export default function LoginPage() {
                   <div className="space-y-2">
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="public-btn-outline w-full border-[#0b363d] text-[#0b363d]"
                       onClick={() => handleOAuth('google')}
                       type="button"
                     >
@@ -255,7 +259,7 @@ export default function LoginPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="public-btn-outline w-full border-[#0b363d] text-[#0b363d]"
                       onClick={() => handleOAuth('github')}
                       type="button"
                     >
@@ -265,17 +269,17 @@ export default function LoginPage() {
                   </div>
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                      <Separator />
+                      <Separator className="public-separator bg-[#0b363d]/15" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">
+                      <span className="bg-white px-2 text-[#616c6e]">
                         lub e-mail
                       </span>
                     </div>
                   </div>
                   <form onSubmit={handleEmailLogin} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-email">Email</Label>
+                      <Label htmlFor="login-email" className="text-[#0b363d]">Email</Label>
                       <Input
                         id="login-email"
                         type="email"
@@ -283,22 +287,23 @@ export default function LoginPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        className="public-input border-[#0b363d]/20 bg-white text-[#0b363d] placeholder:text-[#616c6e]"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="login-password">Hasło</Label>
+                      <Label htmlFor="login-password" className="text-[#0b363d]">Hasło</Label>
                       <Input
                         id="login-password"
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        className="public-input border-[#0b363d]/20 bg-white text-[#0b363d]"
                       />
                     </div>
                     <Button
                       type="submit"
-                      className="w-full"
-                      variant="accent"
+                      className="public-btn-accent w-full bg-[#ff8945] text-white hover:bg-[#e67a3d]"
                       disabled={loading}
                     >
                       {loading ? 'Logowanie...' : 'Zaloguj się'}
@@ -309,7 +314,7 @@ export default function LoginPage() {
                       variant="link"
                       onClick={() => setShowMagicLink(true)}
                       type="button"
-                      className="text-sm text-muted-foreground"
+                      className="text-sm text-[#616c6e] hover:text-[#0b363d]"
                     >
                       Lub zaloguj się linkiem magicznym
                     </Button>
@@ -319,7 +324,7 @@ export default function LoginPage() {
                 <>
                   <form onSubmit={handleMagicLink} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="magic-email">Email</Label>
+                      <Label htmlFor="magic-email" className="text-[#0b363d]">Email</Label>
                       <Input
                         id="magic-email"
                         type="email"
@@ -327,15 +332,15 @@ export default function LoginPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        className="public-input border-[#0b363d]/20 bg-white text-[#0b363d]"
                       />
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-[#616c6e]">
                         Wyślemy Ci link do logowania
                       </p>
                     </div>
                     <Button
                       type="submit"
-                      className="w-full"
-                      variant="accent"
+                      className="public-btn-accent w-full bg-[#ff8945] text-white hover:bg-[#e67a3d]"
                       disabled={loading}
                     >
                       {loading ? 'Wysyłanie...' : 'Wyślij link'}
@@ -346,7 +351,7 @@ export default function LoginPage() {
                       variant="link"
                       onClick={() => setShowMagicLink(false)}
                       type="button"
-                      className="text-sm text-muted-foreground"
+                      className="text-sm text-[#616c6e] hover:text-[#0b363d]"
                     >
                       Wróć do logowania hasłem
                     </Button>
@@ -359,7 +364,7 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="public-btn-outline w-full border-[#0b363d] text-[#0b363d]"
                   onClick={() => handleOAuth('google')}
                   type="button"
                 >
@@ -368,7 +373,7 @@ export default function LoginPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="public-btn-outline w-full border-[#0b363d] text-[#0b363d]"
                   onClick={() => handleOAuth('github')}
                   type="button"
                 >
@@ -378,27 +383,28 @@ export default function LoginPage() {
               </div>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <Separator />
+                  <Separator className="public-separator bg-[#0b363d]/15" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
+                  <span className="bg-white px-2 text-[#616c6e]">
                     lub e-mail
                   </span>
                 </div>
               </div>
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="reg-name">Imię i nazwisko (opcjonalnie)</Label>
+                  <Label htmlFor="reg-name" className="text-[#0b363d]">Imię i nazwisko (opcjonalnie)</Label>
                   <Input
                     id="reg-name"
                     type="text"
                     placeholder="Jan Kowalski"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
+                    className="public-input border-[#0b363d]/20 bg-white text-[#0b363d]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="reg-email">Email</Label>
+                  <Label htmlFor="reg-email" className="text-[#0b363d]">Email</Label>
                   <Input
                     id="reg-email"
                     type="email"
@@ -406,35 +412,37 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="public-input border-[#0b363d]/20 bg-white text-[#0b363d]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="reg-password">Hasło</Label>
+                  <Label htmlFor="reg-password" className="text-[#0b363d]">Hasło</Label>
                   <Input
                     id="reg-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className="public-input border-[#0b363d]/20 bg-white text-[#0b363d]"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-[#616c6e]">
                     Min. 8 znaków, wielka i mała litera, cyfra
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="reg-confirm">Potwierdź hasło</Label>
+                  <Label htmlFor="reg-confirm" className="text-[#0b363d]">Potwierdź hasło</Label>
                   <Input
                     id="reg-confirm"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
+                    className="public-input border-[#0b363d]/20 bg-white text-[#0b363d]"
                   />
                 </div>
                 <Button
                   type="submit"
-                  className="w-full"
-                  variant="accent"
+                  className="public-btn-accent w-full bg-[#ff8945] text-white hover:bg-[#e67a3d]"
                   disabled={loading}
                 >
                   {loading ? 'Tworzenie konta...' : 'Zarejestruj się'}
@@ -443,14 +451,14 @@ export default function LoginPage() {
             </TabsContent>
           </Tabs>
 
-          <p className="pt-4 text-center text-sm text-muted-foreground">
+          <p className="pt-4 text-center text-sm text-[#616c6e]">
             {activeTab === 'login' ? (
               <>
                 Nie masz konta?{' '}
                 <button
                   type="button"
                   onClick={() => setActiveTab('register')}
-                  className="text-primary hover:underline"
+                  className="text-[#0b363d] font-medium hover:underline hover:text-[#ff8945]"
                 >
                   Zarejestruj się
                 </button>
@@ -461,7 +469,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('login')}
-                  className="text-primary hover:underline"
+                  className="text-[#0b363d] font-medium hover:underline hover:text-[#ff8945]"
                 >
                   Zaloguj się
                 </button>

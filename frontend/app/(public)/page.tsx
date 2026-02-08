@@ -32,7 +32,7 @@ export default function PublicHomePage() {
   if (checkingAuth) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center p-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0b363d] border-t-transparent" />
       </div>
     )
   }
@@ -40,12 +40,12 @@ export default function PublicHomePage() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-24">
       <div className="text-center">
-        <h1 className="mb-4 text-6xl font-bold text-primary">SiteSpector</h1>
-        <p className="mb-8 text-xl text-muted-foreground">
+        <h1 className="mb-4 text-6xl font-bold text-[#0b363d]">SiteSpector</h1>
+        <p className="mb-8 text-xl text-[#616c6e]">
           AI-Powered Website Audits
         </p>
         <Link href="/login">
-          <Button variant="accent" size="lg">
+          <Button size="lg" className="bg-[#ff8945] text-white hover:bg-[#e67a3d]">
             Zaloguj się / Załóż konto
           </Button>
         </Link>

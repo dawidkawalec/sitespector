@@ -82,13 +82,8 @@ const Topbar = () => {
               </ul>
               <ul className="navbar-nav nav-btn">
                 <li className="nav-item">
-                  <Link className="btn btn-outline-primary me-2" href="/login">
-                    Zaloguj się
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="btn btn-orange text-light" href="/register">
-                    Załóż konto
+                  <Link className="btn btn-orange text-light" href="/login">
+                    Zaloguj się / Załóż konto
                   </Link>
                 </li>
               </ul>

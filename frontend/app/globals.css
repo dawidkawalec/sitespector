@@ -76,3 +76,66 @@
   width: 100%;
   z-index: -1;
 }
+
+/* Public (landing + login): wymuszenie jasnego wyglądu – identycznie jak landingu */
+.public-light,
+.public-light * {
+  color: inherit;
+}
+.public-light .public-navbar-bg {
+  background-color: #fff9f5 !important;
+  border-color: rgba(11, 54, 61, 0.12) !important;
+}
+.public-light .public-navbar-logo,
+.public-light .public-navbar-link {
+  color: #0b363d !important;
+}
+.public-light .public-navbar-link:hover {
+  color: #ff8945 !important;
+}
+.public-light .public-card {
+  background-color: #ffffff !important;
+  border-color: rgba(11, 54, 61, 0.12) !important;
+  color: #0b363d !important;
+}
+.public-light .public-card-muted {
+  color: #616c6e !important;
+}
+.public-light .public-input {
+  background-color: #ffffff !important;
+  border-color: rgba(11, 54, 61, 0.2) !important;
+  color: #0b363d !important;
+}
+.public-light .public-tabs-bg {
+  background-color: rgba(11, 54, 61, 0.08) !important;
+}
+.public-light .public-tabs-trigger[data-state="inactive"] {
+  color: #616c6e !important;
+}
+.public-light .public-tabs-trigger[data-state="active"] {
+  background-color: #ffffff !important;
+  color: #0b363d !important;
+}
+.public-light .public-btn-outline {
+  background-color: transparent !important;
+  border-color: #0b363d !important;
+  color: #0b363d !important;
+}
+.public-light .public-btn-outline:hover {
+  background-color: rgba(11, 54, 61, 0.06) !important;
+}
+.public-light .public-btn-accent {
+  background-color: #ff8945 !important;
+  color: #ffffff !important;
+}
+.public-light .public-btn-accent:hover {
+  background-color: #e67a3d !important;
+  color: #ffffff !important;
+}
+.public-light .public-separator {
+  border-color: rgba(11, 54, 61, 0.15) !important;
+}
+.public-light [data-slot="card"] {
+  background-color: #ffffff !important;
+  border-color: rgba(11, 54, 61, 0.12) !important;
+}

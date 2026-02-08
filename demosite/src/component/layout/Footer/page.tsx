@@ -35,8 +35,7 @@ const footerData: FooterColumn[] = [
   {
     heading: 'Wsparcie :',
     links: [
-      { label: 'Zaloguj się', link: '/login' },
-      { label: 'Załóż konto', link: '/register' },
+      { label: 'Zaloguj się / Załóż konto', link: '/login' },
       { label: 'Dokumentacja', link: '' },
     ],
   },
