@@ -4,7 +4,7 @@
  * NavSection Component
  * 
  * Collapsible section for sidebar navigation.
- * Uses Radix UI Accordion for accessibility and smooth animations.
+ * Uses conditional rendering (no CSS grid tricks) to avoid ghost elements.
  */
 
 import * as React from 'react'
@@ -18,6 +18,7 @@ interface NavSectionItem {
   label: string
   badge?: string | number
   disabled?: boolean
+  id?: string
 }
 
 interface NavSectionProps {
@@ -45,7 +46,6 @@ export function NavSection({
 }: NavSectionProps) {
   const [isOpen, setIsOpen] = React.useState(defaultOpen)
 
-  // Keep isOpen in sync with defaultOpen if it changes (e.g. when audit is selected)
   React.useEffect(() => {
     setIsOpen(defaultOpen)
   }, [defaultOpen])
@@ -58,15 +58,14 @@ export function NavSection({
   }
 
   return (
-    <div className={cn("mb-1 transition-opacity duration-200", disabled && "opacity-50")}>
-      {/* Section Header - Clickable to toggle */}
+    <div className={cn("mb-1", disabled && "opacity-50")}>
       <button
         onClick={handleToggle}
         disabled={disabled}
         className={cn(
           'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
           'text-muted-foreground hover:bg-accent hover:text-foreground',
-          isOpen && 'bg-accent text-foreground',
+          isOpen && !disabled && 'bg-accent text-foreground',
           disabled && 'cursor-not-allowed hover:bg-transparent hover:text-muted-foreground'
         )}
       >
@@ -80,33 +79,25 @@ export function NavSection({
         />
       </button>
 
-      {/* Collapsible Items */}
-      <div 
-        className={cn(
-          "grid transition-all duration-300 ease-in-out",
-          isOpen ? "grid-rows-[1fr] opacity-100 mt-1" : "grid-rows-[0fr] opacity-0"
-        )}
-      >
-        <div className="overflow-hidden">
-          <div className="ml-4 border-l-2 border-border/40 pl-2 space-y-0.5">
-            {items.map((item, index) => (
-              <NavItem
-                key={`${value}-${item.href}-${index}`}
-                href={item.href}
-                icon={item.icon}
-                label={item.label}
-                badge={item.badge}
-                disabled={item.disabled}
-                activeClass={cn(
-                  'bg-primary/10 text-primary font-medium',
-                  variant === 'audit' && 'bg-primary/5'
-                )}
-                onClick={onItemClick}
-              />
-            ))}
-          </div>
+      {isOpen && (
+        <div className="mt-1 ml-4 border-l-2 border-border/40 pl-2 space-y-0.5">
+          {items.map((item, index) => (
+            <NavItem
+              key={item.id || `${value}-${index}`}
+              href={item.href}
+              icon={item.icon}
+              label={item.label}
+              badge={item.badge}
+              disabled={item.disabled}
+              activeClass={cn(
+                'bg-primary/10 text-primary font-medium',
+                variant === 'audit' && 'bg-primary/5'
+              )}
+              onClick={onItemClick}
+            />
+          ))}
         </div>
-      </div>
+      )}
     </div>
   )
 }

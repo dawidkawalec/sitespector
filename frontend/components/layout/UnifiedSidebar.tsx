@@ -239,8 +239,7 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
             </div>
           </div>
 
-          <div className={cn("space-y-1 transition-opacity duration-200", isAuditDisabled && "opacity-50 pointer-events-none")}>
-            {/* Overview Section */}
+          <div key={currentAuditId || 'no-audit'} className={cn("space-y-1", isAuditDisabled && "opacity-50 pointer-events-none")}>
             <NavSection
               title="Przegląd"
               icon={FileText}
@@ -252,7 +251,6 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
               disabled={isAuditDisabled}
             />
 
-            {/* Reports Section */}
             <NavSection
               title="Raporty"
               icon={FileDown}
@@ -263,7 +261,6 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
               disabled={isAuditDisabled}
             />
 
-            {/* Advanced Section */}
             <NavSection
               title="Zaawansowane"
               icon={Network}
@@ -274,7 +271,6 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
               disabled={isAuditDisabled}
             />
 
-            {/* Tools Section */}
             <NavSection
               title="Narzędzia"
               icon={Zap}
