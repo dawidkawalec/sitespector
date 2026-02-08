@@ -253,6 +253,16 @@ class PageAnalysisResponse(BaseModel):
     impact: str
 
 
+class AltTextRequest(BaseModel):
+    """Request for AI alt text generation."""
+    image_url: str
+
+
+class AltTextResponse(BaseModel):
+    """Response for AI alt text generation."""
+    alt_text: str
+
+
 class AuditListResponse(BaseModel):
     """Schema for paginated audit list."""
     total: int

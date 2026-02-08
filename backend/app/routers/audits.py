@@ -8,7 +8,7 @@ Version: 2.0 (Workspace-based)
 """
 
 import logging
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -28,6 +28,8 @@ from app.schemas import (
     FixSuggestionResponse,
     PageAnalysisRequest,
     PageAnalysisResponse,
+    AltTextRequest,
+    AltTextResponse,
 )
 from app.auth_supabase import get_current_user, verify_workspace_access
 from app.lib.supabase import supabase, get_workspace_subscription, increment_audit_usage, check_audit_limit
