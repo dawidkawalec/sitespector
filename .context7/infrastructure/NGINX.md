@@ -195,32 +195,23 @@ location /_next/static {
 
 ## SSL Certificate
 
-### Current: Self-signed
+### Current: Let's Encrypt
 
-**Location**: `/opt/sitespector/ssl/`
+**Location**: `/etc/letsencrypt/live/sitespector.app/`
 
 **Files**:
-- `selfsigned.crt` - Certificate
-- `selfsigned.key` - Private key
+- `fullchain.pem` - Certificate
+- `privkey.pem` - Private key
 
 **Generate**:
 ```bash
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout selfsigned.key \
-  -out selfsigned.crt \
-  -subj "/C=PL/ST=Mazowieckie/L=Warsaw/O=SiteSpector/CN=77.42.79.46"
+certbot certonly --standalone -d sitespector.app -d www.sitespector.app
 ```
 
-### Future: Let's Encrypt
-
-**When domain registered**:
-
-```bash
-certbot certonly --standalone -d yourdomain.com
-
-# Update nginx.conf
-ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
-ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+**Nginx Volume**:
+```yaml
+volumes:
+  - /etc/letsencrypt/live/sitespector.app:/etc/nginx/ssl:ro
 ```
 
 ---

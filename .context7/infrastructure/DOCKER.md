@@ -44,16 +44,16 @@ nginx:
 ### 2. frontend (Next.js)
 
 ```yaml
-frontend:
-  build:
-    context: ./frontend
-    dockerfile: Dockerfile
-    args:
-      - NEXT_PUBLIC_API_URL=https://77.42.79.46
-  container_name: sitespector-frontend
-  command: node server.js
-  environment:
-    - NEXT_PUBLIC_API_URL=https://77.42.79.46
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=https://sitespector.app
+    container_name: sitespector-frontend
+    command: node server.js
+    environment:
+      - NEXT_PUBLIC_API_URL=https://sitespector.app
     - HOSTNAME=0.0.0.0
   depends_on:
     - backend
@@ -73,19 +73,19 @@ frontend:
 ### 3. backend (FastAPI)
 
 ```yaml
-backend:
-  build:
-    context: ./backend
-    dockerfile: Dockerfile
-  container_name: sitespector-backend
-  command: uvicorn app.main:app --host 0.0.0.0 --port 8000
-  environment:
-    - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
-    - ENVIRONMENT=production
-    - DEBUG=false
-    - CORS_ORIGINS=["https://77.42.79.46","http://77.42.79.46"]
-  env_file:
-    - .env
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sitespector-backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - CORS_ORIGINS=["https://sitespector.app","https://www.sitespector.app","https://77.42.79.46"]
+    env_file:
+      - .env
   volumes:
     - ./tmp/audits:/tmp/audits
   depends_on:
