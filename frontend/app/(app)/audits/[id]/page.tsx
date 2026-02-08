@@ -265,42 +265,6 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
       {/* Completed State - Overview */}
       {audit.status === 'completed' && (
         <>
-          {/* Score Overview */}
-          <div className="grid gap-4 md:grid-cols-4 mb-8">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Wynik ogólny</CardDescription>
-                <CardTitle className={`text-4xl ${getScoreColor(audit.overall_score)}`}>
-                  {formatScore(audit.overall_score)}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>SEO</CardDescription>
-                <CardTitle className={`text-4xl ${getScoreColor(audit.seo_score)}`}>
-                  {formatScore(audit.seo_score)}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Wydajność</CardDescription>
-                <CardTitle className={`text-4xl ${getScoreColor(audit.performance_score)}`}>
-                  {formatScore(audit.performance_score)}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Treść</CardDescription>
-                <CardTitle className={`text-4xl ${getScoreColor(audit.content_score)}`}>
-                  {formatScore(audit.content_score)}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-          </div>
-
           {/* Executive Summary - 4 main scores */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
