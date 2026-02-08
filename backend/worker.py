@@ -99,6 +99,8 @@ async def process_audit(audit_id: str) -> None:
                 competitor_data
             )
             
+            industry_benchmarks = await ai_analysis.get_industry_benchmarks("general")
+            
             # Step 5: Calculate scores
             desktop_data = lighthouse_data.get("desktop", {})
             seo_score = calculate_seo_score(crawl_data, desktop_data)
@@ -116,6 +118,7 @@ async def process_audit(audit_id: str) -> None:
                 "tech_stack": tech_stack,
                 "security": security_analysis,
                 "ux": ux_analysis,
+                "benchmarks": industry_benchmarks,
                 "local_seo": local_seo_analysis,
                 "performance_analysis": performance_analysis,
                 "competitive_analysis": competitive_analysis,

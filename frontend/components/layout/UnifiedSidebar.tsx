@@ -79,8 +79,8 @@ const auditOverviewItems = [
 const auditReportsItems = [
   { href: '/audits/[id]/comparison', icon: ArrowLeftRight, label: 'Porównanie', id: 'comparison' },
   { href: '/audits/[id]/pdf', icon: FileDown, label: 'Raport PDF', id: 'pdf' },
-  { href: '/audits/[id]/client-report', icon: FileText, label: 'Raport dla klienta', disabled: true, id: 'client-report' },
-  { href: '/audits/[id]/benchmark', icon: Target, label: 'Benchmark', disabled: true, id: 'benchmark' },
+  { href: '/audits/[id]/client-report', icon: FileText, label: 'Raport dla klienta', id: 'client-report' },
+  { href: '/audits/[id]/benchmark', icon: Target, label: 'Benchmark', id: 'benchmark' },
 ]
 
 // Audit advanced section items
