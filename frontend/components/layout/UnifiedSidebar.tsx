@@ -72,11 +72,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-// Mock Collapsible components since the file is missing
-const Collapsible = ({ children, className, ...props }: any) => <div className={className} {...props}>{children}</div>
-const CollapsibleTrigger = ({ children, asChild, ...props }: any) => <div {...props}>{children}</div>
-const CollapsibleContent = ({ children, className, ...props }: any) => <div className={className} {...props}>{children}</div>
-
 // Main navigation items (always visible)
 const mainNavItems = [
   { 
@@ -132,6 +127,65 @@ const settingsItems = [
   { href: '/settings/appearance', icon: Palette, label: 'Appearance' },
   { href: '/settings/notifications', icon: Bell, label: 'Notifications' },
 ]
+
+function SystemStatusSection({ systemStatus, getStatusColor }: { systemStatus: any, getStatusColor: (status: string) => string }) {
+  const [isOpen, setIsOpen] = React.useState(false)
+  
+  return (
+    <div className="mb-1">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+          'text-muted-foreground hover:bg-accent hover:text-foreground',
+          isOpen && 'bg-accent text-foreground'
+        )}
+      >
+        <ActivityIcon className="h-4 w-4 flex-shrink-0" />
+        <span className="flex-1 text-left">System Status</span>
+        <div className="flex items-center gap-2">
+          <div className={cn(
+            "h-2 w-2 rounded-full animate-pulse",
+            systemStatus ? "bg-green-500" : "bg-gray-400"
+          )} />
+          <ChevronDown className={cn(
+            'h-4 w-4 transition-transform duration-200',
+            isOpen && 'rotate-180'
+          )} />
+        </div>
+      </button>
+      {isOpen && (
+        <div className="mt-1 ml-4 border-l-2 border-border/40 pl-2 space-y-0.5 animate-in slide-in-from-top-2 fade-in duration-200">
+          <TooltipProvider delayDuration={0}>
+            {systemStatus?.services && Object.entries(systemStatus.services).map(([name, data]: [string, any]) => (
+              <Tooltip key={name}>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center justify-between px-3 py-1.5 rounded-md hover:bg-accent/30 transition-colors cursor-help">
+                    <span className="text-xs font-medium capitalize text-muted-foreground">
+                      {name.replace('_', ' ')}
+                    </span>
+                    <div className={cn(
+                      "h-2 w-2 rounded-full",
+                      getStatusColor(data.status)
+                    )} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-[10px] p-2">
+                  <div className="space-y-1">
+                    <p className="font-bold capitalize">{name.replace('_', ' ')}</p>
+                    <p>Status: <span className="capitalize">{data.status}</span></p>
+                    {data.version && <p>Version: {data.version}</p>}
+                    {data.error && <p className="text-red-500">Error: {data.error}</p>}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </TooltipProvider>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
   const pathname = usePathname()
@@ -354,54 +408,8 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
             onItemClick={onAction}
           />
 
-          {/* System Status - Collapsible */}
-          <Collapsible className="px-1">
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-between font-normal hover:bg-accent/50 transition-all duration-200 h-10"
-              >
-                <div className="flex items-center">
-                  <ActivityIcon className="mr-3 h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">System Status</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className={cn(
-                    "h-2 w-2 rounded-full animate-pulse",
-                    systemStatus ? "bg-green-500" : "bg-gray-400"
-                  )} />
-                  <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform duration-200" />
-                </div>
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 px-2 py-1">
-              <TooltipProvider delayDuration={0}>
-                {systemStatus?.services && Object.entries(systemStatus.services).map(([name, data]: [string, any]) => (
-                  <Tooltip key={name}>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center justify-between px-3 py-1.5 rounded-md hover:bg-accent/30 transition-colors cursor-help">
-                        <span className="text-[11px] font-medium capitalize text-muted-foreground">
-                          {name.replace('_', ' ')}
-                        </span>
-                        <div className={cn(
-                          "h-1.5 w-1.5 rounded-full",
-                          getStatusColor(data.status)
-                        )} />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="text-[10px] p-2">
-                      <div className="space-y-1">
-                        <p className="font-bold capitalize">{name.replace('_', ' ')}</p>
-                        <p>Status: <span className="capitalize">{data.status}</span></p>
-                        {data.version && <p>Version: {data.version}</p>}
-                        {data.error && <p className="text-red-500">Error: {data.error}</p>}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </TooltipProvider>
-            </CollapsibleContent>
-          </Collapsible>
+          {/* System Status - matching NavSection style */}
+          <SystemStatusSection systemStatus={systemStatus} getStatusColor={getStatusColor} />
         </div>
       </nav>
 

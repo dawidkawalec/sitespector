@@ -37,6 +37,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { PageStatusChart } from '@/components/AuditCharts'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import type { Audit } from '@/lib/api'
