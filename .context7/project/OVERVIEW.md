@@ -391,7 +391,7 @@ USER → Frontend → Backend API → Database (PENDING)
 - **Access**: SSH as root@77.42.79.46
 - **Location**: `/opt/sitespector`
 - **Environment**: `/opt/sitespector/.env`
-- **SSL**: Self-signed cert at `/opt/sitespector/ssl/`
+- **SSL**: Let's Encrypt (sitespector.app); fallback self-signed at `/opt/sitespector/ssl/`
 - **Branch**: `release` (most up-to-date)
 
 **Development Workflow**:
@@ -455,6 +455,9 @@ Complete PDF sections 4-9:
 - API for third-party integrations
 
 **See**: `.context7/frontend/MISSING_FEATURES.md` for detailed TODO list
+
+### 📋 Backlog: Dokumentacja
+- **Aktualizacja .context7**: Przy każdym większym feature (OAuth, Stripe live, nowe endpointy, zmiany w UI) zaktualizować odpowiednie pliki w `.context7/` oraz ewentualnie `docs/`, żeby dokumentacja nie odbiegała od kodu. Reguła w `.cursor/rules/global.mdc`: po zakończeniu zadania zawsze zaktualizować Context7.
 
 ## Access & Credentials
 
