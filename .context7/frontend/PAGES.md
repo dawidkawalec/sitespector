@@ -12,20 +12,29 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ```
 app/
-├── layout.tsx                 # Root layout (wraps all pages)
+├── layout.tsx                 # Root layout (providers, metadata)
 ├── globals.css                # Global styles
-├── (public)/                  # Route group: navbar + footer + background
-│   ├── layout.tsx             # PublicNavbar, main (gradient bg), PublicFooter
-│   ├── page.tsx               # Homepage (/) – redirect when logged in
-│   ├── login/
-│   │   └── page.tsx           # Auth page (/login) – tabs: Zaloguj | Zarejestruj
-│   └── register/
-│       └── page.tsx           # Redirect to /login?mode=register
-├── (app)/                     # App with sidebar (dashboard, audits, settings)
-│   ├── dashboard/page.tsx
-│   ├── audits/[id]/...
-│   └── ...
-└── auth/callback/page.tsx    # OAuth callback
+├── (public)/                  # Route group: PublicNavbar + gradient bg + PublicFooter
+│   ├── layout.tsx             # Public layout (navbar, main, footer)
+│   ├── page.tsx               # Homepage (/) – redirect to /dashboard when logged in
+│   ├── login/page.tsx         # Auth (/login) – tabs: Zaloguj | Zarejestruj (Supabase)
+│   └── register/page.tsx      # Redirect to /login?mode=register
+├── (app)/                     # Authenticated app with UnifiedSidebar
+│   ├── layout.tsx             # Sidebar layout (workspace switcher)
+│   ├── dashboard/page.tsx     # Dashboard + workspace analytics
+│   ├── audits/[id]/           # Audit detail + subpages
+│   │   ├── page.tsx           # Overview
+│   │   ├── seo/page.tsx
+│   │   ├── performance/page.tsx
+│   │   ├── quick-wins/page.tsx
+│   │   ├── comparison/page.tsx
+│   │   ├── client-report/page.tsx
+│   │   ├── ai-analysis/, pdf/, links/, images/, etc.
+│   │   └── layout.tsx
+│   ├── pricing/page.tsx
+│   ├── settings/              # Profile, Team, Billing, Appearance, Notifications, Schedules
+│   └── invite/[token]/page.tsx
+└── auth/callback/page.tsx     # OAuth callback (Supabase)
 ```
 
 ---
@@ -65,174 +74,47 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ---
 
-## Homepage (`app/page.tsx`)
+## Homepage (`app/(public)/page.tsx`)
 
 **Route**: `/`
 
-**Purpose**: Landing page (public, redirects to login if not authenticated)
-
-**Status**: Basic implementation (needs design)
-
-**Code**:
-```tsx
-'use client'
-
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { isAuthenticated } from '@/lib/api'
-import { Button } from '@/components/ui/button'
-
-export default function HomePage() {
-  const router = useRouter()
-
-  useEffect(() => {
-    if (isAuthenticated()) {
-      router.push('/dashboard')
-    }
-  }, [router])
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-4xl font-bold mb-4">SiteSpector</h1>
-      <p className="text-xl text-muted-foreground mb-8">
-        Automated website auditing platform
-      </p>
-      <div className="flex gap-4">
-        <Button onClick={() => router.push('/login')}>Login</Button>
-        <Button variant="outline" onClick={() => router.push('/register')}>
-          Register
-        </Button>
-      </div>
-    </div>
-  )
-}
-```
+**Purpose**: Public landing; redirects to `/dashboard` when authenticated. Otherwise shows landing content (same layout as login: PublicNavbar, gradient background, PublicFooter with single CTA to `/login`).
 
 ---
 
-## Login Page (`app/login/page.tsx`)
+## Login Page (`app/(public)/login/page.tsx`)
 
 **Route**: `/login`
 
-**Purpose**: User authentication
+**Purpose**: User authentication (Supabase Auth). Same visual layout as landing: PublicNavbar, gradient background, PublicFooter.
 
 **Features**:
-- Email + password form
-- JWT token storage
-- Redirects to dashboard on success
-- Error handling
-
-**Code structure**:
-```tsx
-'use client'
-
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { authAPI, setAuthToken } from '@/lib/api'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-
-export default function LoginPage() {
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
-
-    try {
-      const response = await authAPI.login({ email, password })
-      setAuthToken(response.access_token)
-      router.push('/dashboard')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow">
-        <h1 className="text-2xl font-bold text-center">Login</h1>
-        
-        {error && (
-          <Alert variant="destructive">{error}</Alert>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Login'}
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{' '}
-          <a href="/register" className="text-primary hover:underline">
-            Register
-          </a>
-        </p>
-      </div>
-    </div>
-  )
-}
-```
+- Tabs: **Zaloguj się** | **Zarejestruj się** (single page, no separate register route in UI)
+- Email + password, OAuth (Google, GitHub), Magic link
+- Redirect to `/dashboard` on success; unauthenticated users see CTA in navbar/footer
+- Auth state via Supabase; token stored in session, redirect to `auth/callback` for OAuth
 
 ---
 
-## Register Page (`app/register/page.tsx`)
+## Register Page (`app/(public)/register/page.tsx`)
 
 **Route**: `/register`
 
-**Purpose**: User registration
-
-**Features**: Similar to login + password validation
-
-**Validation**:
-- Email: Valid email format
-- Password: Min 8 chars, uppercase, lowercase, digit
+**Purpose**: Redirects to `/login?mode=register` so registration is handled on the same page with tabs.
 
 ---
 
-## Dashboard Page (`app/dashboard/page.tsx`)
+## Dashboard Page (`app/(app)/dashboard/page.tsx`)
 
 **Route**: `/dashboard`
 
-**Purpose**: List all audits for authenticated user
+**Purpose**: Workspace-scoped audit list and analytics. Uses `useWorkspace()` for current workspace.
 
 **Features**:
-- Audit list (paginated)
-- Create audit button (opens NewAuditDialog)
-- Status badges
-- Click to view details
-- Logout button
+- Workspace analytics (usage, stats)
+- Audit list with status badges
+- New Audit button (NewAuditDialog)
+- Click to audit detail; sidebar with workspace switcher
 
 **Code structure**:
 ```tsx
@@ -345,11 +227,11 @@ export default function DashboardPage() {
 
 ---
 
-## Audit Detail Page (`app/audits/[id]/page.tsx`)
+## Audit Detail Page (`app/(app)/audits/[id]/page.tsx`)
 
 **Route**: `/audits/:id`
 
-**Purpose**: Display detailed audit results
+**Purpose**: Display detailed audit results (overview). Subpages under same layout for SEO, Performance, Quick Wins, Comparison, Client Report, AI Analysis, PDF, Links, Images, etc.
 
 **Features**:
 - Back button
@@ -549,7 +431,7 @@ if (isError) {
 
 ---
 
-**Last Updated**: 2025-02-03  
+**Last Updated**: 2026-02-09  
 **Framework**: Next.js 14 (App Router)  
-**Pages**: 5 (homepage, login, register, dashboard, audit detail)  
-**Status**: Fully functional, rendering functions implemented
+**Route groups**: `(public)` – landing, login, register; `(app)` – dashboard, audits, pricing, settings, invite  
+**Status**: Fully functional; auth + landing unified layout; UnifiedSidebar; audit subpages (SEO, Performance, Quick Wins, Comparison, Client Report, etc.)

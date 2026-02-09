@@ -298,23 +298,16 @@ refetchInterval: (query) => {
 
 **Reported**: 2024-12-15
 
-**Status**: 🟡 EXPECTED (design decision)
+**Status**: ✅ RESOLVED (2026-02-08)
 
 **Severity**: LOW
 
 **Description**:
-- Browser shows "Your connection is not private" warning
-- Users must manually accept certificate
+- Browser showed "Your connection is not private" when using IP.
 
-**Root cause**:
-- Self-signed certificate (not trusted by browsers)
-- No domain registered yet
+**Solution**: Domain sitespector.app configured with Let's Encrypt. Production uses valid HTTPS at https://sitespector.app. IP (77.42.79.46) may still use self-signed if configured.
 
-**Solution**: Replace with Let's Encrypt certificate when domain ready
-
-**Workaround**: Accept certificate warning (safe for internal use)
-
-**Related**: ADR-006 (Architectural Decisions)
+**Related**: ADR-006, DECISIONS_LOG (domain migration)
 
 ---
 
@@ -428,7 +421,7 @@ When adding new bugs to this file, use this format:
 
 ---
 
-**Last Updated**: 2025-02-03  
-**Resolved Bugs**: 6  
-**Known Issues**: 4  
+**Last Updated**: 2026-02-09  
+**Resolved Bugs**: 7 (incl. BUG-007 audit pipeline, ISSUE-002 SSL)  
+**Known Issues**: 3  
 **Watching**: 2

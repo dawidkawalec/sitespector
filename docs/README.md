@@ -77,5 +77,5 @@ Context7 is the single source of truth. Keep it updated!
 
 ---
 
-**Last Updated**: 2026-02-04
+**Last Updated**: 2026-02-09
 **Maintainer**: Dawid

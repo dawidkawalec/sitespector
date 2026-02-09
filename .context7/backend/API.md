@@ -2,7 +2,7 @@
 
 ## Base URL
 
-**Production**: `https://77.42.79.46/api`  
+**Production**: `https://sitespector.app/api` (IP fallback: `https://77.42.79.46/api`)  
 **Local** (not used): `http://localhost:8000/api`
 
 ---
@@ -701,8 +701,9 @@ interface Competitor {
 ## CORS
 
 **Allowed origins**:
+- `https://sitespector.app`
+- `https://www.sitespector.app`
 - `https://77.42.79.46`
-- `http://77.42.79.46`
 
 **Allowed methods**: All (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`)
 
@@ -714,12 +715,12 @@ interface Competitor {
 
 ## OpenAPI Documentation
 
-**Swagger UI**: `https://77.42.79.46/api/docs`  
-**ReDoc**: `https://77.42.79.46/api/redoc`  
-**OpenAPI JSON**: `https://77.42.79.46/api/openapi.json`
+**Swagger UI**: `https://sitespector.app/api/docs`  
+**ReDoc**: `https://sitespector.app/api/redoc`  
+**OpenAPI JSON**: `https://sitespector.app/api/openapi.json`
 
 ---
 
-**Last Updated**: 2025-02-03  
+**Last Updated**: 2026-02-09  
 **API Version**: v1  
-**Base URL**: https://77.42.79.46/api
+**Base URL**: https://sitespector.app/api

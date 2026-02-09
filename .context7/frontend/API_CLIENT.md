@@ -6,7 +6,7 @@ Frontend API client for communicating with SiteSpector backend.
 
 **Location**: `frontend/lib/api.ts`
 
-**Base URL**: `https://77.42.79.46` (production) or `http://localhost:8000` (local - not used)
+**Base URL**: `https://sitespector.app` (production, from `NEXT_PUBLIC_API_URL`) or `http://localhost:8000` (local - not used)
 
 ---
 
@@ -18,7 +18,7 @@ Frontend API client for communicating with SiteSpector backend.
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 ```
 
-**Environment variable**: `NEXT_PUBLIC_API_URL=https://77.42.79.46`
+**Environment variable**: `NEXT_PUBLIC_API_URL=https://sitespector.app`
 
 ---
 

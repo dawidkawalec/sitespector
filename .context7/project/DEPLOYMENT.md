@@ -32,9 +32,9 @@ ssh root@77.42.79.46
 ```
 
 **URLs**:
-- Frontend: https://77.42.79.46
-- API: https://77.42.79.46/api
-- Health check: https://77.42.79.46/health
+- Frontend: https://sitespector.app (primary), https://77.42.79.46 (IP fallback)
+- API: https://sitespector.app/api
+- Health check: https://sitespector.app/health
 
 **Test credentials**:
 - Email: info@craftweb.pl
@@ -258,7 +258,7 @@ DEBUG=false
 LOG_LEVEL=WARNING
 
 # CORS
-CORS_ORIGINS=["https://77.42.79.46","http://77.42.79.46"]
+CORS_ORIGINS=["https://sitespector.app","https://www.sitespector.app","https://77.42.79.46","http://77.42.79.46"]
 ```
 
 ### Updating Environment Variables
@@ -273,6 +273,7 @@ docker compose -f docker-compose.prod.yml restart backend worker
 ```
 
 **Frontend env vars** (build-time):
+- `NEXT_PUBLIC_API_URL=https://sitespector.app` (and Supabase URLs)
 - Set in `docker-compose.prod.yml` under `args` or `environment`
 - Requires rebuild if changed
 
@@ -498,41 +499,26 @@ cat /opt/backups/db_20250203.sql | docker exec -i sitespector-postgres psql -U s
 
 ## SSL Certificate Management
 
-### Current: Self-signed Certificate
+### Current: Let's Encrypt (sitespector.app)
 
-**Location**: `/opt/sitespector/ssl/`
+**Location on host**: `/etc/letsencrypt/live/sitespector.app/`
 
 **Files**:
-- `selfsigned.crt` - Certificate
-- `selfsigned.key` - Private key
+- `fullchain.pem` - Certificate
+- `privkey.pem` - Private key
 
-### Regenerate Self-signed Certificate
+**Nginx**: Mount full `/etc/letsencrypt:/etc/letsencrypt:ro` so symlinks resolve. Certbot renewal: `certbot renew` (or systemd timer).
+
+### Regenerate / Renew
 
 ```bash
-cd /opt/sitespector/ssl
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout selfsigned.key \
-  -out selfsigned.crt \
-  -subj "/C=PL/ST=Mazowieckie/L=Warsaw/O=SiteSpector/CN=77.42.79.46"
-
-# Restart nginx
+certbot certonly --standalone -d sitespector.app -d www.sitespector.app --non-interactive --agree-tos -m your@email.com
 docker compose -f docker-compose.prod.yml restart nginx
 ```
 
-### Future: Let's Encrypt
+### Fallback: Self-signed (e.g. for IP-only access)
 
-**When domain registered**:
-
-```bash
-# Install certbot
-apt install certbot python3-certbot-nginx
-
-# Get certificate
-certbot certonly --standalone -d yourdomain.com
-
-# Update nginx config to use Let's Encrypt certs
-# Restart nginx
-```
+**Location**: `/opt/sitespector/ssl/` – `selfsigned.crt`, `selfsigned.key`. Use only if not using domain.
 
 ---
 
@@ -560,7 +546,7 @@ certbot certonly --standalone -d yourdomain.com
    ```
 6. Verify services: `docker ps`
 7. Check logs: `docker logs sitespector-backend --tail 100`
-8. Test frontend: Open https://77.42.79.46
+8. Test frontend: Open https://sitespector.app (or https://77.42.79.46)
 
 ---
 
@@ -701,6 +687,6 @@ docker exec sitespector-backend printenv | grep -E "DATABASE|JWT|GEMINI"
 
 ---
 
-**Last Updated**: 2025-02-03  
-**Deployment target**: Hetzner VPS (77.42.79.46)  
-**Status**: Production-ready, manual deployment workflow
+**Last Updated**: 2026-02-09  
+**Deployment target**: Hetzner VPS (77.42.79.46), domain sitespector.app  
+**Status**: Production-ready, Let's Encrypt SSL, manual deployment workflow

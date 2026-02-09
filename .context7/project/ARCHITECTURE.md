@@ -50,7 +50,7 @@ build: ./frontend
 ports:
   - "3000:3000"
 environment:
-  - NEXT_PUBLIC_API_URL=https://77.42.79.46
+  - NEXT_PUBLIC_API_URL=https://sitespector.app
 ```
 
 **Purpose**: Serve React UI (server-side rendered)
@@ -69,7 +69,7 @@ environment:
   - DATABASE_URL=postgresql+asyncpg://sitespector_user:...@postgres:5432/sitespector_db
   - GEMINI_API_KEY=...
   - JWT_SECRET=...
-  - CORS_ORIGINS=["https://77.42.79.46","http://77.42.79.46"]
+  - CORS_ORIGINS=["https://sitespector.app","https://www.sitespector.app","https://77.42.79.46"]
 depends_on:
   - postgres
 ```
@@ -433,7 +433,7 @@ engine = create_async_engine(
 # backend/app/main.py
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://77.42.79.46", "http://77.42.79.46"],
+    allow_origins=["https://sitespector.app", "https://www.sitespector.app", "https://77.42.79.46"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

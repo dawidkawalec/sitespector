@@ -222,7 +222,7 @@ volumes:
 
 ```
 Browser
-  ↓ HTTPS request: https://77.42.79.46/
+  ↓ HTTPS request: https://sitespector.app/
 Nginx (443)
   ↓ proxy_pass / → frontend:3000
 Frontend Container (Next.js)
@@ -236,7 +236,7 @@ Browser (renders page)
 
 ```
 Browser
-  ↓ POST https://77.42.79.46/api/audits (Bearer token)
+  ↓ POST https://sitespector.app/api/audits (Bearer token)
 Nginx (443)
   ↓ proxy_pass /api/* → backend:8000
 Backend Container (FastAPI)
@@ -276,9 +276,9 @@ docker compose -f docker-compose.prod.yml restart backend frontend
 
 ### SSL Certificate Warning
 
-**Cause**: Self-signed certificate
+**Cause**: If using IP only with self-signed cert, browser shows warning.
 
-**Fix**: Accept browser warning (expected for MVP)
+**Fix**: Use https://sitespector.app (Let's Encrypt – no warning). For IP-only, accept browser warning.
 
 ### 413 Payload Too Large
 
@@ -330,7 +330,7 @@ docker exec sitespector-nginx nginx -s reload
 
 ---
 
-**Last Updated**: 2025-02-03  
+**Last Updated**: 2026-02-09  
 **Version**: Nginx 1.25 (Alpine)  
-**SSL**: Self-signed (development)  
-**Status**: Production-ready for MVP
+**SSL**: Let's Encrypt (sitespector.app)  
+**Status**: Production-ready

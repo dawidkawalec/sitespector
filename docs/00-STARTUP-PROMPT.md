@@ -9,8 +9,8 @@
 You are now working on **SiteSpector**, an SEO & technical audit platform (SaaS). This is a live production application running on a Hetzner VPS.
 
 ### Critical Information
-- **Status**: MVP deployed, partial functionality working
-- **Deployment**: Hetzner VPS (IP: 77.42.79.46)
+- **Status**: Production SaaS (teams, billing, workspaces); domain sitespector.app, Let's Encrypt SSL
+- **Deployment**: Hetzner VPS (IP: 77.42.79.46); app URL: https://sitespector.app
 - **Environment**: **NO LOCAL DOCKER** - all containers run on VPS only
 - **Workflow**: Code locally in Cursor, deploy via SSH to VPS
 - **Branch**: `release` (most up-to-date)
@@ -230,7 +230,7 @@ All three rendering functions are implemented and working:
 **Audit ID**: `85d6ee6f-8c55-4c98-abd8-60dedfafa9df`  
 **URL**: https://meditrue.pl/  
 **Status**: COMPLETED (has full results in DB)  
-**Access**: https://77.42.79.46/audits/85d6ee6f-8c55-4c98-abd8-60dedfafa9df
+**Access**: https://sitespector.app/audits/85d6ee6f-8c55-4c98-abd8-60dedfafa9df
 
 **Test credentials**:  
 Email: info@craftweb.pl  
@@ -344,7 +344,7 @@ When you start working on this project:
 3. ✅ Check `.cursorrules` file for project-specific rules
 4. ✅ Review `MISSING_FEATURES.md` for current priorities
 5. ✅ Test VPS access: `ssh root@77.42.79.46`
-6. ✅ Test application: https://77.42.79.46 (accept SSL warning)
+6. ✅ Test application: https://sitespector.app (valid SSL)
 7. ✅ Login with test credentials to see current state
 8. ✅ View test audit to understand what's broken
 

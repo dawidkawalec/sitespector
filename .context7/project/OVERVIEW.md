@@ -77,7 +77,7 @@ Professional SaaS platform for automated website auditing that combines:
 
 **Infrastructure**
 - 7 Docker containers on Hetzner VPS
-- Nginx reverse proxy with SSL
+- Nginx reverse proxy with Let's Encrypt SSL (sitespector.app)
 - Dual database: Supabase (users/teams) + VPS PostgreSQL (audits)
 - Auto-scaling ready architecture
 
@@ -92,17 +92,17 @@ Professional SaaS platform for automated website auditing that combines:
 - Responsive design (mobile-friendly)
 
 ### 🔨 In Progress / To Be Completed
-- **Audit Detail Rendering**: Basic structure exists, needs enhancement
-- **PDF Generator**: Template complete, sections 4-9 need data population
+- **Audit Detail Rendering**: Structure and tabs in place; individual subpages (Quick Wins, Comparison, Client Report, etc.) implemented
+- **PDF Generator**: Full reports implemented (infrastructure stability and full PDF reports commit); template populated with audit data
 - **OAuth Providers**: Supabase configured, frontend buttons ready (needs provider activation)
 - **Stripe Live Mode**: Currently using test mode, ready for production keys
-- **Domain & SSL**: Configured for sitespector.app, Let's Encrypt setup pending
+- **Domain & SSL**: ✅ Done – sitespector.app with Let's Encrypt (valid HTTPS)
 
 ## Architecture Overview
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│              77.42.79.46 (Hetzner VPS)                          │
+│         sitespector.app (77.42.79.46 – Hetzner VPS)             │
 ├────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  ┌──────────────┐   HTTPS (443)                                │
@@ -178,14 +178,10 @@ DUAL DATABASE STRATEGY:
 ### 1. Audit Creation & Processing
 - User creates audit (URL + optional 3 competitors)
 - Backend saves as PENDING
-- Worker picks up (polls every 10s)
-- Sequential processing:
-  1. Screaming Frog crawl (10-30s)
-  2. Lighthouse desktop + mobile (20-40s)
-  3. Competitor processing (parallel)
-  4. AI analysis (4 Gemini calls, 10-20s)
-  5. Score calculation
-  6. Save as COMPLETED with full results
+- Worker picks up (polls every 10s); **two-phase pipeline** for faster feedback
+- **Phase 1 (Technical)**: Screaming Frog crawl, Lighthouse desktop + mobile, competitors (parallel), technical scoring → results saved early
+- **Phase 2 (AI)**: Gemini analysis (content, performance/tech, strategic), score update → COMPLETED
+- Granular progress via `processing_logs`; timeouts on all steps (no indefinite hangs)
 
 ### 2. Real-time Status Updates
 - Frontend polls every 5s when status = PROCESSING
@@ -205,8 +201,8 @@ DUAL DATABASE STRATEGY:
 - Competitive comparison
 
 ### 5. Professional PDF Reports
-- (Intended) Complete audit report with all sections
-- (Current) Cover page + summary only, rest empty
+- Full audit report with populated sections (technical + AI analysis)
+- Download from audit detail page; CORS and infrastructure stable
 
 ## Data Flow
 
@@ -445,7 +441,7 @@ Complete PDF sections 4-9:
 
 ### 🟢 Priority 3: OAuth & Production Setup
 - Activate Google/GitHub OAuth in Supabase
-- Configure Let's Encrypt SSL for sitespector.app
+- ~~Configure Let's Encrypt SSL for sitespector.app~~ ✅ Done
 - Switch Stripe to live mode
 - Setup email notifications (Supabase Email)
 
@@ -462,7 +458,7 @@ Complete PDF sections 4-9:
 
 ## Access & Credentials
 
-**Production URL**: https://77.42.79.46  
+**Production URL**: https://sitespector.app (IP fallback: https://77.42.79.46)  
 **Test User**: info@craftweb.pl (password: Dawid132?)  
 **Test Audit**: 85d6ee6f-8c55-4c98-abd8-60dedfafa9df (https://meditrue.pl/)  
 **SSH**: root@77.42.79.46  
@@ -471,7 +467,7 @@ Complete PDF sections 4-9:
 
 ## Known Limitations
 
-- **SSL**: Self-signed certificate (browser warning on first visit)
+- **SSL**: Let's Encrypt in use (valid HTTPS for sitespector.app)
 - **No staging**: Direct deployment to production VPS
 - **No local Docker**: All containers run only on VPS
 - **Worker**: Max 3 concurrent audits, 30min timeout per audit
@@ -497,7 +493,7 @@ Complete PDF sections 4-9:
 
 ---
 
-**Last Updated**: 2026-02-05
-**Status**: Production SaaS Platform with Teams & Billing
-**Next**: Audit detail enhancements, PDF completion, OAuth activation
+**Last Updated**: 2026-02-09
+**Status**: Production SaaS Platform with Teams & Billing; domain sitespector.app, Let's Encrypt SSL
+**Next**: OAuth activation, Stripe live mode, email notifications
 **Maintainer**: Dawid (solo developer)
