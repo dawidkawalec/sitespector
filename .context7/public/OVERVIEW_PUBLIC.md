@@ -1,16 +1,14 @@
-# SiteSpector - Public Overview
+# SiteSpector Documentation
 
-AI-powered SaaS platform for comprehensive website audits. SiteSpector provides SEO analysis, performance metrics, content quality assessment, and competitor comparison with actionable AI recommendations.
+Welcome to SiteSpector's public documentation.
 
-## 🎯 Value Proposition
-- **Professional Audits**: Combines industry-standard tools (Screaming Frog, Lighthouse) with advanced AI.
-- **Actionable Insights**: Not just data, but clear instructions on how to improve.
-- **Team Collaboration**: Built for agencies and teams with workspace isolation.
-- **White-label Ready**: Professional PDF reports for clients.
+## 📢 Product Information
+- **[OVERVIEW_PUBLIC.md](../.context7/public/OVERVIEW_PUBLIC.md)** - High-level product description.
+- **[PRICING_COPY.md](../.context7/public/PRICING_COPY.md)** - Subscription plans and limits.
+- **[FAQ_PUBLIC.md](../.context7/public/FAQ_PUBLIC.md)** - General product FAQ.
 
-## 🚀 Key Features
-- **SEO Technical Analysis**: Deep crawl of technical SEO factors.
-- **Performance Benchmarking**: Core Web Vitals and speed metrics.
-- **AI Content Quality**: Content assessment via Google Gemini.
-- **Competitive Analysis**: Side-by-side comparison with up to 3 competitors.
-- **Professional PDF Reports**: Downloadable, client-ready reports.
+## 🚀 Technical Documentation
+For technical details, architecture, and deployment guides, please refer to the **[.context7/](../.context7/INDEX.md)** directory.
+
+---
+**Last Updated**: 2026-02-11

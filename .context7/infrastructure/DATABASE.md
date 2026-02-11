@@ -127,6 +127,27 @@ CREATE INDEX idx_competitors_audit_id ON competitors(audit_id);
 
 ---
 
+### 4. public_submissions (Contact & Newsletter)
+
+**Purpose**: Store contact form submissions and newsletter subscriptions
+
+```sql
+CREATE TABLE public_submissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    type VARCHAR(50) NOT NULL, -- 'contact' or 'newsletter'
+    email VARCHAR(255) NOT NULL,
+    name VARCHAR(255),
+    message TEXT,
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_submissions_type ON public_submissions(type);
+CREATE INDEX idx_submissions_email ON public_submissions(email);
+```
+
+---
+
 ## Relationships
 
 ```
