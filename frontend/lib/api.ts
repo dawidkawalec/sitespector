@@ -77,11 +77,37 @@ async function apiRequest<T>(
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Request failed' }))
-    throw new Error(error.detail || `HTTP ${response.status}`)
+    const errorText = await response.text().catch(() => '')
+    try {
+      const parsed = errorText ? JSON.parse(errorText) : null
+      const detail = parsed?.detail
+      throw new Error(detail || `HTTP ${response.status}`)
+    } catch {
+      throw new Error(errorText || `HTTP ${response.status}`)
+    }
   }
 
-  return response.json()
+  // Many endpoints (e.g. DELETE) return 204 No Content.
+  if (response.status === 204) {
+    return undefined as unknown as T
+  }
+
+  const bodyText = await response.text()
+  if (!bodyText) {
+    return undefined as unknown as T
+  }
+
+  const contentType = response.headers.get('content-type') || ''
+  if (contentType.includes('application/json')) {
+    return JSON.parse(bodyText) as T
+  }
+
+  // Fallback for non-JSON success responses (rare in this app).
+  try {
+    return JSON.parse(bodyText) as T
+  } catch {
+    return bodyText as unknown as T
+  }
 }
 
 // Legacy token management (deprecated, kept for backward compatibility)

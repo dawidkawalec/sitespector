@@ -88,17 +88,33 @@ async function apiRequest<T>(
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Request failed' }))
-    throw new Error(error.detail || `HTTP ${response.status}`)
+    const errorText = await response.text().catch(() => '')
+    // Prefer JSON { detail } but tolerate empty/non-JSON bodies.
+    try {
+      const parsed = errorText ? JSON.parse(errorText) : null
+      throw new Error(parsed?.detail || `HTTP ${response.status}`)
+    } catch {
+      throw new Error(errorText || `HTTP ${response.status}`)
+    }
   }
 
-  return response.json()
+  // Some endpoints (e.g. DELETE) return 204 No Content.
+  if (response.status === 204) {
+    return undefined as unknown as T
+  }
+
+  const text = await response.text()
+  if (!text) {
+    return undefined as unknown as T
+  }
+
+  return JSON.parse(text) as T
 }
 ```
 
 **Features**:
 - Auto-adds `Authorization` header if token exists
-- Auto-parses JSON response
+- Auto-parses JSON response and handles `204 No Content`
 - Throws error if response not OK
 - Type-safe with TypeScript generics
 
