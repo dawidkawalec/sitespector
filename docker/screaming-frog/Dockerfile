@@ -5,6 +5,7 @@ FROM --platform=linux/amd64 ubuntu:22.04
 RUN apt-get update && apt-get install -y \
     wget \
     gdebi-core \
+    python3 \
     openjdk-11-jre-headless \
     xvfb \
     libgtk-3-0 \
@@ -22,6 +23,7 @@ RUN wget https://download.screamingfrog.co.uk/products/seo-spider/screamingfrogs
     && rm sf.deb
 
 # Create wrapper script
+COPY merge_csvs.py /usr/local/bin/merge_csvs.py
 COPY crawl.sh /usr/local/bin/crawl.sh
 RUN chmod +x /usr/local/bin/crawl.sh
 

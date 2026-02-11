@@ -186,6 +186,19 @@
 
 ---
 
+## ADR-019: Reproducible Screaming Frog Image for Crawl Merge Step
+**Date**: 2026-02-11
+**Status**: ✅ Done
+**Decision**: Explicitly copy `merge_csvs.py` into the Screaming Frog image and install `python3` as a declared runtime dependency.
+**Rationale**: Prevent non-deterministic `crawl:start` failures caused by missing helper scripts after clean rebuilds.
+**Outcome**:
+- `docker/screaming-frog/Dockerfile` includes:
+  - `COPY merge_csvs.py /usr/local/bin/merge_csvs.py`
+  - explicit `python3` in apt packages
+- VPS deploy standard now uses `docker compose build --no-cache` for critical crawler/frontend fixes.
+
+---
+
 **Last Updated**: 2026-02-11
-**Total Decisions**: 17 accepted
+**Total Decisions**: 19 accepted
 **Review**: Update when making significant architectural changes.

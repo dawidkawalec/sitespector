@@ -283,6 +283,39 @@ refetchInterval: (query) => {
 
 ---
 
+### BUG-009: Audyty FAIL na kroku crawl:start (missing merge_csvs.py)
+
+**Reported**: 2026-02-11
+
+**Status**: ✅ FIXED (2026-02-11)
+
+**Severity**: CRITICAL
+
+**Description**:
+- Nowe audyty zatrzymywały się na `crawl:start` ze statusem `FAILED`.
+- Błąd z `error_message` w tabeli `audits`:
+  - `python3: can't open file '/usr/local/bin/merge_csvs.py': [Errno 2] No such file or directory`
+- Dotknięty przypadek: `https://meditrue.pl/`.
+
+**Root cause**:
+- Skrypt `crawl.sh` wywołuje `python3 /usr/local/bin/merge_csvs.py`.
+- Plik `merge_csvs.py` istniał w repo (`docker/screaming-frog/merge_csvs.py`), ale nie był kopiowany do obrazu w `docker/screaming-frog/Dockerfile`.
+- Po czystszych rebuildach kontenerów problem zaczął występować deterministycznie.
+
+**Fix**:
+- Dodano kopiowanie pliku do obrazu:
+  - `COPY merge_csvs.py /usr/local/bin/merge_csvs.py`
+- Dodano jawnie `python3` do listy pakietów instalowanych w kontenerze Screaming Frog.
+- Wykonano rebuild i recreate kontenerów na VPS z wymuszeniem odświeżenia:
+  - `docker compose build --no-cache screaming-frog frontend`
+  - `docker compose up -d --force-recreate screaming-frog frontend worker`
+
+**Impact**: CRITICAL - Audyty ponownie przechodzą etap crawl i nie kończą się natychmiastowym `FAILED` przez brak skryptu merge.
+
+**Related**: `docker/screaming-frog/Dockerfile`, `docker/screaming-frog/crawl.sh`, `docker/screaming-frog/merge_csvs.py`
+
+---
+
 ## Known Issues
 
 ### ISSUE-001: PDF Template Incomplete
@@ -445,7 +478,7 @@ When adding new bugs to this file, use this format:
 
 ---
 
-**Last Updated**: 2026-02-09  
-**Resolved Bugs**: 7 (incl. BUG-007 audit pipeline, ISSUE-002 SSL)  
+**Last Updated**: 2026-02-11  
+**Resolved Bugs**: 9 (incl. BUG-009 crawl:start missing merge_csvs.py, ISSUE-002 SSL)  
 **Known Issues**: 3  
 **Watching**: 2
