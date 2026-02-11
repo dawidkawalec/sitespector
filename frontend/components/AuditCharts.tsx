@@ -140,6 +140,13 @@ export function WordCountChart({ pages }: WordCountChartProps) {
   )
 }
 
+  ImageSizeChart,
+  PositionsDistributionChart,
+  SeasonalityChart,
+  CompetitorsBarChart,
+  LinkAttributesPieChart
+} from '@/components/AuditCharts'
+
 interface ImageSizeChartProps {
   images: Array<{
     size_bytes: number
@@ -184,6 +191,116 @@ export function ImageSizeChart({ images }: ImageSizeChartProps) {
         <Legend iconType="circle" />
         <Bar dataKey="value" fill="#adefd1" name="Liczba obrazów" radius={[4, 4, 0, 0]} />
       </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+interface PositionsDistributionChartProps {
+  data: {
+    [key: string]: number
+  }
+}
+
+export function PositionsDistributionChart({ data }: PositionsDistributionChartProps) {
+  if (!data) return <div className="text-muted-foreground text-center py-8">Brak danych</div>
+  
+  const chartData = Object.entries(data)
+    .map(([pos, count]) => ({ pos: parseInt(pos), count }))
+    .sort((a, b) => a.pos - b.pos)
+
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="pos" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+        <Tooltip />
+        <Bar dataKey="count" fill="#0b363d" name="Liczba fraz" radius={[2, 2, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+interface SeasonalityChartProps {
+  data: {
+    [key: string]: { value: number; deviation: any }
+  }
+}
+
+export function SeasonalityChart({ data }: SeasonalityChartProps) {
+  if (!data) return <div className="text-muted-foreground text-center py-8">Brak danych</div>
+  
+  const months = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru']
+  const chartData = Object.entries(data)
+    .map(([key, val]) => {
+      const monthIdx = parseInt(key.replace('trend_', '')) - 1
+      return { month: months[monthIdx], value: val.value, idx: monthIdx }
+    })
+    .sort((a, b) => a.idx - b.idx)
+
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="month" axisLine={false} tickLine={false} />
+        <YAxis axisLine={false} tickLine={false} hide />
+        <Tooltip formatter={(value: number) => value.toLocaleString()} />
+        <Bar dataKey="value" fill="#ff8945" name="Widoczność" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+interface CompetitorsBarChartProps {
+  competitors: any[]
+}
+
+export function CompetitorsBarChart({ competitors }: CompetitorsBarChartProps) {
+  const data = competitors.slice(0, 8).map(c => ({
+    name: c.domain,
+    visibility: c.statistics?.visibility?.recent_value || 0
+  })).sort((a, b) => b.visibility - a.visibility)
+
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={data} layout="vertical">
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+        <XAxis type="number" hide />
+        <YAxis dataKey="name" type="category" width={100} axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+        <Tooltip formatter={(value: number) => Math.round(value).toLocaleString()} />
+        <Bar dataKey="visibility" fill="#81d86f" name="Widoczność" radius={[0, 4, 4, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+interface LinkAttributesPieChartProps {
+  attributes: any[]
+}
+
+export function LinkAttributesPieChart({ attributes }: LinkAttributesPieChartProps) {
+  const COLORS = ['#81d86f', '#ff8945', '#eea47f', '#dc3545', '#616c6e']
+  
+  return (
+    <ResponsiveContainer width="100%" height={250}>
+      <PieChart>
+        <Pie
+          data={attributes}
+          cx="50%"
+          cy="50%"
+          innerRadius={60}
+          outerRadius={80}
+          paddingAngle={5}
+          dataKey="count"
+          nameKey="attribute"
+        >
+          {attributes.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+        <Legend />
+      </PieChart>
     </ResponsiveContainer>
   )
 }

@@ -141,6 +141,15 @@
 
 ---
 
+## ADR-015: Senuto Integration & Enhanced Technical Data
+**Date**: 2026-02-11
+**Status**: ✅ Done
+**Decision**: Integrate Senuto API for Visibility and Backlinks. Expand Screaming Frog to multi-tab exports. Save raw Lighthouse JSON.
+**Rationale**: Provide "complete" technical data set before AI strategy phase.
+**Outcome**: 15 new Senuto endpoints in pipeline, 10 SF tabs, full LH raw data, 2 new frontend pages.
+
+---
+
 **Last Updated**: 2026-02-11
 **Total Decisions**: 14 accepted
 **Review**: Update when making significant architectural changes.

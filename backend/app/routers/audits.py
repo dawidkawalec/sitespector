@@ -88,6 +88,8 @@ async def create_audit(
         user_id=None,  # Legacy field, not used for workspace-based audits
         url=audit_data.url,
         status=AuditStatus.PENDING,
+        senuto_country_id=audit_data.senuto_country_id,
+        senuto_fetch_mode=audit_data.senuto_fetch_mode,
     )
     
     db.add(new_audit)
@@ -338,7 +340,9 @@ def _calculate_progress(step: Optional[str], status: AuditStatus) -> int:
         "crawl:done": 25,
         "lighthouse:start": 30,
         "lighthouse:done": 50,
-        "competitors:start": 55,
+        "senuto:start": 52,
+        "senuto:done": 55,
+        "competitors:start": 56,
         "competitors:done": 65,
         "ai_content:start": 70,
         "ai_content:done": 80,

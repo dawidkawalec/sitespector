@@ -177,6 +177,8 @@ class AuditCreate(AuditBase):
         max_items=3,
         description="Up to 3 competitor URLs"
     )
+    senuto_country_id: Optional[int] = Field(default=200, description="Senuto country ID")
+    senuto_fetch_mode: Optional[str] = Field(default="subdomain", description="Senuto fetch mode")
 
     @validator("competitors")
     def validate_competitors(cls, v: List[str]) -> List[str]:
@@ -220,6 +222,8 @@ class AuditResponse(AuditBase):
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     competitors: List[CompetitorResponse] = []
+    senuto_country_id: Optional[int] = None
+    senuto_fetch_mode: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -55,10 +55,11 @@ The worker uses a **two-phase architecture** to provide faster feedback to users
 
 #### Phase 1: Technical Analysis
 Runs technical tools and saves results immediately.
-1. **Screaming Frog Crawl** (timeout: 300s)
-2. **Lighthouse Audits** (Desktop & Mobile, timeout: 90s)
-3. **Competitor Analysis** (Parallel Lighthouse)
-4. **Technical Scoring** (SEO & Performance)
+1. **Screaming Frog Crawl** (timeout: 300s) - Now exports multiple tabs (Internal, Response Codes, Titles, Meta, H1, H2, Images, Canonicals, Directives, Hreflang).
+2. **Lighthouse Audits** (Desktop & Mobile, timeout: 90s) - Now saves full raw JSON (excluding screenshots).
+3. **Senuto Analysis** (Visibility & Backlinks) - Fetches comprehensive data from Senuto API (15 endpoints).
+4. **Competitor Analysis** (Parallel Lighthouse)
+5. **Technical Scoring** (SEO & Performance)
 
 #### Phase 2: AI Analysis
 Enriches technical results with AI insights using Gemini 3.0 Flash.

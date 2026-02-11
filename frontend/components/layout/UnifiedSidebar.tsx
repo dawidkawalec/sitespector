@@ -126,8 +126,8 @@ const auditToolsItems = [
   { href: '/audits/[id]/quick-wins', icon: Zap, label: 'Quick Wins', id: 'quick-wins' },
   { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki', id: 'links' },
   { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
-  { href: '#', icon: RiGlobalFill, label: 'Widoczność (Senuto)', disabled: true, tooltip: 'Wymaga integracji z Senuto', id: 'senuto' },
-  { href: '#', icon: Share2, label: 'Backlinki (Ahrefs)', disabled: true, tooltip: 'Wymaga integracji z Ahrefs', id: 'ahrefs' },
+  { href: '/audits/[id]/visibility', icon: Globe, label: 'Widoczność (Senuto)', id: 'senuto' },
+  { href: '/audits/[id]/backlinks', icon: Share2, label: 'Backlinki (Senuto)', id: 'backlinks' },
 ]
 
 // Settings items (inside collapsible section)

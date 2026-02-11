@@ -77,55 +77,25 @@ async def crawl_url(url: str) -> Dict[str, Any]:
             logger.error(f"❌ Screaming Frog crawl FAILED: {error}")
             raise Exception(f"Screaming Frog crawl failed with exit code {process.returncode}: {error[:500]}")
             
-        # Parse SF output (CSV format)
+        # Parse SF output (JSON format from merge_csvs.py)
         output = stdout.decode().strip()
-        
-        # Remove BOM if present (Screaming Frog adds UTF-8 BOM to CSV)
-        if output.startswith('\ufeff'):
-            output = output[1:]
-        
-        # Check for error JSON
-        if output.startswith('{'):
-            try:
-                err_json = json.loads(output)
-                if "error" in err_json:
-                    logger.error(f"❌ Screaming Frog returned error: {err_json}")
-                    raise Exception(f"Screaming Frog error: {err_json.get('error', 'Unknown error')}")
-            except json.JSONDecodeError:
-                pass
         
         if not output:
             logger.error("❌ Screaming Frog returned empty output")
             raise Exception("Screaming Frog returned empty output")
 
-        # Convert CSV to list of dicts
-        csv_io = io.StringIO(output)
-        reader = csv.DictReader(csv_io)
-        crawl_data = list(reader)
-        
-        # Clean BOM from field names if present
-        if crawl_data:
-            first_row = crawl_data[0]
-            # Check if first key has BOM or quotes
-            first_key = list(first_row.keys())[0]
-            if first_key.startswith('\ufeff') or first_key.startswith('"'):
-                logger.warning(f"🔧 Cleaning CSV keys - detected BOM/quotes: {repr(first_key)}")
-                cleaned_data = []
-                for row in crawl_data:
-                    cleaned_row = {}
-                    for key, value in row.items():
-                        # Remove BOM and quotes from key
-                        clean_key = key.lstrip('\ufeff').strip('"')
-                        cleaned_row[clean_key] = value
-                    cleaned_data.append(cleaned_row)
-                crawl_data = cleaned_data
-                logger.info(f"✅ CSV keys cleaned - first key now: {list(crawl_data[0].keys())[0]}")
-        
-        if not crawl_data:
-            logger.error("❌ Screaming Frog returned empty CSV data")
-            raise Exception("Screaming Frog returned empty CSV data")
+        try:
+            crawl_data_tabs = json.loads(output)
+        except json.JSONDecodeError as e:
+            logger.error(f"❌ Failed to parse Screaming Frog JSON: {e}")
+            logger.error(f"Output preview: {output[:500]}")
+            raise Exception("Screaming Frog returned invalid JSON")
 
-        return _transform_sf_data(crawl_data, url)
+        if not crawl_data_tabs.get("internal_all"):
+            logger.error("❌ Screaming Frog returned empty internal_all data")
+            raise Exception("Screaming Frog returned empty internal_all data")
+
+        return _transform_sf_data(crawl_data_tabs, url)
             
     except Exception as e:
         # Re-raise any exception - NO FALLBACKS
@@ -133,33 +103,16 @@ async def crawl_url(url: str) -> Dict[str, Any]:
         raise
 
 
-def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
+def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
     """
-    Transform Screaming Frog CSV data to our format with FULL data preservation.
-    
-    Extracts ALL pages, images, links, and technical SEO data from SF crawl.
-    
-    Args:
-        data: List of dictionaries from Screaming Frog CSV
-        url: Original URL crawled
-        
-    Returns:
-        Dictionary with comprehensive crawl results including:
-        - Homepage summary (backward compatible)
-        - all_pages: Full list of all HTML pages with details
-        - images: Complete image analysis
-        - links: Internal/external/broken links analysis
-        - technical_seo: Canonical, robots, redirects
-        - pages_by_status: Grouping by HTTP status code
-        
-    Raises:
-        ValueError: If data is invalid or empty
+    Transform Screaming Frog JSON data (multiple tabs) to our format.
     """
-    if not isinstance(data, list) or not data:
+    data = tabs.get("internal_all", [])
+    if not data:
         logger.error("❌ Invalid or empty Screaming Frog data")
         raise ValueError("No URLs found in Screaming Frog data")
     
-    logger.info(f"✅ SF parsed {len(data)} rows successfully")
+    logger.info(f"✅ SF parsed {len(data)} rows from internal_all successfully")
         
     # Find homepage
     homepage = next((item for item in data if item.get('Address') == url or item.get('Address') == url + '/'), data[0])
@@ -173,15 +126,15 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
         content_type = row.get('Content Type', '')
         
         # Classify by content type
-        if 'image' in content_type.lower():
+        if 'image' in (content_type or '').lower():
             images_data.append({
                 'url': page_url,
                 'alt_text': row.get('Alt Text 1', ''),
                 'size_bytes': int(row.get('Size (bytes)', 0) or 0),
                 'format': content_type,
             })
-        elif 'text/html' in (content_type or '').lower() or not content_type.strip():
-            # HTML pages (or unspecified content type - default to HTML)
+        elif 'text/html' in (content_type or '').lower() or not (content_type or '').strip():
+            # HTML pages
             all_pages.append({
                 'url': page_url,
                 'title': row.get('Title 1', ''),
@@ -207,17 +160,15 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
                 'redirect_type': row.get('Redirect Type', ''),
             })
     
-    # Links analysis
+    # ... (rest of analysis logic remains same) ...
     internal_links = sum(max(0, p['outlinks'] - p['external_outlinks']) for p in all_pages)
     external_links = sum(p['external_outlinks'] for p in all_pages)
     broken_links = len([p for p in all_pages if p['status_code'] >= 400])
     redirects = len([p for p in all_pages if 300 <= p['status_code'] < 400])
     
-    # Technical SEO summary
     missing_canonical = len([p for p in all_pages if not p['canonical'] and p['status_code'] == 200])
     noindex_pages = len([p for p in all_pages if 'noindex' in p.get('meta_robots', '').lower()])
     
-    # Pages by status code
     pages_by_status = {
         "200": len([p for p in all_pages if p['status_code'] == 200]),
         "301": len([p for p in all_pages if p['status_code'] == 301]),
@@ -226,15 +177,11 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
         "other": len([p for p in all_pages if p['status_code'] not in [200, 301, 302, 404]])
     }
     
-    # Images analysis
     images_with_alt = len([i for i in images_data if i['alt_text']])
     images_without_alt = len([i for i in images_data if not i['alt_text']])
     total_images_size = sum(i['size_bytes'] for i in images_data)
     
-    logger.info(f"✅ Processed: {len(all_pages)} pages, {len(images_data)} images, {internal_links} internal links")
-    
     return {
-        # Homepage summary (backward compatible)
         "url": url,
         "title": homepage.get('Title 1', ''),
         "title_length": int(homepage.get('Title 1 Length', 0) or 0),
@@ -252,16 +199,14 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
         "pages_crawled": len(all_pages),
         "has_sitemap": False,
         "flesch_reading_ease": float(homepage.get('Flesch Reading Ease Score', 0) or 0),
-        
-        # NEW: Full data structures
-        "all_pages": all_pages,  # Complete list of all pages
+        "all_pages": all_pages,
         "pages_by_status": pages_by_status,
         "images": {
             "total": len(images_data),
             "with_alt": images_with_alt,
             "without_alt": images_without_alt,
             "total_size_mb": round(total_images_size / (1024 * 1024), 2),
-            "all_images": images_data,  # Complete list
+            "all_images": images_data,
         },
         "links": {
             "internal": internal_links,
@@ -274,5 +219,6 @@ def _transform_sf_data(data: list, url: str) -> Dict[str, Any]:
             "noindex_pages": noindex_pages,
             "redirects": redirects,
             "broken_links": broken_links,
-        }
+        },
+        "sf_raw_tabs": tabs # Store all raw tabs for future use
     }

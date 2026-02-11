@@ -36,14 +36,9 @@ echo "Starting Screaming Frog crawl for $URL..." >&2
 # Run crawl
 # Using CSV format as JSON is not supported in CLI for this version
 # NOTE: --crawl-depth does NOT exist in SF CLI - removed to prevent FATAL error
-screamingfrogseospider --crawl "$URL" --headless --output-folder /tmp/crawls --export-tabs "Internal:All" --export-format "csv" --overwrite > /dev/null
+screamingfrogseospider --crawl "$URL" --headless --output-folder /tmp/crawls --export-tabs "Internal:All,Response Codes:All,Page Titles:All,Meta Description:All,H1:All,H2:All,Images:All,Canonicals:All,Directives:All,Hreflang:All" --export-format "csv" --overwrite > /dev/null
 
 # Find output
-LATEST_EXPORT=$(ls -t /tmp/crawls/internal_all.csv 2>/dev/null | head -n 1)
+# Output all CSVs as JSON object with tab names as keys
+python3 /usr/local/bin/merge_csvs.py /tmp/crawls/
 
-if [ -f "$LATEST_EXPORT" ]; then
-    # Output ONLY the CSV content to stdout for the worker to capture
-    cat "$LATEST_EXPORT"
-else
-    echo "Error: No CSV generated"
-fi

@@ -75,6 +75,17 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
             logger.error(f"Output start: {stdout.decode()[:200]}...")
             raise Exception(f"Lighthouse returned invalid JSON for {url} ({device})")
             
+        # Store full raw result (excluding heavy screenshots)
+        raw_result = dict(lh_result)
+        # Remove fullPageScreenshot (can be 2MB+ base64)
+        raw_result.pop('fullPageScreenshot', None)
+        # Also remove potential large base64 in audits
+        if "audits" in raw_result:
+            for audit in raw_result["audits"].values():
+                if "details" in audit and isinstance(audit["details"], dict):
+                    if audit["details"].get("type") == "screenshot":
+                        audit["details"].pop("data", None)
+
         # Extract metrics
         categories = lh_result.get("categories", {})
         audits = lh_result.get("audits", {})
@@ -172,6 +183,7 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
                     "title": categories.get("seo", {}).get("title", ""),
                 },
             },
+            "raw": raw_result,  # Full Lighthouse JSON (without screenshot)
         }
         
         logger.info(f"✅ Lighthouse audit completed for {url} ({device})")

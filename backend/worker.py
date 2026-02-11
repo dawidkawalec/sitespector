@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import AsyncSessionLocal
 from app.models import Audit, AuditStatus, Competitor, CompetitorStatus, AuditSchedule, ScheduleFrequency
 from app.config import settings
-from app.services import screaming_frog, lighthouse, ai_analysis
+from app.services import screaming_frog, lighthouse, ai_analysis, senuto
 
 # Configure logging
 logging.basicConfig(
@@ -78,7 +78,28 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
             await add_audit_log(audit, "lighthouse", "success", "Lighthouse audits completed", duration)
             await db.commit()
 
-            # 3. Competitor Analysis
+            # 3. Senuto Analysis
+            audit.processing_step = "senuto:start"
+            await add_audit_log(audit, "senuto", "running", "Starting Senuto visibility & backlinks analysis...")
+            await db.commit()
+
+            step_start = datetime.utcnow()
+            try:
+                senuto_data = await senuto.analyze_domain(
+                    domain=audit.url,
+                    country_id=audit.senuto_country_id or settings.SENUTO_DEFAULT_COUNTRY_ID,
+                    fetch_mode=audit.senuto_fetch_mode or settings.SENUTO_DEFAULT_FETCH_MODE,
+                )
+                duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
+                audit.processing_step = "senuto:done"
+                await add_audit_log(audit, "senuto", "success", "Senuto analysis completed", duration)
+            except Exception as e:
+                logger.warning(f"Senuto analysis failed (non-fatal): {e}")
+                senuto_data = {}
+                await add_audit_log(audit, "senuto", "warning", f"Senuto skipped: {str(e)}")
+            await db.commit()
+
+            # 4. Competitor Analysis
             audit.processing_step = "competitors:start"
             await add_audit_log(audit, "competitors", "running", "Starting competitor analysis...")
             await db.commit()
@@ -106,11 +127,12 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
             audit.performance_score = performance_score
             audit.results = {
                 "crawl": crawl_data,
-                "lighthouse": lighthouse_data
+                "lighthouse": lighthouse_data,
+                "senuto": senuto_data
             }
             await db.commit()
             
-            return {"crawl": crawl_data, "lighthouse": lighthouse_data}
+            return {"crawl": crawl_data, "lighthouse": lighthouse_data, "senuto": senuto_data}
 
         except Exception as e:
             await add_audit_log(audit, audit.processing_step or "technical", "error", str(e))

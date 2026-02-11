@@ -128,6 +128,10 @@ class Audit(Base):
     # AI status (None, "processing", "completed", "failed")
     ai_status = Column(String(20), nullable=True)
 
+    # Senuto configuration per audit
+    senuto_country_id = Column(Integer, nullable=True, default=200)
+    senuto_fetch_mode = Column(String(20), nullable=True, default="subdomain")
+
     # Timestamps
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True

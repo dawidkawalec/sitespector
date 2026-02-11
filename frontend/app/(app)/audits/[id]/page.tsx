@@ -174,6 +174,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
   const lh = audit.results?.lighthouse?.desktop
   const crawl = audit.results?.crawl
+  const senuto = audit.results?.senuto
   const ai = audit.results?.content_analysis
 
   // Calculate duration
@@ -185,6 +186,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   const steps = [
     { id: 'crawl', label: 'Crawling strony (Screaming Frog)', icon: Search },
     { id: 'lighthouse', label: 'Analiza Desktop & Mobile (Lighthouse)', icon: Gauge },
+    { id: 'senuto', label: 'Analiza Senuto (Widoczność & Linki)', icon: Globe },
     { id: 'competitors', label: 'Analiza konkurencji', icon: Users },
     { id: 'ai_content', label: 'Analiza AI - Treść', icon: Sparkles },
     { id: 'ai_perf_tech', label: 'Analiza AI - Wydajność i Tech', icon: Zap },
@@ -474,6 +476,44 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                   </Card>
                 </Link>
               </div>
+
+              {/* Senuto Quick Stats */}
+              {senuto?.visibility && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Link href={`/audits/${params.id}/visibility`} className="block">
+                    <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-2xl font-bold text-primary">{senuto.visibility.statistics?.statistics?.top10?.recent_value || 0}</div>
+                        <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1">TOP 10 Frazy</div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                  <Link href={`/audits/${params.id}/visibility`} className="block">
+                    <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-2xl font-bold text-primary">{Math.round(senuto.visibility.dashboard?.statistics?.visibility?.recent_value || 0).toLocaleString()}</div>
+                        <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1">Widoczność</div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                  <Link href={`/audits/${params.id}/backlinks`} className="block">
+                    <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-2xl font-bold text-primary">{senuto.backlinks.statistics?.backlinks_count || 0}</div>
+                        <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1">Backlinki</div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                  <Link href={`/audits/${params.id}/backlinks`} className="block">
+                    <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-2xl font-bold text-primary">{senuto.backlinks.statistics?.domains_count || 0}</div>
+                        <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1">Domeny Ref.</div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
+              )}
 
               {/* Top Priority Issues */}
               <Card>

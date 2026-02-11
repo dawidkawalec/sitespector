@@ -16,8 +16,28 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { X, AlertCircle } from 'lucide-react'
+import { X, AlertCircle, Globe, Layers } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
+const SENUTO_COUNTRIES = [
+  { id: 200, label: 'Polska (baza 2.0)', code: 'pl_new' },
+  { id: 1, label: 'Polska (baza 1.0)', code: 'pl' },
+  { id: 50, label: 'Czechy', code: 'cz' },
+  { id: 53, label: 'Dania', code: 'dk' },
+  { id: 82, label: 'Węgry', code: 'hu' },
+  { id: 134, label: 'Holandia', code: 'nl' },
+  { id: 153, label: 'Rumunia', code: 'ro' },
+  { id: 164, label: 'Słowacja', code: 'sk' },
+  { id: 160, label: 'Szwecja', code: 'se' },
+]
 
 interface NewAuditDialogProps {
   open: boolean
@@ -223,6 +243,40 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
             <p className="text-[10px] text-muted-foreground italic">
               Możesz dodać do 3 konkurentów dla porównania AI.
             </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 py-2 border-t border-primary/5 mt-4">
+            <div className="space-y-2">
+              <Label className="text-[11px] font-bold uppercase text-muted-foreground flex items-center gap-1">
+                <Globe className="h-3 w-3" /> Baza Senuto
+              </Label>
+              <Select value={senutoCountry} onValueChange={setSenutoCountry}>
+                <SelectTrigger className="rounded-xl border-primary/10 h-9 text-xs">
+                  <SelectValue placeholder="Wybierz kraj" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SENUTO_COUNTRIES.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()} className="text-xs">
+                      {c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[11px] font-bold uppercase text-muted-foreground flex items-center gap-1">
+                <Layers className="h-3 w-3" /> Tryb Analizy
+              </Label>
+              <Select value={senutoFetchMode} onValueChange={setSenutoFetchMode}>
+                <SelectTrigger className="rounded-xl border-primary/10 h-9 text-xs">
+                  <SelectValue placeholder="Wybierz tryb" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="subdomain" className="text-xs">Subdomena</SelectItem>
+                  <SelectItem value="domain" className="text-xs">Cała domena</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-6">

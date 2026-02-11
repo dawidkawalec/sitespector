@@ -23,9 +23,11 @@ app/
 │   ├── layout.tsx             # Sidebar layout (workspace switcher)
 │   ├── dashboard/page.tsx     # Dashboard + workspace analytics
 │   ├── audits/[id]/           # Audit detail + subpages
-│   │   ├── page.tsx           # Overview
+│   │   ├── page.tsx           # Overview (enriched with Senuto stats)
 │   │   ├── seo/page.tsx
 │   │   ├── performance/page.tsx
+│   │   ├── visibility/page.tsx    # Senuto Visibility Analysis (NEW)
+│   │   ├── backlinks/page.tsx     # Senuto Backlinks Analysis (NEW)
 │   │   ├── quick-wins/page.tsx
 │   │   ├── comparison/page.tsx
 │   │   ├── client-report/page.tsx

@@ -151,6 +151,8 @@ export interface Audit {
   ai_analysis?: any
   pdf_url: string | null
   competitors?: any[]
+  senuto_country_id?: number | null
+  senuto_fetch_mode?: string | null
 }
 
 export interface CreateAuditData {

@@ -169,6 +169,41 @@ export const TOOLTIPS = {
     description: "Linki prowadzące do innych domen (wychodzące).",
     source: "Screaming Frog",
   },
+  senuto_top3: {
+    label: "TOP 3 Keywords",
+    description: "Liczba fraz kluczowych, na które domena rankuje w pierwszej trójce wyników wyszukiwania.",
+    source: "Senuto",
+  },
+  senuto_top10: {
+    label: "TOP 10 Keywords",
+    description: "Liczba fraz kluczowych, na które domena rankuje w pierwszej dziesiątce wyników wyszukiwania.",
+    source: "Senuto",
+  },
+  senuto_top50: {
+    label: "TOP 50 Keywords",
+    description: "Liczba fraz kluczowych, na które domena rankuje w pierwszej pięćdziesiątce wyników wyszukiwania.",
+    source: "Senuto",
+  },
+  senuto_visibility: {
+    label: "Widoczność (Ruch)",
+    description: "Estymowany miesięczny ruch organiczny z Google na podstawie pozycji fraz i ich popularności.",
+    source: "Senuto",
+  },
+  backlinks_count: {
+    label: "Liczba Backlinków",
+    description: "Całkowita liczba linków przychodzących do domeny wykrytych przez roboty Senuto.",
+    source: "Senuto",
+  },
+  ref_domains: {
+    label: "Domeny Referujące",
+    description: "Liczba unikalnych domen, z których prowadzą linki do badanej witryny.",
+    source: "Senuto",
+  },
+  follow_ratio: {
+    label: "Stosunek Follow/Nofollow",
+    description: "Procentowy udział linków przekazujących moc (dofollow) w całym profilu linkowym.",
+    source: "Senuto",
+  },
 } as const
 
 export type TooltipKey = keyof typeof TOOLTIPS

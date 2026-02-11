@@ -100,6 +100,14 @@ class Settings(BaseSettings):
     )
     LIGHTHOUSE_TIMEOUT: int = Field(default=90, description="Lighthouse timeout in seconds")
 
+    # Senuto SEO Platform
+    SENUTO_EMAIL: str = Field(default="", description="Senuto account email for API auth")
+    SENUTO_PASSWORD: str = Field(default="", description="Senuto account password for API auth")
+    SENUTO_API_URL: str = Field(default="https://api.senuto.com/api", description="Senuto API base URL")
+    SENUTO_DEFAULT_COUNTRY_ID: int = Field(default=200, description="Senuto default country ID (200=Polska baza 2.0)")
+    SENUTO_DEFAULT_FETCH_MODE: str = Field(default="subdomain", description="Senuto default fetch mode (subdomain/domain)")
+    SENUTO_TIMEOUT: int = Field(default=60, description="Senuto API request timeout in seconds")
+
     # File Storage
     PDF_STORAGE_PATH: str = Field(default="/tmp/audits", description="PDF storage path")
     PDF_CACHE_ENABLED: bool = Field(default=True, description="Enable PDF caching")
