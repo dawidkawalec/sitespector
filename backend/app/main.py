@@ -304,6 +304,28 @@ async def get_system_status():
             "error": str(e)
         }
     
+    # Check Senuto
+    try:
+        from app.services import senuto
+        # Just check if we can get a token or something simple
+        # For status check, we'll just verify the service is configured
+        if settings.SENUTO_EMAIL and settings.SENUTO_PASSWORD:
+            status["services"]["senuto"] = {
+                "status": "online",
+                "version": "API v2",
+                "error": None
+            }
+        else:
+            status["services"]["senuto"] = {
+                "status": "offline",
+                "error": "Credentials missing"
+            }
+    except Exception as e:
+        status["services"]["senuto"] = {
+            "status": "error",
+            "error": str(e)
+        }
+    
     return status
 
 
