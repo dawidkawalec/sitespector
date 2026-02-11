@@ -285,6 +285,23 @@ class AuditStatusResponse(BaseModel):
 
 
 # ============================================
+# Public Form Schemas
+# ============================================
+
+class ContactForm(BaseModel):
+    """Schema for public contact form."""
+    name: str = Field(..., min_length=2, max_length=255)
+    email: EmailStr
+    subject: str = Field(..., min_length=2, max_length=255)
+    message: str = Field(..., min_length=20)
+
+
+class NewsletterForm(BaseModel):
+    """Schema for newsletter subscription."""
+    email: EmailStr
+
+
+# ============================================
 # Health Check Schema
 # ============================================
 
@@ -314,6 +331,8 @@ class ValidationError(BaseModel):
 
 
 class ValidationErrorResponse(BaseModel):
-    """Schema for validation error response."""
+    """error": "Validation Error"
+    details: List[ValidationError]
+"""
     error: str = "Validation Error"
     details: List[ValidationError]

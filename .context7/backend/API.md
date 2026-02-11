@@ -11,7 +11,7 @@
 
 ### JWT Bearer Token
 
-**All endpoints except** `/auth/register` and `/auth/login` require authentication.
+**All endpoints except** `/auth/register`, `/auth/login`, `/contact`, and `/newsletter` require authentication.
 
 **Header format**:
 ```
@@ -39,6 +39,55 @@ Authorization: Bearer <jwt_token>
   "version": "v1",
   "database": "connected",
   "timestamp": "2025-02-03T10:30:00Z"
+}
+```
+
+---
+
+## Public Endpoints (No Auth)
+
+### Contact Form
+
+#### `POST /api/contact`
+
+Submit a public contact form.
+
+**Request body**:
+```json
+{
+  "name": "Jan Kowalski",
+  "email": "jan@example.com",
+  "subject": "Pytanie o produkt",
+  "message": "Treść wiadomości (min. 20 znaków)..."
+}
+```
+
+**Response** (201):
+```json
+{
+  "message": "Dziękujemy! Odpowiemy w ciągu 24 godzin."
+}
+```
+
+---
+
+### Newsletter Subscription
+
+#### `POST /api/newsletter`
+
+Subscribe to the newsletter.
+
+**Request body**:
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response** (201):
+```json
+{
+  "message": "Dziękujemy za zapis! Będziemy Cię informować o nowościach."
 }
 ```
 
@@ -721,6 +770,6 @@ interface Competitor {
 
 ---
 
-**Last Updated**: 2026-02-09  
+**Last Updated**: 2026-02-11  
 **API Version**: v1  
 **Base URL**: https://sitespector.app/api

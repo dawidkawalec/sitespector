@@ -1,5 +1,11 @@
 # Architectural Decisions Log
 
+## 📜 Landing Page Expansion (Feb 2026)
+- **Decision**: Expanded the landing page into a full marketing site with blog, documentation, legal pages, and case studies.
+- **Decision**: Renamed `demosite/` to `landing/` to match service naming.
+- **Rationale**: Improve SEO, build trust, and provide comprehensive information to potential customers.
+- **Outcome**: 12 new public routes added, served by the `landing` container.
+
 ## 📜 Documentation Cleanup (Feb 2026)
 - **Decision**: Canonical documentation moved to `.context7/`.
 - **Rationale**: Ensure AI agents have a single, up-to-date source of truth.

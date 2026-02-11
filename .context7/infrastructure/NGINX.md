@@ -58,12 +58,16 @@ upstream backend {
     server backend:8000;
 }
 
+upstream landing {
+    server landing:3001;
+}
+
 upstream frontend {
     server frontend:3000;
 }
 ```
 
-**Purpose**: Define backend services for load balancing (future)
+**Purpose**: Define backend services for load balancing and routing.
 
 ---
 
@@ -159,19 +163,32 @@ location /health {
 
 ```nginx
 location / {
-    proxy_pass http://frontend;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection 'upgrade';
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_cache_bypass $http_upgrade;
+    proxy_pass http={frontend};
+    # ...
 }
 ```
 
 **Routing**: Everything else → `frontend:3000`
+
+### Landing Page Routes (SiteSpector Landing)
+
+The landing page application handles the root URL, auth pages, and all marketing/content pages.
+
+```nginx
+location = / { proxy_pass http://landing; }
+location /login { proxy_pass http://landing; }
+location /register { proxy_pass http://landing; }
+location /regulamin { proxy_pass http://landing; }
+location /polityka-prywatnosci { proxy_pass http://landing; }
+location /polityka-cookies { proxy_pass http://landing; }
+location /kontakt { proxy_pass http://landing; }
+location /o-nas { proxy_pass http://landing; }
+location /blog { proxy_pass http://landing; }
+location /docs { proxy_pass http://landing; }
+location /case-study { proxy_pass http://landing; }
+location /porownanie { proxy_pass http://landing; }
+location /changelog { proxy_pass http://landing; }
+```
 
 **WebSocket support**: Yes (upgrade header)
 

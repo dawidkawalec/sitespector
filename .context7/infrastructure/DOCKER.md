@@ -177,7 +177,22 @@ postgres:
 
 ---
 
-### 6. screaming-frog (SEO Crawler)
+### 6. landing (SiteSpector Landing Page)
+
+```yaml
+  landing:
+    build:
+      context: ./landing
+      dockerfile: Dockerfile
+    container_name: sitespector-landing
+    # ...
+```
+
+**Purpose**: Marketing website, blog, documentation, and authentication pages.
+
+---
+
+### 7. screaming-frog (SEO Crawler)
 
 ```yaml
 screaming-frog:

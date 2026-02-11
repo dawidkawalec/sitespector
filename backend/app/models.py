@@ -201,3 +201,37 @@ class AuditSchedule(Base):
     def __repr__(self) -> str:
         return f"<AuditSchedule(id={self.id}, url={self.url}, freq={self.frequency})>"
 
+
+class ContactSubmission(Base):
+    """Model for public contact form submissions."""
+
+    __tablename__ = "contact_submissions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False)
+    subject = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+    is_read = Column(Boolean, default=False, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
+    )
+
+    def __repr__(self) -> str:
+        return f"<ContactSubmission(id={self.id}, email={self.email}, subject={self.subject})>"
+
+
+class NewsletterSubscriber(Base):
+    """Model for newsletter subscribers."""
+
+    __tablename__ = "newsletter_subscribers"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    subscribed_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
+    )
+
+    def __repr__(self) -> str:
+        return f"<NewsletterSubscriber(id={self.id}, email={self.email}, active={self.is_active})>"

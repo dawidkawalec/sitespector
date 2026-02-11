@@ -118,7 +118,7 @@ services:
   # Landing Page (Next.js) – LP + login/register (ta sama nawigacja 1:1)
   landing:
     build:
-      context: ./demosite
+      context: ./landing
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_SUPABASE_URL=https://ljimahizqgewhvrgqhyx.supabase.co

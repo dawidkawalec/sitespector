@@ -8,24 +8,34 @@ const footerColumns = [
     heading: 'Produkt',
     links: [
       { label: 'Funkcje', link: '/#about' },
-      { label: 'Wydajność', link: '/#services' },
       { label: 'Cennik', link: '/#price' },
-      { label: 'FAQ', link: '/#faq' },
+      { label: 'Blog', link: '/blog' },
+      { label: 'Dokumentacja', link: '/docs' },
+      { label: 'Changelog', link: '/changelog' },
     ],
   },
   {
     heading: 'Firma',
     links: [
-      { label: 'O nas', link: '#' },
-      { label: 'Kariera', link: '#' },
-      { label: 'Kontakt', link: '/#contacts' },
+      { label: 'O nas', link: '/o-nas' },
+      { label: 'Kontakt', link: '/kontakt' },
+      { label: 'Case study', link: '/case-study' },
+      { label: 'Porównanie', link: '/porownanie' },
+    ],
+  },
+  {
+    heading: 'Prawne',
+    links: [
+      { label: 'Regulamin', link: '/regulamin' },
+      { label: 'Polityka prywatności', link: '/polityka-prywatnosci' },
+      { label: 'Polityka cookies', link: '/polityka-cookies' },
     ],
   },
   {
     heading: 'Wsparcie',
     links: [
       { label: 'Zaloguj się / Załóż konto', link: '/login' },
-      { label: 'Dokumentacja', link: '#' },
+      { label: 'Centrum pomocy', link: '/docs' },
     ],
   },
 ]
@@ -36,7 +46,7 @@ export function PublicFooter() {
   return (
     <footer className="border-t border-[#0b363d]/20 bg-[#0b363d] text-white">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
             <Link
               href="/"
