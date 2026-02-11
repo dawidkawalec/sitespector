@@ -19,6 +19,7 @@ import { Loader2, Zap, CheckCircle2, AlertCircle, Clock, ArrowUpCircle, Target, 
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { formatNumber } from '@/lib/utils'
 import type { Audit } from '@/lib/api'
 
 interface QuickWin {
@@ -86,7 +87,7 @@ export default function QuickWinsPage({ params }: { params: { id: string } }) {
     localStorage.setItem(`quick-wins-${params.id}`, JSON.stringify(newCompleted))
   }
 
-  const progress = Math.round((completedWins.length / wins.length) * 100) || 0
+  const progress = wins.length > 0 ? (completedWins.length / wins.length) * 100 : 0
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
@@ -110,7 +111,7 @@ export default function QuickWinsPage({ params }: { params: { id: string } }) {
             <CardContent className="pt-6 pb-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs font-bold uppercase text-muted-foreground">Postęp prac</span>
-                <span className="text-sm font-bold">{progress}%</span>
+                <span className="text-sm font-bold">{formatNumber(progress)}%</span>
               </div>
               <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
                 <div className="h-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }} />

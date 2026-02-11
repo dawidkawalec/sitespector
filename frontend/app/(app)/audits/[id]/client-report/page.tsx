@@ -184,7 +184,7 @@ export default function ClientReportPage({ params }: { params: { id: string } })
                     <SelectContent>
                       {history?.filter(a => a.id !== audit.id).map((a) => (
                         <SelectItem key={a.id} value={a.id}>
-                          {new Date(a.created_at).toLocaleDateString()} (Score: {Math.round(a.overall_score || 0)})
+                          {new Date(a.created_at).toLocaleDateString()} (Score: {formatScore(a.overall_score || 0)})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -241,15 +241,15 @@ export default function ClientReportPage({ params }: { params: { id: string } })
                   <div className="grid grid-cols-2 gap-12">
                     <div>
                       <p className="text-sm font-bold text-slate-400 uppercase mb-4">Stan Początkowy ({new Date(comparisonAudit.created_at).toLocaleDateString()})</p>
-                      <div className="text-5xl font-black text-slate-400">{Math.round(comparisonAudit.overall_score || 0)}%</div>
+                      <div className="text-5xl font-black text-slate-400">{formatScore(comparisonAudit.overall_score || 0)}%</div>
                     </div>
                     <div>
                       <p className="text-sm font-bold text-primary uppercase mb-4">Stan Obecny ({new Date(audit.created_at).toLocaleDateString()})</p>
                       <div className="flex items-center gap-4">
-                        <div className="text-5xl font-black text-primary">{Math.round(audit.overall_score || 0)}%</div>
+                        <div className="text-5xl font-black text-primary">{formatScore(audit.overall_score || 0)}%</div>
                         <div className="flex items-center gap-1 text-green-600 bg-green-100 px-3 py-1 rounded-full text-lg font-bold">
                           <TrendingUp className="h-5 w-5" />
-                          +{Math.round((audit.overall_score || 0) - (comparisonAudit.overall_score || 0))}
+                          +{formatScore((audit.overall_score || 0) - (comparisonAudit.overall_score || 0))}
                         </div>
                       </div>
                     </div>
@@ -261,12 +261,12 @@ export default function ClientReportPage({ params }: { params: { id: string } })
                       { label: 'Wydajność', cur: audit.performance_score, prev: comparisonAudit.performance_score },
                       { label: 'Treść', cur: audit.content_score, prev: comparisonAudit.content_score },
                     ].map((s, i) => {
-                      const delta = Math.round((s.cur || 0) - (s.prev || 0))
+                      const delta = (s.cur || 0) - (s.prev || 0)
                       return (
                         <div key={i} className="text-center">
                           <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">{s.label}</p>
                           <p className={cn("text-sm font-bold", delta > 0 ? "text-green-600" : delta < 0 ? "text-red-600" : "text-slate-400")}>
-                            {delta > 0 ? `+${delta}` : delta}%
+                            {delta > 0 ? `+${formatScore(delta)}` : `${formatScore(delta)}`}%
                           </p>
                         </div>
                       )

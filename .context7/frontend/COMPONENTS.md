@@ -399,12 +399,32 @@ export function formatDate(dateString: string): string {
 
 ```typescript
 export function formatScore(score: number | null | undefined): string {
-  if (score === null || score === undefined) return '-'
-  return Math.round(score).toString()
+  if (score === null || score === undefined) return 'N/A'
+  // Scores are always shown with 2 decimals to avoid long floats in UI.
+  return new Intl.NumberFormat('pl-PL', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: false,
+  }).format(score)
 }
 ```
 
-**Output**: "85" or "-"
+**Output**: "85,00" or "N/A"
+
+---
+
+### Format Number (Max 2 Decimals)
+
+Use for general metrics/statistics to avoid long floats while keeping integers readable.
+
+```typescript
+export function formatNumber(num: number | null | undefined): string {
+  if (num === null || num === undefined) return 'N/A'
+  return new Intl.NumberFormat('pl-PL', {
+    maximumFractionDigits: 2,
+  }).format(num)
+}
+```
 
 ---
 

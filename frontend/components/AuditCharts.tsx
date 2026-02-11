@@ -1,6 +1,7 @@
 'use client'
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { formatNumber } from '@/lib/utils'
 
 interface PageStatusChartProps {
   statusData: {
@@ -237,7 +238,7 @@ export function SeasonalityChart({ data }: SeasonalityChartProps) {
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
         <XAxis dataKey="month" axisLine={false} tickLine={false} />
         <YAxis axisLine={false} tickLine={false} hide />
-        <Tooltip formatter={(value: number) => value.toLocaleString()} />
+        <Tooltip formatter={(value: number) => formatNumber(value)} />
         <Bar dataKey="value" fill="#ff8945" name="Widoczność" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -260,7 +261,7 @@ export function CompetitorsBarChart({ competitors }: CompetitorsBarChartProps) {
         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
         <XAxis type="number" hide />
         <YAxis dataKey="name" type="category" width={100} axisLine={false} tickLine={false} tick={{fontSize: 10}} />
-        <Tooltip formatter={(value: number) => Math.round(value).toLocaleString()} />
+        <Tooltip formatter={(value: number) => formatNumber(value)} />
         <Bar dataKey="visibility" fill="#81d86f" name="Widoczność" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>

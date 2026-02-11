@@ -24,7 +24,12 @@ export function formatDate(dateString: string): string {
 // Score formatting and coloring
 export function formatScore(score: number | null | undefined): string {
   if (score === null || score === undefined) return 'N/A'
-  return `${Math.round(score)}`
+  // Scores should be stable and comparable; always show 2 decimals.
+  return new Intl.NumberFormat('pl-PL', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: false,
+  }).format(score)
 }
 
 export function getScoreColor(score: number | null | undefined): string {
@@ -79,7 +84,10 @@ export function truncateUrl(url: string, maxLength: number = 50): string {
 // Number formatting
 export function formatNumber(num: number | null | undefined): string {
   if (num === null || num === undefined) return 'N/A'
-  return new Intl.NumberFormat('pl-PL').format(num)
+  // Avoid long floats in UI; cap to 2 decimals (do not force trailing zeros).
+  return new Intl.NumberFormat('pl-PL', {
+    maximumFractionDigits: 2,
+  }).format(num)
 }
 
 // File size formatting
@@ -95,7 +103,7 @@ export function formatFileSize(bytes: number | null | undefined): string {
     unitIndex++
   }
   
-  return `${size.toFixed(1)} ${units[unitIndex]}`
+  return `${size.toFixed(2)} ${units[unitIndex]}`
 }
 
 // Time duration formatting
@@ -107,7 +115,7 @@ export function formatDuration(seconds: number | null | undefined): string {
   }
   
   if (seconds < 60) {
-    return `${seconds.toFixed(1)}s`
+    return `${seconds.toFixed(2)}s`
   }
   
   const minutes = Math.floor(seconds / 60)

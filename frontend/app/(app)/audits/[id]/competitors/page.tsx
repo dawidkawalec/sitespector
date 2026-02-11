@@ -210,9 +210,9 @@ export default function CompetitorsPage({ params }: { params: { id: string } }) 
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">CLS</TableCell>
-                      <TableCell className="text-center font-bold">{mainSiteLh?.cls?.toFixed(3) || '-'}</TableCell>
+                      <TableCell className="text-center font-bold">{mainSiteLh?.cls?.toFixed(2) || '-'}</TableCell>
                       {competitors.map((c: any) => (
-                        <TableCell key={c.id} className="text-center">{c.results?.lighthouse?.desktop?.cls?.toFixed(3) || '-'}</TableCell>
+                        <TableCell key={c.id} className="text-center">{c.results?.lighthouse?.desktop?.cls?.toFixed(2) || '-'}</TableCell>
                       ))}
                     </TableRow>
                     <TableRow>

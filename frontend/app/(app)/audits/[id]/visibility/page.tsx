@@ -28,6 +28,7 @@ import { AuditPageLayout } from '@/components/AuditPageLayout'
 import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { formatNumber, formatScore } from '@/lib/utils'
 
 function OverviewTab({ vis, stats, dash, audit }: { vis: any; stats: any; dash: any; audit: Audit }) {
   return (
@@ -38,7 +39,7 @@ function OverviewTab({ vis, stats, dash, audit }: { vis: any; stats: any; dash: 
           { label: 'TOP 3', value: stats.top3?.recent_value, diff: stats.top3?.diff, id: 'senuto_top3' },
           { label: 'TOP 10', value: stats.top10?.recent_value, diff: stats.top10?.diff, id: 'senuto_top10' },
           { label: 'TOP 50', value: stats.top50?.recent_value, diff: stats.top50?.diff, id: 'senuto_top50' },
-          { label: 'Widoczność', value: Math.round(dash.statistics?.visibility?.recent_value || 0).toLocaleString(), diff: dash.statistics?.visibility?.diff, id: 'senuto_visibility' },
+          { label: 'Widoczność', value: dash.statistics?.visibility?.recent_value || 0, diff: dash.statistics?.visibility?.diff, id: 'senuto_visibility' },
         ].map((card, i) => (
           <Card key={i}>
             <CardHeader className="pb-2">
@@ -47,14 +48,14 @@ function OverviewTab({ vis, stats, dash, audit }: { vis: any; stats: any; dash: 
                 <InfoTooltip id={card.id as any} />
               </CardDescription>
               <CardTitle className="text-3xl font-bold">
-                {card.value || 0}
+                {formatNumber(card.value || 0)}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {card.diff !== undefined && (
                 <div className={`flex items-center gap-1 text-xs font-medium ${card.diff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {card.diff >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                  {Math.abs(card.diff)} {card.diff >= 0 ? 'wzrost' : 'spadek'}
+                  {formatNumber(Math.abs(card.diff))} {card.diff >= 0 ? 'wzrost' : 'spadek'}
                 </div>
               )}
             </CardContent>
@@ -117,7 +118,7 @@ function OverviewTab({ vis, stats, dash, audit }: { vis: any; stats: any; dash: 
               {(vis.sections || []).slice(0, 6).map((s: any, i: number) => (
                 <div key={i} className="flex items-center justify-between p-2 rounded border bg-accent/10">
                   <div className="text-xs font-medium truncate max-w-[150px]">{s.section || s.subdomain}</div>
-                  <Badge variant="outline" className="text-[10px]">{Math.round(s.statistics?.visibility?.recent_value || 0)} pkt</Badge>
+                  <Badge variant="outline" className="text-[10px]">{formatNumber(s.statistics?.visibility?.recent_value || 0)} pkt</Badge>
                 </div>
               ))}
               {(vis.sections || []).length === 0 && (
@@ -201,13 +202,13 @@ function KeywordsTab({ vis }: { vis: any }) {
       key: 'statistics.searches.current', 
       label: 'Wyszukiwania', 
       className: 'text-center',
-      render: (_: any, row: any) => row.statistics?.searches?.current?.toLocaleString()
+      render: (_: any, row: any) => formatNumber(row.statistics?.searches?.current)
     },
     { 
       key: 'statistics.visibility.current', 
       label: 'Widoczność', 
       className: 'text-right font-mono text-xs',
-      render: (_: any, row: any) => row.statistics?.visibility?.current?.toFixed(2)
+      render: (_: any, row: any) => formatScore(row.statistics?.visibility?.current)
     },
   ]
 

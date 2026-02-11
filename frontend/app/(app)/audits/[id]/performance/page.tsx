@@ -16,7 +16,7 @@ import { useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Zap, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Monitor, Smartphone, Activity, ExternalLink, Lightbulb } from 'lucide-react'
+import { Loader2, Zap, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Monitor, Smartphone, Activity, ExternalLink, Lightbulb, Database } from 'lucide-react'
 import { formatScore, getScoreColor } from '@/lib/utils'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { Badge } from '@/components/ui/badge'
@@ -43,7 +43,7 @@ function DeviceTab({ lhData, device, audit }: { lhData: any; device: string; aud
     { label: 'First Contentful Paint', value: lhData.fcp ? `${lhData.fcp}ms` : '-', id: 'fcp' },
     { label: 'Largest Contentful Paint', value: lhData.lcp ? `${lhData.lcp}ms` : '-', id: 'lcp' },
     { label: 'Total Blocking Time', value: lhData.total_blocking_time ? `${lhData.total_blocking_time}ms` : '-', id: 'tbt' },
-    { label: 'Cumulative Layout Shift', value: lhData.cls !== undefined ? lhData.cls.toFixed(3) : '-', id: 'cls' },
+    { label: 'Cumulative Layout Shift', value: lhData.cls !== undefined ? lhData.cls.toFixed(2) : '-', id: 'cls' },
     { label: 'Speed Index', value: lhData.speed_index ? `${lhData.speed_index}ms` : '-', id: 'speed-index' },
     { label: 'Time to First Byte', value: lhData.ttfb ? `${lhData.ttfb}ms` : '-', id: 'ttfb' },
   ]
@@ -303,7 +303,7 @@ function RawDataTab({ audit }: { audit: Audit }) {
       label: 'Wynik', 
       render: (v: any) => v !== null ? (
         <Badge variant="outline" className={v >= 0.9 ? 'text-green-600' : v >= 0.5 ? 'text-yellow-600' : 'text-red-600'}>
-          {Math.round(v * 100)}
+          {(v * 100).toFixed(2)}
         </Badge>
       ) : '-' 
     },
@@ -444,9 +444,9 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
                       <tbody className="divide-y">
                         <tr>
                           <td className="p-3 font-medium">Performance Score</td>
-                          <td className={`text-center p-3 font-bold ${getScoreColor(lhDesktop.performance_score)}`}>{lhDesktop.performance_score}</td>
-                          <td className={`text-center p-3 font-bold ${getScoreColor(lhMobile.performance_score)}`}>{lhMobile.performance_score}</td>
-                          <td className="text-center p-3">{lhDesktop.performance_score - lhMobile.performance_score}</td>
+                          <td className={`text-center p-3 font-bold ${getScoreColor(lhDesktop.performance_score)}`}>{formatScore(lhDesktop.performance_score)}</td>
+                          <td className={`text-center p-3 font-bold ${getScoreColor(lhMobile.performance_score)}`}>{formatScore(lhMobile.performance_score)}</td>
+                          <td className="text-center p-3">{formatScore(lhDesktop.performance_score - lhMobile.performance_score)}</td>
                         </tr>
                         <tr>
                           <td className="p-3 font-medium">LCP (ms)</td>
@@ -456,9 +456,9 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
                         </tr>
                         <tr>
                           <td className="p-3 font-medium">CLS</td>
-                          <td className="text-center p-3">{lhDesktop.cls?.toFixed(3)}</td>
-                          <td className="text-center p-3">{lhMobile.cls?.toFixed(3)}</td>
-                          <td className="text-center p-3">{(lhMobile.cls - lhDesktop.cls).toFixed(3)}</td>
+                          <td className="text-center p-3">{lhDesktop.cls?.toFixed(2)}</td>
+                          <td className="text-center p-3">{lhMobile.cls?.toFixed(2)}</td>
+                          <td className="text-center p-3">{(lhMobile.cls - lhDesktop.cls).toFixed(2)}</td>
                         </tr>
                       </tbody>
                     </table>

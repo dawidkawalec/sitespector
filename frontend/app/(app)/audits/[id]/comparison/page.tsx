@@ -174,7 +174,7 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
                 {audits.filter(a => a.id !== currentAudit.id).map((a) => (
                   <SelectItem key={a.id} value={a.id}>
                     <span className="font-medium">{formatDate(a.created_at).split(',')[0]}</span>
-                    <span className="ml-2 text-[10px] text-muted-foreground">Score: {Math.round(a.overall_score || 0)}</span>
+                    <span className="ml-2 text-[10px] text-muted-foreground">Score: {formatScore(a.overall_score || 0)}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -416,7 +416,7 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
                     {(currentAudit.results?.lighthouse?.desktop?.performance_score || 0) < (comparisonAudit?.results?.lighthouse?.desktop?.performance_score || 0) - 5 && (
                       <div className="text-xs p-2 bg-white rounded border border-red-100 flex items-center gap-2">
                         <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                        Spadek wydajności o {Math.round((comparisonAudit?.results?.lighthouse?.desktop?.performance_score || 0) - (currentAudit.results?.lighthouse?.desktop?.performance_score || 0))} pkt
+                        Spadek wydajności o {formatScore((comparisonAudit?.results?.lighthouse?.desktop?.performance_score || 0) - (currentAudit.results?.lighthouse?.desktop?.performance_score || 0))} pkt
                       </div>
                     )}
                     <div className="text-xs text-muted-foreground italic p-4 text-center">

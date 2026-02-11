@@ -47,7 +47,6 @@ function OverviewTab({ imagesData, allImages, params, generatingAlt, aiAlts, han
   const largeImagesCount = allImages.filter((img: any) => img.size_bytes > 512000).length
   const altTextScore = imagesData.total > 0 ? (imagesData.with_alt / imagesData.total) * 100 : 100
   const sizeScore = imagesData.total > 0 ? Math.max(0, 100 - (largeImagesCount / imagesData.total) * 200) : 100
-  const optimizationScore = Math.round((altTextScore + sizeScore) / 2)
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant } from '@/lib/utils'
+import { formatDate, formatNumber, formatScore, getScoreColor, getStatusBadgeVariant } from '@/lib/utils'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { 
   ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle, 
@@ -493,7 +493,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                   <Link href={`/audits/${params.id}/visibility`} className="block">
                     <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
                       <CardContent className="pt-6 text-center">
-                        <div className="text-2xl font-bold text-primary">{Math.round(senuto.visibility.dashboard?.statistics?.visibility?.recent_value || 0).toLocaleString()}</div>
+                        <div className="text-2xl font-bold text-primary">{formatNumber(senuto.visibility.dashboard?.statistics?.visibility?.recent_value || 0)}</div>
                         <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1">Widoczność</div>
                       </CardContent>
                     </Card>
@@ -661,7 +661,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">Lighthouse SEO</span>
-                    <Badge variant="outline">{lh?.seo_score || 0}</Badge>
+                    <Badge variant="outline">{formatScore(lh?.seo_score || 0)}</Badge>
                   </div>
                 </CardContent>
               </Card>

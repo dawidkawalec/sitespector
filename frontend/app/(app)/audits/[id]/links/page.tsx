@@ -40,7 +40,9 @@ import { AuditPageLayout } from '@/components/AuditPageLayout'
 import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
 import { LinkAttributesPieChart } from '@/components/AuditCharts'
+import { formatNumber } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 
 function InternalLinksTab({ linksData, allPages }: { linksData: any; allPages: any[] }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -225,10 +227,10 @@ function IncomingLinksTab({ senuto, audit }: { senuto: any; audit: Audit }) {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Wszystkie Linki', value: stats.backlinks_count?.toLocaleString(), id: 'backlinks_count' },
-          { label: 'Domeny Ref.', value: stats.domains_count?.toLocaleString(), id: 'ref_domains' },
-          { label: 'IP Referujące', value: stats.ips_count?.toLocaleString(), id: 'ref_domains' },
-          { label: 'Linki Follow', value: `${Math.round((attrs.find((a:any)=>a.attribute==='follow')?.percent || 0) * 100)}%`, id: 'follow_ratio' },
+          { label: 'Wszystkie Linki', value: formatNumber(stats.backlinks_count), id: 'backlinks_count' },
+          { label: 'Domeny Ref.', value: formatNumber(stats.domains_count), id: 'ref_domains' },
+          { label: 'IP Referujące', value: formatNumber(stats.ips_count), id: 'ref_domains' },
+          { label: 'Linki Follow', value: `${formatNumber((attrs.find((a:any)=>a.attribute==='follow')?.percent || 0) * 100)}%`, id: 'follow_ratio' },
         ].map((card, i) => (
           <Card key={i}>
             <CardHeader className="pb-2">

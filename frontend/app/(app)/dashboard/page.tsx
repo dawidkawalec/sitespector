@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { NewAuditDialog } from '@/components/NewAuditDialog'
 import { SystemStatus } from '@/components/SystemStatus'
-import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant, truncateUrl, cn } from '@/lib/utils'
+import { formatDate, formatNumber, formatScore, getScoreColor, getStatusBadgeVariant, truncateUrl, cn } from '@/lib/utils'
 import { Loader2, Plus, Trash, RefreshCw, TrendingUp, Activity, Search, Gauge, Sparkles, Layout } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -151,21 +151,21 @@ export default function DashboardPage() {
     .reverse()
     .map(a => ({
       date: new Date(a.created_at).toLocaleDateString(),
-      score: a.overall_score,
-      seo: a.seo_score,
-      perf: a.performance_score
+      score: a.overall_score ?? 0,
+      seo: a.seo_score ?? 0,
+      perf: a.performance_score ?? 0
     }))
 
-  const avgOverall = completedAudits.length > 0 
-    ? completedAudits.reduce((acc, a) => acc + (a.overall_score || 0), 0) / completedAudits.length 
+  const avgOverall = completedAudits.length > 0
+    ? completedAudits.reduce((acc, a) => acc + (a.overall_score || 0), 0) / completedAudits.length
     : 0
 
-  const avgSeo = completedAudits.length > 0 
-    ? completedAudits.reduce((acc, a) => acc + (a.seo_score || 0), 0) / completedAudits.length 
+  const avgSeo = completedAudits.length > 0
+    ? completedAudits.reduce((acc, a) => acc + (a.seo_score || 0), 0) / completedAudits.length
     : 0
 
-  const avgPerf = completedAudits.length > 0 
-    ? completedAudits.reduce((acc, a) => acc + (a.performance_score || 0), 0) / completedAudits.length 
+  const avgPerf = completedAudits.length > 0
+    ? completedAudits.reduce((acc, a) => acc + (a.performance_score || 0), 0) / completedAudits.length
     : 0
 
   const barData = [
@@ -247,11 +247,11 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Średnia Kondycja</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-5xl font-black text-primary mb-4">{avgOverall.toFixed(1)}%</div>
+                <div className="text-5xl font-black text-primary mb-4">{formatScore(avgOverall)}%</div>
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="flex items-center gap-1 font-medium"><RiSearchEyeFill className="h-3 w-3 text-accent" /> SEO</span>
-                    <span className="font-bold text-primary">{avgSeo.toFixed(0)}%</span>
+                    <span className="font-bold text-primary">{formatScore(avgSeo)}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <motion.div 
@@ -263,7 +263,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex justify-between text-sm pt-1">
                     <span className="flex items-center gap-1 font-medium"><RiShieldFlashFill className="h-3 w-3 text-primary" /> Wydajność</span>
-                    <span className="font-bold text-primary">{avgPerf.toFixed(0)}%</span>
+                    <span className="font-bold text-primary">{formatScore(avgPerf)}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <motion.div 
