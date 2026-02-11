@@ -334,7 +334,10 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
             
             results = dict(audit.results)
             results["ai_contexts"] = ai_contexts
-            audit.results = results
+            # Ensure SQLAlchemy sees JSONB mutation as a new value.
+            from sqlalchemy.orm.attributes import flag_modified
+            audit.results = dict(results)
+            flag_modified(audit, "results")
             await db.commit()
             logger.info(
                 "AI checkpoint after ai_contexts (audit_id=%s): %s",
@@ -372,7 +375,11 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
             audit.processing_step = "ai_strategy:done"
             await add_audit_log(audit, "ai_strategy", "success", "Strategy generation completed", duration)
             
-            audit.results = results
+            # IMPORTANT: `results` was previously assigned to audit.results. Mutating it in-place may not be persisted
+            # unless we reassign a fresh dict / flag_modified for JSONB.
+            from sqlalchemy.orm.attributes import flag_modified
+            audit.results = dict(results)
+            flag_modified(audit, "results")
             audit.ai_status = "completed"
             audit.status = AuditStatus.COMPLETED
             audit.completed_at = datetime.utcnow()

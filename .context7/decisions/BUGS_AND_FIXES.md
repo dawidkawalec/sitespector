@@ -346,6 +346,9 @@ refetchInterval: (query) => {
   - `frontend/components/AiInsightsPanel.tsx`
   - strony obszarowe z `AuditPageLayout`
   - `frontend/app/(app)/audits/[id]/page.tsx` (polling także dla manualnego run-ai)
+- Naprawiono zapisywanie kluczy strategii AI w `audits.results`:
+  - `backend/worker.py` wykonuje `audit.results = dict(results)` + `flag_modified(audit, "results")`
+  - bez tego SQLAlchemy mogło nie zapisać mutacji JSONB po `ai_contexts` (brak `cross_tool/roadmap/executive_summary` mimo sukcesu kroku).
 
 **Impact**: HIGH - AI insights nie pozostają "cicho puste"; UI jasno komunikuje przetwarzanie i automatycznie odświeża dane.
 
