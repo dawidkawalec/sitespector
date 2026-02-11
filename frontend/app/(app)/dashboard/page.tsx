@@ -219,6 +219,12 @@ export default function DashboardPage() {
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 12}} />
                 <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fontSize: 12}} />
                 <Tooltip 
+                  formatter={(value: number, name: string) => {
+                    if (name === 'score') {
+                      return [`${formatScore(value)}%`, 'Score']
+                    }
+                    return [formatNumber(value), name]
+                  }}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 />
                 <Area 
