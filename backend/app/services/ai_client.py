@@ -45,7 +45,7 @@ async def call_claude(
             prompt_len,
             system_len,
         )
-        return _generate_mock_response()
+        return _generate_mock_response(reason="missing_api_key")
     
     try:
         # Use Gemini 3.0 Flash Preview
@@ -106,18 +106,45 @@ async def call_claude(
             prompt_len,
             system_len,
         )
-        return _generate_mock_response()
+        msg = str(e)
+        if "reported as leaked" in msg or "leaked" in msg:
+            return _generate_mock_response(reason="api_key_leaked")
+        if "exceeded your current quota" in msg or "ResourceExhausted" in msg or "429" in msg:
+            return _generate_mock_response(reason="quota_exhausted")
+        if "PermissionDenied" in msg or "403" in msg:
+            return _generate_mock_response(reason="permission_denied")
+        return _generate_mock_response(reason="unknown_error")
 
 
-def _generate_mock_response() -> str:
-    """Generate mock AI response when API is not available."""
+def _generate_mock_response(reason: str = "unknown") -> str:
+    """Generate mock AI response when API is not available.
+
+    IMPORTANT: Keep schema compatible with contextual and strategy contracts.
+    """
+    if reason == "quota_exhausted":
+        headline = "AI fallback: przekroczony limit (quota/billing) dla Gemini API."
+        recommendation = "Sprawdz limit i billing w panelu Gemini, a potem uruchom ponownie analizę AI."
+        priority = "Brak quota/billing dla Gemini API - wyniki AI wymagają regeneracji."
+    elif reason == "api_key_leaked":
+        headline = "AI fallback: klucz API został zablokowany jako wyciek (leaked)."
+        recommendation = "Wygeneruj nowy klucz Gemini API i uruchom ponownie analizę AI."
+        priority = "Zablokowany klucz Gemini API - wyniki AI wymagają regeneracji."
+    elif reason == "missing_api_key":
+        headline = "AI fallback: brak konfiguracji klucza Gemini API."
+        recommendation = "Skonfiguruj GEMINI_API_KEY i uruchom ponownie analizę AI."
+        priority = "Brak GEMINI_API_KEY - wyniki AI wymagają regeneracji."
+    else:
+        headline = "AI fallback: model AI chwilowo niedostępny lub wystąpił błąd."
+        recommendation = "Zweryfikuj konfigurację klucza Gemini i uruchom ponownie analizę AI."
+        priority = "Brak wiarygodnej odpowiedzi modelu AI - dane kontekstowe wymagają regeneracji."
+
     return """
     {
         "key_findings": [
-            "AI fallback: wykryto brak połączenia z modelem, pokazujemy bezpieczne wnioski zastępcze."
+            "%s"
         ],
         "recommendations": [
-            "Zweryfikuj konfigurację klucza Gemini i uruchom ponownie analizę AI."
+            "%s"
         ],
         "quick_wins": [
             {
@@ -128,7 +155,7 @@ def _generate_mock_response() -> str:
             }
         ],
         "priority_issues": [
-            "Brak wiarygodnej odpowiedzi modelu AI - dane kontekstowe wymagają regeneracji."
+            "%s"
         ],
         "correlations": [
             "Fallback: korelacje cross-tool niedostępne, wymagane ponowne przeliczenie strategii."
@@ -176,4 +203,4 @@ def _generate_mock_response() -> str:
             "missing_elements": ["Google Maps", "Phone Number"]
         }
     }
-    """
+    """ % (headline, recommendation, priority)
