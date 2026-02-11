@@ -384,6 +384,34 @@ refetchInterval: (query) => {
 
 ---
 
+### BUG-012: React #310 on Visibility page (hook order mismatch)
+
+**Reported**: 2026-02-12
+
+**Status**: ✅ FIXED (2026-02-12)
+
+**Severity**: HIGH
+
+**Description**:
+- Production visibility route crashed with minified React error `#310`.
+- Error appeared after token/session refresh and rerender path changes.
+
+**Root cause**:
+- `useMemo` hooks in `visibility/page.tsx` were declared below conditional early returns.
+- Initial render path could return before those hooks, later render executed them, causing hook-order mismatch.
+
+**Fix**:
+- Moved all derived-state hooks above conditional returns.
+- Kept loading/no-data branches after hook declarations.
+- Cleaned unused imports introduced in the same module.
+
+**Impact**:
+- Visibility page no longer throws React invariant 310 during runtime rerenders.
+
+**Related**: `frontend/app/(app)/audits/[id]/visibility/page.tsx`
+
+---
+
 ## Known Issues
 
 ### ISSUE-001: PDF Template Incomplete
@@ -547,6 +575,6 @@ When adding new bugs to this file, use this format:
 ---
 
 **Last Updated**: 2026-02-12  
-**Resolved Bugs**: 11 (incl. BUG-011 Senuto pagination payload fix)  
+**Resolved Bugs**: 12 (incl. BUG-012 visibility hook-order runtime crash)  
 **Known Issues**: 3  
 **Watching**: 2

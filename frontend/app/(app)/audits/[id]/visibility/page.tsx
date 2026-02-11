@@ -7,8 +7,8 @@ import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { 
-  Loader2, Globe2, TrendingUp, TrendingDown, AlertCircle, Search,
-  BarChart3, Calendar, Users, Target, Layers, Gauge, DollarSign
+  Loader2, Globe2, TrendingUp, TrendingDown, AlertCircle,
+  BarChart3, Calendar, Users, Target, Layers, Gauge
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -558,26 +558,9 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
     enabled: isAuth,
   })
 
-  if (!isAuth || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
+  // Keep all hooks above conditional returns to avoid hook-order mismatch between renders.
   const senuto = audit?.results?.senuto
-  if (!senuto || !senuto.visibility) {
-    return (
-      <div className="container mx-auto py-8 px-4 text-center">
-        <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Brak danych widoczności</h1>
-        <p className="text-muted-foreground">Analiza widoczności nie została przeprowadzona dla tego audytu.</p>
-      </div>
-    )
-  }
-
-  const vis = senuto.visibility
+  const vis = senuto?.visibility || {}
   const stats = vis.statistics?.statistics || {}
   const dash = vis.dashboard || {}
   const hasAiData = !!(audit?.results?.ai_contexts?.visibility)
@@ -689,6 +672,24 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
   const searchesChartData = useMemo(() => searchesRows.map((r) => ({ range: r.range, count: r.top50 })), [searchesRows])
   const wordsChartData = useMemo(() => wordsRows.map((r) => ({ range: r.range, count: r.top50 })), [wordsRows])
   const peakChartData = useMemo(() => peakRows.map((r) => ({ month: r.range, count: r.top50 })), [peakRows])
+
+  if (!isAuth || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!senuto || !senuto.visibility) {
+    return (
+      <div className="container mx-auto py-8 px-4 text-center">
+        <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Brak danych widoczności</h1>
+        <p className="text-muted-foreground">Analiza widoczności nie została przeprowadzona dla tego audytu.</p>
+      </div>
+    )
+  }
 
   return (
     <AuditPageLayout
