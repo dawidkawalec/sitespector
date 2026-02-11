@@ -140,13 +140,6 @@ export function WordCountChart({ pages }: WordCountChartProps) {
   )
 }
 
-  ImageSizeChart,
-  PositionsDistributionChart,
-  SeasonalityChart,
-  CompetitorsBarChart,
-  LinkAttributesPieChart
-} from '@/components/AuditCharts'
-
 interface ImageSizeChartProps {
   images: Array<{
     size_bytes: number
