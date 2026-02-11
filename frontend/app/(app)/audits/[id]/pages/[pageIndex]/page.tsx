@@ -7,7 +7,7 @@ import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { 
-  Loader2, ArrowLeft, Globe, FileText, Layout, 
+  Loader2, ArrowLeft, Globe2, FileText, Layout, 
   BarChart, ImageIcon, Link2, Sparkles, AlertCircle,
   CheckCircle2, XCircle, Clock, Zap, Lightbulb, TrendingUp, RefreshCw
 } from 'lucide-react'
@@ -89,7 +89,7 @@ export default function PageDetailsPage({ params }: { params: { id: string, page
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold break-all flex items-center gap-2">
-              <Globe className="h-6 w-6 text-primary shrink-0" />
+              <Globe2 className="h-6 w-6 text-primary shrink-0" />
               {page.url}
             </h1>
             <div className="flex flex-wrap items-center gap-2">

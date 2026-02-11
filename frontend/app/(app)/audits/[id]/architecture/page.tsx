@@ -13,7 +13,9 @@ import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Network, Server, Code2, Shield, Globe, Cpu, Database } from 'lucide-react'
+import { 
+  Loader2, Network, Server, Code2, Shield, Globe2, Cpu, Database 
+} from 'lucide-react'
 import type { Audit } from '@/lib/api'
 
 export default function ArchitecturePage({ params }: { params: { id: string } }) {
@@ -84,7 +86,7 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
                   techStack.technologies.map((tech: any, i: number) => (
                     <div key={i} className="flex items-center gap-4 p-4 rounded-lg border bg-accent/10">
                       <div className="p-2 rounded bg-primary/10 text-primary">
-                        {tech.category === 'CMS' && <Globe className="h-5 w-5" />}
+                        {tech.category === 'CMS' && <Globe2 className="h-5 w-5" />}
                         {tech.category === 'Framework' && <Code2 className="h-5 w-5" />}
                         {tech.category === 'Analytics' && <Cpu className="h-5 w-5" />}
                         {tech.category === 'Library' && <Database className="h-5 w-5" />}

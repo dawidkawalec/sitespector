@@ -16,7 +16,7 @@ import {
   ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle, 
   FileJson, CheckCircle, Search, Gauge, Sparkles, ImageIcon, 
   Link as LinkIcon, Users, Clock, ShieldCheck, Zap, ChevronDown, ChevronRight, ExternalLink,
-  Terminal, Activity, Check, Timer
+  Terminal, Activity, Check, Timer, Globe2
 } from 'lucide-react'
 import Link from 'next/link'
 import { PageStatusChart } from '@/components/AuditCharts'
@@ -186,7 +186,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   const steps = [
     { id: 'crawl', label: 'Crawling strony (Screaming Frog)', icon: Search },
     { id: 'lighthouse', label: 'Analiza Desktop & Mobile (Lighthouse)', icon: Gauge },
-    { id: 'senuto', label: 'Analiza Senuto (Widoczność & Linki)', icon: Globe },
+    { id: 'senuto', label: 'Analiza Senuto (Widoczność & Linki)', icon: Globe2 },
     { id: 'competitors', label: 'Analiza konkurencji', icon: Users },
     { id: 'ai_content', label: 'Analiza AI - Treść', icon: Sparkles },
     { id: 'ai_perf_tech', label: 'Analiza AI - Wydajność i Tech', icon: Zap },
