@@ -192,6 +192,12 @@ export default function AiStrategyPage({ params }: { params: { id: string } }) {
     queryKey: ['audit', params.id],
     queryFn: () => auditsAPI.get(params.id),
     enabled: isAuth,
+    refetchInterval: (query) => {
+      const data = query?.state?.data as Audit | undefined
+      const isAuditRunning = data?.status === 'pending' || data?.status === 'processing'
+      const isAiRunning = data?.ai_status === 'processing'
+      return isAuditRunning || isAiRunning ? 3000 : false
+    },
   })
 
   const handleRegenerate = async () => {
@@ -229,6 +235,7 @@ export default function AiStrategyPage({ params }: { params: { id: string } }) {
   const aiContexts = audit.results?.ai_contexts || {}
   const quickWins = audit.results?.quick_wins || []
   const contentAnalysis = audit.results?.content_analysis
+  const isAiRunning = audit.ai_status === 'processing' || (audit.processing_step || '').startsWith('ai_')
 
   const hasAnyData = execSummary || roadmap || crossTool || Object.keys(aiContexts).length > 0
 
@@ -253,6 +260,20 @@ export default function AiStrategyPage({ params }: { params: { id: string } }) {
           Przelicz strategię AI
         </Button>
       </div>
+
+      {isAiRunning && (
+        <Card className="border-accent/30 bg-accent/5">
+          <CardContent className="p-4 flex items-start gap-3">
+            <Loader2 className="h-4 w-4 animate-spin text-accent mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-accent">Analizy AI są w trakcie generowania</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Aktualny etap: {audit.processing_step || 'ai:processing'}. Dane będą odświeżane automatycznie.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {!hasAnyData && (
         <Card>

@@ -135,6 +135,9 @@ export interface Audit {
   id: string
   url: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
+  ai_status?: 'processing' | 'completed' | 'failed' | 'skipped' | null
+  processing_step?: string | null
+  processing_logs?: Array<Record<string, any>> | null
   created_at: string
   started_at?: string | null
   completed_at: string | null

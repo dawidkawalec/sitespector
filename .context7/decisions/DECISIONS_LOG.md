@@ -199,6 +199,22 @@
 
 ---
 
+## ADR-020: AI Fallback Contract + In-Progress UX State
+**Date**: 2026-02-11
+**Status**: ✅ Done
+**Decision**:
+- Standardize AI fallback payload schema in `ai_client` so contextual and strategy analyzers receive expected keys.
+- Expose and consume `ai_status`/`processing_step` on frontend to show explicit "AI analysis in progress" states.
+**Rationale**:
+- Audits could appear as `completed` while AI results were effectively empty due to schema mismatch in fallback responses.
+- Users need deterministic status visibility instead of ambiguous empty panels.
+**Outcome**:
+- Added AI diagnostics checkpoints in worker/services logs.
+- Updated frontend polling logic to continue while `ai_status="processing"`.
+- Added in-progress banners/panel states on `ai-strategy` and area pages.
+
+---
+
 **Last Updated**: 2026-02-11
-**Total Decisions**: 19 accepted
+**Total Decisions**: 20 accepted
 **Review**: Update when making significant architectural changes.

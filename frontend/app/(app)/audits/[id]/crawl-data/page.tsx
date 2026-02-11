@@ -176,6 +176,7 @@ export default function CrawlDataPage({ params }: { params: { id: string } }) {
       aiPanel={<AiInsightsPanel area="crawl" audit={audit} />}
       aiPanelTitle="AI: Dane techniczne"
       hasAiData={hasAiData}
+      isAiLoading={audit.ai_status === 'processing'}
     >
       {/* Header */}
       <div className="flex items-center gap-3">

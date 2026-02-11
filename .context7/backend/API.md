@@ -556,6 +556,15 @@ interface Audit {
   user_id: string  // UUID
   url: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
+  ai_status?: 'processing' | 'completed' | 'failed' | 'skipped' | null
+  processing_step?: string | null
+  processing_logs?: Array<{
+    timestamp: string
+    step: string
+    status: 'running' | 'success' | 'warning' | 'error' | 'skipped'
+    message: string
+    duration_ms?: number | null
+  }> | null
   overall_score: number | null  // 0-100
   seo_score: number | null  // 0-100
   performance_score: number | null  // 0-100
@@ -754,6 +763,7 @@ Manually trigger full AI analysis for a completed audit.
 - **Auth**: Required
 - **Response**: `{ "status": "ai_started", "message": "..." }`
 - **Notes**: Launches AI pipeline in background. Use when audit was created with `run_ai_pipeline=false`.
+- **UI Guidance**: Frontend should poll `GET /api/audits/{id}` while `ai_status="processing"` and show explicit "AI analysis in progress" state.
 
 ### `POST /api/audits/{audit_id}/run-ai-context`
 Trigger contextual AI analysis for specific area(s).
@@ -761,6 +771,7 @@ Trigger contextual AI analysis for specific area(s).
 - **Query Params**: `area` (optional) - `seo|performance|visibility|backlinks|links|images`
 - **Response**: `{ "status": "completed", "areas_analyzed": [...], "message": "..." }`
 - **Notes**: If `area` not specified, regenerates all areas + cross_tool + roadmap + executive_summary.
+- **Behavior**: For full regeneration (`area` not provided) endpoint recalculates `results.ai_contexts`, `results.cross_tool`, `results.roadmap`, and `results.executive_summary`.
 
 ---
 

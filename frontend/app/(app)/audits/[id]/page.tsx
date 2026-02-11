@@ -73,8 +73,10 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     enabled: isAuth,
     refetchInterval: (query) => {
       const data = query?.state?.data as Audit | undefined
-      // Poll every 3 seconds if processing or pending
-      if (data?.status === 'processing' || data?.status === 'pending') {
+      const isAuditRunning = data?.status === 'processing' || data?.status === 'pending'
+      const isAiRunning = data?.ai_status === 'processing'
+      // Poll every 3 seconds while technical audit or AI pipeline is running
+      if (isAuditRunning || isAiRunning) {
         return 3000
       }
       return false

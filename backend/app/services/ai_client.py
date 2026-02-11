@@ -35,14 +35,27 @@ async def call_claude(
     Returns:
         AI response text
     """
+    prompt_len = len(prompt or "")
+    system_len = len(system_prompt or "")
+
     if not settings.GEMINI_API_KEY:
-        logger.warning("Gemini API key not configured - returning mock response")
+        logger.warning(
+            "Gemini API key not configured - returning mock response "
+            "(prompt_len=%s, system_len=%s)",
+            prompt_len,
+            system_len,
+        )
         return _generate_mock_response()
     
     try:
         # Use Gemini 3.0 Flash Preview
-        model_name = "gemini-flash-3-preview" 
-        logger.info(f"Calling Gemini API (model: {model_name})")
+        model_name = "gemini-3-flash-preview"
+        logger.info(
+            "Calling Gemini API (model=%s, prompt_len=%s, system_len=%s)",
+            model_name,
+            prompt_len,
+            system_len,
+        )
         
         # Configure model with system instruction
         model = genai.GenerativeModel(
@@ -65,16 +78,34 @@ async def call_claude(
             timeout=30.0  # 30 seconds timeout per call
         )
         
-        return response.text
+        text = response.text or ""
+        preview = text[:180].replace("\n", " ")
+        logger.info(
+            "Gemini API success (model=%s, response_len=%s, preview=%s)",
+            model_name,
+            len(text),
+            preview,
+        )
+        return text
         
     except asyncio.TimeoutError:
         logger.error(f"Gemini API TIMEOUT for model {model_name}")
         raise Exception(f"Gemini API call timed out after 30s")
     except Exception as e:
-        logger.error(f"Gemini API error: {e}")
+        logger.error(
+            "Gemini API error (model=%s, error_type=%s): %s",
+            model_name,
+            type(e).__name__,
+            e,
+        )
         # Only return mock if it's a configuration issue or we want to allow partial success
         # For now, let's keep mock fallback but log it clearly
-        logger.warning("Returning mock response due to API error")
+        logger.warning(
+            "Returning mock response due to API error "
+            "(prompt_len=%s, system_len=%s)",
+            prompt_len,
+            system_len,
+        )
         return _generate_mock_response()
 
 
@@ -82,6 +113,53 @@ def _generate_mock_response() -> str:
     """Generate mock AI response when API is not available."""
     return """
     {
+        "key_findings": [
+            "AI fallback: wykryto brak połączenia z modelem, pokazujemy bezpieczne wnioski zastępcze."
+        ],
+        "recommendations": [
+            "Zweryfikuj konfigurację klucza Gemini i uruchom ponownie analizę AI."
+        ],
+        "quick_wins": [
+            {
+                "title": "Uruchom ponownie analizę AI po naprawie konfiguracji",
+                "description": "Po przywróceniu łączności z modelem wygeneruj aktualne insighty dla wszystkich obszarów.",
+                "impact": "medium",
+                "effort": "easy"
+            }
+        ],
+        "priority_issues": [
+            "Brak wiarygodnej odpowiedzi modelu AI - dane kontekstowe wymagają regeneracji."
+        ],
+        "correlations": [
+            "Fallback: korelacje cross-tool niedostępne, wymagane ponowne przeliczenie strategii."
+        ],
+        "synergies": [],
+        "conflicts": [
+            "Fallback: brak kompletnych danych strategii AI."
+        ],
+        "unified_recommendations": [
+            "Po naprawie połączenia AI uruchom pełną regenerację strategii."
+        ],
+        "immediate_actions": [
+            {
+                "title": "Napraw konfigurację AI",
+                "description": "Sprawdź poprawność API key i modelu Gemini.",
+                "impact": "high",
+                "area": "AI"
+            }
+        ],
+        "short_term": [],
+        "medium_term": [],
+        "long_term": [],
+        "overall_health": "moderate",
+        "health_score": 50,
+        "summary": "Fallback AI: zwrócono odpowiedź zastępczą, ponieważ model był chwilowo niedostępny.",
+        "strengths": [],
+        "critical_issues": [
+            "Model AI niedostępny - część rekomendacji może być niekompletna."
+        ],
+        "growth_potential": "Po przywróceniu działania AI możliwe jest wygenerowanie pełnej strategii wzrostu.",
+        "estimated_impact": "medium",
         "content": {
             "quality_score": 75,
             "readability_score": 80,

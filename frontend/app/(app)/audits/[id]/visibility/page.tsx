@@ -331,6 +331,7 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
       aiPanel={<AiInsightsPanel area="visibility" audit={audit!} />}
       aiPanelTitle="AI: Widoczność"
       hasAiData={hasAiData}
+      isAiLoading={audit?.ai_status === 'processing'}
     >
       <div className="space-y-8">
         <div className="flex items-center gap-3">

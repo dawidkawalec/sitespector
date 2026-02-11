@@ -680,7 +680,46 @@ async def _call_ai_context(system_prompt: str, user_prompt: str) -> Dict[str, An
     """Call AI and parse JSON response for context analysis."""
     try:
         response = await call_claude(user_prompt, system_prompt, max_tokens=4096)
-        return _safe_json_parse(response)
+        parsed = _safe_json_parse(response)
+        parsed_keys = list(parsed.keys()) if isinstance(parsed, dict) else []
+        response_preview = (response or "")[:200].replace("\n", " ")
+
+        logger.info(
+            "AI context parsed (response_len=%s, parsed_keys=%s, preview=%s)",
+            len(response or ""),
+            parsed_keys,
+            response_preview,
+        )
+
+        if not parsed:
+            logger.warning("AI context parse returned empty JSON")
+            return {}
+
+        expected_ai_keys = {
+            "key_findings",
+            "recommendations",
+            "quick_wins",
+            "priority_issues",
+            "correlations",
+            "synergies",
+            "conflicts",
+            "unified_recommendations",
+            "immediate_actions",
+            "short_term",
+            "medium_term",
+            "long_term",
+            "overall_health",
+            "health_score",
+            "summary",
+        }
+        if set(parsed_keys).isdisjoint(expected_ai_keys):
+            logger.warning(
+                "AI context payload has unexpected schema (keys=%s). "
+                "Downstream insights may be empty.",
+                parsed_keys,
+            )
+
+        return parsed
     except Exception as e:
         logger.error(f"AI context call failed: {e}")
         return {}

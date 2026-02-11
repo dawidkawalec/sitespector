@@ -168,11 +168,26 @@ function getFallbackData(audit: Audit, area: AiArea): AiContextData | null {
 export function AiInsightsPanel({ area, audit, onTriggerAi }: AiInsightsPanelProps) {
   const params = useParams()
   const auditId = params?.id as string
+  const isAiRunning = audit.ai_status === 'processing' || (audit.processing_step || '').startsWith('ai_')
 
   // Try ai_contexts first, then fallback to existing AI data
   const contextData = getContextData(audit, area) || getFallbackData(audit, area)
 
   if (!contextData) {
+    if (isAiRunning) {
+      return (
+        <div className="flex flex-col items-center justify-center py-6 text-center">
+          <Sparkles className="h-5 w-5 text-accent mb-2 animate-pulse" />
+          <p className="text-xs font-medium text-accent">
+            AI analizuje dane dla obszaru: {AREA_LABELS[area]}
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Etap: {audit.processing_step || 'ai:processing'}
+          </p>
+        </div>
+      )
+    }
+
     return (
       <div className="flex flex-col items-center justify-center py-6 text-center">
         <Sparkles className="h-5 w-5 text-muted-foreground/40 mb-2" />

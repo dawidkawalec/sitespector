@@ -40,6 +40,31 @@ async def add_audit_log(audit: Audit, step: str, status: str, message: str, dura
     audit.processing_logs = logs
 
 
+def _summarize_result_shapes(results: Dict[str, Any]) -> Dict[str, Any]:
+    """Return lightweight shape summary for AI checkpoints."""
+    ai_contexts = results.get("ai_contexts", {}) if isinstance(results, dict) else {}
+    context_summary: Dict[str, Any] = {}
+    if isinstance(ai_contexts, dict):
+        for area, payload in ai_contexts.items():
+            if isinstance(payload, dict):
+                context_summary[area] = {
+                    "key_findings": len(payload.get("key_findings", []) or []),
+                    "recommendations": len(payload.get("recommendations", []) or []),
+                    "quick_wins": len(payload.get("quick_wins", []) or []),
+                    "priority_issues": len(payload.get("priority_issues", []) or []),
+                }
+            else:
+                context_summary[area] = {"invalid_payload": True}
+
+    return {
+        "top_level_keys": sorted(results.keys()) if isinstance(results, dict) else [],
+        "has_cross_tool": "cross_tool" in results if isinstance(results, dict) else False,
+        "has_roadmap": "roadmap" in results if isinstance(results, dict) else False,
+        "has_executive_summary": "executive_summary" in results if isinstance(results, dict) else False,
+        "ai_contexts": context_summary,
+    }
+
+
 async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
     """
     Phase 1: Technical Analysis (Crawl + Lighthouse + Competitors)
@@ -155,6 +180,12 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
 
         audit.ai_status = "processing"
         await db.commit()
+        logger.info(
+            "run_ai_analysis started (audit_id=%s, tech_keys=%s, run_ai_pipeline=%s)",
+            audit_id,
+            sorted(list(tech_data.keys())),
+            audit.run_ai_pipeline,
+        )
 
         try:
             crawl_data = tech_data["crawl"]
@@ -305,6 +336,11 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
             results["ai_contexts"] = ai_contexts
             audit.results = results
             await db.commit()
+            logger.info(
+                "AI checkpoint after ai_contexts (audit_id=%s): %s",
+                audit_id,
+                json.dumps(_summarize_result_shapes(results), ensure_ascii=True),
+            )
 
             # 5. Cross-tool analysis + Roadmap + Executive Summary
             audit.processing_step = "ai_strategy:start"
@@ -344,6 +380,11 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
             
             await add_audit_log(audit, "finalizing", "success", "Audit completed successfully")
             await db.commit()
+            logger.info(
+                "AI checkpoint after ai_strategy (audit_id=%s): %s",
+                audit_id,
+                json.dumps(_summarize_result_shapes(results), ensure_ascii=True),
+            )
 
         except Exception as e:
             logger.error(f"AI Analysis failed for audit {audit_id}: {e}")

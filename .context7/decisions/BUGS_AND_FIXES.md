@@ -316,6 +316,43 @@ refetchInterval: (query) => {
 
 ---
 
+### BUG-010: AI insights puste mimo `ai_status=completed`
+
+**Reported**: 2026-02-11
+
+**Status**: ✅ FIXED (2026-02-11)
+
+**Severity**: HIGH
+
+**Description**:
+- Audyty kończyły się z `ai_status=completed`, ale `results.ai_contexts.*` zawierały puste listy.
+- W `results` brakowało `executive_summary`, `roadmap` i `cross_tool` dla części audytów.
+- UI pokazywał głównie `quick_wins`, co wyglądało jak brak działania AI.
+
+**Root cause**:
+- Fallback z `ai_client` zwracał payload o strukturze niezgodnej z kontraktem funkcji `analyze_*_context` i `ai_strategy`.
+- W efekcie parser zwracał dane bez oczekiwanych kluczy (`key_findings`, `recommendations`, ...), a warstwa mapująca zwracała puste kolekcje.
+- Brak czytelnego stanu "AI w toku" w UI utrudniał rozróżnienie między "brak danych" a "analiza trwa".
+
+**Fix**:
+- Ujednolicono fallback payload w `backend/app/services/ai_client.py` do wspólnego kontraktu (obszary + strategia).
+- Skorygowano nazwę modelu Gemini na `gemini-3-flash-preview`.
+- Dodano diagnostyczne logi i checkpointy:
+  - `backend/app/services/ai_client.py`
+  - `backend/app/services/ai_analysis.py`
+  - `backend/worker.py`
+- Dodano stany "AI analysis in progress" + polling po `ai_status=processing`:
+  - `frontend/app/(app)/audits/[id]/ai-strategy/page.tsx`
+  - `frontend/components/AiInsightsPanel.tsx`
+  - strony obszarowe z `AuditPageLayout`
+  - `frontend/app/(app)/audits/[id]/page.tsx` (polling także dla manualnego run-ai)
+
+**Impact**: HIGH - AI insights nie pozostają "cicho puste"; UI jasno komunikuje przetwarzanie i automatycznie odświeża dane.
+
+**Related**: `backend/app/services/ai_client.py`, `backend/app/services/ai_analysis.py`, `backend/worker.py`, `frontend/app/(app)/audits/[id]/ai-strategy/page.tsx`, `frontend/components/AiInsightsPanel.tsx`
+
+---
+
 ## Known Issues
 
 ### ISSUE-001: PDF Template Incomplete
@@ -479,6 +516,6 @@ When adding new bugs to this file, use this format:
 ---
 
 **Last Updated**: 2026-02-11  
-**Resolved Bugs**: 9 (incl. BUG-009 crawl:start missing merge_csvs.py, ISSUE-002 SSL)  
+**Resolved Bugs**: 10 (incl. BUG-010 AI empty insights, ISSUE-002 SSL)  
 **Known Issues**: 3  
 **Watching**: 2

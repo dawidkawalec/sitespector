@@ -141,6 +141,18 @@ Results stored in `audit.results`:
 - `results.roadmap` - priority roadmap (immediate/short/medium/long term)
 - `results.executive_summary` - health score, strengths, critical issues
 
+### AI Diagnostics (Feb 2026 update)
+
+Worker now emits additional diagnostics for AI pipeline troubleshooting:
+- Start checkpoint: `run_ai_analysis started (audit_id, tech_keys, run_ai_pipeline)`
+- Post-context checkpoint: shape summary for `results.ai_contexts` (counts per area)
+- Post-strategy checkpoint: presence flags for `cross_tool`, `roadmap`, `executive_summary`
+
+This helps identify cases where:
+- AI call falls back to mock payload,
+- parsed JSON schema does not match expected keys,
+- strategy keys are missing from final persisted `results`.
+
 ---
 
 ## Monitoring

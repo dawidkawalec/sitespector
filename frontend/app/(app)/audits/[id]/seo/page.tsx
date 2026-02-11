@@ -346,6 +346,7 @@ export default function SeoPage({ params }: { params: { id: string } }) {
       aiPanel={<AiInsightsPanel area="seo" audit={audit} />}
       aiPanelTitle="AI: SEO"
       hasAiData={hasAiData}
+      isAiLoading={audit.ai_status === 'processing'}
     >
       <div className="space-y-8">
         <div className="flex justify-between items-center">

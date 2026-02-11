@@ -248,6 +248,7 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
       aiPanel={<AiInsightsPanel area="images" audit={audit!} />}
       aiPanelTitle="AI: Obrazy"
       hasAiData={hasAiData}
+      isAiLoading={audit?.ai_status === 'processing'}
     >
       <div className="space-y-8">
         <div className="flex items-center gap-3">
