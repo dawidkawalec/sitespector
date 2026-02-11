@@ -21,6 +21,7 @@ interface SystemStatus {
     lighthouse: ServiceStatus
     worker: ServiceStatus
     database: ServiceStatus
+    senuto: ServiceStatus
   }
 }
 
@@ -90,12 +91,12 @@ export function SystemStatus() {
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>v{status.version}</span>
             <span>•</span>
-            <span>Updated: 2025-02-03 16:10 UTC</span>
+            <span>Updated: {new Date(status.timestamp).toLocaleString()}</span>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Screaming Frog */}
           <div className="space-y-1">
             <div className="flex items-center justify-between">
@@ -143,6 +144,20 @@ export function SystemStatus() {
             </div>
             {status.services.database.message && (
               <p className="text-xs text-muted-foreground">{status.services.database.message}</p>
+            )}
+          </div>
+
+          {/* Senuto */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Senuto</span>
+              {getStatusBadge(status.services.senuto.status)}
+            </div>
+            {status.services.senuto.version && (
+              <p className="text-xs text-muted-foreground">{status.services.senuto.version}</p>
+            )}
+            {status.services.senuto.error && (
+              <p className="text-xs text-red-500">{status.services.senuto.error}</p>
             )}
           </div>
         </div>
