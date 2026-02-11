@@ -173,6 +173,19 @@
 
 ---
 
+## ADR-018: Tool-Agnostic Information Architecture (IA)
+**Date**: 2026-02-11
+**Status**: ✅ Done
+**Decision**: Removed all tool-specific names (Screaming Frog, Lighthouse, Senuto) from the UI. Consolidated data into logical SEO areas: SEO, Wydajność, Widoczność, Linki, Obrazy. Every area now includes a "Surowe dane (RAW)" explorer.
+**Rationale**: Improve UX by focusing on SEO outcomes rather than tools. Provide "complete" data access via RAW explorers with search, sort, and export.
+**Outcome**:
+- Sidebar restructured without tool names.
+- 5 main areas with Overview + RAW tabs.
+- Automated pagination for Senuto datasets (up to 500-1000 items).
+- Legacy routes (`/backlinks`, `/lighthouse-data`) redirected to new IA.
+
+---
+
 **Last Updated**: 2026-02-11
-**Total Decisions**: 16 accepted
+**Total Decisions**: 17 accepted
 **Review**: Update when making significant architectural changes.

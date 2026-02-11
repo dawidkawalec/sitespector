@@ -100,6 +100,28 @@ class SenutoClient:
                         await asyncio.sleep(1)
             return {}
 
+    async def _fetch_paginated(self, method: str, path: str, body: Dict[str, Any], max_items: int = 1000) -> List[Dict[str, Any]]:
+        """Fetch multiple pages of data up to max_items."""
+        all_items = []
+        page = 1
+        limit = 100 # Senuto standard limit
+        
+        while len(all_items) < max_items:
+            current_body = {**body, "page": page, "limit": limit}
+            data = await self._request(method, path, data_body=current_body if method == "POST" else None, params=current_body if method == "GET" else None)
+            
+            # Senuto returns list directly or in a nested field depending on endpoint
+            items = data if isinstance(data, list) else data.get("items", [])
+            if not items:
+                break
+                
+            all_items.extend(items)
+            if len(items) < limit:
+                break
+            page += 1
+            
+        return all_items[:max_items]
+
     async def analyze_domain(self, domain: str, country_id: int, fetch_mode: str) -> Dict[str, Any]:
         """
         Comprehensive domain analysis: Visibility + Backlinks.
@@ -112,7 +134,7 @@ class SenutoClient:
             domain = urlparse(domain).netloc
         domain = domain.replace("www.", "")
 
-        # Group A: Parallel GETs
+        # Group A: Parallel GETs (Dashboard & Charts)
         try:
             group_a = await asyncio.gather(
                 self._request("GET", "/visibility_analysis/reports/dashboard/getDomainData", params={"domain": domain, "fetch_mode": fetch_mode, "country_id": country_id}),
@@ -125,20 +147,21 @@ class SenutoClient:
             logger.error(f"Error in Senuto Group A: {e}")
             group_a = [{}, {}, {}, {}]
 
-        # Group B: Parallel POSTs (Visibility)
+        # Group B: Paginated POSTs (Visibility)
         try:
+            # We fetch more items for the main positions table
             group_b = await asyncio.gather(
-                self._request("POST", "/visibility_analysis/reports/positions/getData", data_body={"domain": domain, "fetch_mode": fetch_mode, "country_id": country_id, "limit": 100, "page": 1}),
-                self._request("POST", "/visibility_analysis/reports/positions/getWins", data_body={"domain": domain, "fetch_mode": fetch_mode, "country_id": country_id, "limit": 50, "page": 1}),
-                self._request("POST", "/visibility_analysis/reports/positions/getLosses", data_body={"domain": domain, "fetch_mode": fetch_mode, "country_id": country_id, "limit": 50, "page": 1}),
+                self._fetch_paginated("POST", "/visibility_analysis/reports/positions/getData", {"domain": domain, "fetch_mode": fetch_mode, "country_id": country_id}, max_items=500),
+                self._fetch_paginated("POST", "/visibility_analysis/reports/positions/getWins", {"domain": domain, "fetch_mode": fetch_mode, "country_id": country_id}, max_items=200),
+                self._fetch_paginated("POST", "/visibility_analysis/reports/positions/getLosses", {"domain": domain, "fetch_mode": fetch_mode, "country_id": country_id}, max_items=200),
                 self._request("POST", "/visibility_analysis/reports/competitors/getData", json_body={"domain": domain, "fetch_mode": fetch_mode, "country_id": country_id}),
                 self._request("POST", "/visibility_analysis/reports/cannibalization/getKeywords", json_body={"domain": domain, "fetch_mode": fetch_mode, "country_id": country_id}),
-                self._request("POST", "/visibility_analysis/reports/sections/getSections", data_body={"domain": domain, "fetch_mode": fetch_mode, "country_id": country_id, "limit": 50, "page": 1}),
+                self._fetch_paginated("POST", "/visibility_analysis/reports/sections/getSections", {"domain": domain, "fetch_mode": fetch_mode, "country_id": country_id}, max_items=100),
                 return_exceptions=True
             )
         except Exception as e:
             logger.error(f"Error in Senuto Group B: {e}")
-            group_b = [{}, {}, {}, {}, {}, {}]
+            group_b = [[], [], [], {}, {}, []]
 
         # Group C: Parallel POSTs (Backlinks)
         try:
@@ -146,39 +169,46 @@ class SenutoClient:
                 self._request("POST", "/backlinks/reports/statistics/getData", json_body={"domain": domain, "competitors": []}),
                 self._request("POST", "/backlinks/reports/statistics/getLinkAttributes", json_body={"domain": domain, "competitors": []}),
                 self._request("POST", "/backlinks/reports/anchors/getCloud", json_body={"domain": domain, "competitors": []}),
-                self._request("POST", "/backlinks/reports/references/getDomains", json_body={"domain": domain}),
-                self._request("POST", "/backlinks/reports/backlinks/getData", json_body={"domain": domain}),
+                self._fetch_paginated("POST", "/backlinks/reports/references/getDomains", {"domain": domain}, max_items=200),
+                self._fetch_paginated("POST", "/backlinks/reports/backlinks/getData", {"domain": domain}, max_items=500),
                 return_exceptions=True
             )
         except Exception as e:
             logger.error(f"Error in Senuto Group C: {e}")
-            group_c = [{}, {}, {}, {}, {}]
+            group_c = [{}, {}, {}, [], []]
 
         # Helper to safely get result from gather
-        def s(res): return res if not isinstance(res, Exception) else {}
+        def s(res, default=None): 
+            if default is None: default = {}
+            return res if not isinstance(res, Exception) else default
 
         return {
             "country_id": country_id,
             "fetch_mode": fetch_mode,
             "fetched_at": datetime.utcnow().isoformat(),
+            "_meta": {
+                "positions_count": len(s(group_b[0], [])),
+                "backlinks_count": len(s(group_c[4], [])),
+                "is_complete": True # For now we assume complete within our caps
+            },
             "visibility": {
                 "dashboard": s(group_a[0]),
                 "statistics": s(group_a[1]),
                 "seasonality": s(group_a[2]),
                 "distribution": s(group_a[3]),
-                "positions": s(group_b[0]),
-                "wins": s(group_b[1]),
-                "losses": s(group_b[2]),
+                "positions": s(group_b[0], []),
+                "wins": s(group_b[1], []),
+                "losses": s(group_b[2], []),
                 "competitors": s(group_b[3]),
                 "cannibalization": s(group_b[4]),
-                "sections": s(group_b[5]),
+                "sections": s(group_b[5], []),
             },
             "backlinks": {
                 "statistics": s(group_c[0]),
                 "link_attributes": s(group_c[1]),
                 "anchors": s(group_c[2]),
-                "ref_domains": s(group_c[3]),
-                "list": s(group_c[4]),
+                "ref_domains": s(group_c[3], []),
+                "list": s(group_c[4], []),
             }
         }
 

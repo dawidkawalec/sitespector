@@ -26,74 +26,11 @@ import { InfoTooltip } from '@/components/ui/info-tooltip'
 import type { Audit } from '@/lib/api'
 import { AuditPageLayout } from '@/components/AuditPageLayout'
 import { AiInsightsPanel } from '@/components/AiInsightsPanel'
+import { DataExplorerTable } from '@/components/DataExplorerTable'
 
-export default function VisibilityPage({ params }: { params: { id: string } }) {
-  const router = useRouter()
-  const [isAuth, setIsAuth] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 15
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsAuth(!!session)
-      if (!session) router.push('/login')
-    }
-    checkAuth()
-  }, [router])
-
-  const { data: audit, isLoading } = useQuery({
-    queryKey: ['audit', params.id],
-    queryFn: () => auditsAPI.get(params.id),
-    enabled: isAuth,
-  })
-
-  if (!isAuth || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
-  const senuto = audit?.results?.senuto
-  if (!senuto || !senuto.visibility) {
-    return (
-      <div className="container mx-auto py-8 px-4 text-center">
-        <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Brak danych Senuto</h1>
-        <p className="text-muted-foreground">Analiza widoczności nie została przeprowadzona dla tego audytu.</p>
-      </div>
-    )
-  }
-
-  const vis = senuto.visibility
-  const stats = vis.statistics?.statistics || {}
-  const dash = vis.dashboard || {}
-  
-  const allPositions = vis.positions || []
-  const filteredPositions = allPositions.filter((p: any) => 
-    p.keyword.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-  const paginatedPositions = filteredPositions.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const totalPages = Math.ceil(filteredPositions.length / pageSize)
-  const hasAiData = !!(audit?.results?.ai_contexts?.visibility)
-
+function OverviewTab({ vis, stats, dash, audit }: { vis: any; stats: any; dash: any; audit: Audit }) {
   return (
-    <AuditPageLayout
-      aiPanel={<AiInsightsPanel area="visibility" audit={audit!} />}
-      aiPanelTitle="AI: Widoczność"
-      hasAiData={hasAiData}
-    >
-      <div className="flex items-center gap-3">
-        <Globe2 className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-3xl font-bold">Analiza Widoczności</h1>
-          <p className="text-sm text-muted-foreground">Dane z platformy Senuto • Baza: {senuto.country_id === 200 ? 'Polska 2.0' : 'Inna'} • Tryb: {senuto.fetch_mode}</p>
-        </div>
-      </div>
-
+    <div className="space-y-8">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
@@ -125,7 +62,6 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Distribution Chart */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -139,7 +75,6 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
           </CardContent>
         </Card>
 
-        {/* Seasonality Chart */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -154,73 +89,7 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
         </Card>
       </div>
 
-      {/* Keywords Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                Najważniejsze Frazy
-              </CardTitle>
-              <CardDescription>Słowa kluczowe generujące największy ruch</CardDescription>
-            </div>
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Szukaj frazy..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fraza</TableHead>
-                  <TableHead className="text-center">Pozycja</TableHead>
-                  <TableHead className="text-center">Zmiana</TableHead>
-                  <TableHead className="text-center">Wyszukiwania</TableHead>
-                  <TableHead className="text-right">Widoczność</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedPositions.map((p: any, i: number) => (
-                  <TableRow key={i}>
-                    <TableCell className="font-medium">{p.keyword}</TableCell>
-                    <TableCell className="text-center font-bold">{p.statistics?.position?.current}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant={p.statistics?.position?.diff < 0 ? 'default' : p.statistics?.position?.diff > 0 ? 'destructive' : 'outline'}>
-                        {p.statistics?.position?.diff === 0 ? '-' : (p.statistics?.position?.diff < 0 ? `+${Math.abs(p.statistics.position.diff)}` : `-${p.statistics.position.diff}`)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">{p.statistics?.searches?.current?.toLocaleString()}</TableCell>
-                    <TableCell className="text-right font-mono text-xs">{p.statistics?.visibility?.current?.toFixed(2)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-end space-x-2 py-4">
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="text-xs text-muted-foreground">Strona {currentPage} z {totalPages}</div>
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Competitors */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -234,7 +103,6 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
           </CardContent>
         </Card>
 
-        {/* Sections/Subdomains */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -259,7 +127,6 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
         </Card>
       </div>
 
-      {/* Cannibalization */}
       {vis.cannibalization?.keywords?.length > 0 && (
         <Card className="border-red-200 bg-red-50/30 dark:bg-red-950/10">
           <CardHeader>
@@ -297,6 +164,202 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
           </CardContent>
         </Card>
       )}
+    </div>
+  )
+}
+
+function KeywordsTab({ vis }: { vis: any }) {
+  const [searchTerm, setSearchTerm] = useState('')
+  const allPositions = vis.positions || []
+  const filteredPositions = allPositions.filter((p: any) => 
+    p.keyword.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const columns = [
+    { key: 'keyword', label: 'Fraza', className: 'font-medium' },
+    { 
+      key: 'statistics.position.current', 
+      label: 'Pozycja', 
+      className: 'text-center font-bold',
+      render: (_: any, row: any) => row.statistics?.position?.current
+    },
+    { 
+      key: 'statistics.position.diff', 
+      label: 'Zmiana', 
+      className: 'text-center',
+      render: (_: any, row: any) => {
+        const diff = row.statistics?.position?.diff
+        return (
+          <Badge variant={diff < 0 ? 'default' : diff > 0 ? 'destructive' : 'outline'}>
+            {diff === 0 ? '-' : (diff < 0 ? `+${Math.abs(diff)}` : `-${diff}`)}
+          </Badge>
+        )
+      }
+    },
+    { 
+      key: 'statistics.searches.current', 
+      label: 'Wyszukiwania', 
+      className: 'text-center',
+      render: (_: any, row: any) => row.statistics?.searches?.current?.toLocaleString()
+    },
+    { 
+      key: 'statistics.visibility.current', 
+      label: 'Widoczność', 
+      className: 'text-right font-mono text-xs',
+      render: (_: any, row: any) => row.statistics?.visibility?.current?.toFixed(2)
+    },
+  ]
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              Najważniejsze Frazy
+            </CardTitle>
+            <CardDescription>Słowa kluczowe generujące największy ruch</CardDescription>
+          </div>
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Szukaj frazy..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <DataExplorerTable
+          data={filteredPositions}
+          columns={columns}
+          pageSize={20}
+          exportFilename="widocznosc_frazy"
+        />
+      </CardContent>
+    </Card>
+  )
+}
+
+function RawDataTab({ vis, audit }: { vis: any; audit: Audit }) {
+  const [activeDataset, setActiveDataset] = useState('positions')
+  
+  const datasets: Record<string, { label: string; data: any[] }> = {
+    positions: { label: 'Pozycje', data: vis.positions || [] },
+    wins: { label: 'Wzrosty', data: vis.wins || [] },
+    losses: { label: 'Spadki', data: vis.losses || [] },
+    competitors: { label: 'Konkurenci', data: vis.competitors || [] },
+    sections: { label: 'Sekcje', data: vis.sections || [] },
+  }
+
+  const currentData = datasets[activeDataset].data
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center overflow-x-auto">
+        <Tabs value={activeDataset} onValueChange={setActiveDataset}>
+          <TabsList>
+            {Object.entries(datasets).map(([key, ds]) => (
+              <TabsTrigger key={key} value={key} className="text-xs">
+                {ds.label} <Badge variant="secondary" className="ml-1.5 text-[9px] h-4 px-1">{ds.data.length}</Badge>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <DataExplorerTable
+        data={currentData}
+        columns={currentData.length > 0 ? Object.keys(currentData[0]).slice(0, 8).map(k => ({ key: k, label: k })) : []}
+        pageSize={25}
+        exportFilename={`widocznosc_raw_${activeDataset}`}
+      />
+    </div>
+  )
+}
+
+export default function VisibilityPage({ params }: { params: { id: string } }) {
+  const router = useRouter()
+  const [isAuth, setIsAuth] = useState(false)
+  const [activeTab, setActiveTab] = useState('overview')
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsAuth(!!session)
+      if (!session) router.push('/login')
+    }
+    checkAuth()
+  }, [router])
+
+  const { data: audit, isLoading } = useQuery({
+    queryKey: ['audit', params.id],
+    queryFn: () => auditsAPI.get(params.id),
+    enabled: isAuth,
+  })
+
+  if (!isAuth || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  const senuto = audit?.results?.senuto
+  if (!senuto || !senuto.visibility) {
+    return (
+      <div className="container mx-auto py-8 px-4 text-center">
+        <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Brak danych widoczności</h1>
+        <p className="text-muted-foreground">Analiza widoczności nie została przeprowadzona dla tego audytu.</p>
+      </div>
+    )
+  }
+
+  const vis = senuto.visibility
+  const stats = vis.statistics?.statistics || {}
+  const dash = vis.dashboard || {}
+  const hasAiData = !!(audit?.results?.ai_contexts?.visibility)
+
+  return (
+    <AuditPageLayout
+      aiPanel={<AiInsightsPanel area="visibility" audit={audit!} />}
+      aiPanelTitle="AI: Widoczność"
+      hasAiData={hasAiData}
+    >
+      <div className="space-y-8">
+        <div className="flex items-center gap-3">
+          <Globe2 className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">Analiza Widoczności</h1>
+            <p className="text-sm text-muted-foreground">Baza: {senuto.country_id === 200 ? 'Polska 2.0' : 'Inna'} • Tryb: {senuto.fetch_mode}</p>
+          </div>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList>
+            <TabsTrigger value="overview">Przegląd</TabsTrigger>
+            <TabsTrigger value="keywords">Frazy</TabsTrigger>
+            <TabsTrigger value="raw">Surowe dane (RAW)</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="pt-6">
+            <OverviewTab vis={vis} stats={stats} dash={dash} audit={audit!} />
+          </TabsContent>
+
+          <TabsContent value="keywords" className="pt-6">
+            <KeywordsTab vis={vis} />
+          </TabsContent>
+
+          <TabsContent value="raw" className="pt-6">
+            <RawDataTab vis={vis} audit={audit!} />
+          </TabsContent>
+        </Tabs>
+      </div>
     </AuditPageLayout>
   )
 }

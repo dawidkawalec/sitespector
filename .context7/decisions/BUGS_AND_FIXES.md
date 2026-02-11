@@ -259,6 +259,30 @@ refetchInterval: (query) => {
 
 ---
 
+### BUG-008: Frontend Reference Errors & 404s after Deployment
+
+**Reported**: 2026-02-11
+
+**Status**: ✅ FIXED (2026-02-11)
+
+**Severity**: HIGH
+
+**Description**:
+- `ReferenceError: senutoCountry is not defined` in NewAuditDialog.
+- `ReferenceError: Globe is not defined` (inconsistent icon imports).
+- `404 Not Found` for API calls due to double `/api/api` prefix.
+- System Status services showing "offline" due to missing Docker socket in backend.
+
+**Fix**:
+- Added missing `useState` and `useRouter` hooks in `NewAuditDialog.tsx`.
+- Standardized icon imports to `Globe2` across all pages.
+- Fixed `API_URL` logic in `lib/api.ts` to strip trailing slashes/prefixes.
+- Mounted `/var/run/docker.sock` to backend container and added Senuto status check.
+
+**Impact**: HIGH - Frontend is stable, API calls are correct, and system status reflects reality.
+
+---
+
 ## Known Issues
 
 ### ISSUE-001: PDF Template Incomplete

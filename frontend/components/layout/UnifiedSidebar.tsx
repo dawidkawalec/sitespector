@@ -104,12 +104,11 @@ const auditDataItems = [
   { href: '/audits/[id]', icon: RiFileTextFill, label: 'Podsumowanie', id: 'overview' },
   { href: '/audits/[id]/seo', icon: RiSearchEyeFill, label: 'SEO', id: 'seo' },
   { href: '/audits/[id]/performance', icon: RiShieldFlashFill, label: 'Wydajność', id: 'performance' },
-  { href: '/audits/[id]/visibility', icon: Globe2, label: 'Widoczność', id: 'senuto' },
-  { href: '/audits/[id]/backlinks', icon: Share2, label: 'Backlinki', id: 'backlinks' },
-  { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki wewnętrzne', id: 'links' },
+  { href: '/audits/[id]/visibility', icon: Globe2, label: 'Widoczność', id: 'visibility' },
+  { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki', id: 'links' },
   { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
-  { href: '/audits/[id]/crawl-data', icon: Bug, label: 'Screaming Frog', id: 'crawl-data' },
-  { href: '/audits/[id]/lighthouse-data', icon: Gauge, label: 'Lighthouse', id: 'lighthouse-data' },
+  { href: '/audits/[id]/ux-check', icon: MousePointer, label: 'Użyteczność', id: 'ux-check' },
+  { href: '/audits/[id]/security', icon: Shield, label: 'Bezpieczeństwo', id: 'security' },
 ]
 
 // STRATEGIA AI section
@@ -121,11 +120,11 @@ const auditAiItems = [
 // RAPORTY section
 const auditReportsItems = [
   { href: '/audits/[id]/comparison', icon: ArrowLeftRight, label: 'Porównanie', id: 'comparison' },
+  { href: '/audits/[id]/benchmark', icon: RiBarChartFill, label: 'Benchmark', id: 'benchmark' },
+  { href: '/audits/[id]/competitors', icon: RiTeamFill, label: 'Konkurencja', id: 'competitors' },
+  { href: '/audits/[id]/architecture', icon: Network, label: 'Architektura', id: 'architecture' },
   { href: '/audits/[id]/pdf', icon: FileDown, label: 'Raport PDF', id: 'pdf' },
   { href: '/audits/[id]/client-report', icon: RiFileTextFill, label: 'Raport dla klienta', id: 'client-report' },
-  { href: '/audits/[id]/benchmark', icon: RiBarChartFill, label: 'Benchmark', id: 'benchmark' },
-  { href: '/audits/[id]/architecture', icon: Network, label: 'Architektura', id: 'architecture' },
-  { href: '/audits/[id]/competitors', icon: RiTeamFill, label: 'Konkurencja', id: 'competitors' },
   { href: '/audits/[id]/debug', icon: Bug, label: 'Debug', id: 'debug' },
 ]
 
@@ -139,13 +138,11 @@ const settingsItems = [
   { href: '/settings/notifications', icon: Bell, label: 'Powiadomienia' },
 ]
 
-// Audit tools section items
+// Audit tools section items (deprecated/internal)
 const auditToolsItems = [
   { href: '/audits/[id]/quick-wins', icon: Zap, label: 'Quick Wins', id: 'quick-wins' },
   { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki', id: 'links' },
   { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
-  { href: '/audits/[id]/visibility', icon: Globe2, label: 'Widoczność (Senuto)', id: 'senuto' },
-  { href: '/audits/[id]/backlinks', icon: Share2, label: 'Backlinki (Senuto)', id: 'backlinks' },
 ]
 
 function SystemStatusSection({ systemStatus, getStatusColor }: { systemStatus: any, getStatusColor: (status: string) => string }) {
