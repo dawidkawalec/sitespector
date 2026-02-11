@@ -4,21 +4,44 @@ Gemini API client for AI analysis.
 
 import logging
 import asyncio
-from typing import Dict, Any, Optional
+import os
+from typing import Dict, Any, Optional, List
 import google.generativeai as genai
-from tenacity import retry, stop_after_attempt, wait_exponential
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Configure Gemini
-if settings.GEMINI_API_KEY:
-    genai.configure(api_key=settings.GEMINI_API_KEY)
+def _get_gemini_api_keys() -> List[str]:
+    """Return ordered list of Gemini API keys (primary + fallbacks).
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=10)
-)
+    Secrets MUST come from environment only (VPS .env), never from repo.
+    """
+    keys: List[str] = []
+
+    primary = (settings.GEMINI_API_KEY or "").strip()
+    if primary:
+        keys.append(primary)
+
+    fallback = (getattr(settings, "GEMINI_API_KEY_FALLBACK", "") or "").strip()
+    if fallback:
+        keys.append(fallback)
+
+    extra = (getattr(settings, "GEMINI_API_KEYS", "") or os.getenv("GEMINI_API_KEYS") or "").strip()
+    if extra:
+        for part in extra.split(","):
+            k = part.strip()
+            if k:
+                keys.append(k)
+
+    # De-duplicate while preserving order
+    uniq: List[str] = []
+    seen = set()
+    for k in keys:
+        if k not in seen:
+            uniq.append(k)
+            seen.add(k)
+    return uniq
+
 async def call_claude(
     prompt: str,
     system_prompt: str = "",
@@ -38,7 +61,8 @@ async def call_claude(
     prompt_len = len(prompt or "")
     system_len = len(system_prompt or "")
 
-    if not settings.GEMINI_API_KEY:
+    api_keys = _get_gemini_api_keys()
+    if not api_keys:
         logger.warning(
             "Gemini API key not configured - returning mock response "
             "(prompt_len=%s, system_len=%s)",
@@ -47,73 +71,90 @@ async def call_claude(
         )
         return _generate_mock_response(reason="missing_api_key")
     
-    try:
-        # Use Gemini 3.0 Flash Preview
-        model_name = "gemini-3-flash-preview"
-        logger.info(
-            "Calling Gemini API (model=%s, prompt_len=%s, system_len=%s)",
-            model_name,
-            prompt_len,
-            system_len,
-        )
-        
-        # Configure model with system instruction
-        model = genai.GenerativeModel(
-            model_name=model_name,
-            system_instruction=system_prompt if system_prompt else None
-        )
-        
-        # Generate content
-        # Use asyncio.to_thread for sync Gemini call to avoid blocking event loop
-        # and wrap in wait_for for per-call timeout
-        response = await asyncio.wait_for(
-            asyncio.to_thread(
-                model.generate_content,
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=max_tokens or 2048,
-                    temperature=0.7
-                )
-            ),
-            timeout=30.0  # 30 seconds timeout per call
-        )
-        
-        text = response.text or ""
-        preview = text[:180].replace("\n", " ")
-        logger.info(
-            "Gemini API success (model=%s, response_len=%s, preview=%s)",
-            model_name,
-            len(text),
-            preview,
-        )
-        return text
-        
-    except asyncio.TimeoutError:
-        logger.error(f"Gemini API TIMEOUT for model {model_name}")
-        raise Exception(f"Gemini API call timed out after 30s")
-    except Exception as e:
-        logger.error(
-            "Gemini API error (model=%s, error_type=%s): %s",
-            model_name,
-            type(e).__name__,
-            e,
-        )
-        # Only return mock if it's a configuration issue or we want to allow partial success
-        # For now, let's keep mock fallback but log it clearly
-        logger.warning(
-            "Returning mock response due to API error "
-            "(prompt_len=%s, system_len=%s)",
-            prompt_len,
-            system_len,
-        )
-        msg = str(e)
-        if "reported as leaked" in msg or "leaked" in msg:
-            return _generate_mock_response(reason="api_key_leaked")
-        if "exceeded your current quota" in msg or "ResourceExhausted" in msg or "429" in msg:
-            return _generate_mock_response(reason="quota_exhausted")
-        if "PermissionDenied" in msg or "403" in msg:
-            return _generate_mock_response(reason="permission_denied")
-        return _generate_mock_response(reason="unknown_error")
+    # Use Gemini 3.0 Flash Preview
+    model_name = "gemini-3-flash-preview"
+    last_reason = "unknown_error"
+
+    for idx, key in enumerate(api_keys):
+        try:
+            genai.configure(api_key=key)
+            logger.info(
+                "Calling Gemini API (model=%s, key_index=%s/%s, prompt_len=%s, system_len=%s)",
+                model_name,
+                idx + 1,
+                len(api_keys),
+                prompt_len,
+                system_len,
+            )
+
+            model = genai.GenerativeModel(
+                model_name=model_name,
+                system_instruction=system_prompt if system_prompt else None,
+            )
+
+            response = await asyncio.wait_for(
+                asyncio.to_thread(
+                    model.generate_content,
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=max_tokens or 2048,
+                        temperature=0.7,
+                    ),
+                ),
+                timeout=30.0,
+            )
+
+            text = response.text or ""
+            preview = text[:180].replace("\n", " ")
+            logger.info(
+                "Gemini API success (model=%s, key_index=%s/%s, response_len=%s, preview=%s)",
+                model_name,
+                idx + 1,
+                len(api_keys),
+                len(text),
+                preview,
+            )
+            return text
+
+        except asyncio.TimeoutError:
+            last_reason = "timeout"
+            logger.error(
+                "Gemini API TIMEOUT (model=%s, key_index=%s/%s)",
+                model_name,
+                idx + 1,
+                len(api_keys),
+            )
+            continue
+
+        except Exception as e:
+            msg = str(e)
+            if "reported as leaked" in msg or "leaked" in msg:
+                last_reason = "api_key_leaked"
+            elif "exceeded your current quota" in msg or "ResourceExhausted" in msg or "429" in msg:
+                last_reason = "quota_exhausted"
+            elif "PermissionDenied" in msg or "403" in msg:
+                last_reason = "permission_denied"
+            else:
+                last_reason = "unknown_error"
+
+            logger.error(
+                "Gemini API error (model=%s, key_index=%s/%s, error_type=%s): %s",
+                model_name,
+                idx + 1,
+                len(api_keys),
+                type(e).__name__,
+                e,
+            )
+
+            # If we have another key, try it; otherwise fallback.
+            continue
+
+    logger.warning(
+        "Returning mock response after exhausting all Gemini keys (reason=%s, keys_tried=%s)",
+        last_reason,
+        len(api_keys),
+    )
+    return _generate_mock_response(reason=last_reason)
 
 
 def _generate_mock_response(reason: str = "unknown") -> str:

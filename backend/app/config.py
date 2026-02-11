@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     STRIPE_PRICE_ID_ENTERPRISE: str = Field(default="", description="Stripe price ID for Enterprise plan")
 
     GEMINI_API_KEY: str = Field(default="", description="Google Gemini API key")
+    GEMINI_API_KEY_FALLBACK: str = Field(default="", description="Google Gemini API key (fallback)")
+    GEMINI_API_KEYS: str = Field(
+        default="",
+        description="Optional comma-separated list of Gemini API keys (in addition to GEMINI_API_KEY)",
+    )
     
     # Frontend URL (for redirects, Stripe)
     FRONTEND_URL: str = Field(default="https://sitespector.app", description="Frontend URL")

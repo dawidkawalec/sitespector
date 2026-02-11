@@ -10,16 +10,13 @@ SiteSpector uses **Google Gemini API** (gemini-3-flash) for AI-powered content a
 
 ---
 
-## ⚠️ CRITICAL: No Fallbacks Policy
+## AI Availability and Fallbacks
 
-**As of 2025-02-03**: ALL fallback mechanisms have been removed from the system.
+SiteSpector prioritizes transparency and continuity:
+- Technical phase failures (crawl/performance tools) are treated as critical.
+- AI phase failures should be visible and diagnosable; audits may still complete with AI placeholders when the model is unavailable.
 
-- ✅ If Screaming Frog fails → audit fails (no HTTP fallback)
-- ✅ If Lighthouse fails → audit fails (no mock data)
-- ✅ If AI analysis fails → audit fails (no default responses)
-- ✅ If PDF generation fails → explicit error (no empty PDFs)
-
-**Philosophy**: Transparency over silent failures. Users must know exactly what failed.
+The UI explicitly shows when data comes from fallback (and why), instead of silently returning empty insights.
 
 ---
 
@@ -27,7 +24,7 @@ SiteSpector uses **Google Gemini API** (gemini-3-flash) for AI-powered content a
 
 ### Model
 
-**Name**: `gemini-3-flash`
+**Name**: `gemini-3-flash-preview`
 
 **Why Gemini?**
 - Very cheap (~10x cheaper than GPT-4)
@@ -39,14 +36,19 @@ SiteSpector uses **Google Gemini API** (gemini-3-flash) for AI-powered content a
 
 **Location**: `backend/app/services/ai_client.py`
 
-```python
-import google.generativeai as genai
-from app.config import settings
+The client supports multiple API keys to improve resilience when:
+- primary key is out of quota / billing (429),
+- primary key is blocked (403 leaked/permission),
+- transient network issues occur.
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
+Environment variables (VPS only, never commit secrets):
+- `GEMINI_API_KEY` (primary)
+- `GEMINI_API_KEY_FALLBACK` (secondary)
+- `GEMINI_API_KEYS` (optional comma-separated extra keys)
 
-model = genai.GenerativeModel('gemini-3-flash')
-```
+Behavior:
+- `call_claude()` attempts keys in order and switches automatically on quota/permission errors.
+- If all keys fail, it returns a schema-compatible fallback payload with a reason code (quota/leaked/missing).
 
 ---
 

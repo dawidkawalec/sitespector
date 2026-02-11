@@ -153,6 +153,15 @@ This helps identify cases where:
 - parsed JSON schema does not match expected keys,
 - strategy keys are missing from final persisted `results`.
 
+### Gemini Multi-Key Fallback
+
+AI client supports multiple Gemini keys to reduce outages when a single key is blocked or out of quota:
+- `GEMINI_API_KEY` (primary)
+- `GEMINI_API_KEY_FALLBACK` (secondary)
+- optional `GEMINI_API_KEYS` (comma-separated)
+
+Worker does not need special handling for this; `ai_client` rotates keys per call and logs `key_index` without exposing secrets.
+
 ---
 
 ## Monitoring
