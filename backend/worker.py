@@ -118,6 +118,21 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
                 duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
                 audit.processing_step = "senuto:done"
                 await add_audit_log(audit, "senuto", "success", "Senuto analysis completed", duration)
+                senuto_meta = (senuto_data or {}).get("_meta", {})
+                await add_audit_log(
+                    audit,
+                    "senuto_extended",
+                    "success",
+                    (
+                        "Extended Senuto payload collected "
+                        f"(positions={senuto_meta.get('positions_count', 0)}"
+                        f"/{senuto_meta.get('positions_total', 0)}, "
+                        f"wins={senuto_meta.get('wins_count', 0)}, "
+                        f"losses={senuto_meta.get('losses_count', 0)}, "
+                        f"backlinks={senuto_meta.get('backlinks_count', 0)}, "
+                        f"aio_keywords={senuto_meta.get('ai_overviews_keywords_count', 0)})"
+                    ),
+                )
             except Exception as e:
                 logger.warning(f"Senuto analysis failed (non-fatal): {e}")
                 senuto_data = {}
@@ -312,6 +327,14 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
             if senuto_data.get("backlinks"):
                 context_tasks["backlinks"] = ai_analysis.analyze_backlinks_context(
                     senuto_data["backlinks"], crawl_data
+                )
+            if (
+                senuto_data.get("visibility", {}).get("ai_overviews", {}).get("keywords")
+                or senuto_data.get("visibility", {}).get("ai_overviews", {}).get("statistics")
+            ):
+                context_tasks["ai_overviews"] = ai_analysis.analyze_ai_overviews_context(
+                    senuto_data["visibility"].get("ai_overviews", {}),
+                    crawl_data,
                 )
             
             ctx_names = list(context_tasks.keys())

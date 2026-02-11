@@ -32,7 +32,7 @@ import {
 } from 'lucide-react'
 import type { Audit } from '@/lib/api'
 
-type AiArea = 'seo' | 'performance' | 'visibility' | 'backlinks' | 'links' | 'images' | 'crawl' | 'lighthouse'
+type AiArea = 'seo' | 'performance' | 'visibility' | 'ai_overviews' | 'backlinks' | 'links' | 'images' | 'crawl' | 'lighthouse'
 
 interface AiInsightsPanelProps {
   area: AiArea
@@ -64,6 +64,7 @@ const AREA_LABELS: Record<AiArea, string> = {
   seo: 'SEO',
   performance: 'Wydajność',
   visibility: 'Widoczność',
+  ai_overviews: 'AI Overviews',
   backlinks: 'Backlinki',
   links: 'Linki wewnętrzne',
   images: 'Obrazy',

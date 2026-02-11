@@ -356,6 +356,34 @@ refetchInterval: (query) => {
 
 ---
 
+### BUG-011: Senuto paginated POST payload encoded as form-data
+
+**Reported**: 2026-02-12
+
+**Status**: ✅ FIXED (2026-02-12)
+
+**Severity**: HIGH
+
+**Description**:
+- Some Senuto paginated endpoints returned incomplete/empty payloads.
+- Root cause was inconsistent request encoding for POST pagination requests.
+
+**Root cause**:
+- Pagination helper used `data_body` for POST by default.
+- Senuto visibility/backlinks paginated endpoints require JSON payload.
+
+**Fix**:
+- Added raw request helper + explicit JSON pagination path in `senuto.py`.
+- Unified paginated POST calls to send `json_body`.
+- Added extended metadata counters to validate payload completeness.
+
+**Impact**:
+- Full payloads are now fetched for positions, wins/losses, backlinks, AIO keywords, and sections detail.
+
+**Related**: `backend/app/services/senuto.py`, `backend/worker.py`
+
+---
+
 ## Known Issues
 
 ### ISSUE-001: PDF Template Incomplete
@@ -518,7 +546,7 @@ When adding new bugs to this file, use this format:
 
 ---
 
-**Last Updated**: 2026-02-11  
-**Resolved Bugs**: 10 (incl. BUG-010 AI empty insights, ISSUE-002 SSL)  
+**Last Updated**: 2026-02-12  
+**Resolved Bugs**: 11 (incl. BUG-011 Senuto pagination payload fix)  
 **Known Issues**: 3  
 **Watching**: 2

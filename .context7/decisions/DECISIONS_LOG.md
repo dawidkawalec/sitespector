@@ -215,6 +215,21 @@
 
 ---
 
-**Last Updated**: 2026-02-11
-**Total Decisions**: 20 accepted
+## ADR-021: Senuto Full Data Integration (Visibility + AIO + Sections)
+**Date**: 2026-02-12
+**Status**: ✅ Done
+**Decision**: Expand Senuto ingestion to full high-cap datasets and add AI Overviews + sections detail endpoints; expose data across dedicated frontend modules.
+**Rationale**: Existing UI covered only a subset of Senuto capabilities and limited keyword volume, reducing analysis depth.
+**Outcome**:
+- `backend/app/services/senuto.py` expanded to 20 endpoints and high-cap pagination.
+- Added `results.senuto.visibility.ai_overviews` and `sections_subdomains/sections_urls`.
+- Added worker log step `senuto_extended` and AI context `ai_overviews`.
+- Added new frontend route `/audits/[id]/ai-overviews`.
+- Visibility page upgraded with advanced tabs/charts and feature distributions.
+- Sidebar + tooltips updated for new metrics.
+
+---
+
+**Last Updated**: 2026-02-12
+**Total Decisions**: 21 accepted
 **Review**: Update when making significant architectural changes.

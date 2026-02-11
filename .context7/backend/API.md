@@ -775,6 +775,27 @@ Trigger contextual AI analysis for specific area(s).
 
 ---
 
+## Senuto Data Contract (in `GET /api/audits/{id}`)
+
+`audit.results.senuto` now contains expanded payload:
+
+- `senuto._meta.positions_total` - total available keywords from Senuto pagination.
+- `senuto.visibility.positions|wins|losses` - high-cap paginated datasets.
+- `senuto.visibility.sections_subdomains` - subdomains statistics list.
+- `senuto.visibility.sections_urls` - URL-level sections statistics list.
+- `senuto.visibility.ai_overviews.statistics` - aggregate AIO metrics.
+- `senuto.visibility.ai_overviews.keywords` - keyword-level AIO rows with intentions and AIO text metadata.
+- `senuto.visibility.ai_overviews.competitors` - AIO competitor comparison dataset.
+
+AI contextual analyses can include:
+- `results.ai_contexts.ai_overviews` (when AIO data is available)
+
+Raw ZIP export now includes:
+- `senuto/ai_overviews.json`
+- `senuto/sections_detail.json`
+
+---
+
 ## CORS
 
 **Allowed origins**:
@@ -798,6 +819,6 @@ Trigger contextual AI analysis for specific area(s).
 
 ---
 
-**Last Updated**: 2026-02-11  
+**Last Updated**: 2026-02-12  
 **API Version**: v1  
 **Base URL**: https://sitespector.app/api

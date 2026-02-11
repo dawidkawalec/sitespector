@@ -498,7 +498,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                       </CardContent>
                     </Card>
                   </Link>
-                  <Link href={`/audits/${params.id}/backlinks`} className="block">
+                  <Link href={`/audits/${params.id}/links?tab=incoming`} className="block">
                     <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
                       <CardContent className="pt-6 text-center">
                         <div className="text-2xl font-bold text-primary">{senuto.backlinks.statistics?.backlinks_count || 0}</div>
@@ -506,7 +506,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                       </CardContent>
                     </Card>
                   </Link>
-                  <Link href={`/audits/${params.id}/backlinks`} className="block">
+                  <Link href={`/audits/${params.id}/links?tab=incoming`} className="block">
                     <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
                       <CardContent className="pt-6 text-center">
                         <div className="text-2xl font-bold text-primary">{senuto.backlinks.statistics?.domains_count || 0}</div>
@@ -515,6 +515,61 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                     </Card>
                   </Link>
                 </div>
+              )}
+
+              {senuto?.visibility?.statistics?.statistics && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Link href={`/audits/${params.id}/visibility`} className="block">
+                    <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-2xl font-bold text-primary">{formatNumber(senuto.visibility.statistics.statistics.domain_rank?.recent_value || 0)}</div>
+                        <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1">Domain Rank</div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                  <Link href={`/audits/${params.id}/visibility`} className="block">
+                    <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-2xl font-bold text-primary">{formatNumber(senuto.visibility.statistics.statistics.ads_equivalent?.recent_value || 0)} PLN</div>
+                        <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1">Ads Equivalent</div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                  <Link href={`/audits/${params.id}/ai-overviews`} className="block">
+                    <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-2xl font-bold text-primary">{formatNumber(senuto.visibility.statistics.statistics.aio_visible_keywords?.recent_value || 0)}</div>
+                        <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1">AIO Frazy</div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                  <Link href={`/audits/${params.id}/ai-overviews`} className="block">
+                    <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-2xl font-bold text-primary">{formatNumber(senuto.visibility.ai_overviews?.statistics?.aio_keywords_with_domain_count || 0)}</div>
+                        <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1">Cytowania AIO</div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
+              )}
+
+              {senuto?.visibility?.dashboard?.technologies?.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Wykryte technologie</CardTitle>
+                    <CardDescription>Technologie wykryte przez Senuto</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {senuto.visibility.dashboard.technologies.map((tech: any, idx: number) => (
+                        <Badge key={`${tech.name}-${idx}`} variant="outline" className="normal-case tracking-normal text-[11px] py-1 px-2">
+                          {tech.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Top Priority Issues */}

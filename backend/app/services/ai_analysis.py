@@ -870,6 +870,68 @@ async def analyze_visibility_context(
     }
 
 
+async def analyze_ai_overviews_context(
+    ai_overviews_data: Dict[str, Any],
+    crawl: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    AI Overviews strategy from Senuto AIO data.
+    """
+    logger.info("Analyzing AI Overviews context")
+
+    stats = ai_overviews_data.get("statistics", {}) or {}
+    keywords = ai_overviews_data.get("keywords", []) or []
+    competitors = ai_overviews_data.get("competitors", []) or []
+
+    keyword_preview = ", ".join(
+        [
+            f"{k.get('keyword', '')}(aio_pos:{k.get('best_aio_pos', '-')}, organic:{k.get('organic_pos', '-')})"
+            for k in keywords[:5]
+        ]
+    )
+    competitors_preview = ", ".join(
+        [
+            f"{c.get('domain', '')}(avg:{c.get('aio_avg_position', '-')}, common:{c.get('aio_common_words', 0)})"
+            for c in competitors[:5]
+        ]
+    )
+
+    system_prompt = """Jesteś ekspertem SEO AI Overviews. Przeanalizuj obecność domeny w AIO i podaj strategię.
+    Odpowiedz w JSON:
+    {
+        "key_findings": ["..."],
+        "recommendations": ["..."],
+        "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+        "priority_issues": ["..."],
+        "aio_opportunities": ["..."],
+        "competitor_gaps": ["..."],
+        "content_rewrite_targets": ["..."]
+    }"""
+
+    user_prompt = f"""Dane AI Overviews:
+    - Cytowania w AIO: {stats.get('aio_keywords_with_domain_count', 0)}
+    - Widoczne słowa AIO: {stats.get('aio_keywords_count', 0)}
+    - Śr. pozycja AIO: {stats.get('aio_avg_pos', 0)}
+    - Wzrosty/Spadki AIO: {stats.get('aio_wins_count', 0)}/{stats.get('aio_losses_count', 0)}
+    - Utrata visibility: {stats.get('aio_vis_loss_percentage', 0)}%
+    - Przykładowe frazy: {keyword_preview}
+    - Konkurencja AIO: {competitors_preview}
+    - Liczba stron z crawla: {crawl.get('pages_crawled', 0)}
+
+    Przygotuj max 5 key_findings, 5 recommendations, 3 aio_opportunities, 3 competitor_gaps."""
+
+    result = await _call_ai_context(system_prompt, user_prompt)
+    return {
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+        "aio_opportunities": result.get("aio_opportunities", []),
+        "competitor_gaps": result.get("competitor_gaps", []),
+        "content_rewrite_targets": result.get("content_rewrite_targets", []),
+    }
+
+
 async def analyze_backlinks_context(
     senuto_backlinks: Dict[str, Any],
     crawl: Dict[str, Any]

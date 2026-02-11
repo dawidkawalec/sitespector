@@ -26,8 +26,9 @@ app/
 │   │   ├── page.tsx           # Overview (enriched with Senuto stats)
 │   │   ├── seo/page.tsx       # SEO Analysis (Overview + RAW)
 │   │   ├── performance/page.tsx # Performance Analysis (Overview + RAW)
-│   │   ├── visibility/page.tsx  # Visibility Analysis (Overview + Keywords + RAW)
-│   │   ├── links/page.tsx       # Links Analysis (Internal + Incoming + RAW)
+│   │   ├── visibility/page.tsx  # Visibility Analysis (6+ tabs, features distributions, sections, cannibalization)
+│   │   ├── ai-overviews/page.tsx # AI Overviews module (KPI, keywords, competitors)
+│   │   ├── links/page.tsx       # Links Analysis (Internal + Incoming + RAW, large-data friendly)
 │   │   ├── images/page.tsx      # Images Analysis (Overview + RAW)
 │   │   ├── ux-check/page.tsx    # UX Analysis
 │   │   ├── security/page.tsx    # Security Analysis
@@ -114,6 +115,33 @@ Each major section contains a **Surowe dane (RAW)** tab providing access to the 
 **Route**: `/audits/:id`
 
 **Purpose**: Display detailed audit results (overview). Subpages under same layout.
+
+### Feb 2026 additions
+- Expanded Senuto KPI grid with `domain_rank`, `ads_equivalent`, and AIO quick stats.
+- Added technology chips section from Senuto domain dashboard payload.
+- Added direct quick-link card to `/audits/[id]/ai-overviews`.
+
+## Visibility Page (`app/(app)/audits/[id]/visibility/page.tsx`)
+
+Expanded from basic 3 tabs to multi-module workflow:
+- `Przegląd`
+- `Pozycje`
+- `Wzrosty/Spadki`
+- `Pozyskane/Utracone`
+- `Cechy fraz`
+- `Strony`
+- `Kanibalizacja`
+- `Surowe dane`
+
+Heavy computations are memoized (`useMemo`) for large keyword datasets.
+
+## AI Overviews Page (`app/(app)/audits/[id]/ai-overviews/page.tsx`)
+
+Dedicated page for Senuto AIO data:
+- KPI cards (citations, avg AIO position, wins/losses, visibility loss)
+- Position distribution + intent distribution charts
+- Keyword-level explorer table
+- Competitor comparison chart + table
 
 ---
 
@@ -206,6 +234,6 @@ if (isError) {
 
 ---
 
-**Last Updated**: 2026-02-11  
+**Last Updated**: 2026-02-12  
 **Framework**: Next.js 14 (App Router)  
 **Status**: Tool-agnostic IA implemented with RAW data explorers.

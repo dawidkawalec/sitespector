@@ -1,6 +1,22 @@
 'use client'
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+} from 'recharts'
 import { formatNumber } from '@/lib/utils'
 
 interface PageStatusChartProps {
@@ -296,5 +312,222 @@ export function LinkAttributesPieChart({ attributes }: LinkAttributesPieChartPro
         <Legend />
       </PieChart>
     </ResponsiveContainer>
+  )
+}
+
+type NumberMap = Record<string, number>
+
+const BASE_COLORS = ['#81d86f', '#0b363d', '#ff8945', '#eea47f', '#dc3545', '#616c6e', '#4f46e5', '#14b8a6']
+
+function renderNoData(data: unknown) {
+  if (!data || (Array.isArray(data) && data.length === 0)) {
+    return <div className="text-muted-foreground text-center py-8">Brak danych</div>
+  }
+  return null
+}
+
+export function IntentDistributionPieChart({
+  data,
+}: {
+  data: Array<{ name: string; value: number }>
+}) {
+  const empty = renderNoData(data)
+  if (empty) return empty
+
+  return (
+    <ResponsiveContainer width="100%" height={260}>
+      <PieChart>
+        <Pie data={data} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={3}>
+          {data.map((_, idx) => (
+            <Cell key={`intent-${idx}`} fill={BASE_COLORS[idx % BASE_COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+        <Legend />
+      </PieChart>
+    </ResponsiveContainer>
+  )
+}
+
+export function DifficultyDistributionChart({ data }: { data: Array<{ range: string; count: number }> }) {
+  const empty = renderNoData(data)
+  if (empty) return empty
+
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="range" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+        <Tooltip />
+        <Bar dataKey="count" fill="#0b363d" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+export function SearchVolumeDistributionChart({ data }: { data: Array<{ range: string; count: number }> }) {
+  const empty = renderNoData(data)
+  if (empty) return empty
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="range" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+        <Tooltip />
+        <Bar dataKey="count" fill="#ff8945" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+export function SerpFeaturesChart({ data }: { data: Array<{ name: string; count: number }> }) {
+  const empty = renderNoData(data)
+  if (empty) return empty
+  return (
+    <ResponsiveContainer width="100%" height={320}>
+      <BarChart data={data} layout="vertical">
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+        <XAxis type="number" axisLine={false} tickLine={false} />
+        <YAxis type="category" dataKey="name" width={130} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+        <Tooltip />
+        <Bar dataKey="count" fill="#14b8a6" radius={[0, 4, 4, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+export function WordCountDistributionChart({ data }: { data: Array<{ range: string; count: number }> }) {
+  const empty = renderNoData(data)
+  if (empty) return empty
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="range" axisLine={false} tickLine={false} />
+        <YAxis axisLine={false} tickLine={false} />
+        <Tooltip />
+        <Bar dataKey="count" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+export function TrendsPeakChart({ data }: { data: Array<{ month: string; count: number }> }) {
+  const empty = renderNoData(data)
+  if (empty) return empty
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="month" axisLine={false} tickLine={false} />
+        <YAxis axisLine={false} tickLine={false} />
+        <Tooltip />
+        <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+export function CompetitorsDualBarChart({
+  competitors,
+}: {
+  competitors: Array<{ domain: string; common_keywords?: number | null; statistics?: any }>
+}) {
+  const data = (competitors || []).slice(0, 10).map((c) => ({
+    name: c.domain,
+    common: c.common_keywords || 0,
+    all: c.statistics?.top50?.current || 0,
+  }))
+  const empty = renderNoData(data)
+  if (empty) return empty
+  return (
+    <ResponsiveContainer width="100%" height={360}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+        <YAxis axisLine={false} tickLine={false} />
+        <Tooltip />
+        <Legend />
+        <Bar dataKey="common" fill="#0b363d" name="Wspólne słowa" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="all" fill="#81d86f" name="Wszystkie słowa" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+export function AIOCompetitorsChart({
+  data,
+}: {
+  data: Array<{ domain: string; common: number; exclusiveMe: number; exclusiveCompetitor: number }>
+}) {
+  const empty = renderNoData(data)
+  if (empty) return empty
+  return (
+    <ResponsiveContainer width="100%" height={360}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="domain" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+        <YAxis axisLine={false} tickLine={false} />
+        <Tooltip />
+        <Legend />
+        <Bar dataKey="common" fill="#0b363d" name="Wspólne AIO" />
+        <Bar dataKey="exclusiveMe" fill="#81d86f" name="Unikalne dla mnie" />
+        <Bar dataKey="exclusiveCompetitor" fill="#ff8945" name="Unikalne konkurenta" />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+export function AIOPositionDistributionChart({ data }: { data: NumberMap }) {
+  const chartData = Object.entries(data || {})
+    .map(([k, v]) => ({ pos: Number(k), count: v }))
+    .sort((a, b) => a.pos - b.pos)
+  const empty = renderNoData(chartData)
+  if (empty) return empty
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="pos" axisLine={false} tickLine={false} />
+        <YAxis axisLine={false} tickLine={false} />
+        <Tooltip />
+        <Bar dataKey="count" fill="#4f46e5" />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+export function PositionSparkline({ history }: { history: Record<string, { position?: number } | number> }) {
+  const data = Object.entries(history || {})
+    .map(([date, payload]) => ({
+      date,
+      value: typeof payload === 'number' ? payload : payload?.position ?? 0,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+  if (!data.length) return <span className="text-muted-foreground text-[10px]">—</span>
+  return (
+    <div className="h-8 w-20">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data}>
+          <Line type="monotone" dataKey="value" stroke="#0b363d" strokeWidth={2} dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+export function TrendsSparkline({ trend }: { trend: number[] }) {
+  const data = (trend || []).map((value, i) => ({ month: i + 1, value }))
+  if (!data.length) return <span className="text-muted-foreground text-[10px]">—</span>
+  return (
+    <div className="h-8 w-20">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data}>
+          <Area type="monotone" dataKey="value" stroke="#ff8945" fill="#ff8945" fillOpacity={0.25} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
   )
 }

@@ -204,6 +204,51 @@ export const TOOLTIPS = {
     description: "Procentowy udział linków przekazujących moc (dofollow) w całym profilu linkowym.",
     source: "Senuto",
   },
+  domain_rank: {
+    label: "Domain Rank",
+    description: "Pozycja domeny w rankingu Senuto względem wszystkich analizowanych domen.",
+    source: "Senuto",
+  },
+  ads_equivalent: {
+    label: "Ads Equivalent",
+    description: "Szacowany miesięczny ekwiwalent kosztu reklam Google Ads dla ruchu organicznego.",
+    source: "Senuto",
+  },
+  aio_keywords: {
+    label: "AIO Keywords",
+    description: "Liczba słów kluczowych, dla których domena pojawia się w AI Overviews.",
+    source: "Senuto",
+  },
+  aio_avg_pos: {
+    label: "Średnia pozycja AIO",
+    description: "Średnia pozycja domeny w źródłach cytowanych przez AI Overviews.",
+    source: "Senuto",
+  },
+  aio_vis_loss: {
+    label: "Utrata widoczności przez AIO",
+    description: "Szacowany procent widoczności organicznej potencjalnie przejmowanej przez AI Overviews.",
+    source: "Senuto",
+  },
+  keyword_difficulty: {
+    label: "Keyword Difficulty",
+    description: "Szacowana trudność wypozycjonowania frazy w TOP wyników (0-100).",
+    source: "Senuto",
+  },
+  keyword_cpc: {
+    label: "Keyword CPC",
+    description: "Szacowany koszt kliknięcia reklamy Google Ads dla frazy.",
+    source: "Senuto",
+  },
+  keyword_intent: {
+    label: "Intencja słowa kluczowego",
+    description: "Klasyfikacja zamiaru użytkownika: informacyjny, transakcyjny, nawigacyjny lub komercyjny.",
+    source: "Senuto",
+  },
+  serp_features: {
+    label: "Cechy SERP",
+    description: "Specjalne elementy wyników wyszukiwania dla frazy, np. mapy, PAA, obrazy.",
+    source: "Senuto",
+  },
 } as const
 
 export type TooltipKey = keyof typeof TOOLTIPS

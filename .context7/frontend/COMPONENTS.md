@@ -263,6 +263,34 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 ## Custom Components
 
+### Senuto Visualization Components (Feb 2026)
+
+`frontend/components/AuditCharts.tsx` now includes additional charts:
+- `CompetitorsDualBarChart`
+- `DifficultyDistributionChart`
+- `SearchVolumeDistributionChart`
+- `SerpFeaturesChart`
+- `WordCountDistributionChart`
+- `TrendsPeakChart`
+- `IntentDistributionPieChart`
+- `AIOPositionDistributionChart`
+- `AIOCompetitorsChart`
+- `PositionSparkline` / `TrendsSparkline`
+
+### New Shared UI Components
+
+- `frontend/components/ui/intent-badge.tsx` - intent + journey stage badges
+- `frontend/components/ui/difficulty-badge.tsx` - color-coded difficulty ranges
+- `frontend/components/ui/serp-tags.tsx` - snippet tags for SERP features
+- `frontend/components/KeywordFeaturesTable.tsx` - reusable feature distribution table
+
+### DataExplorerTable Large Dataset Handling
+
+`frontend/components/DataExplorerTable.tsx` supports:
+- search + sorting + exports (existing behavior)
+- optional row virtualization for large pages via `@tanstack/react-virtual`
+- configurable thresholds (`virtualizeThreshold`, `virtualHeight`)
+
 ### NewAuditDialog (`components/NewAuditDialog.tsx`)
 
 **Purpose**: Create new audit with URL and optional competitors

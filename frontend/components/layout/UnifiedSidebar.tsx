@@ -105,6 +105,7 @@ const auditDataItems = [
   { href: '/audits/[id]/seo', icon: RiSearchEyeFill, label: 'SEO', id: 'seo' },
   { href: '/audits/[id]/performance', icon: RiShieldFlashFill, label: 'Wydajność', id: 'performance' },
   { href: '/audits/[id]/visibility', icon: Globe2, label: 'Widoczność', id: 'visibility' },
+  { href: '/audits/[id]/ai-overviews', icon: Sparkles, label: 'AI Overviews', id: 'ai-overviews' },
   { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki', id: 'links' },
   { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
   { href: '/audits/[id]/ux-check', icon: MousePointer, label: 'Użyteczność', id: 'ux-check' },

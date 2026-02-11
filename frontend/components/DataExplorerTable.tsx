@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useMemo, useCallback } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   Table,
   TableBody,
@@ -51,6 +52,8 @@ interface DataExplorerTableProps {
   exportFilename?: string
   maxDisplayRows?: number
   searchPlaceholder?: string
+  virtualizeThreshold?: number
+  virtualHeight?: number
 }
 
 type SortDirection = 'asc' | 'desc' | null
@@ -64,6 +67,8 @@ export function DataExplorerTable({
   exportFilename = 'export',
   maxDisplayRows,
   searchPlaceholder = 'Szukaj...',
+  virtualizeThreshold = 500,
+  virtualHeight = 560,
 }: DataExplorerTableProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -110,6 +115,15 @@ export function DataExplorerTable({
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   )
+  const tableContainerRef = React.useRef<HTMLDivElement>(null)
+  const shouldVirtualize = paginatedData.length >= virtualizeThreshold
+  const rowVirtualizer = useVirtualizer({
+    count: shouldVirtualize ? paginatedData.length : 0,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 48,
+    overscan: 12,
+  })
+  const virtualRows = shouldVirtualize ? rowVirtualizer.getVirtualItems() : []
 
   // Reset page on search/sort change
   React.useEffect(() => {
@@ -218,7 +232,11 @@ export function DataExplorerTable({
       )}
 
       {/* Table */}
-      <div className="rounded-md border overflow-x-auto">
+      <div
+        ref={tableContainerRef}
+        className="rounded-md border overflow-x-auto"
+        style={shouldVirtualize ? { maxHeight: `${virtualHeight}px`, overflowY: 'auto' } : undefined}
+      >
         <Table>
           <TableHeader>
             <TableRow>
@@ -245,24 +263,66 @@ export function DataExplorerTable({
           </TableHeader>
           <TableBody>
             {paginatedData.length > 0 ? (
-              paginatedData.map((row, idx) => (
-                <TableRow key={idx}>
-                  {columns.map(col => (
-                    <TableCell
-                      key={col.key}
-                      className={col.className}
-                      style={col.maxWidth ? { maxWidth: col.maxWidth } : undefined}
-                    >
-                      {col.render
-                        ? col.render(row[col.key], row)
-                        : row[col.key] != null
-                          ? String(row[col.key])
-                          : <span className="text-muted-foreground/50">—</span>
-                      }
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              shouldVirtualize ? (
+                <>
+                  {virtualRows.length > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} style={{ height: `${virtualRows[0].start}px`, padding: 0 }} />
+                    </TableRow>
+                  )}
+                  {virtualRows.map((virtualRow) => {
+                    const row = paginatedData[virtualRow.index]
+                    return (
+                      <TableRow key={virtualRow.key}>
+                        {columns.map(col => (
+                          <TableCell
+                            key={col.key}
+                            className={col.className}
+                            style={col.maxWidth ? { maxWidth: col.maxWidth } : undefined}
+                          >
+                            {col.render
+                              ? col.render(row[col.key], row)
+                              : row[col.key] != null
+                                ? String(row[col.key])
+                                : <span className="text-muted-foreground/50">—</span>
+                            }
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    )
+                  })}
+                  {virtualRows.length > 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        style={{
+                          height: `${rowVirtualizer.getTotalSize() - virtualRows[virtualRows.length - 1].end}px`,
+                          padding: 0,
+                        }}
+                      />
+                    </TableRow>
+                  )}
+                </>
+              ) : (
+                paginatedData.map((row, idx) => (
+                  <TableRow key={idx}>
+                    {columns.map(col => (
+                      <TableCell
+                        key={col.key}
+                        className={col.className}
+                        style={col.maxWidth ? { maxWidth: col.maxWidth } : undefined}
+                      >
+                        {col.render
+                          ? col.render(row[col.key], row)
+                          : row[col.key] != null
+                            ? String(row[col.key])
+                            : <span className="text-muted-foreground/50">—</span>
+                        }
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">

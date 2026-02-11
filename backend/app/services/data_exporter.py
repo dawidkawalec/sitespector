@@ -83,6 +83,23 @@ def export_raw_data(audit_id: str, audit_data: Dict[str, Any]) -> str:
                 backlinks = senuto_data.get("backlinks", {})
                 if visibility:
                     zipf.writestr("senuto/visibility.json", json.dumps(visibility, indent=2, default=str))
+                    if visibility.get("ai_overviews"):
+                        zipf.writestr(
+                            "senuto/ai_overviews.json",
+                            json.dumps(visibility.get("ai_overviews", {}), indent=2, default=str),
+                        )
+                    if visibility.get("sections_subdomains") or visibility.get("sections_urls"):
+                        zipf.writestr(
+                            "senuto/sections_detail.json",
+                            json.dumps(
+                                {
+                                    "sections_subdomains": visibility.get("sections_subdomains", []),
+                                    "sections_urls": visibility.get("sections_urls", []),
+                                },
+                                indent=2,
+                                default=str,
+                            ),
+                        )
                 if backlinks:
                     zipf.writestr("senuto/backlinks.json", json.dumps(backlinks, indent=2, default=str))
             

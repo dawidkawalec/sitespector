@@ -1,26 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { 
-  Loader2, Globe2, TrendingUp, TrendingDown, AlertCircle, 
-  Search, Filter, ChevronLeft, ChevronRight, ExternalLink,
-  BarChart3, Calendar, Users, Target, Layers
+  Loader2, Globe2, TrendingUp, TrendingDown, AlertCircle, Search,
+  BarChart3, Calendar, Users, Target, Layers, Gauge, DollarSign
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table"
 import {
   PositionsDistributionChart,
   SeasonalityChart,
-  CompetitorsBarChart
+  CompetitorsDualBarChart,
+  IntentDistributionPieChart,
+  DifficultyDistributionChart,
+  SearchVolumeDistributionChart,
+  SerpFeaturesChart,
+  WordCountDistributionChart,
+  TrendsPeakChart,
+  PositionSparkline,
+  TrendsSparkline,
+  AIOPositionDistributionChart,
 } from '@/components/AuditCharts'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import type { Audit } from '@/lib/api'
@@ -29,11 +32,177 @@ import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { formatNumber, formatScore } from '@/lib/utils'
+import { IntentBadge } from '@/components/ui/intent-badge'
+import { DifficultyBadge } from '@/components/ui/difficulty-badge'
+import { SerpTags } from '@/components/ui/serp-tags'
+import { KeywordFeaturesTable, type KeywordFeatureRow } from '@/components/KeywordFeaturesTable'
 
-function OverviewTab({ vis, stats, dash, audit }: { vis: any; stats: any; dash: any; audit: Audit }) {
+const MONTHS = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru']
+
+function getPosition(row: any): number {
+  return row?.statistics?.position?.current ?? 9999
+}
+
+function getDiff(row: any): number {
+  return row?.statistics?.position?.diff ?? 0
+}
+
+function getSearches(row: any): number {
+  return row?.statistics?.searches?.current ?? 0
+}
+
+function getDifficulty(row: any): number {
+  return row?.statistics?.difficulty?.current ?? 0
+}
+
+function getSnippets(row: any): string[] {
+  return row?.statistics?.snippets?.current || []
+}
+
+function getTrafficEstimate(row: any): number {
+  const visibility = row?.statistics?.visibility?.current || 0
+  const searches = getSearches(row)
+  return Math.round((visibility || 0) + searches * 0.05)
+}
+
+function makeRangeLabel(start: number, size: number) {
+  return `${start}-${start + size - 1}`
+}
+
+function buildFeatureRows(groups: Record<string, any[]>, totalTraffic: number): KeywordFeatureRow[] {
+  return Object.entries(groups).map(([range, rows]) => {
+    const top3 = rows.filter((r: any) => getPosition(r) <= 3).length
+    const top10 = rows.filter((r: any) => getPosition(r) <= 10).length
+    const top50 = rows.filter((r: any) => getPosition(r) <= 50).length
+    const estimatedTraffic = rows.reduce((acc: number, row: any) => acc + getTrafficEstimate(row), 0)
+    return {
+      range,
+      top3,
+      top10,
+      top50,
+      estimatedTraffic,
+      estimatedTrafficPercent: totalTraffic > 0 ? (estimatedTraffic / totalTraffic) * 100 : 0,
+    }
+  })
+}
+
+function keywordColumns() {
+  return [
+    { key: 'keyword', label: 'Fraza', className: 'font-medium max-w-[260px]', maxWidth: '260px' },
+    {
+      key: 'intent',
+      label: 'Intencja',
+      sortable: false,
+      render: (_: any, row: any) => (
+        <IntentBadge
+          intent={row?.statistics?.intentions?.main_intent}
+          stage={row?.statistics?.intentions?.journey_stage}
+        />
+      ),
+    },
+    {
+      key: 'difficulty',
+      label: 'Trudność',
+      render: (_: any, row: any) => <DifficultyBadge value={getDifficulty(row)} />,
+    },
+    {
+      key: 'searches',
+      label: 'Wyszuk.',
+      render: (_: any, row: any) => formatNumber(getSearches(row)),
+    },
+    {
+      key: 'position',
+      label: 'Pozycja',
+      render: (_: any, row: any) => (
+        <div className="font-bold text-center">{getPosition(row)}</div>
+      ),
+    },
+    {
+      key: 'change',
+      label: 'Zmiana',
+      render: (_: any, row: any) => {
+        const diff = getDiff(row)
+        if (diff === 0) return <Badge variant="outline">0</Badge>
+        const isUp = diff < 0
+        return (
+          <Badge variant={isUp ? 'default' : 'destructive'}>
+            {isUp ? `+${Math.abs(diff)}` : `-${diff}`}
+          </Badge>
+        )
+      },
+    },
+    {
+      key: 'history',
+      label: 'Historia',
+      sortable: false,
+      render: (_: any, row: any) => <PositionSparkline history={row?.statistics?.position?.history || {}} />,
+    },
+    {
+      key: 'trends',
+      label: 'Trendy',
+      sortable: false,
+      render: (_: any, row: any) => <TrendsSparkline trend={row?.statistics?.trends?.history || []} />,
+    },
+    {
+      key: 'serp',
+      label: 'SERP',
+      sortable: false,
+      render: (_: any, row: any) => <SerpTags snippets={getSnippets(row)} />,
+    },
+    {
+      key: 'url',
+      label: 'URL',
+      className: 'max-w-[260px]',
+      maxWidth: '260px',
+      render: (_: any, row: any) => (
+        <span className="text-xs text-muted-foreground truncate block">
+          {row?.statistics?.url?.current || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'cpc',
+      label: 'CPC',
+      render: (_: any, row: any) => {
+        const cpc = row?.statistics?.cpc?.current
+        return cpc ? `${cpc} PLN` : '—'
+      },
+    },
+    {
+      key: 'est',
+      label: 'Szac. ruch',
+      render: (_: any, row: any) => formatNumber(getTrafficEstimate(row)),
+    },
+  ]
+}
+
+function OverviewTab({
+  vis,
+  stats,
+  dash,
+  intentData,
+  difficultyData,
+  audit,
+}: {
+  vis: any
+  stats: any
+  dash: any
+  intentData: Array<{ name: string; value: number }>
+  difficultyData: Array<{ range: string; count: number }>
+  audit: Audit
+}) {
+  const aioStats = vis?.ai_overviews?.statistics || {}
+  const positions = vis.positions || []
+  const aioPositionDistribution = positions.reduce((acc: Record<string, number>, row: any) => {
+    const pos = row?.best_aio_pos
+    if (typeof pos === 'number' && pos > 0) {
+      acc[String(pos)] = (acc[String(pos)] || 0) + 1
+    }
+    return acc
+  }, {})
+
   return (
     <div className="space-y-8">
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'TOP 3', value: stats.top3?.recent_value, diff: stats.top3?.diff, id: 'senuto_top3' },
@@ -61,6 +230,33 @@ function OverviewTab({ vis, stats, dash, audit }: { vis: any; stats: any; dash: 
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Domain Rank</CardDescription>
+            <CardTitle className="text-3xl font-bold">{formatNumber(stats.domain_rank?.recent_value || 0)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Ads Equivalent</CardDescription>
+            <CardTitle className="text-3xl font-bold">{formatNumber(stats.ads_equivalent?.recent_value || 0)} PLN</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>AIO Keywords</CardDescription>
+            <CardTitle className="text-3xl font-bold">{formatNumber(aioStats.aio_keywords_count || 0)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Śr. pozycja AIO</CardDescription>
+            <CardTitle className="text-3xl font-bold">{formatScore(aioStats.aio_avg_pos || 0)}</CardTitle>
+          </CardHeader>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -101,7 +297,7 @@ function OverviewTab({ vis, stats, dash, audit }: { vis: any; stats: any; dash: 
             <CardDescription>Domeny o najbardziej zbliżonym profilu słów kluczowych</CardDescription>
           </CardHeader>
           <CardContent>
-            <CompetitorsBarChart competitors={vis.competitors || []} />
+            <CompetitorsDualBarChart competitors={vis.competitors || []} />
           </CardContent>
         </Card>
 
@@ -129,40 +325,41 @@ function OverviewTab({ vis, stats, dash, audit }: { vis: any; stats: any; dash: 
         </Card>
       </div>
 
-      {vis.cannibalization?.keywords?.length > 0 && (
-        <Card className="border-red-200 bg-red-50/30 dark:bg-red-950/10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="h-5 w-5" />
-              Wykryta Kanibalizacja
+            <CardTitle className="flex items-center gap-2">
+              <Gauge className="h-5 w-5 text-primary" />
+              Rozkład intencji
             </CardTitle>
-            <CardDescription>Słowa kluczowe, na które rankuje więcej niż jeden adres URL</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border border-red-100 overflow-hidden bg-white dark:bg-slate-950">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Słowo kluczowe</TableHead>
-                    <TableHead>Zduplikowane adresy URL</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {vis.cannibalization.keywords.slice(0, 10).map((c: any, i: number) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-bold text-xs">{c.keyword}</TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {c.urls?.map((u: string, idx: number) => (
-                            <div key={idx} className="text-[10px] text-primary truncate max-w-[500px]">{u}</div>
-                          ))}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <IntentDistributionPieChart data={intentData} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Rozkład trudności
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DifficultyDistributionChart data={difficultyData} />
+          </CardContent>
+        </Card>
+      </div>
+
+      {Object.keys(aioPositionDistribution).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              Rozkład pozycji wejścia do AIO
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AIOPositionDistributionChart data={aioPositionDistribution} />
           </CardContent>
         </Card>
       )}
@@ -170,83 +367,29 @@ function OverviewTab({ vis, stats, dash, audit }: { vis: any; stats: any; dash: 
   )
 }
 
-function KeywordsTab({ vis }: { vis: any }) {
-  const [searchTerm, setSearchTerm] = useState('')
-  const allPositions = vis.positions || []
-  const filteredPositions = allPositions.filter((p: any) => 
-    p.keyword.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  const columns = [
-    { key: 'keyword', label: 'Fraza', className: 'font-medium' },
-    { 
-      key: 'statistics.position.current', 
-      label: 'Pozycja', 
-      className: 'text-center font-bold',
-      render: (_: any, row: any) => row.statistics?.position?.current
-    },
-    { 
-      key: 'statistics.position.diff', 
-      label: 'Zmiana', 
-      className: 'text-center',
-      render: (_: any, row: any) => {
-        const diff = row.statistics?.position?.diff
-        return (
-          <Badge variant={diff < 0 ? 'default' : diff > 0 ? 'destructive' : 'outline'}>
-            {diff === 0 ? '-' : (diff < 0 ? `+${Math.abs(diff)}` : `-${diff}`)}
-          </Badge>
-        )
-      }
-    },
-    { 
-      key: 'statistics.searches.current', 
-      label: 'Wyszukiwania', 
-      className: 'text-center',
-      render: (_: any, row: any) => formatNumber(row.statistics?.searches?.current)
-    },
-    { 
-      key: 'statistics.visibility.current', 
-      label: 'Widoczność', 
-      className: 'text-right font-mono text-xs',
-      render: (_: any, row: any) => formatScore(row.statistics?.visibility?.current)
-    },
-  ]
-
+function PositionsTab({ data, title, filename }: { data: any[]; title: string; filename: string }) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              Najważniejsze Frazy
-            </CardTitle>
-            <CardDescription>Słowa kluczowe generujące największy ruch</CardDescription>
-          </div>
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Szukaj frazy..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+          <Target className="h-5 w-5 text-primary" />
+          {title}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <DataExplorerTable
-          data={filteredPositions}
-          columns={columns}
+          data={data}
+          columns={keywordColumns()}
           pageSize={20}
-          exportFilename="widocznosc_frazy"
+          exportFilename={filename}
+          searchPlaceholder="Szukaj frazy, URL, intencji..."
         />
       </CardContent>
     </Card>
   )
 }
 
-function RawDataTab({ vis, audit }: { vis: any; audit: Audit }) {
+function RawDataTab({ vis }: { vis: any }) {
   const [activeDataset, setActiveDataset] = useState('positions')
   
   const datasets: Record<string, { label: string; data: any[] }> = {
@@ -257,7 +400,7 @@ function RawDataTab({ vis, audit }: { vis: any; audit: Audit }) {
     sections: { label: 'Sekcje', data: vis.sections || [] },
   }
 
-  const currentData = datasets[activeDataset].data
+  const currentData = datasets[activeDataset].data || []
 
   return (
     <div className="space-y-6">
@@ -281,6 +424,118 @@ function RawDataTab({ vis, audit }: { vis: any; audit: Audit }) {
       />
     </div>
   )
+}
+
+function SectionsTab({ vis }: { vis: any }) {
+  const [active, setActive] = useState('subdomains')
+  const datasets: Record<string, any[]> = {
+    subdomains: vis.sections_subdomains || [],
+    paths: vis.sections || [],
+    urls: vis.sections_urls || [],
+  }
+  const data = datasets[active] || []
+  const columns = [
+    {
+      key: 'name',
+      label: active === 'subdomains' ? 'Subdomena' : active === 'paths' ? 'Ścieżka' : 'URL',
+      render: (_: any, row: any) => row.domain || row.section || row.url || row.subdomain || '—',
+      className: 'max-w-[400px]',
+      maxWidth: '400px',
+    },
+    { key: 'keywords_count', label: 'Słowa TOP10', render: (_: any, row: any) => formatNumber(row.keywords_count || 0) },
+    {
+      key: 'vis',
+      label: 'Szac. ruch',
+      render: (_: any, row: any) => formatNumber(row.statistics?.visibility?.current || row.statistics?.visibility?.recent_value || 0),
+    },
+    {
+      key: 'diff',
+      label: 'Zmiana ruchu',
+      render: (_: any, row: any) => {
+        const diff = row.statistics?.visibility?.diff ?? 0
+        if (diff === 0) return <Badge variant="outline">0</Badge>
+        return <Badge variant={diff > 0 ? 'default' : 'destructive'}>{diff > 0 ? `+${formatNumber(diff)}` : formatNumber(diff)}</Badge>
+      },
+    },
+    { key: 'top3', label: 'TOP3', render: (_: any, row: any) => formatNumber(row.statistics?.top3?.current || row.statistics?.top3?.recent_value || 0) },
+    { key: 'top10', label: 'TOP10', render: (_: any, row: any) => formatNumber(row.statistics?.top10?.current || row.statistics?.top10?.recent_value || 0) },
+    { key: 'top50', label: 'TOP50', render: (_: any, row: any) => formatNumber(row.statistics?.top50?.current || row.statistics?.top50?.recent_value || 0) },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <Tabs value={active} onValueChange={setActive}>
+        <TabsList>
+          <TabsTrigger value="subdomains">Subdomeny</TabsTrigger>
+          <TabsTrigger value="paths">Ścieżki</TabsTrigger>
+          <TabsTrigger value="urls">URLs</TabsTrigger>
+        </TabsList>
+      </Tabs>
+      <DataExplorerTable data={data} columns={columns} pageSize={20} exportFilename={`widocznosc_sections_${active}`} />
+    </div>
+  )
+}
+
+function CannibalizationTab({ vis }: { vis: any }) {
+  const data = vis?.cannibalization?.keywords || []
+  const columns = [
+    { key: 'keyword', label: 'Słowo kluczowe', className: 'font-medium max-w-[280px]', maxWidth: '280px' },
+    {
+      key: 'position',
+      label: 'Pozycja',
+      render: (_: any, row: any) => row.statistics?.position?.current || '—',
+    },
+    {
+      key: 'diff',
+      label: 'Zmiana',
+      render: (_: any, row: any) => {
+        const diff = row.statistics?.position?.diff ?? 0
+        if (diff === 0) return <Badge variant="outline">0</Badge>
+        return <Badge variant={diff < 0 ? 'default' : 'destructive'}>{diff < 0 ? `+${Math.abs(diff)}` : `-${diff}`}</Badge>
+      },
+    },
+    {
+      key: 'history',
+      label: 'Historia',
+      sortable: false,
+      render: (_: any, row: any) => <PositionSparkline history={row.statistics?.position?.history || {}} />,
+    },
+    {
+      key: 'searches',
+      label: 'Wyszukiwania',
+      render: (_: any, row: any) => formatNumber(row.statistics?.searches?.current || 0),
+    },
+    {
+      key: 'traffic',
+      label: 'Szac. ruch',
+      render: (_: any, row: any) => formatNumber(getTrafficEstimate(row)),
+    },
+    {
+      key: 'trends',
+      label: 'Trendy',
+      sortable: false,
+      render: (_: any, row: any) => <TrendsSparkline trend={row.statistics?.trends?.history || []} />,
+    },
+    {
+      key: 'difficulty',
+      label: 'Trudność',
+      render: (_: any, row: any) => <DifficultyBadge value={row.statistics?.difficulty?.current} />,
+    },
+    {
+      key: 'url',
+      label: 'URL current/prev',
+      className: 'max-w-[300px]',
+      maxWidth: '300px',
+      render: (_: any, row: any) => (
+        <div className="space-y-1">
+          <div className="text-[10px] truncate">{row.statistics?.url?.current || '—'}</div>
+          <div className="text-[10px] text-muted-foreground truncate">{row.statistics?.url?.previous || '—'}</div>
+        </div>
+      ),
+    },
+  ]
+
+  return <DataExplorerTable data={data} columns={columns} pageSize={20} exportFilename="widocznosc_kanibalizacja" />
 }
 
 export default function VisibilityPage({ params }: { params: { id: string } }) {
@@ -326,6 +581,114 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
   const stats = vis.statistics?.statistics || {}
   const dash = vis.dashboard || {}
   const hasAiData = !!(audit?.results?.ai_contexts?.visibility)
+  const positions = vis.positions || []
+  const wins = vis.wins || []
+  const losses = vis.losses || []
+
+  const increases = useMemo(() => [...positions].filter((p: any) => getDiff(p) < 0).sort((a: any, b: any) => getDiff(a) - getDiff(b)), [positions])
+  const decreases = useMemo(() => [...positions].filter((p: any) => getDiff(p) > 0).sort((a: any, b: any) => getDiff(b) - getDiff(a)), [positions])
+
+  const intentData = useMemo(() => {
+    const counter: Record<string, number> = {}
+    positions.forEach((p: any) => {
+      const key = p?.statistics?.intentions?.main_intent || 'unknown'
+      counter[key] = (counter[key] || 0) + 1
+    })
+    return Object.entries(counter).map(([name, value]) => ({ name, value }))
+  }, [positions])
+
+  const totalTraffic = useMemo(
+    () => positions.reduce((acc: number, row: any) => acc + getTrafficEstimate(row), 0),
+    [positions]
+  )
+
+  const difficultyRows = useMemo(() => {
+    const groups: Record<string, any[]> = {}
+    positions.forEach((row: any) => {
+      const d = Math.max(0, Math.min(100, getDifficulty(row)))
+      const rangeStart = Math.floor((d === 100 ? 99 : d) / 10) * 10 + 1
+      const key = makeRangeLabel(rangeStart, 10)
+      if (!groups[key]) groups[key] = []
+      groups[key].push(row)
+    })
+    return buildFeatureRows(groups, totalTraffic).sort((a, b) => Number(a.range.split('-')[0]) - Number(b.range.split('-')[0]))
+  }, [positions, totalTraffic])
+
+  const difficultyChartData = useMemo(
+    () => difficultyRows.map((r) => ({ range: r.range, count: r.top50 })),
+    [difficultyRows]
+  )
+
+  const searchesRows = useMemo(() => {
+    const buckets: Record<string, any[]> = {
+      '0-10': [],
+      '11-50': [],
+      '51-100': [],
+      '101-500': [],
+      '501-1000': [],
+      '1001+': [],
+    }
+    positions.forEach((row: any) => {
+      const s = getSearches(row)
+      if (s <= 10) buckets['0-10'].push(row)
+      else if (s <= 50) buckets['11-50'].push(row)
+      else if (s <= 100) buckets['51-100'].push(row)
+      else if (s <= 500) buckets['101-500'].push(row)
+      else if (s <= 1000) buckets['501-1000'].push(row)
+      else buckets['1001+'].push(row)
+    })
+    return buildFeatureRows(buckets, totalTraffic)
+  }, [positions, totalTraffic])
+
+  const serpRows = useMemo(() => {
+    const buckets: Record<string, any[]> = {}
+    positions.forEach((row: any) => {
+      const snippets = getSnippets(row)
+      if (snippets.length === 0) {
+        buckets['Brak snippetów'] = [...(buckets['Brak snippetów'] || []), row]
+      } else {
+        snippets.forEach((snippet) => {
+          if (!buckets[snippet]) buckets[snippet] = []
+          buckets[snippet].push(row)
+        })
+      }
+    })
+    return buildFeatureRows(buckets, totalTraffic).sort((a, b) => b.top50 - a.top50)
+  }, [positions, totalTraffic])
+
+  const wordsRows = useMemo(() => {
+    const buckets: Record<string, any[]> = { '1': [], '2': [], '3': [], '4': [], '5': [], '6+': [] }
+    positions.forEach((row: any) => {
+      const wc = row?.words_count || 0
+      if (wc <= 1) buckets['1'].push(row)
+      else if (wc === 2) buckets['2'].push(row)
+      else if (wc === 3) buckets['3'].push(row)
+      else if (wc === 4) buckets['4'].push(row)
+      else if (wc === 5) buckets['5'].push(row)
+      else buckets['6+'].push(row)
+    })
+    return buildFeatureRows(buckets, totalTraffic)
+  }, [positions, totalTraffic])
+
+  const peakRows = useMemo(() => {
+    const buckets: Record<string, any[]> = Object.fromEntries(MONTHS.map((m) => [m, []]))
+    positions.forEach((row: any) => {
+      const trend = row?.statistics?.trends?.history || []
+      if (!Array.isArray(trend) || trend.length === 0) return
+      const max = Math.max(...trend)
+      const idx = trend.findIndex((v: number) => v === max)
+      if (idx >= 0) buckets[MONTHS[idx]].push(row)
+    })
+    return buildFeatureRows(buckets, totalTraffic)
+  }, [positions, totalTraffic])
+
+  const serpFeatureChartData = useMemo(
+    () => serpRows.slice(0, 12).map((r) => ({ name: r.range, count: r.top50 })),
+    [serpRows]
+  )
+  const searchesChartData = useMemo(() => searchesRows.map((r) => ({ range: r.range, count: r.top50 })), [searchesRows])
+  const wordsChartData = useMemo(() => wordsRows.map((r) => ({ range: r.range, count: r.top50 })), [wordsRows])
+  const peakChartData = useMemo(() => peakRows.map((r) => ({ month: r.range, count: r.top50 })), [peakRows])
 
   return (
     <AuditPageLayout
@@ -346,20 +709,87 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList>
             <TabsTrigger value="overview">Przegląd</TabsTrigger>
-            <TabsTrigger value="keywords">Frazy</TabsTrigger>
+            <TabsTrigger value="positions">Pozycje</TabsTrigger>
+            <TabsTrigger value="changes">Wzrosty/Spadki</TabsTrigger>
+            <TabsTrigger value="acquired">Pozyskane/Utracone</TabsTrigger>
+            <TabsTrigger value="features">Cechy fraz</TabsTrigger>
+            <TabsTrigger value="sections">Strony</TabsTrigger>
+            <TabsTrigger value="cannibalization">Kanibalizacja</TabsTrigger>
             <TabsTrigger value="raw">Surowe dane (RAW)</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="pt-6">
-            <OverviewTab vis={vis} stats={stats} dash={dash} audit={audit!} />
+            <OverviewTab vis={vis} stats={stats} dash={dash} intentData={intentData} difficultyData={difficultyChartData} audit={audit!} />
           </TabsContent>
 
-          <TabsContent value="keywords" className="pt-6">
-            <KeywordsTab vis={vis} />
+          <TabsContent value="positions" className="pt-6">
+            <PositionsTab data={positions} title="Pozycje słów kluczowych" filename="widocznosc_pozycje" />
+          </TabsContent>
+
+          <TabsContent value="changes" className="pt-6">
+            <div className="grid grid-cols-1 gap-6">
+              <PositionsTab data={increases} title="Wzrosty (największe awanse)" filename="widocznosc_wzrosty" />
+              <PositionsTab data={decreases} title="Spadki (największe spadki)" filename="widocznosc_spadki" />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="acquired" className="pt-6">
+            <Tabs defaultValue="wins">
+              <TabsList>
+                <TabsTrigger value="wins">Pozyskane</TabsTrigger>
+                <TabsTrigger value="losses">Utracone</TabsTrigger>
+              </TabsList>
+              <TabsContent value="wins" className="pt-6">
+                <PositionsTab data={wins} title="Pozyskane słowa kluczowe" filename="widocznosc_pozyskane" />
+              </TabsContent>
+              <TabsContent value="losses" className="pt-6">
+                <PositionsTab data={losses} title="Utracone słowa kluczowe" filename="widocznosc_utracone" />
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          <TabsContent value="features" className="pt-6">
+            <Tabs defaultValue="difficulty">
+              <TabsList>
+                <TabsTrigger value="difficulty">Trudność</TabsTrigger>
+                <TabsTrigger value="searches">Wyszukiwania</TabsTrigger>
+                <TabsTrigger value="serp">SERP</TabsTrigger>
+                <TabsTrigger value="trends">Trendy</TabsTrigger>
+                <TabsTrigger value="words">Liczba słów</TabsTrigger>
+              </TabsList>
+              <TabsContent value="difficulty" className="pt-6 space-y-6">
+                <Card><CardContent className="pt-6"><DifficultyDistributionChart data={difficultyChartData} /></CardContent></Card>
+                <KeywordFeaturesTable title="Trudność fraz" rows={difficultyRows} />
+              </TabsContent>
+              <TabsContent value="searches" className="pt-6 space-y-6">
+                <Card><CardContent className="pt-6"><SearchVolumeDistributionChart data={searchesChartData} /></CardContent></Card>
+                <KeywordFeaturesTable title="Wyszukiwania fraz" rows={searchesRows} />
+              </TabsContent>
+              <TabsContent value="serp" className="pt-6 space-y-6">
+                <Card><CardContent className="pt-6"><SerpFeaturesChart data={serpFeatureChartData} /></CardContent></Card>
+                <KeywordFeaturesTable title="Cechy SERP" rows={serpRows} />
+              </TabsContent>
+              <TabsContent value="trends" className="pt-6 space-y-6">
+                <Card><CardContent className="pt-6"><TrendsPeakChart data={peakChartData} /></CardContent></Card>
+                <KeywordFeaturesTable title="Trendy fraz (peak month)" rows={peakRows} />
+              </TabsContent>
+              <TabsContent value="words" className="pt-6 space-y-6">
+                <Card><CardContent className="pt-6"><WordCountDistributionChart data={wordsChartData} /></CardContent></Card>
+                <KeywordFeaturesTable title="Liczba słów w frazie" rows={wordsRows} />
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          <TabsContent value="sections" className="pt-6">
+            <SectionsTab vis={vis} />
+          </TabsContent>
+
+          <TabsContent value="cannibalization" className="pt-6">
+            <CannibalizationTab vis={vis} />
           </TabsContent>
 
           <TabsContent value="raw" className="pt-6">
-            <RawDataTab vis={vis} audit={audit!} />
+            <RawDataTab vis={vis} />
           </TabsContent>
         </Tabs>
       </div>

@@ -57,7 +57,7 @@ The worker uses a **two-phase architecture** to provide faster feedback to users
 Runs technical tools and saves results immediately.
 1. **Screaming Frog Crawl** (timeout: 300s) - Now exports multiple tabs (Internal, Response Codes, Titles, Meta, H1, H2, Images, Canonicals, Directives, Hreflang).
 2. **Lighthouse Audits** (Desktop & Mobile, timeout: 90s) - Now saves full raw JSON (excluding screenshots).
-3. **Senuto Analysis** (Visibility & Backlinks) - Fetches comprehensive data from Senuto API (15 endpoints).
+3. **Senuto Analysis** (Visibility, Backlinks, AI Overviews) - Fetches comprehensive data from Senuto API (20 endpoints).
 4. **Competitor Analysis** (Parallel Lighthouse)
 5. **Technical Scoring** (SEO & Performance)
 
@@ -82,7 +82,7 @@ The worker maintains a granular log of each step in the `processing_logs` (JSONB
 }
 ```
 
-**Step IDs**: `crawl`, `lighthouse`, `competitors`, `ai_content`, `ai_perf_tech`, `ai_strategic`.
+**Step IDs**: `crawl`, `lighthouse`, `senuto`, `senuto_extended`, `competitors`, `ai_content`, `ai_parallel`, `ai_contexts`, `ai_strategy`.
 
 ---
 
@@ -132,7 +132,7 @@ The `run_ai_pipeline` flag on audit controls whether AI runs automatically:
 ### Phase 2 Extensions (AI Contexts + Strategy)
 
 After existing AI analyses, the worker now runs:
-1. **Contextual AI** (`ai_contexts:start/done`): Parallel per-area AI (seo, performance, visibility, backlinks, links, images)
+1. **Contextual AI** (`ai_contexts:start/done`): Parallel per-area AI (seo, performance, visibility, ai_overviews, backlinks, links, images)
 2. **Strategy** (`ai_strategy:start/done`): Cross-tool analysis, roadmap, executive summary
 
 Results stored in `audit.results`:
@@ -140,6 +140,14 @@ Results stored in `audit.results`:
 - `results.cross_tool` - cross-tool correlations
 - `results.roadmap` - priority roadmap (immediate/short/medium/long term)
 - `results.executive_summary` - health score, strengths, critical issues
+
+### Senuto Expansion (Feb 2026)
+
+Worker now persists full Senuto payload (no low caps) with:
+- Visibility positions/wins/losses fetched in full pagination windows (up to high limits)
+- New AI Overviews payload: `results.senuto.visibility.ai_overviews.{statistics,keywords,competitors}`
+- New sections detail payloads: `results.senuto.visibility.sections_subdomains`, `results.senuto.visibility.sections_urls`
+- Extended processing log `senuto_extended` with payload counts for diagnostics
 
 ### AI Diagnostics (Feb 2026 update)
 

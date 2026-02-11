@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
@@ -349,8 +349,16 @@ function RawDataTab({ audit }: { audit: Audit }) {
 
 export default function LinksPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isAuth, setIsAuth] = useState(false)
   const [activeTab, setActiveTab] = useState('internal')
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'incoming' || tab === 'internal' || tab === 'raw') {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -405,8 +413,18 @@ export default function LinksPage({ params }: { params: { id: string } }) {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList>
-            <TabsTrigger value="internal">Wewnętrzne</TabsTrigger>
-            <TabsTrigger value="incoming">Przychodzące</TabsTrigger>
+            <TabsTrigger value="internal">
+              Wewnętrzne
+              <Badge variant="secondary" className="ml-2 text-[9px] h-4 px-1">
+                {formatNumber(allPages.length)}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="incoming">
+              Przychodzące
+              <Badge variant="secondary" className="ml-2 text-[9px] h-4 px-1">
+                {formatNumber(senuto?.backlinks?.list?.length || 0)}
+              </Badge>
+            </TabsTrigger>
             <TabsTrigger value="raw">Surowe dane (RAW)</TabsTrigger>
           </TabsList>
 
