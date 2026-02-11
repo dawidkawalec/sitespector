@@ -40,6 +40,7 @@ import { AuditPageLayout } from '@/components/AuditPageLayout'
 import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
 import { LinkAttributesPieChart } from '@/components/AuditCharts'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 function InternalLinksTab({ linksData, allPages }: { linksData: any; allPages: any[] }) {
   const [searchTerm, setSearchTerm] = useState('')

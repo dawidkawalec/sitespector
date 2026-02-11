@@ -67,6 +67,8 @@ import { AuditPageLayout } from '@/components/AuditPageLayout'
 import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 function OverviewTab({ crawl, allPages, params, renderFixSuggestion, exportToCSV }: { crawl: any; allPages: any[]; params: any; renderFixSuggestion: any; exportToCSV: any }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')

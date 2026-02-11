@@ -27,6 +27,7 @@ import type { Audit } from '@/lib/api'
 import { AuditPageLayout } from '@/components/AuditPageLayout'
 import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 function OverviewTab({ vis, stats, dash, audit }: { vis: any; stats: any; dash: any; audit: Audit }) {
   return (
