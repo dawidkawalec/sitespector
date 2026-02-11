@@ -51,7 +51,8 @@ import {
   SearchIcon,
   BarChart3,
   ShieldCheck,
-  ZapIcon
+  ZapIcon,
+  Globe2
 } from 'lucide-react'
 import { 
   RiSearchEyeFill, 
@@ -103,7 +104,7 @@ const auditDataItems = [
   { href: '/audits/[id]', icon: RiFileTextFill, label: 'Podsumowanie', id: 'overview' },
   { href: '/audits/[id]/seo', icon: RiSearchEyeFill, label: 'SEO', id: 'seo' },
   { href: '/audits/[id]/performance', icon: RiShieldFlashFill, label: 'Wydajność', id: 'performance' },
-  { href: '/audits/[id]/visibility', icon: Globe, label: 'Widoczność', id: 'senuto' },
+  { href: '/audits/[id]/visibility', icon: Globe2, label: 'Widoczność', id: 'senuto' },
   { href: '/audits/[id]/backlinks', icon: Share2, label: 'Backlinki', id: 'backlinks' },
   { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki wewnętrzne', id: 'links' },
   { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
@@ -143,7 +144,7 @@ const auditToolsItems = [
   { href: '/audits/[id]/quick-wins', icon: Zap, label: 'Quick Wins', id: 'quick-wins' },
   { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki', id: 'links' },
   { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
-  { href: '/audits/[id]/visibility', icon: Globe, label: 'Widoczność (Senuto)', id: 'senuto' },
+  { href: '/audits/[id]/visibility', icon: Globe2, label: 'Widoczność (Senuto)', id: 'senuto' },
   { href: '/audits/[id]/backlinks', icon: Share2, label: 'Backlinki (Senuto)', id: 'backlinks' },
 ]
 
