@@ -7,7 +7,7 @@ import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { 
-  Loader2, Globe, TrendingUp, TrendingDown, AlertCircle, 
+  Loader2, Globe2, TrendingUp, TrendingDown, AlertCircle, 
   Search, Filter, ChevronLeft, ChevronRight, ExternalLink,
   BarChart3, Calendar, Users, Target, Layers
 } from 'lucide-react'
@@ -87,7 +87,7 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
       hasAiData={hasAiData}
     >
       <div className="flex items-center gap-3">
-        <Globe className="h-8 w-8 text-primary" />
+        <Globe2 className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-3xl font-bold">Analiza Widoczności</h1>
           <p className="text-sm text-muted-foreground">Dane z platformy Senuto • Baza: {senuto.country_id === 200 ? 'Polska 2.0' : 'Inna'} • Tryb: {senuto.fetch_mode}</p>
