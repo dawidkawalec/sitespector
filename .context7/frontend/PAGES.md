@@ -98,6 +98,12 @@ Each major section contains a **Surowe dane (RAW)** tab providing access to the 
 
 **Purpose**: Workspace-scoped audit list and analytics. Uses `useWorkspace()` for current workspace.
 
+**UX Notes**:
+- Destructive actions (delete audit) show explicit user feedback:
+  - loading toast ("Usuwanie audytu..."),
+  - disabled controls + spinner on the delete action,
+  - success/error toast and list refresh.
+
 ---
 
 ## Audit Detail Page (`app/(app)/audits/[id]/page.tsx`)

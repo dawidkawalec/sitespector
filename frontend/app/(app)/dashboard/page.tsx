@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { auditsAPI, CreateAuditData } from '@/lib/api'
@@ -40,11 +40,14 @@ import {
 } from 'recharts'
 import { motion, AnimatePresence } from 'framer-motion'
 import { RiDashboardFill, RiAddFill, RiHistoryFill, RiSearchEyeFill, RiShieldFlashFill, RiSparklingFill } from 'react-icons/ri'
+import { toast } from 'sonner'
 
 export default function DashboardPage() {
   const router = useRouter()
   const [showNewAuditDialog, setShowNewAuditDialog] = useState(false)
   const [isAuth, setIsAuth] = useState(false)
+  const [deletingAuditId, setDeletingAuditId] = useState<string | null>(null)
+  const deleteToastIdRef = useRef<string | number | null>(null)
   const { currentWorkspace, isLoading: isWorkspaceLoading, error: workspaceError, refreshWorkspaces } = useWorkspace()
 
   const handleLogout = async () => {
@@ -74,7 +77,24 @@ export default function DashboardPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => auditsAPI.delete(id),
-    onSuccess: () => refetch(),
+    onMutate: (id) => {
+      setDeletingAuditId(id)
+      deleteToastIdRef.current = toast.loading('Usuwanie audytu...')
+    },
+    onSuccess: () => {
+      toast.success('Audyt usunięty')
+      refetch()
+    },
+    onError: (err: any) => {
+      toast.error(err?.message ? `Nie udało się usunąć audytu: ${err.message}` : 'Nie udało się usunąć audytu')
+    },
+    onSettled: () => {
+      if (deleteToastIdRef.current) {
+        toast.dismiss(deleteToastIdRef.current)
+      }
+      deleteToastIdRef.current = null
+      setDeletingAuditId(null)
+    },
   })
 
   const retryMutation = useMutation({
@@ -85,6 +105,7 @@ export default function DashboardPage() {
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.preventDefault()
     e.stopPropagation()
+    if (deleteMutation.isPending) return
     deleteMutation.mutate(id)
   }
 
@@ -370,6 +391,7 @@ export default function DashboardPage() {
                       variant="secondary" 
                       size="icon" 
                       onClick={(e) => handleRetry(e, audit)}
+                      disabled={deleteMutation.isPending}
                       className="h-7 w-7 rounded-full bg-white/90 backdrop-blur shadow-sm"
                     >
                       <RefreshCw className="h-3 w-3" />
@@ -380,9 +402,14 @@ export default function DashboardPage() {
                           variant="secondary" 
                           size="icon" 
                           className="h-7 w-7 rounded-full bg-white/90 backdrop-blur shadow-sm text-destructive"
+                          disabled={deleteMutation.isPending && deletingAuditId === audit.id}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Trash className="h-3 w-3" />
+                          {deleteMutation.isPending && deletingAuditId === audit.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash className="h-3 w-3" />
+                          )}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent onClick={(e) => e.stopPropagation()}>
@@ -391,8 +418,22 @@ export default function DashboardPage() {
                           <AlertDialogDescription>Are you sure you want to delete audit for {audit.url}?</AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={(e) => handleDelete(e, audit.id)} className="bg-red-600">Delete</AlertDialogAction>
+                          <AlertDialogCancel
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={deleteMutation.isPending && deletingAuditId === audit.id}
+                          >
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={(e) => handleDelete(e, audit.id)}
+                            className="bg-red-600 gap-2"
+                            disabled={deleteMutation.isPending && deletingAuditId === audit.id}
+                          >
+                            {deleteMutation.isPending && deletingAuditId === audit.id && (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            )}
+                            Delete
+                          </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
