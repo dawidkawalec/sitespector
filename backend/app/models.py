@@ -132,6 +132,9 @@ class Audit(Base):
     senuto_country_id = Column(Integer, nullable=True, default=200)
     senuto_fetch_mode = Column(String(20), nullable=True, default="subdomain")
 
+    # AI pipeline toggle
+    run_ai_pipeline = Column(Boolean, default=True, nullable=False)
+
     # Timestamps
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True

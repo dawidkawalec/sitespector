@@ -24,6 +24,8 @@ import {
 } from '@/components/AuditCharts'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import type { Audit } from '@/lib/api'
+import { AuditPageLayout } from '@/components/AuditPageLayout'
+import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 
 export default function VisibilityPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -76,9 +78,14 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
   )
   const paginatedPositions = filteredPositions.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   const totalPages = Math.ceil(filteredPositions.length / pageSize)
+  const hasAiData = !!(audit?.results?.ai_contexts?.visibility)
 
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
+    <AuditPageLayout
+      aiPanel={<AiInsightsPanel area="visibility" audit={audit!} />}
+      aiPanelTitle="AI: Widoczność"
+      hasAiData={hasAiData}
+    >
       <div className="flex items-center gap-3">
         <Globe className="h-8 w-8 text-primary" />
         <div>
@@ -290,6 +297,6 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
           </CardContent>
         </Card>
       )}
-    </div>
+    </AuditPageLayout>
   )
 }

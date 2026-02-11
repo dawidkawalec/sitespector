@@ -38,6 +38,8 @@ import { ImageSizeChart } from '@/components/AuditCharts'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import type { Audit } from '@/lib/api'
+import { AuditPageLayout } from '@/components/AuditPageLayout'
+import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 
 export default function ImagesPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -127,8 +129,14 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
     }
   }
 
+  const hasAiData = !!(audit?.results?.ai_contexts?.images)
+
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
+    <AuditPageLayout
+      aiPanel={<AiInsightsPanel area="images" audit={audit!} />}
+      aiPanelTitle="AI: Obrazy"
+      hasAiData={hasAiData}
+    >
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
           <ImageIcon className="h-8 w-8 text-primary" />
@@ -360,7 +368,7 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </AuditPageLayout>
   )
 }
 

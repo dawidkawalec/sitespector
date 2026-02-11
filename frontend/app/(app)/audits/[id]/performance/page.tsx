@@ -29,6 +29,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { ResponseTimeChart } from '@/components/AuditCharts'
+import { AuditPageLayout } from '@/components/AuditPageLayout'
+import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import type { Audit } from '@/lib/api'
 
 export default function PerformancePage({ params }: { params: { id: string } }) {
@@ -95,8 +97,14 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
   const diagnostics = lh.audits?.diagnostics || []
   const passed = lh.audits?.passed || []
 
+  const hasAiData = !!(audit.results?.ai_contexts?.performance || audit.results?.performance_analysis)
+
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
+    <AuditPageLayout
+      aiPanel={<AiInsightsPanel area="performance" audit={audit} />}
+      aiPanelTitle="AI: Wydajność"
+      hasAiData={hasAiData}
+    >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-bold text-primary">
           <span className="text-line">Analiza Wydajności</span>
@@ -412,6 +420,6 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
           </CardContent>
         </Card>
       )}
-    </div>
+    </AuditPageLayout>
   )
 }

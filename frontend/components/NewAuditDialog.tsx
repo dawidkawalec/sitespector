@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { X, AlertCircle, Globe, Layers } from 'lucide-react'
+import { X, AlertCircle, Globe, Layers, Sparkles } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -52,10 +52,14 @@ interface Subscription {
 }
 
 export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialogProps) {
+  const router = useRouter()
   const [error, setError] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [competitors, setCompetitors] = useState<string[]>([''])
   const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [senutoCountry, setSenutoCountry] = useState('200')
+  const [senutoFetchMode, setSenutoFetchMode] = useState('subdomain')
+  const [runAiPipeline, setRunAiPipeline] = useState(true)
   const { currentWorkspace } = useWorkspace()
 
   const {
@@ -119,6 +123,9 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
       const auditData: CreateAuditData = {
         url: data.url,
         competitors: competitors.filter(c => c.trim() !== ''),
+        senuto_country_id: parseInt(senutoCountry),
+        senuto_fetch_mode: senutoFetchMode,
+        run_ai_pipeline: runAiPipeline,
       }
 
       const newAudit = await auditsAPI.create(currentWorkspace.id, auditData)
@@ -277,6 +284,25 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* AI Pipeline Toggle */}
+          <div className="flex items-center gap-3 py-2 border-t border-primary/5 mt-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={runAiPipeline}
+                onChange={(e) => setRunAiPipeline(e.target.checked)}
+                className="rounded border-primary/20 text-accent focus:ring-accent h-4 w-4"
+              />
+              <span className="text-xs font-medium flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-accent" />
+                Uruchom analizę AI automatycznie
+              </span>
+            </label>
+            <span className="text-[10px] text-muted-foreground">
+              (można uruchomić później ręcznie)
+            </span>
           </div>
 
           <div className="flex justify-end gap-2 pt-6">

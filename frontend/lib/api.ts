@@ -157,6 +157,10 @@ export interface Audit {
 
 export interface CreateAuditData {
   url: string
+  competitors?: string[]
+  senuto_country_id?: number
+  senuto_fetch_mode?: string
+  run_ai_pipeline?: boolean
 }
 
 export interface AuditListResponse {
@@ -264,6 +268,17 @@ export const auditsAPI = {
       method: 'POST',
       body: JSON.stringify({ image_url: imageUrl }),
     }),
+
+  runAi: (auditId: string) =>
+    apiRequest<{ status: string; message: string }>(`/api/audits/${auditId}/run-ai`, {
+      method: 'POST',
+    }),
+
+  runAiContext: (auditId: string, area?: string) =>
+    apiRequest<{ status: string; areas_analyzed: string[]; message: string }>(
+      `/api/audits/${auditId}/run-ai-context${area ? `?area=${area}` : ''}`,
+      { method: 'POST' }
+    ),
 
   // Schedules
   listSchedules: (workspaceId: string) =>

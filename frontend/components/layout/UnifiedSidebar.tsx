@@ -98,36 +98,34 @@ const mainNavItems = [
   },
 ]
 
-// Audit overview section items
-const auditOverviewItems = [
+// DANE AUDYTU section
+const auditDataItems = [
   { href: '/audits/[id]', icon: RiFileTextFill, label: 'Podsumowanie', id: 'overview' },
   { href: '/audits/[id]/seo', icon: RiSearchEyeFill, label: 'SEO', id: 'seo' },
   { href: '/audits/[id]/performance', icon: RiShieldFlashFill, label: 'Wydajność', id: 'performance' },
-  { href: '/audits/[id]/ai-analysis', icon: RiSparklingFill, label: 'Analiza AI', id: 'ai' },
+  { href: '/audits/[id]/visibility', icon: Globe, label: 'Widoczność', id: 'senuto' },
+  { href: '/audits/[id]/backlinks', icon: Share2, label: 'Backlinki', id: 'backlinks' },
+  { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki wewnętrzne', id: 'links' },
+  { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
+  { href: '/audits/[id]/crawl-data', icon: Bug, label: 'Screaming Frog', id: 'crawl-data' },
+  { href: '/audits/[id]/lighthouse-data', icon: Gauge, label: 'Lighthouse', id: 'lighthouse-data' },
 ]
 
-// Audit reports section items
+// STRATEGIA AI section
+const auditAiItems = [
+  { href: '/audits/[id]/ai-strategy', icon: RiSparklingFill, label: 'Strategia i Roadmap', id: 'ai-strategy' },
+  { href: '/audits/[id]/quick-wins', icon: Zap, label: 'Quick Wins', id: 'quick-wins' },
+]
+
+// RAPORTY section
 const auditReportsItems = [
   { href: '/audits/[id]/comparison', icon: ArrowLeftRight, label: 'Porównanie', id: 'comparison' },
   { href: '/audits/[id]/pdf', icon: FileDown, label: 'Raport PDF', id: 'pdf' },
   { href: '/audits/[id]/client-report', icon: RiFileTextFill, label: 'Raport dla klienta', id: 'client-report' },
   { href: '/audits/[id]/benchmark', icon: RiBarChartFill, label: 'Benchmark', id: 'benchmark' },
-]
-
-// Audit advanced section items
-const auditAdvancedItems = [
   { href: '/audits/[id]/architecture', icon: Network, label: 'Architektura', id: 'architecture' },
   { href: '/audits/[id]/competitors', icon: RiTeamFill, label: 'Konkurencja', id: 'competitors' },
   { href: '/audits/[id]/debug', icon: Bug, label: 'Debug', id: 'debug' },
-]
-
-// Audit tools section items
-const auditToolsItems = [
-  { href: '/audits/[id]/quick-wins', icon: Zap, label: 'Quick Wins', id: 'quick-wins' },
-  { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki', id: 'links' },
-  { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
-  { href: '/audits/[id]/visibility', icon: Globe, label: 'Widoczność (Senuto)', id: 'senuto' },
-  { href: '/audits/[id]/backlinks', icon: Share2, label: 'Backlinki (Senuto)', id: 'backlinks' },
 ]
 
 // Settings items (inside collapsible section)
@@ -344,10 +342,22 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
 
           <div key={currentAuditId || 'no-audit'} className={cn("space-y-1", isAuditDisabled && "opacity-50 pointer-events-none")}>
             <NavSection
-              title="Przegląd"
+              title="Dane audytu"
               icon={FileText}
-              items={auditOverviewItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
-              value="audit-overview"
+              items={auditDataItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
+              value="audit-data"
+              defaultOpen={!isAuditDisabled}
+              variant="audit"
+              onItemClick={onAction}
+              disabled={isAuditDisabled}
+              className="text-white/70 hover:text-white"
+            />
+
+            <NavSection
+              title="Strategia AI"
+              icon={Sparkles}
+              items={auditAiItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
+              value="audit-ai"
               defaultOpen={!isAuditDisabled}
               variant="audit"
               onItemClick={onAction}
@@ -360,28 +370,6 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
               icon={FileDown}
               items={auditReportsItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
               value="audit-reports"
-              variant="audit"
-              onItemClick={onAction}
-              disabled={isAuditDisabled}
-              className="text-white/70 hover:text-white"
-            />
-
-            <NavSection
-              title="Zaawansowane"
-              icon={Network}
-              items={auditAdvancedItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
-              value="audit-advanced"
-              variant="audit"
-              onItemClick={onAction}
-              disabled={isAuditDisabled}
-              className="text-white/70 hover:text-white"
-            />
-
-            <NavSection
-              title="Narzędzia"
-              icon={Zap}
-              items={auditToolsItems.map(i => ({ ...i, href: replaceAuditId(i.href) }))}
-              value="audit-tools"
               variant="audit"
               onItemClick={onAction}
               disabled={isAuditDisabled}

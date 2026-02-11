@@ -26,12 +26,15 @@ app/
 │   │   ├── page.tsx           # Overview (enriched with Senuto stats)
 │   │   ├── seo/page.tsx
 │   │   ├── performance/page.tsx
-│   │   ├── visibility/page.tsx    # Senuto Visibility Analysis (NEW)
-│   │   ├── backlinks/page.tsx     # Senuto Backlinks Analysis (NEW)
+│   │   ├── visibility/page.tsx    # Senuto Visibility Analysis (split layout)
+│   │   ├── backlinks/page.tsx     # Senuto Backlinks Analysis (split layout)
+│   │   ├── crawl-data/page.tsx    # Screaming Frog raw tabs (NEW, split layout)
+│   │   ├── lighthouse-data/page.tsx # Lighthouse full data (NEW, split layout)
+│   │   ├── ai-strategy/page.tsx   # AI Strategy + Roadmap (NEW, replaces ai-analysis)
 │   │   ├── quick-wins/page.tsx
 │   │   ├── comparison/page.tsx
 │   │   ├── client-report/page.tsx
-│   │   ├── ai-analysis/, pdf/, links/, images/, etc.
+│   │   ├── pdf/, links/, images/, etc. (all split layout)
 │   │   └── layout.tsx
 │   ├── pricing/page.tsx
 │   ├── settings/              # Profile, Team, Billing, Appearance, Notifications, Schedules

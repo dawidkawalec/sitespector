@@ -150,6 +150,29 @@
 
 ---
 
+## ADR-016: Split Layout + Contextual AI per Area
+**Date**: 2026-02-11
+**Status**: ✅ Done
+**Decision**: Every audit data page uses a split layout (data left, AI insights panel right). AI pipeline generates per-area contextual analyses stored in `results.ai_contexts.*`. New `/ai-strategy` page provides full duplicate of all AI insights + executive summary + roadmap + cross-tool correlations.
+**Rationale**: Users need both raw data and AI context visible simultaneously. The AI strategy page aggregates everything for client-facing use.
+**Key Components**:
+- `AuditPageLayout` - reusable split layout wrapper (collapsible, localStorage state)
+- `AiInsightsPanel` - reusable AI panel (key findings, recommendations, quick wins, priority issues)
+- `DataExplorerTable` - reusable paginated/searchable/sortable/exportable table
+- 9 new AI analysis functions (6 per-area + cross_tool + roadmap + executive_summary)
+- AI pipeline toggle (`run_ai_pipeline` column) + manual trigger endpoints
+- Sidebar restructured: DANE AUDYTU / STRATEGIA AI / RAPORTY
+
+---
+
+## ADR-017: AI Pipeline Toggle (Option B)
+**Date**: 2026-02-11
+**Status**: ✅ Done
+**Decision**: AI pipeline runs automatically by default but can be toggled off in New Audit dialog. Manual trigger available via `POST /api/audits/{id}/run-ai` and `POST /api/audits/{id}/run-ai-context`.
+**Rationale**: Allows quick technical-only audits when AI budget/time is a concern, while still supporting on-demand AI analysis later.
+
+---
+
 **Last Updated**: 2026-02-11
-**Total Decisions**: 14 accepted
+**Total Decisions**: 16 accepted
 **Review**: Update when making significant architectural changes.

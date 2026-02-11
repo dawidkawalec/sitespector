@@ -19,6 +19,9 @@ import {
 } from "@/components/ui/table"
 import { LinkAttributesPieChart } from '@/components/AuditCharts'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
+import { AuditPageLayout } from '@/components/AuditPageLayout'
+import { AiInsightsPanel } from '@/components/AiInsightsPanel'
+import type { Audit } from '@/lib/api'
 
 export default function BacklinksPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -72,9 +75,14 @@ export default function BacklinksPage({ params }: { params: { id: string } }) {
   )
   const paginatedLinks = filteredLinks.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   const totalPages = Math.ceil(filteredLinks.length / pageSize)
+  const hasAiData = !!(audit?.results?.ai_contexts?.backlinks)
 
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
+    <AuditPageLayout
+      aiPanel={<AiInsightsPanel area="backlinks" audit={audit!} />}
+      aiPanelTitle="AI: Backlinki"
+      hasAiData={hasAiData}
+    >
       <div className="flex items-center gap-3">
         <Share2 className="h-8 w-8 text-primary" />
         <div>
@@ -242,6 +250,6 @@ export default function BacklinksPage({ params }: { params: { id: string } }) {
           )}
         </CardContent>
       </Card>
-    </div>
+    </AuditPageLayout>
   )
 }

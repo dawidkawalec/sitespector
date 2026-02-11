@@ -179,6 +179,7 @@ class AuditCreate(AuditBase):
     )
     senuto_country_id: Optional[int] = Field(default=200, description="Senuto country ID")
     senuto_fetch_mode: Optional[str] = Field(default="subdomain", description="Senuto fetch mode")
+    run_ai_pipeline: Optional[bool] = Field(default=True, description="Run AI analysis automatically")
 
     @validator("competitors")
     def validate_competitors(cls, v: List[str]) -> List[str]:

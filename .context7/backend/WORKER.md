@@ -123,6 +123,24 @@ AUDIT_TIMEOUT_MINUTES = 10  # mark as failed after 10 minutes
 
 If any step fails in Phase 1, the audit is marked as FAILED. If Phase 2 (AI) fails, the audit is still marked as COMPLETED but with `ai_status="failed"`.
 
+### AI Pipeline Toggle
+
+The `run_ai_pipeline` flag on audit controls whether AI runs automatically:
+- `True` (default): Full pipeline with contextual AI analyses
+- `False`: Only technical analysis, audit completes after Phase 1 with `ai_status="skipped"`
+
+### Phase 2 Extensions (AI Contexts + Strategy)
+
+After existing AI analyses, the worker now runs:
+1. **Contextual AI** (`ai_contexts:start/done`): Parallel per-area AI (seo, performance, visibility, backlinks, links, images)
+2. **Strategy** (`ai_strategy:start/done`): Cross-tool analysis, roadmap, executive summary
+
+Results stored in `audit.results`:
+- `results.ai_contexts.{area}` - per-area contextual insights
+- `results.cross_tool` - cross-tool correlations
+- `results.roadmap` - priority roadmap (immediate/short/medium/long term)
+- `results.executive_summary` - health score, strengths, critical issues
+
 ---
 
 ## Monitoring
@@ -139,7 +157,7 @@ docker logs sitespector-worker --tail 100 -f
 
 ---
 
-**Last Updated**: 2026-02-08  
+**Last Updated**: 2026-02-11  
 **Container**: sitespector-worker  
 **Poll interval**: 10 seconds  
 **Max concurrent**: 3 audits  

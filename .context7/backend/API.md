@@ -747,6 +747,23 @@ interface Competitor {
 
 ---
 
+## AI Trigger Endpoints
+
+### `POST /api/audits/{audit_id}/run-ai`
+Manually trigger full AI analysis for a completed audit.
+- **Auth**: Required
+- **Response**: `{ "status": "ai_started", "message": "..." }`
+- **Notes**: Launches AI pipeline in background. Use when audit was created with `run_ai_pipeline=false`.
+
+### `POST /api/audits/{audit_id}/run-ai-context`
+Trigger contextual AI analysis for specific area(s).
+- **Auth**: Required
+- **Query Params**: `area` (optional) - `seo|performance|visibility|backlinks|links|images`
+- **Response**: `{ "status": "completed", "areas_analyzed": [...], "message": "..." }`
+- **Notes**: If `area` not specified, regenerates all areas + cross_tool + roadmap + executive_summary.
+
+---
+
 ## CORS
 
 **Allowed origins**:

@@ -63,6 +63,8 @@ import {
 } from "@/components/ui/accordion"
 import { PageStatusChart } from '@/components/AuditCharts'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
+import { AuditPageLayout } from '@/components/AuditPageLayout'
+import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import type { Audit } from '@/lib/api'
 import Link from 'next/link'
 
@@ -263,8 +265,14 @@ export default function SeoPage({ params }: { params: { id: string } }) {
     )
   }
 
+  const hasAiData = !!(audit.results?.ai_contexts?.seo || audit.results?.content_analysis)
+
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
+    <AuditPageLayout
+      aiPanel={<AiInsightsPanel area="seo" audit={audit} />}
+      aiPanelTitle="AI: SEO"
+      hasAiData={hasAiData}
+    >
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-primary">
           <span className="text-line">Analiza SEO</span>
@@ -697,6 +705,6 @@ export default function SeoPage({ params }: { params: { id: string } }) {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AuditPageLayout>
   )
 }

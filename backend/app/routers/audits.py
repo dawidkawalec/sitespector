@@ -35,7 +35,12 @@ from app.auth_supabase import get_current_user, verify_workspace_access
 from app.lib.supabase import supabase, get_workspace_subscription, increment_audit_usage, check_audit_limit
 from app.services.pdf_generator import generate_pdf
 from app.services.data_exporter import export_raw_data
-from app.services.ai_analysis import generate_fix_suggestion, analyze_single_page, generate_quick_wins, generate_alt_text
+from app.services.ai_analysis import (
+    generate_fix_suggestion, analyze_single_page, generate_quick_wins, generate_alt_text,
+    analyze_seo_context, analyze_performance_context, analyze_visibility_context,
+    analyze_backlinks_context, analyze_links_context, analyze_images_context,
+    analyze_cross_tool, generate_roadmap, generate_executive_summary,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +95,7 @@ async def create_audit(
         status=AuditStatus.PENDING,
         senuto_country_id=audit_data.senuto_country_id,
         senuto_fetch_mode=audit_data.senuto_fetch_mode,
+        run_ai_pipeline=audit_data.run_ai_pipeline if audit_data.run_ai_pipeline is not None else True,
     )
     
     db.add(new_audit)
@@ -337,19 +343,23 @@ def _calculate_progress(step: Optional[str], status: AuditStatus) -> int:
     
     progress_map = {
         "crawl:start": 10,
-        "crawl:done": 25,
-        "lighthouse:start": 30,
-        "lighthouse:done": 50,
-        "senuto:start": 52,
-        "senuto:done": 55,
-        "competitors:start": 56,
-        "competitors:done": 65,
-        "ai_content:start": 70,
-        "ai_content:done": 80,
-        "ai_perf_tech:start": 82,
-        "ai_perf_tech:done": 88,
-        "ai_strategic:start": 90,
-        "ai_strategic:done": 95,
+        "crawl:done": 20,
+        "lighthouse:start": 22,
+        "lighthouse:done": 40,
+        "senuto:start": 42,
+        "senuto:done": 48,
+        "competitors:start": 49,
+        "competitors:done": 55,
+        "ai_content:start": 57,
+        "ai_content:done": 63,
+        "ai_parallel:start": 64,
+        "ai_parallel:done": 72,
+        "ai_strategic:start": 73,
+        "ai_strategic:done": 78,
+        "ai_contexts:start": 80,
+        "ai_contexts:done": 90,
+        "ai_strategy:start": 91,
+        "ai_strategy:done": 97,
         "finalizing": 98,
         "completed": 100
     }
@@ -695,4 +705,136 @@ async def post_generate_alt(
     
     alt_text = await generate_alt_text(request.image_url)
     return {"alt_text": alt_text}
+
+
+@router.post("/{audit_id}/run-ai")
+async def trigger_ai_analysis(
+    audit_id: UUID,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Manually trigger AI analysis for a completed audit.
+    Runs the full AI pipeline including contextual analyses.
+    """
+    import asyncio
+    from worker import run_ai_analysis as worker_run_ai
+    
+    result = await db.execute(select(Audit).where(Audit.id == audit_id))
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    
+    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
+    if not has_access:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if audit.status != AuditStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="Audit must be completed first")
+    
+    if audit.ai_status == "processing":
+        raise HTTPException(status_code=409, detail="AI analysis already in progress")
+    
+    # Launch in background
+    tech_data = {
+        "crawl": audit.results.get("crawl", {}),
+        "lighthouse": audit.results.get("lighthouse", {}),
+        "senuto": audit.results.get("senuto", {}),
+    }
+    asyncio.create_task(worker_run_ai(str(audit_id), tech_data))
+    
+    return {"status": "ai_started", "message": "Analiza AI uruchomiona w tle"}
+
+
+@router.post("/{audit_id}/run-ai-context")
+async def trigger_ai_context(
+    audit_id: UUID,
+    area: Optional[str] = Query(None, description="Specific area to re-analyze (seo, performance, visibility, backlinks, links, images)"),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Manually trigger contextual AI analysis for specific area(s).
+    Use to regenerate per-area insights without re-running full pipeline.
+    """
+    result = await db.execute(select(Audit).where(Audit.id == audit_id))
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    
+    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
+    if not has_access:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if not audit.results:
+        raise HTTPException(status_code=400, detail="No audit data available")
+    
+    crawl_data = audit.results.get("crawl", {})
+    lighthouse_data = audit.results.get("lighthouse", {})
+    senuto_data = audit.results.get("senuto", {})
+    
+    valid_areas = ["seo", "performance", "visibility", "backlinks", "links", "images"]
+    areas_to_run = [area] if area and area in valid_areas else valid_areas
+    
+    import asyncio
+    
+    tasks = {}
+    for a in areas_to_run:
+        if a == "seo":
+            tasks[a] = analyze_seo_context(crawl_data, lighthouse_data, senuto_data)
+        elif a == "performance":
+            tasks[a] = analyze_performance_context(
+                lighthouse_data.get("desktop", {}),
+                lighthouse_data.get("mobile", {}),
+                crawl_data
+            )
+        elif a == "visibility" and senuto_data.get("visibility"):
+            tasks[a] = analyze_visibility_context(senuto_data["visibility"], crawl_data)
+        elif a == "backlinks" and senuto_data.get("backlinks"):
+            tasks[a] = analyze_backlinks_context(senuto_data["backlinks"], crawl_data)
+        elif a == "links":
+            tasks[a] = analyze_links_context(crawl_data)
+        elif a == "images":
+            tasks[a] = analyze_images_context(crawl_data)
+    
+    if not tasks:
+        return {"status": "skipped", "message": "No valid areas to analyze"}
+    
+    task_names = list(tasks.keys())
+    task_results = await asyncio.gather(*[tasks[n] for n in task_names], return_exceptions=True)
+    
+    # Update results
+    results = dict(audit.results)
+    if "ai_contexts" not in results:
+        results["ai_contexts"] = {}
+    
+    for name, res in zip(task_names, task_results):
+        if isinstance(res, Exception):
+            logger.error(f"Context re-analysis {name} failed: {res}")
+        else:
+            results["ai_contexts"][name] = res
+    
+    # Also regenerate cross-tool, roadmap, summary if full re-run
+    if not area:
+        try:
+            cross_tool = await analyze_cross_tool(results)
+            roadmap = await generate_roadmap(results)
+            exec_summary = await generate_executive_summary(results)
+            results["cross_tool"] = cross_tool
+            results["roadmap"] = roadmap
+            results["executive_summary"] = exec_summary
+        except Exception as e:
+            logger.error(f"Strategy re-generation failed: {e}")
+    
+    audit.results = results
+    
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(audit, "results")
+    await db.commit()
+    
+    return {
+        "status": "completed",
+        "areas_analyzed": task_names,
+        "message": f"Przeanalizowano {len(task_names)} obszarów"
+    }
 

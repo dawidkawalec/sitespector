@@ -640,3 +640,443 @@ def calculate_readability(text: str) -> Dict[str, Any]:
         "fog_index": 0,
         "interpretation": "Unknown",
     }
+
+
+# ============================================================
+# Contextual AI analysis functions (per-area, cross-tool)
+# ============================================================
+
+def _safe_json_parse(text: str) -> Dict[str, Any]:
+    """Safely extract JSON from AI response text."""
+    import json
+    import re
+    
+    # Try direct parse first
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, TypeError):
+        pass
+    
+    # Try finding JSON block
+    json_match = re.search(r'\{.*\}', text or '', re.DOTALL)
+    if json_match:
+        try:
+            return json.loads(json_match.group())
+        except json.JSONDecodeError:
+            pass
+    
+    # Try finding JSON array
+    arr_match = re.search(r'\[.*\]', text or '', re.DOTALL)
+    if arr_match:
+        try:
+            return {"items": json.loads(arr_match.group())}
+        except json.JSONDecodeError:
+            pass
+    
+    return {}
+
+
+async def _call_ai_context(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+    """Call AI and parse JSON response for context analysis."""
+    try:
+        response = await call_claude(user_prompt, system_prompt, max_tokens=4096)
+        return _safe_json_parse(response)
+    except Exception as e:
+        logger.error(f"AI context call failed: {e}")
+        return {}
+
+
+async def analyze_seo_context(
+    crawl: Dict[str, Any],
+    lighthouse: Dict[str, Any],
+    senuto: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    SEO insights crossing data from SF + LH + Senuto.
+    Returns key_findings, recommendations, quick_wins, priority_issues.
+    """
+    logger.info("Analyzing SEO context (cross-tool)")
+    
+    # Prepare compact data summary
+    pages_count = crawl.get("pages_crawled", 0)
+    broken_links = crawl.get("technical_seo", {}).get("broken_links", 0)
+    missing_canonical = crawl.get("technical_seo", {}).get("missing_canonical", 0)
+    noindex = crawl.get("technical_seo", {}).get("noindex_pages", 0)
+    title = crawl.get("title", "")
+    meta_desc = crawl.get("meta_description", "")
+    
+    lh_desktop = lighthouse.get("desktop", {})
+    seo_score = lh_desktop.get("seo_score", 0)
+    
+    senuto_vis = senuto.get("visibility", {})
+    top3 = senuto_vis.get("statistics", {}).get("statistics", {}).get("top3", 0)
+    top10 = senuto_vis.get("statistics", {}).get("statistics", {}).get("top10", 0)
+    top50 = senuto_vis.get("statistics", {}).get("statistics", {}).get("top50", 0)
+    
+    system_prompt = """Jesteś ekspertem SEO. Na podstawie danych ze Screaming Frog, Lighthouse i Senuto 
+    przygotuj kontekstową analizę SEO. Odpowiedz w JSON:
+    {
+        "key_findings": ["finding1", "finding2", ...],
+        "recommendations": ["rec1", "rec2", ...],
+        "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+        "priority_issues": ["issue1", "issue2", ...]
+    }"""
+    
+    user_prompt = f"""Dane SEO do analizy:
+    - Stron: {pages_count}, Błędy 404: {broken_links}, Brak canonical: {missing_canonical}, Noindex: {noindex}
+    - Title: {title[:100]}, Meta: {meta_desc[:100]}
+    - LH SEO Score: {seo_score}
+    - Senuto: TOP3={top3}, TOP10={top10}, TOP50={top50}
+    - Ma sitemap: {crawl.get('has_sitemap', False)}
+    
+    Przygotuj max 5 key_findings, 5 recommendations, 3 quick_wins, 3 priority_issues."""
+    
+    result = await _call_ai_context(system_prompt, user_prompt)
+    
+    return {
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+    }
+
+
+async def analyze_performance_context(
+    lighthouse_desktop: Dict[str, Any],
+    lighthouse_mobile: Dict[str, Any],
+    crawl: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Performance insights from Lighthouse Desktop + Mobile + SF crawl.
+    """
+    logger.info("Analyzing performance context")
+    
+    system_prompt = """Jesteś ekspertem wydajności stron (Web Performance). Porównaj Desktop i Mobile 
+    i podaj wnioski. Odpowiedz w JSON:
+    {
+        "key_findings": ["..."],
+        "recommendations": ["..."],
+        "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+        "priority_issues": ["..."],
+        "desktop_vs_mobile_comparison": "krótki tekst porównania"
+    }"""
+    
+    user_prompt = f"""Desktop: perf={lighthouse_desktop.get('performance_score', 0)}, FCP={lighthouse_desktop.get('fcp', 0)}ms, LCP={lighthouse_desktop.get('lcp', 0)}ms, CLS={lighthouse_desktop.get('cls', 0)}, TBT={lighthouse_desktop.get('tbt', 0)}ms, TTFB={lighthouse_desktop.get('ttfb', 0)}ms
+    Mobile: perf={lighthouse_mobile.get('performance_score', 0)}, FCP={lighthouse_mobile.get('fcp', 0)}ms, LCP={lighthouse_mobile.get('lcp', 0)}ms, CLS={lighthouse_mobile.get('cls', 0)}, TBT={lighthouse_mobile.get('tbt', 0)}ms, TTFB={lighthouse_mobile.get('ttfb', 0)}ms
+    Crawl: pages={crawl.get('pages_crawled', 0)}, avg_load_time={crawl.get('average_response_time', 'N/A')}
+    
+    Max 5 key_findings, 5 recommendations, 3 quick_wins."""
+    
+    result = await _call_ai_context(system_prompt, user_prompt)
+    
+    return {
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+        "desktop_vs_mobile_comparison": result.get("desktop_vs_mobile_comparison", ""),
+    }
+
+
+async def analyze_visibility_context(
+    senuto_visibility: Dict[str, Any],
+    crawl: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Visibility strategy from Senuto + crawl data.
+    """
+    logger.info("Analyzing visibility context")
+    
+    stats = senuto_visibility.get("statistics", {}).get("statistics", {})
+    positions = senuto_visibility.get("positions", [])[:10]
+    competitors = senuto_visibility.get("competitors", [])[:5]
+    wins = senuto_visibility.get("wins", [])[:5]
+    losses = senuto_visibility.get("losses", [])[:5]
+    
+    positions_summary = ", ".join([f"{p.get('keyword','')}(pos:{p.get('statistics',{}).get('position','')})" for p in positions[:5]])
+    competitors_summary = ", ".join([f"{c.get('domain','')}(common:{c.get('common_keywords',0)})" for c in competitors])
+    
+    system_prompt = """Jesteś ekspertem widoczności SEO. Na podstawie danych Senuto przygotuj strategię 
+    widoczności. Odpowiedz w JSON:
+    {
+        "key_findings": ["..."],
+        "recommendations": ["..."],
+        "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+        "priority_issues": ["..."],
+        "keyword_opportunities": ["fraza 1 - opis szansy", ...],
+        "competitor_gaps": ["gap 1", ...],
+        "seasonality_strategy": "krótki tekst"
+    }"""
+    
+    user_prompt = f"""Widoczność:
+    - TOP3: {stats.get('top3', 0)}, TOP10: {stats.get('top10', 0)}, TOP50: {stats.get('top50', 0)}
+    - Top frazy: {positions_summary}
+    - Wins (ostatnie wzrosty): {len(wins)} fraz
+    - Losses (ostatnie spadki): {len(losses)} fraz
+    - Konkurenci: {competitors_summary}
+    - Stron w crawlu: {crawl.get('pages_crawled', 0)}
+    
+    Max 5 key_findings, 5 recommendations, 3 keyword_opportunities, 3 competitor_gaps."""
+    
+    result = await _call_ai_context(system_prompt, user_prompt)
+    
+    return {
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+        "keyword_opportunities": result.get("keyword_opportunities", []),
+        "competitor_gaps": result.get("competitor_gaps", []),
+        "seasonality_strategy": result.get("seasonality_strategy", ""),
+    }
+
+
+async def analyze_backlinks_context(
+    senuto_backlinks: Dict[str, Any],
+    crawl: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Backlink profile analysis from Senuto.
+    """
+    logger.info("Analyzing backlinks context")
+    
+    stats = senuto_backlinks.get("statistics", {})
+    link_attrs = senuto_backlinks.get("link_attributes", {})
+    ref_domains = senuto_backlinks.get("ref_domains", [])[:5]
+    anchors = senuto_backlinks.get("anchors", {})
+    
+    ref_summary = ", ".join([f"{d.get('ref_domain','')}({d.get('backlinks_count',0)} links)" for d in ref_domains])
+    
+    system_prompt = """Jesteś ekspertem link buildingu. Przeanalizuj profil linków i podaj strategię. 
+    Odpowiedz w JSON:
+    {
+        "key_findings": ["..."],
+        "recommendations": ["..."],
+        "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+        "priority_issues": ["..."],
+        "toxic_risk_assessment": "ocena ryzyka toksycznych linków",
+        "anchor_diversity_score": 0-100,
+        "link_building_suggestions": ["sugestia 1", ...]
+    }"""
+    
+    user_prompt = f"""Profil backlinków:
+    - Stats: {stats}
+    - Top ref domains: {ref_summary}
+    - Link attributes: {link_attrs}
+    - Stron w crawlu: {crawl.get('pages_crawled', 0)}
+    
+    Max 5 key_findings, 5 recommendations, 3 link_building_suggestions."""
+    
+    result = await _call_ai_context(system_prompt, user_prompt)
+    
+    return {
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+        "toxic_risk_assessment": result.get("toxic_risk_assessment", ""),
+        "anchor_diversity_score": result.get("anchor_diversity_score", 50),
+        "link_building_suggestions": result.get("link_building_suggestions", []),
+    }
+
+
+async def analyze_links_context(crawl_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Internal linking analysis from crawl data.
+    """
+    logger.info("Analyzing internal links context")
+    
+    links = crawl_data.get("links", {})
+    all_pages = crawl_data.get("all_pages", [])
+    
+    system_prompt = """Jesteś ekspertem linkowania wewnętrznego. Przeanalizuj dane i podaj wnioski. 
+    Odpowiedz w JSON:
+    {
+        "key_findings": ["..."],
+        "recommendations": ["..."],
+        "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+        "priority_issues": ["..."],
+        "orphan_pages": ["url1", ...],
+        "link_juice_distribution": "opis",
+        "silo_suggestions": ["sugestia 1", ...]
+    }"""
+    
+    user_prompt = f"""Linkowanie wewnętrzne:
+    - Total links: {links.get('total', 0)}, Internal: {links.get('internal', 0)}, External: {links.get('external', 0)}, Broken: {links.get('broken', 0)}
+    - Stron: {len(all_pages)}
+    
+    Max 5 key_findings, 5 recommendations, 3 silo_suggestions."""
+    
+    result = await _call_ai_context(system_prompt, user_prompt)
+    
+    return {
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+        "orphan_pages": result.get("orphan_pages", []),
+        "link_juice_distribution": result.get("link_juice_distribution", ""),
+        "silo_suggestions": result.get("silo_suggestions", []),
+    }
+
+
+async def analyze_images_context(crawl_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Image optimization analysis from crawl data.
+    """
+    logger.info("Analyzing images context")
+    
+    images = crawl_data.get("images", {})
+    
+    system_prompt = """Jesteś ekspertem optymalizacji obrazów. Przeanalizuj dane i podaj wnioski. 
+    Odpowiedz w JSON:
+    {
+        "key_findings": ["..."],
+        "recommendations": ["..."],
+        "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+        "priority_issues": ["..."],
+        "missing_alt_count": 0,
+        "oversized_images": ["url1", ...],
+        "format_suggestions": ["sugestia 1", ...]
+    }"""
+    
+    user_prompt = f"""Obrazy:
+    - Total: {images.get('total', 0)}, Without ALT: {images.get('without_alt', 0)}
+    - Average size: {images.get('avg_size', 'N/A')}
+    
+    Max 5 key_findings, 5 recommendations, 3 format_suggestions."""
+    
+    result = await _call_ai_context(system_prompt, user_prompt)
+    
+    return {
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+        "missing_alt_count": result.get("missing_alt_count", images.get("without_alt", 0)),
+        "oversized_images": result.get("oversized_images", []),
+        "format_suggestions": result.get("format_suggestions", []),
+    }
+
+
+async def analyze_cross_tool(all_results: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Cross-tool correlation analysis (for /ai-strategy page).
+    """
+    logger.info("Analyzing cross-tool correlations")
+    
+    crawl = all_results.get("crawl", {})
+    lighthouse = all_results.get("lighthouse", {})
+    senuto = all_results.get("senuto", {})
+    
+    desktop = lighthouse.get("desktop", {})
+    
+    system_prompt = """Jesteś strategiem SEO. Przeanalizuj korelacje między danymi z Screaming Frog, 
+    Lighthouse i Senuto. Znajdź synergię i konflikty. Odpowiedz w JSON:
+    {
+        "correlations": ["korelacja 1: np. niski LCP wpływa na pozycje...", ...],
+        "synergies": ["synergia 1", ...],
+        "conflicts": ["konflikt 1", ...],
+        "unified_recommendations": ["rec 1", ...]
+    }"""
+    
+    user_prompt = f"""Dane cross-tool:
+    SF: pages={crawl.get('pages_crawled',0)}, broken_links={crawl.get('technical_seo',{}).get('broken_links',0)}
+    LH Desktop: perf={desktop.get('performance_score',0)}, seo={desktop.get('seo_score',0)}, LCP={desktop.get('lcp',0)}ms
+    Senuto: TOP10={senuto.get('visibility',{}).get('statistics',{}).get('statistics',{}).get('top10',0)}
+    
+    Przygotuj max 5 correlations, 3 synergies, 3 conflicts, 5 unified_recommendations."""
+    
+    result = await _call_ai_context(system_prompt, user_prompt)
+    
+    return {
+        "correlations": result.get("correlations", []),
+        "synergies": result.get("synergies", []),
+        "conflicts": result.get("conflicts", []),
+        "unified_recommendations": result.get("unified_recommendations", []),
+    }
+
+
+async def generate_roadmap(all_results: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Priority roadmap generation from all data.
+    """
+    logger.info("Generating priority roadmap")
+    
+    system_prompt = """Jesteś strategiem SEO. Na podstawie wszystkich danych audytu stwórz roadmapę 
+    priorytetów. Odpowiedz w JSON:
+    {
+        "immediate_actions": [{"title": "...", "description": "...", "impact": "high", "area": "SEO|Performance|Visibility|Backlinks"}],
+        "short_term": [{"title": "...", "description": "...", "impact": "...", "area": "..."}],
+        "medium_term": [{"title": "...", "description": "...", "impact": "...", "area": "..."}],
+        "long_term": [{"title": "...", "description": "...", "impact": "...", "area": "..."}]
+    }"""
+    
+    crawl = all_results.get("crawl", {})
+    lh = all_results.get("lighthouse", {}).get("desktop", {})
+    senuto_stats = all_results.get("senuto", {}).get("visibility", {}).get("statistics", {}).get("statistics", {})
+    
+    user_prompt = f"""Podsumowanie audytu:
+    - Stron: {crawl.get('pages_crawled',0)}, 404: {crawl.get('technical_seo',{}).get('broken_links',0)}
+    - Perf: {lh.get('performance_score',0)}, SEO: {lh.get('seo_score',0)}, LCP: {lh.get('lcp',0)}ms
+    - Visibility TOP10: {senuto_stats.get('top10',0)}, TOP3: {senuto_stats.get('top3',0)}
+    - Missing canonical: {crawl.get('technical_seo',{}).get('missing_canonical',0)}
+    - Images without alt: {crawl.get('images',{}).get('without_alt',0)}
+    
+    Stwórz 3-5 pozycji na immediate, 3-5 short_term, 2-3 medium_term, 2-3 long_term."""
+    
+    result = await _call_ai_context(system_prompt, user_prompt)
+    
+    return {
+        "immediate_actions": result.get("immediate_actions", []),
+        "short_term": result.get("short_term", []),
+        "medium_term": result.get("medium_term", []),
+        "long_term": result.get("long_term", []),
+    }
+
+
+async def generate_executive_summary(all_results: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Executive summary from all data.
+    """
+    logger.info("Generating executive summary")
+    
+    system_prompt = """Jesteś strategiem SEO przygotowującym executive summary dla klienta. 
+    Bądź zwięzły i konkretny. Odpowiedz w JSON:
+    {
+        "overall_health": "good|moderate|poor|critical",
+        "health_score": 0-100,
+        "summary": "1-3 zdania podsumowania",
+        "strengths": ["mocna strona 1", ...],
+        "critical_issues": ["problem 1", ...],
+        "growth_potential": "tekst o potencjale wzrostu",
+        "estimated_impact": "szacowany wpływ wdrożenia rekomendacji"
+    }"""
+    
+    crawl = all_results.get("crawl", {})
+    lh = all_results.get("lighthouse", {}).get("desktop", {})
+    senuto_stats = all_results.get("senuto", {}).get("visibility", {}).get("statistics", {}).get("statistics", {})
+    
+    user_prompt = f"""Executive Summary danych:
+    - Stron: {crawl.get('pages_crawled',0)}, Title: {crawl.get('title','N/A')[:60]}
+    - Performance: {lh.get('performance_score',0)}/100, SEO: {lh.get('seo_score',0)}/100
+    - Accessibility: {lh.get('accessibility_score',0)}/100
+    - LCP: {lh.get('lcp',0)}ms, TTFB: {lh.get('ttfb',0)}ms
+    - 404 errors: {crawl.get('technical_seo',{}).get('broken_links',0)}
+    - Visibility: TOP3={senuto_stats.get('top3',0)}, TOP10={senuto_stats.get('top10',0)}, TOP50={senuto_stats.get('top50',0)}
+    - Sitemap: {crawl.get('has_sitemap',False)}
+    - HTTPS: {'Yes' if crawl.get('url','').startswith('https') else 'No'}
+    
+    Max 3 strengths, 3 critical_issues."""
+    
+    result = await _call_ai_context(system_prompt, user_prompt)
+    
+    return {
+        "overall_health": result.get("overall_health", "moderate"),
+        "health_score": result.get("health_score", 50),
+        "summary": result.get("summary", ""),
+        "strengths": result.get("strengths", []),
+        "critical_issues": result.get("critical_issues", []),
+        "growth_potential": result.get("growth_potential", ""),
+        "estimated_impact": result.get("estimated_impact", ""),
+    }

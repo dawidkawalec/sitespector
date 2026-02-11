@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/select"
 import { Button } from '@/components/ui/button'
 import type { Audit } from '@/lib/api'
+import { AuditPageLayout } from '@/components/AuditPageLayout'
+import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 
 export default function LinksPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -98,8 +100,14 @@ export default function LinksPage({ params }: { params: { id: string } }) {
     return matchesSearch && matchesType
   })
 
+  const hasAiData = !!(audit?.results?.ai_contexts?.links)
+
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
+    <AuditPageLayout
+      aiPanel={<AiInsightsPanel area="links" audit={audit!} />}
+      aiPanelTitle="AI: Linki wewnętrzne"
+      hasAiData={hasAiData}
+    >
       <div className="flex items-center gap-3">
         <LinkIcon className="h-8 w-8 text-primary" />
         <h1 className="text-3xl font-bold">Analiza Linków</h1>
@@ -321,6 +329,6 @@ export default function LinksPage({ params }: { params: { id: string } }) {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </AuditPageLayout>
   )
 }

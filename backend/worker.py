@@ -251,6 +251,92 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 "competitive_analysis": competitive_analysis,
             })
             audit.results = results
+            await db.commit()
+
+            # 4. Contextual AI analyses (per-area insights for split layout)
+            audit.processing_step = "ai_contexts:start"
+            await add_audit_log(audit, "ai_contexts", "running", "Running contextual AI analyses per area...")
+            await db.commit()
+            
+            step_start = datetime.utcnow()
+            
+            senuto_data = results.get("senuto", {})
+            
+            context_tasks = {
+                "seo": ai_analysis.analyze_seo_context(crawl_data, lighthouse_data, senuto_data),
+                "performance": ai_analysis.analyze_performance_context(
+                    lighthouse_data.get("desktop", {}),
+                    lighthouse_data.get("mobile", {}),
+                    crawl_data
+                ),
+                "links": ai_analysis.analyze_links_context(crawl_data),
+                "images": ai_analysis.analyze_images_context(crawl_data),
+            }
+            
+            # Add Senuto-dependent contexts only if data exists
+            if senuto_data.get("visibility"):
+                context_tasks["visibility"] = ai_analysis.analyze_visibility_context(
+                    senuto_data["visibility"], crawl_data
+                )
+            if senuto_data.get("backlinks"):
+                context_tasks["backlinks"] = ai_analysis.analyze_backlinks_context(
+                    senuto_data["backlinks"], crawl_data
+                )
+            
+            ctx_names = list(context_tasks.keys())
+            ctx_results = await asyncio.gather(
+                *[context_tasks[n] for n in ctx_names],
+                return_exceptions=True
+            )
+            
+            ai_contexts = {}
+            for name, res in zip(ctx_names, ctx_results):
+                if isinstance(res, Exception):
+                    logger.error(f"Context AI {name} failed: {res}")
+                    ai_contexts[name] = {}
+                else:
+                    ai_contexts[name] = res
+            
+            duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
+            audit.processing_step = "ai_contexts:done"
+            await add_audit_log(audit, "ai_contexts", "success", f"Contextual analyses completed ({len(ctx_names)} areas)", duration)
+            
+            results = dict(audit.results)
+            results["ai_contexts"] = ai_contexts
+            audit.results = results
+            await db.commit()
+
+            # 5. Cross-tool analysis + Roadmap + Executive Summary
+            audit.processing_step = "ai_strategy:start"
+            await add_audit_log(audit, "ai_strategy", "running", "Generating strategy, roadmap, executive summary...")
+            await db.commit()
+            
+            step_start = datetime.utcnow()
+            
+            strategy_tasks = {
+                "cross_tool": ai_analysis.analyze_cross_tool(results),
+                "roadmap": ai_analysis.generate_roadmap(results),
+                "executive_summary": ai_analysis.generate_executive_summary(results),
+            }
+            
+            strat_names = list(strategy_tasks.keys())
+            strat_results = await asyncio.gather(
+                *[strategy_tasks[n] for n in strat_names],
+                return_exceptions=True
+            )
+            
+            for name, res in zip(strat_names, strat_results):
+                if isinstance(res, Exception):
+                    logger.error(f"Strategy AI {name} failed: {res}")
+                    results[name] = {}
+                else:
+                    results[name] = res
+            
+            duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
+            audit.processing_step = "ai_strategy:done"
+            await add_audit_log(audit, "ai_strategy", "success", "Strategy generation completed", duration)
+            
+            audit.results = results
             audit.ai_status = "completed"
             audit.status = AuditStatus.COMPLETED
             audit.completed_at = datetime.utcnow()
@@ -276,8 +362,26 @@ async def process_audit(audit_id: str) -> None:
         # Phase 1: Technical
         tech_data = await run_technical_analysis(audit_id)
         
-        # Phase 2: AI (runs after Phase 1)
-        await run_ai_analysis(audit_id, tech_data)
+        # Phase 2: AI (runs after Phase 1, unless disabled)
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(select(Audit).where(Audit.id == audit_id))
+            audit = result.scalar_one_or_none()
+            should_run_ai = audit.run_ai_pipeline if audit else True
+        
+        if should_run_ai:
+            await run_ai_analysis(audit_id, tech_data)
+        else:
+            # Mark as completed without AI
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(Audit).where(Audit.id == audit_id))
+                audit = result.scalar_one_or_none()
+                if audit:
+                    audit.ai_status = "skipped"
+                    audit.status = AuditStatus.COMPLETED
+                    audit.completed_at = datetime.utcnow()
+                    audit.processing_step = "completed"
+                    await add_audit_log(audit, "ai", "skipped", "AI pipeline disabled by user")
+                    await db.commit()
         
     except Exception as e:
         logger.error(f"Audit {audit_id} failed: {e}")
