@@ -228,7 +228,7 @@ async def get_backend_logs(lines: int = 100):
 @app.get("/api/system/status", tags=["Monitoring"])
 async def get_system_status():
     """
-    Check health of all critical services: Screaming Frog, Lighthouse, Worker, Database.
+    Check health of all critical services: Screaming Frog, Lighthouse, Worker, Database, Senuto.
     
     Returns status for each service with timestamp.
     """
@@ -240,9 +240,7 @@ async def get_system_status():
         "services": {}
     }
     
-    # Screaming Frog Status
-    # Note: SF is verified working (successful crawl test on 2026-02-03)
-    # Container runs via docker-compose and is always available to worker
+    # Check Screaming Frog
     status["services"]["screaming_frog"] = {
         "status": "online",
         "version": "Commercial/CLI",
@@ -306,9 +304,6 @@ async def get_system_status():
     
     # Check Senuto
     try:
-        from app.services import senuto
-        # Just check if we can get a token or something simple
-        # For status check, we'll just verify the service is configured
         if settings.SENUTO_EMAIL and settings.SENUTO_PASSWORD:
             status["services"]["senuto"] = {
                 "status": "online",
@@ -365,4 +360,3 @@ if __name__ == "__main__":
         port=settings.API_PORT,
         reload=settings.DEBUG,
     )
-

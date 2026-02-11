@@ -138,6 +138,15 @@ const settingsItems = [
   { href: '/settings/notifications', icon: Bell, label: 'Powiadomienia' },
 ]
 
+// Audit tools section items
+const auditToolsItems = [
+  { href: '/audits/[id]/quick-wins', icon: Zap, label: 'Quick Wins', id: 'quick-wins' },
+  { href: '/audits/[id]/links', icon: LinkIcon, label: 'Linki', id: 'links' },
+  { href: '/audits/[id]/images', icon: ImageIcon, label: 'Obrazy', id: 'images' },
+  { href: '/audits/[id]/visibility', icon: Globe, label: 'Widoczność (Senuto)', id: 'senuto' },
+  { href: '/audits/[id]/backlinks', icon: Share2, label: 'Backlinki (Senuto)', id: 'backlinks' },
+]
+
 function SystemStatusSection({ systemStatus, getStatusColor }: { systemStatus: any, getStatusColor: (status: string) => string }) {
   const [isOpen, setIsOpen] = React.useState(false)
   
