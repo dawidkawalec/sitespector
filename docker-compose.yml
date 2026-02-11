@@ -38,13 +38,12 @@ services:
     volumes:
       - ./backend:/app
       - ./tmp/audits:/tmp/audits
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - sitespector-network
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
   # Background Worker
