@@ -37,8 +37,8 @@ ssh root@77.42.79.46
 - Health check: https://sitespector.app/health
 
 **Test credentials**:
-- Email: info@craftweb.pl
-- Password: Dawid132?
+- Email: YOUR_TEST_EMAIL
+- Password: YOUR_TEST_PASSWORD
 
 ---
 
@@ -238,19 +238,19 @@ docker compose -f docker-compose.prod.yml restart nginx
 **Contents** (production):
 ```bash
 # Database
-DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
+DATABASE_URL=postgresql+asyncpg://sitespector_user:YOUR_DATABASE_PASSWORD@postgres:5432/sitespector_db
 
 # JWT
-JWT_SECRET=9kL2mN4pQ6rS8tU0vW2xY4zA6bC8dE0fG2hI4jK6lM8nO0pQ2rS4tU6vW8xY0zA2bC4dE6fG8h
+JWT_SECRET=YOUR_JWT_SECRET_HERE
 JWT_EXPIRATION_DAYS=7
 
 # Gemini API
-GEMINI_API_KEY=AIzaSyDg_TyD46p9zym48pqVk_cGUeQHojO4cjQ
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
 
 # Screaming Frog License
-SCREAMING_FROG_USER=yahretzkee
-SCREAMING_FROG_KEY=E291530FA6-1796688000-A11779DE65
-SCREAMING_FROG_EMAIL=piotr.chabros@bespokesoft.pl
+SCREAMING_FROG_USER=YOUR_SF_USER_HERE
+SCREAMING_FROG_KEY=YOUR_SF_KEY_HERE
+SCREAMING_FROG_EMAIL=YOUR_SF_EMAIL_HERE
 
 # Application
 ENVIRONMENT=production

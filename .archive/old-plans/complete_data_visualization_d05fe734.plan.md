@@ -936,7 +936,7 @@ docker compose -f docker-compose.prod.yml build worker
 docker compose -f docker-compose.prod.yml up -d worker
 
 # Create test audit
-TOKEN=$(curl -k -s -X POST https://77.42.79.46/api/auth/login -H "Content-Type: application/json" -d '{"email":"info@craftweb.pl","password":"Dawid132?"}' | jq -r '.access_token')
+TOKEN=$(curl -k -s -X POST https://77.42.79.46/api/auth/login -H "Content-Type: application/json" -d '{"email":"YOUR_TEST_EMAIL","password":"YOUR_TEST_PASSWORD"}' | jq -r '.access_token')
 AUDIT=$(curl -k -s -X POST https://77.42.79.46/api/audits -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"url":"https://craftweb.pl/","is_local_business":false}' | jq -r '.id')
 
 # Wait ~2 mins, then check data

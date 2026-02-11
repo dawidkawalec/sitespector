@@ -295,7 +295,7 @@ Download generated PDF and verify each section:
    # Get auth token
    TOKEN=$(curl -k -s -X POST https://77.42.79.46/api/auth/login \
      -H "Content-Type: application/json" \
-     -d '{"email":"info@craftweb.pl","password":"Dawid132?"}' | jq -r '.access_token')
+     -d '{"email":"YOUR_TEST_EMAIL","password":"YOUR_TEST_PASSWORD"}' | jq -r '.access_token')
 
    # Create audit
    AUDIT_ID=$(curl -k -s -X POST https://77.42.79.46/api/audits \
