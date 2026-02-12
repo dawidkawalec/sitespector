@@ -95,16 +95,14 @@ export function ResponseTimeChart({ pages }: ResponseTimeChartProps) {
   
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}>
+      <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12}} />
-        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} />
-        <Tooltip 
-          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-        />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
         <Legend iconType="circle" />
-        <Bar dataKey="value" fill="#0b363d" name="Liczba stron" radius={[4, 4, 0, 0]} />
-      </BarChart>
+        <Line type="monotone" dataKey="value" stroke="#0b363d" strokeWidth={3} dot={{ r: 3 }} name="Liczba stron" />
+      </LineChart>
     </ResponsiveContainer>
   )
 }
@@ -143,16 +141,14 @@ export function WordCountChart({ pages }: WordCountChartProps) {
   
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}>
+      <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12}} />
-        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} />
-        <Tooltip 
-          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-        />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
         <Legend iconType="circle" />
-        <Bar dataKey="value" fill="#ff8945" name="Liczba stron" radius={[4, 4, 0, 0]} />
-      </BarChart>
+        <Line type="monotone" dataKey="value" stroke="#ff8945" strokeWidth={3} dot={{ r: 3 }} name="Liczba stron" />
+      </LineChart>
     </ResponsiveContainer>
   )
 }
@@ -191,16 +187,14 @@ export function ImageSizeChart({ images }: ImageSizeChartProps) {
   
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}>
+      <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12}} />
-        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} />
-        <Tooltip 
-          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-        />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
         <Legend iconType="circle" />
-        <Bar dataKey="value" fill="#adefd1" name="Liczba obrazów" radius={[4, 4, 0, 0]} />
-      </BarChart>
+        <Line type="monotone" dataKey="value" stroke="#14b8a6" strokeWidth={3} dot={{ r: 3 }} name="Liczba obrazów" />
+      </LineChart>
     </ResponsiveContainer>
   )
 }
@@ -220,13 +214,13 @@ export function PositionsDistributionChart({ data }: PositionsDistributionChartP
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={chartData}>
+      <LineChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="pos" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
-        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+        <XAxis dataKey="pos" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
         <Tooltip />
-        <Bar dataKey="count" fill="#0b363d" name="Liczba fraz" radius={[2, 2, 0, 0]} />
-      </BarChart>
+        <Line type="monotone" dataKey="count" stroke="#0b363d" strokeWidth={3} dot={{ r: 2 }} name="Liczba fraz" />
+      </LineChart>
     </ResponsiveContainer>
   )
 }
@@ -250,13 +244,13 @@ export function SeasonalityChart({ data }: SeasonalityChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={chartData}>
+      <LineChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
         <XAxis dataKey="month" axisLine={false} tickLine={false} />
         <YAxis axisLine={false} tickLine={false} hide />
         <Tooltip formatter={(value: number) => formatNumber(value)} />
-        <Bar dataKey="value" fill="#ff8945" name="Widoczność" radius={[4, 4, 0, 0]} />
-      </BarChart>
+        <Line type="monotone" dataKey="value" stroke="#ff8945" strokeWidth={3} dot={{ r: 3 }} name="Widoczność" />
+      </LineChart>
     </ResponsiveContainer>
   )
 }
@@ -355,13 +349,13 @@ export function DifficultyDistributionChart({ data }: { data: Array<{ range: str
 
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data}>
+      <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
         <XAxis dataKey="range" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
         <Tooltip />
-        <Bar dataKey="count" fill="#0b363d" radius={[4, 4, 0, 0]} />
-      </BarChart>
+        <Line type="monotone" dataKey="count" stroke="#0b363d" strokeWidth={3} dot={{ r: 2 }} />
+      </LineChart>
     </ResponsiveContainer>
   )
 }
@@ -371,13 +365,13 @@ export function SearchVolumeDistributionChart({ data }: { data: Array<{ range: s
   if (empty) return empty
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data}>
+      <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
         <XAxis dataKey="range" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
         <Tooltip />
-        <Bar dataKey="count" fill="#ff8945" radius={[4, 4, 0, 0]} />
-      </BarChart>
+        <Line type="monotone" dataKey="count" stroke="#ff8945" strokeWidth={3} dot={{ r: 2 }} />
+      </LineChart>
     </ResponsiveContainer>
   )
 }
@@ -403,13 +397,13 @@ export function WordCountDistributionChart({ data }: { data: Array<{ range: stri
   if (empty) return empty
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data}>
+      <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
         <XAxis dataKey="range" axisLine={false} tickLine={false} />
         <YAxis axisLine={false} tickLine={false} />
         <Tooltip />
-        <Bar dataKey="count" fill="#4f46e5" radius={[4, 4, 0, 0]} />
-      </BarChart>
+        <Line type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={3} dot={{ r: 2 }} />
+      </LineChart>
     </ResponsiveContainer>
   )
 }
@@ -419,13 +413,13 @@ export function TrendsPeakChart({ data }: { data: Array<{ month: string; count: 
   if (empty) return empty
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data}>
+      <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
         <XAxis dataKey="month" axisLine={false} tickLine={false} />
         <YAxis axisLine={false} tickLine={false} />
         <Tooltip />
-        <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
-      </BarChart>
+        <Line type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={3} dot={{ r: 2 }} />
+      </LineChart>
     </ResponsiveContainer>
   )
 }
@@ -488,13 +482,13 @@ export function AIOPositionDistributionChart({ data }: { data: NumberMap }) {
   if (empty) return empty
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={chartData}>
+      <LineChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
         <XAxis dataKey="pos" axisLine={false} tickLine={false} />
         <YAxis axisLine={false} tickLine={false} />
         <Tooltip />
-        <Bar dataKey="count" fill="#4f46e5" />
-      </BarChart>
+        <Line type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={3} dot={{ r: 2 }} />
+      </LineChart>
     </ResponsiveContainer>
   )
 }

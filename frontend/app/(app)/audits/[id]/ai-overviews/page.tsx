@@ -43,20 +43,25 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
     )
   }
 
-  const aio = audit?.results?.senuto?.visibility?.ai_overviews
-  if (!aio) {
-    return (
-      <div className="container mx-auto py-8 px-4 text-center">
-        <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Brak danych AI Overviews</h1>
-        <p className="text-muted-foreground">Ten audyt nie zawiera danych AI Overviews z Senuto.</p>
-      </div>
-    )
+  const visibility = audit?.results?.senuto?.visibility || {}
+  const aio = visibility?.ai_overviews
+  const visibilityStats = visibility?.statistics?.statistics || {}
+
+  const hasAioBlock = !!aio
+  const stats = {
+    ...(aio?.statistics || {}),
+    aio_keywords_with_domain_count:
+      (aio?.statistics?.aio_keywords_with_domain_count ?? visibilityStats?.aio_visible_keywords?.recent_value ?? 0),
+    aio_keywords_count:
+      (aio?.statistics?.aio_keywords_count ?? visibilityStats?.aio_keywords?.recent_value ?? 0),
+    aio_avg_pos: aio?.statistics?.aio_avg_pos ?? null,
+    aio_wins_count: aio?.statistics?.aio_wins_count ?? null,
+    aio_losses_count: aio?.statistics?.aio_losses_count ?? null,
+    aio_vis_loss_percentage: aio?.statistics?.aio_vis_loss_percentage ?? null,
   }
 
-  const stats = aio.statistics || {}
-  const keywords = aio.keywords || []
-  const competitors = aio.competitors || []
+  const keywords = aio?.keywords || []
+  const competitors = aio?.competitors || []
 
   const aioPositionDistribution = useMemo(() => {
     const dist: Record<string, number> = {}
@@ -77,6 +82,21 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
     })
     return Object.entries(counter).map(([name, value]) => ({ name, value }))
   }, [keywords])
+
+  const fallbackRows = useMemo(() => {
+    if (keywords.length > 0) return []
+    const positions = visibility?.positions || []
+    return positions.slice(0, 500).map((row: any) => ({
+      keyword: row.keyword,
+      searches: row?.statistics?.searches?.current || 0,
+      organic_pos: row?.statistics?.position?.current || null,
+      best_aio_pos: null,
+      best_aio_url: null,
+      intentions: row?.statistics?.intentions || {},
+      aio_length: null,
+      aio_domains_count: null,
+    }))
+  }, [keywords, visibility])
 
   const keywordColumns = [
     { key: 'keyword', label: 'Słowo kluczowe', className: 'font-medium max-w-[260px]', maxWidth: '260px' },
@@ -149,14 +169,18 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Śr. pozycja w AIO</CardDescription>
-              <CardTitle className="text-3xl font-bold">{formatScore(stats.aio_avg_pos || 0)}</CardTitle>
+              <CardTitle className="text-3xl font-bold">
+                {stats.aio_avg_pos !== null && stats.aio_avg_pos !== undefined ? formatScore(stats.aio_avg_pos) : '—'}
+              </CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Zyski / Straty</CardDescription>
               <CardTitle className="text-3xl font-bold">
-                {formatNumber(stats.aio_wins_count || 0)} / {formatNumber(stats.aio_losses_count || 0)}
+                {stats.aio_wins_count !== null && stats.aio_losses_count !== null
+                  ? `${formatNumber(stats.aio_wins_count || 0)} / ${formatNumber(stats.aio_losses_count || 0)}`
+                  : '—'}
               </CardTitle>
               <div className="flex items-center gap-2 text-xs">
                 <TrendingUp className="h-3 w-3 text-green-600" />
@@ -167,10 +191,23 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Szacowana utrata ruchu</CardDescription>
-              <CardTitle className="text-3xl font-bold">{formatScore(stats.aio_vis_loss_percentage || 0)}%</CardTitle>
+              <CardTitle className="text-3xl font-bold">
+                {stats.aio_vis_loss_percentage !== null && stats.aio_vis_loss_percentage !== undefined
+                  ? `${formatScore(stats.aio_vis_loss_percentage)}%`
+                  : '—'}
+              </CardTitle>
             </CardHeader>
           </Card>
         </div>
+
+        {!hasAioBlock && (
+          <Card className="border-yellow-200 bg-yellow-50/30 dark:bg-yellow-950/10">
+            <CardContent className="pt-6 text-sm text-muted-foreground">
+              Ten audyt zawiera tylko metryki AIO ze statystyk Senuto (bez szczegółowej listy słów i konkurencji).
+              Uruchom nowy audyt, aby pobrać pełny moduł AI Overviews.
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
@@ -199,7 +236,7 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
 
           <TabsContent value="keywords" className="pt-6">
             <DataExplorerTable
-              data={keywords}
+              data={keywords.length > 0 ? keywords : fallbackRows}
               columns={keywordColumns}
               pageSize={20}
               exportFilename="aio_keywords"

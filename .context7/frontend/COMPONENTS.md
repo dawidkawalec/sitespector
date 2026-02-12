@@ -277,6 +277,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 - `AIOCompetitorsChart`
 - `PositionSparkline` / `TrendsSparkline`
 
+Chart style rule (current product preference):
+- Prefer `LineChart` over `BarChart` wherever series continuity can be interpreted (time/ordered buckets).
+- Keep `BarChart` for direct category comparisons where line interpolation is misleading (e.g. grouped competitor comparisons, horizontal feature rank lists).
+
 ### New Shared UI Components
 
 - `frontend/components/ui/intent-badge.tsx` - intent + journey stage badges
