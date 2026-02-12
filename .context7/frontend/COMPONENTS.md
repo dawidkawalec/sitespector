@@ -278,8 +278,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 - `PositionSparkline` / `TrendsSparkline`
 
 Chart style rule (current product preference):
-- Prefer `LineChart` over `BarChart` wherever series continuity can be interpreted (time/ordered buckets).
-- Keep `BarChart` for direct category comparisons where line interpolation is misleading (e.g. grouped competitor comparisons, horizontal feature rank lists).
+- Prefer line-like charts with **dashboard gradient style**: `AreaChart` + monotone stroke + soft vertical gradient fill + rounded tooltip card.
+- Apply one visual preset across modules (`AuditCharts` + comparison trend) for consistency.
+- Keep `BarChart` only for category comparisons where interpolation is misleading (e.g. grouped competitor comparisons, horizontal rank lists).
 
 ### New Shared UI Components
 

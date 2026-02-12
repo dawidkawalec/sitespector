@@ -39,7 +39,8 @@ from app.services.ai_analysis import (
     generate_fix_suggestion, analyze_single_page, generate_quick_wins, generate_alt_text,
     analyze_seo_context, analyze_performance_context, analyze_visibility_context,
     analyze_backlinks_context, analyze_links_context, analyze_images_context,
-    analyze_cross_tool, generate_roadmap, generate_executive_summary,
+    analyze_cross_tool, generate_roadmap, generate_executive_summary, analyze_ai_overviews_context,
+    aggregate_quick_wins_from_results,
 )
 
 logger = logging.getLogger(__name__)
@@ -660,9 +661,23 @@ async def get_quick_wins(
     if not has_access:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Check if already generated in results
-    if audit.results and "quick_wins" in audit.results:
-        return audit.results["quick_wins"]
+    results = audit.results or {}
+    cached_quick_wins = results.get("quick_wins", []) if isinstance(results, dict) else []
+    aggregated_quick_wins = aggregate_quick_wins_from_results(results, max_items=24)
+
+    # Prefer unified aggregated quick wins (from AI Strategy modules) when available.
+    if aggregated_quick_wins and len(aggregated_quick_wins) >= len(cached_quick_wins):
+        if not audit.results:
+            audit.results = {}
+        audit.results["quick_wins"] = aggregated_quick_wins
+        from sqlalchemy.orm.attributes import flag_modified
+        audit.results = dict(audit.results)
+        flag_modified(audit, "results")
+        await db.commit()
+        return aggregated_quick_wins
+
+    if cached_quick_wins:
+        return cached_quick_wins
     
     # Generate new ones
     audit_data = {
@@ -773,7 +788,7 @@ async def trigger_ai_context(
     lighthouse_data = audit.results.get("lighthouse", {})
     senuto_data = audit.results.get("senuto", {})
     
-    valid_areas = ["seo", "performance", "visibility", "backlinks", "links", "images"]
+    valid_areas = ["seo", "performance", "visibility", "ai_overviews", "backlinks", "links", "images"]
     areas_to_run = [area] if area and area in valid_areas else valid_areas
     
     import asyncio
@@ -790,6 +805,11 @@ async def trigger_ai_context(
             )
         elif a == "visibility" and senuto_data.get("visibility"):
             tasks[a] = analyze_visibility_context(senuto_data["visibility"], crawl_data)
+        elif a == "ai_overviews" and senuto_data.get("visibility", {}).get("ai_overviews"):
+            tasks[a] = analyze_ai_overviews_context(
+                senuto_data["visibility"].get("ai_overviews", {}),
+                crawl_data
+            )
         elif a == "backlinks" and senuto_data.get("backlinks"):
             tasks[a] = analyze_backlinks_context(senuto_data["backlinks"], crawl_data)
         elif a == "links":
@@ -823,6 +843,7 @@ async def trigger_ai_context(
             results["cross_tool"] = cross_tool
             results["roadmap"] = roadmap
             results["executive_summary"] = exec_summary
+            results["quick_wins"] = aggregate_quick_wins_from_results(results, max_items=24)
         except Exception as e:
             logger.error(f"Strategy re-generation failed: {e}")
     

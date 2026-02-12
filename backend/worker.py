@@ -393,6 +393,9 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                     results[name] = {}
                 else:
                     results[name] = res
+
+            # Build a unified quick wins list from all AI modules.
+            results["quick_wins"] = ai_analysis.aggregate_quick_wins_from_results(results, max_items=24)
             
             duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
             audit.processing_step = "ai_strategy:done"

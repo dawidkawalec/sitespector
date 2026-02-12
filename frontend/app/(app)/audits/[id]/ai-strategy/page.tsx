@@ -60,6 +60,7 @@ const AREA_META: Record<string, { label: string; icon: React.ReactNode }> = {
   seo: { label: 'SEO', icon: <SearchIcon className="h-4 w-4" /> },
   performance: { label: 'Wydajność', icon: <Gauge className="h-4 w-4" /> },
   visibility: { label: 'Widoczność', icon: <TrendingUp className="h-4 w-4" /> },
+  ai_overviews: { label: 'AI Overviews', icon: <Sparkles className="h-4 w-4" /> },
   backlinks: { label: 'Backlinki', icon: <Link2 className="h-4 w-4" /> },
   links: { label: 'Linki', icon: <Link2 className="h-4 w-4" /> },
   images: { label: 'Obrazy', icon: <ImageIcon className="h-4 w-4" /> },
@@ -528,6 +529,11 @@ export default function AiStrategyPage({ params }: { params: { id: string } }) {
                   {win.effort && (
                     <Badge variant="secondary" className="text-[9px] mt-2">
                       Nakład: {win.effort}
+                    </Badge>
+                  )}
+                  {win.category && (
+                    <Badge variant="outline" className="text-[9px] mt-2 ml-2">
+                      {win.category}
                     </Badge>
                   )}
                 </div>

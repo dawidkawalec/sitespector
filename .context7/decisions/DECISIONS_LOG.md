@@ -230,6 +230,26 @@
 
 ---
 
+## ADR-022: Unified Quick Wins + Gradient Line Style System
+**Date**: 2026-02-12
+**Status**: ✅ Done
+**Decision**:
+- Replace scattered/partial quick wins outputs with a single aggregated `results.quick_wins` list composed from:
+  - per-area `results.ai_contexts.*.quick_wins`,
+  - `results.roadmap.immediate_actions`,
+  - `results.content_analysis.roi_action_plan`.
+- Standardize line-like chart styling to dashboard visual language (Area/line with soft gradient fill + unified tooltip).
+**Rationale**:
+- Users saw mismatch between "Quick Wins" (3 generic items) and richer module-specific AI strategy actions.
+- Chart visuals were inconsistent across modules after Senuto expansion.
+**Outcome**:
+- Backend now ranks/deduplicates quick wins with category/source metadata.
+- Worker and `run-ai-context` regeneration persist unified quick wins.
+- Frontend pages (`ai-strategy`, `quick-wins`) consume aligned quick wins set.
+- `AuditCharts` and comparison trend charts now follow one gradient line style preset.
+
+---
+
 **Last Updated**: 2026-02-12
-**Total Decisions**: 21 accepted
+**Total Decisions**: 22 accepted
 **Review**: Update when making significant architectural changes.

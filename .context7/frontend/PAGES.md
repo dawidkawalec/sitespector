@@ -143,6 +143,12 @@ Dedicated page for Senuto AIO data:
 - Keyword-level explorer table
 - Competitor comparison chart + table
 
+## AI Strategy + Quick Wins Alignment (Feb 2026)
+
+- `ai-strategy` now consumes a unified `results.quick_wins` list aggregated from all `results.ai_contexts.*.quick_wins`, roadmap immediate actions, and ROI content plan.
+- Quick wins include `category` and `source` metadata so module-level actions are visible also in the global quick wins section.
+- `quick-wins` page and `ai-strategy` page now read the same canonical quick wins dataset (no 3-item fallback mismatch when richer AI data exists).
+
 ---
 
 ## Client-Side vs Server-Side

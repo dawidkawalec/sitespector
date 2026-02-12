@@ -440,6 +440,39 @@ refetchInterval: (query) => {
 
 ---
 
+### BUG-014: Quick Wins mismatch vs AI Strategy + inconsistent line chart styling
+
+**Reported**: 2026-02-12
+
+**Status**: ✅ FIXED (2026-02-12)
+
+**Severity**: MEDIUM
+
+**Description**:
+- Global `Quick Wins` sometimes showed only ~3 generic items, while `AI Strategy` contained many actionable quick wins split by modules.
+- Line-chart visuals were inconsistent between dashboard and audit modules.
+
+**Root cause**:
+- `results.quick_wins` could remain legacy/fallback and not reflect richer `results.ai_contexts.*.quick_wins`.
+- No shared chart preset for line-like charts across modules.
+
+**Fix**:
+- Added quick wins aggregator in `ai_analysis` and used it in:
+  - worker strategy finalization,
+  - `GET /audits/{id}/quick-wins`,
+  - `POST /audits/{id}/run-ai-context` full regeneration path.
+- Extended AI context prompts (visibility + ai_overviews + cross_tool + roadmap) to include new Senuto fields (AIO, difficulty, CPC, intent, snippets, sections detail).
+- Replaced module line charts with dashboard-like gradient style (`AreaChart` + unified tooltip).
+
+**Impact**:
+- Quick Wins and AI Strategy now use one canonical, richer backlog.
+- New Senuto data is explicitly consumed by AI suggestions.
+- Visual analytics are consistent across dashboard and audit modules.
+
+**Related**: `backend/app/services/ai_analysis.py`, `backend/worker.py`, `backend/app/routers/audits.py`, `frontend/components/AuditCharts.tsx`, `frontend/app/(app)/audits/[id]/comparison/page.tsx`
+
+---
+
 ## Known Issues
 
 ### ISSUE-001: PDF Template Incomplete
@@ -603,6 +636,6 @@ When adding new bugs to this file, use this format:
 ---
 
 **Last Updated**: 2026-02-12  
-**Resolved Bugs**: 13 (incl. BUG-013 ai-overviews hook-order + favicon 404)  
+**Resolved Bugs**: 14 (incl. BUG-014 quick wins alignment + chart style consistency)  
 **Known Issues**: 3  
 **Watching**: 2

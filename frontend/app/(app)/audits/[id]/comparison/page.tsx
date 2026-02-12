@@ -34,8 +34,6 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -208,18 +206,26 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorOverall" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                     </linearGradient>
+                    <linearGradient id="colorSeo" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorPerformance" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                    </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="date" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
                   <Legend />
                   <Area type="monotone" dataKey="overall" name="Wynik Ogólny" stroke="#3b82f6" fillOpacity={1} fill="url(#colorOverall)" strokeWidth={3} />
-                  <Line type="monotone" dataKey="seo" name="SEO" stroke="#10b981" strokeDasharray="5 5" />
-                  <Line type="monotone" dataKey="performance" name="Wydajność" stroke="#f59e0b" strokeDasharray="5 5" />
+                  <Area type="monotone" dataKey="seo" name="SEO" stroke="#10b981" fillOpacity={1} fill="url(#colorSeo)" strokeWidth={2.5} />
+                  <Area type="monotone" dataKey="performance" name="Wydajność" stroke="#f59e0b" fillOpacity={1} fill="url(#colorPerformance)" strokeWidth={2.5} />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>

@@ -12,8 +12,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   AreaChart,
   Area,
 } from 'recharts'
@@ -94,16 +92,16 @@ export function ResponseTimeChart({ pages }: ResponseTimeChartProps) {
   const data = Object.entries(buckets).map(([name, value]) => ({ name, value }))
   
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-        <Legend iconType="circle" />
-        <Line type="monotone" dataKey="value" stroke="#0b363d" strokeWidth={3} dot={{ r: 3 }} name="Liczba stron" />
-      </LineChart>
-    </ResponsiveContainer>
+    <GradientLineAreaChart
+      data={data}
+      dataKey="value"
+      color="#0b363d"
+      name="Liczba stron"
+      xAxisDataKey="name"
+      xTickFontSize={12}
+      yTickFontSize={12}
+      height={300}
+    />
   )
 }
 
@@ -140,16 +138,16 @@ export function WordCountChart({ pages }: WordCountChartProps) {
   const data = Object.entries(buckets).map(([name, value]) => ({ name, value }))
   
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-        <Legend iconType="circle" />
-        <Line type="monotone" dataKey="value" stroke="#ff8945" strokeWidth={3} dot={{ r: 3 }} name="Liczba stron" />
-      </LineChart>
-    </ResponsiveContainer>
+    <GradientLineAreaChart
+      data={data}
+      dataKey="value"
+      color="#ff8945"
+      name="Liczba stron"
+      xAxisDataKey="name"
+      xTickFontSize={12}
+      yTickFontSize={12}
+      height={300}
+    />
   )
 }
 
@@ -186,16 +184,16 @@ export function ImageSizeChart({ images }: ImageSizeChartProps) {
   const data = Object.entries(buckets).map(([name, value]) => ({ name, value }))
   
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-        <Legend iconType="circle" />
-        <Line type="monotone" dataKey="value" stroke="#14b8a6" strokeWidth={3} dot={{ r: 3 }} name="Liczba obrazów" />
-      </LineChart>
-    </ResponsiveContainer>
+    <GradientLineAreaChart
+      data={data}
+      dataKey="value"
+      color="#14b8a6"
+      name="Liczba obrazów"
+      xAxisDataKey="name"
+      xTickFontSize={12}
+      yTickFontSize={12}
+      height={300}
+    />
   )
 }
 
@@ -213,15 +211,14 @@ export function PositionsDistributionChart({ data }: PositionsDistributionChartP
     .sort((a, b) => a.pos - b.pos)
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="pos" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
-        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
-        <Tooltip />
-        <Line type="monotone" dataKey="count" stroke="#0b363d" strokeWidth={3} dot={{ r: 2 }} name="Liczba fraz" />
-      </LineChart>
-    </ResponsiveContainer>
+    <GradientLineAreaChart
+      data={chartData}
+      dataKey="count"
+      color="#0b363d"
+      name="Liczba fraz"
+      xAxisDataKey="pos"
+      height={300}
+    />
   )
 }
 
@@ -243,15 +240,16 @@ export function SeasonalityChart({ data }: SeasonalityChartProps) {
     .sort((a, b) => a.idx - b.idx)
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="month" axisLine={false} tickLine={false} />
-        <YAxis axisLine={false} tickLine={false} hide />
-        <Tooltip formatter={(value: number) => formatNumber(value)} />
-        <Line type="monotone" dataKey="value" stroke="#ff8945" strokeWidth={3} dot={{ r: 3 }} name="Widoczność" />
-      </LineChart>
-    </ResponsiveContainer>
+    <GradientLineAreaChart
+      data={chartData}
+      dataKey="value"
+      color="#ff8945"
+      name="Widoczność"
+      xAxisDataKey="month"
+      height={300}
+      hideYAxis
+      tooltipFormatter={(value) => formatNumber(value)}
+    />
   )
 }
 
@@ -312,6 +310,74 @@ export function LinkAttributesPieChart({ attributes }: LinkAttributesPieChartPro
 type NumberMap = Record<string, number>
 
 const BASE_COLORS = ['#81d86f', '#0b363d', '#ff8945', '#eea47f', '#dc3545', '#616c6e', '#4f46e5', '#14b8a6']
+const DASHBOARD_TOOLTIP_STYLE = {
+  borderRadius: '12px',
+  border: 'none',
+  boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+}
+
+function GradientLineAreaChart({
+  data,
+  dataKey,
+  color,
+  name,
+  xAxisDataKey,
+  xTickFontSize = 10,
+  yTickFontSize = 10,
+  height = 280,
+  hideYAxis = false,
+  yDomain,
+  tooltipFormatter,
+}: {
+  data: any[]
+  dataKey: string
+  color: string
+  name?: string
+  xAxisDataKey: string
+  xTickFontSize?: number
+  yTickFontSize?: number
+  height?: number
+  hideYAxis?: boolean
+  yDomain?: [number, number]
+  tooltipFormatter?: (value: number) => string
+}) {
+  const gradientId = `gradient-${dataKey}-${color.replace('#', '')}`
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <AreaChart data={data}>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+            <stop offset="95%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey={xAxisDataKey} axisLine={false} tickLine={false} tick={{ fontSize: xTickFontSize }} />
+        <YAxis
+          axisLine={false}
+          tickLine={false}
+          tick={{ fontSize: yTickFontSize }}
+          hide={hideYAxis}
+          domain={yDomain}
+        />
+        <Tooltip
+          formatter={tooltipFormatter ? (value: number) => tooltipFormatter(value) : undefined}
+          contentStyle={DASHBOARD_TOOLTIP_STYLE}
+        />
+        <Area
+          type="monotone"
+          dataKey={dataKey}
+          stroke={color}
+          strokeWidth={3}
+          fillOpacity={1}
+          fill={`url(#${gradientId})`}
+          dot={{ r: 2 }}
+          name={name}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  )
+}
 
 function renderNoData(data: unknown) {
   if (!data || (Array.isArray(data) && data.length === 0)) {
@@ -347,33 +413,13 @@ export function DifficultyDistributionChart({ data }: { data: Array<{ range: str
   const empty = renderNoData(data)
   if (empty) return empty
 
-  return (
-    <ResponsiveContainer width="100%" height={280}>
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="range" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
-        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
-        <Tooltip />
-        <Line type="monotone" dataKey="count" stroke="#0b363d" strokeWidth={3} dot={{ r: 2 }} />
-      </LineChart>
-    </ResponsiveContainer>
-  )
+  return <GradientLineAreaChart data={data} dataKey="count" color="#0b363d" xAxisDataKey="range" />
 }
 
 export function SearchVolumeDistributionChart({ data }: { data: Array<{ range: string; count: number }> }) {
   const empty = renderNoData(data)
   if (empty) return empty
-  return (
-    <ResponsiveContainer width="100%" height={280}>
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="range" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
-        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
-        <Tooltip />
-        <Line type="monotone" dataKey="count" stroke="#ff8945" strokeWidth={3} dot={{ r: 2 }} />
-      </LineChart>
-    </ResponsiveContainer>
-  )
+  return <GradientLineAreaChart data={data} dataKey="count" color="#ff8945" xAxisDataKey="range" />
 }
 
 export function SerpFeaturesChart({ data }: { data: Array<{ name: string; count: number }> }) {
@@ -395,33 +441,13 @@ export function SerpFeaturesChart({ data }: { data: Array<{ name: string; count:
 export function WordCountDistributionChart({ data }: { data: Array<{ range: string; count: number }> }) {
   const empty = renderNoData(data)
   if (empty) return empty
-  return (
-    <ResponsiveContainer width="100%" height={280}>
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="range" axisLine={false} tickLine={false} />
-        <YAxis axisLine={false} tickLine={false} />
-        <Tooltip />
-        <Line type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={3} dot={{ r: 2 }} />
-      </LineChart>
-    </ResponsiveContainer>
-  )
+  return <GradientLineAreaChart data={data} dataKey="count" color="#4f46e5" xAxisDataKey="range" />
 }
 
 export function TrendsPeakChart({ data }: { data: Array<{ month: string; count: number }> }) {
   const empty = renderNoData(data)
   if (empty) return empty
-  return (
-    <ResponsiveContainer width="100%" height={280}>
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="month" axisLine={false} tickLine={false} />
-        <YAxis axisLine={false} tickLine={false} />
-        <Tooltip />
-        <Line type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={3} dot={{ r: 2 }} />
-      </LineChart>
-    </ResponsiveContainer>
-  )
+  return <GradientLineAreaChart data={data} dataKey="count" color="#6366f1" xAxisDataKey="month" />
 }
 
 export function CompetitorsDualBarChart({
@@ -480,17 +506,7 @@ export function AIOPositionDistributionChart({ data }: { data: NumberMap }) {
     .sort((a, b) => a.pos - b.pos)
   const empty = renderNoData(chartData)
   if (empty) return empty
-  return (
-    <ResponsiveContainer width="100%" height={280}>
-      <LineChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-        <XAxis dataKey="pos" axisLine={false} tickLine={false} />
-        <YAxis axisLine={false} tickLine={false} />
-        <Tooltip />
-        <Line type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={3} dot={{ r: 2 }} />
-      </LineChart>
-    </ResponsiveContainer>
-  )
+  return <GradientLineAreaChart data={chartData} dataKey="count" color="#4f46e5" xAxisDataKey="pos" />
 }
 
 export function PositionSparkline({ history }: { history: Record<string, { position?: number } | number> }) {
@@ -504,9 +520,23 @@ export function PositionSparkline({ history }: { history: Record<string, { posit
   return (
     <div className="h-8 w-20">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
-          <Line type="monotone" dataKey="value" stroke="#0b363d" strokeWidth={2} dot={false} />
-        </LineChart>
+        <AreaChart data={data}>
+          <defs>
+            <linearGradient id="sparkline-position-gradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#0b363d" stopOpacity={0.25} />
+              <stop offset="95%" stopColor="#0b363d" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke="#0b363d"
+            strokeWidth={2}
+            dot={false}
+            fillOpacity={1}
+            fill="url(#sparkline-position-gradient)"
+          />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   )
@@ -519,7 +549,13 @@ export function TrendsSparkline({ trend }: { trend: number[] }) {
     <div className="h-8 w-20">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}>
-          <Area type="monotone" dataKey="value" stroke="#ff8945" fill="#ff8945" fillOpacity={0.25} />
+          <defs>
+            <linearGradient id="sparkline-trends-gradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#ff8945" stopOpacity={0.25} />
+              <stop offset="95%" stopColor="#ff8945" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area type="monotone" dataKey="value" stroke="#ff8945" fill="url(#sparkline-trends-gradient)" fillOpacity={1} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

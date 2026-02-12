@@ -140,6 +140,7 @@ Results stored in `audit.results`:
 - `results.cross_tool` - cross-tool correlations
 - `results.roadmap` - priority roadmap (immediate/short/medium/long term)
 - `results.executive_summary` - health score, strengths, critical issues
+- `results.quick_wins` - unified prioritized backlog aggregated from all AI contexts + roadmap immediate actions + content ROI actions
 
 ### Senuto Expansion (Feb 2026)
 

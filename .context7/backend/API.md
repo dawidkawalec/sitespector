@@ -768,10 +768,17 @@ Manually trigger full AI analysis for a completed audit.
 ### `POST /api/audits/{audit_id}/run-ai-context`
 Trigger contextual AI analysis for specific area(s).
 - **Auth**: Required
-- **Query Params**: `area` (optional) - `seo|performance|visibility|backlinks|links|images`
+- **Query Params**: `area` (optional) - `seo|performance|visibility|ai_overviews|backlinks|links|images`
 - **Response**: `{ "status": "completed", "areas_analyzed": [...], "message": "..." }`
 - **Notes**: If `area` not specified, regenerates all areas + cross_tool + roadmap + executive_summary.
-- **Behavior**: For full regeneration (`area` not provided) endpoint recalculates `results.ai_contexts`, `results.cross_tool`, `results.roadmap`, and `results.executive_summary`.
+- **Behavior**: For full regeneration (`area` not provided) endpoint recalculates `results.ai_contexts`, `results.cross_tool`, `results.roadmap`, `results.executive_summary`, and unified `results.quick_wins`.
+
+### `GET /api/audits/{audit_id}/quick-wins`
+- Returns unified quick wins from all AI modules when available.
+- Source of truth priority:
+  1) aggregated `results.ai_contexts.*.quick_wins` + roadmap + ROI actions,
+  2) cached `results.quick_wins`,
+  3) legacy rule-based fallback generation.
 
 ---
 

@@ -9,6 +9,129 @@ from app.services.ai_client import call_claude
 logger = logging.getLogger(__name__)
 
 
+IMPACT_WEIGHT = {"high": 3, "medium": 2, "low": 1}
+EFFORT_WEIGHT = {"easy": 3, "medium": 2, "hard": 1}
+
+
+def _normalize_impact(value: Any) -> str:
+    v = str(value or "").strip().lower()
+    if v in IMPACT_WEIGHT:
+        return v
+    return "medium"
+
+
+def _normalize_effort(value: Any) -> str:
+    v = str(value or "").strip().lower()
+    if v in EFFORT_WEIGHT:
+        return v
+    return "medium"
+
+
+def aggregate_quick_wins_from_results(all_results: Dict[str, Any], max_items: int = 20) -> List[Dict[str, Any]]:
+    """
+    Build a single prioritized quick wins list from all AI modules.
+    """
+    if not isinstance(all_results, dict):
+        return []
+
+    candidates: List[Dict[str, Any]] = []
+    ai_contexts = all_results.get("ai_contexts", {}) or {}
+    area_labels = {
+        "seo": "SEO",
+        "performance": "Performance",
+        "visibility": "Visibility",
+        "ai_overviews": "AI Overviews",
+        "backlinks": "Backlinks",
+        "links": "Internal Links",
+        "images": "Images",
+    }
+
+    if isinstance(ai_contexts, dict):
+        for area, payload in ai_contexts.items():
+            if not isinstance(payload, dict):
+                continue
+            area_wins = payload.get("quick_wins", []) or []
+            for win in area_wins:
+                if not isinstance(win, dict):
+                    continue
+                title = (win.get("title") or "").strip()
+                if not title:
+                    continue
+                impact = _normalize_impact(win.get("impact"))
+                effort = _normalize_effort(win.get("effort"))
+                candidates.append({
+                    "title": title,
+                    "description": win.get("description") or "",
+                    "impact": impact,
+                    "effort": effort,
+                    "category": area_labels.get(area, str(area).replace("_", " ").title()),
+                    "source": f"ai_contexts.{area}",
+                    "score": IMPACT_WEIGHT[impact] * 3 + EFFORT_WEIGHT[effort] * 2,
+                })
+
+    content_plan = all_results.get("content_analysis", {}).get("roi_action_plan", []) or []
+    for action in content_plan:
+        if not isinstance(action, dict):
+            continue
+        title = (action.get("action") or "").strip()
+        if not title:
+            continue
+        impact = _normalize_impact(action.get("impact"))
+        effort = _normalize_effort(action.get("effort"))
+        candidates.append({
+            "title": title,
+            "description": "Akcja z planu ROI dla contentu.",
+            "impact": impact,
+            "effort": effort,
+            "category": "Content",
+            "source": "content_analysis.roi_action_plan",
+            "score": IMPACT_WEIGHT[impact] * 2 + EFFORT_WEIGHT[effort] * 2,
+        })
+
+    roadmap_now = all_results.get("roadmap", {}).get("immediate_actions", []) or []
+    for action in roadmap_now:
+        if not isinstance(action, dict):
+            continue
+        title = (action.get("title") or "").strip()
+        if not title:
+            continue
+        impact = _normalize_impact(action.get("impact"))
+        effort = _normalize_effort(action.get("effort"))
+        candidates.append({
+            "title": title,
+            "description": action.get("description") or "",
+            "impact": impact,
+            "effort": effort,
+            "category": action.get("area") or "Strategy",
+            "source": "roadmap.immediate_actions",
+            "score": IMPACT_WEIGHT[impact] * 4 + EFFORT_WEIGHT[effort],
+        })
+
+    dedup: Dict[str, Dict[str, Any]] = {}
+    for candidate in candidates:
+        dedup_key = " ".join(str(candidate.get("title", "")).lower().split())
+        if not dedup_key:
+            continue
+        existing = dedup.get(dedup_key)
+        if not existing or candidate["score"] > existing["score"]:
+            dedup[dedup_key] = candidate
+
+    wins = list(dedup.values())
+    wins.sort(key=lambda item: (-item.get("score", 0), item.get("title", "")))
+
+    return [
+        {
+            "title": item["title"],
+            "description": item.get("description", ""),
+            "impact": item.get("impact", "medium"),
+            "effort": item.get("effort", "medium"),
+            "category": item.get("category", "General"),
+            "source": item.get("source", "unknown"),
+        }
+        for item in wins[:max_items]
+    ]
+
+
 async def analyze_content(content_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Analyze website content quality and provide recommendations using Claude AI.
@@ -507,6 +630,10 @@ async def generate_quick_wins(audit_data: Dict[str, Any]) -> List[Dict[str, Any]
     """
     logger.info("Generating quick wins")
     results = audit_data.get("results", {})
+    aggregated = aggregate_quick_wins_from_results(results, max_items=20)
+    if aggregated:
+        return aggregated
+
     crawl = results.get("crawl", {})
     lighthouse = results.get("lighthouse", {}).get("desktop", {})
     
@@ -519,7 +646,8 @@ async def generate_quick_wins(audit_data: Dict[str, Any]) -> List[Dict[str, Any]
             "title": f"Napraw {broken_links} uszkodzonych linków",
             "description": "Wykryto linki prowadzące do stron 404. Ich naprawa poprawi indeksowanie i UX.",
             "impact": "high",
-            "effort": "low"
+            "effort": "easy",
+            "category": "SEO"
         })
         
     # 2. Performance - LCP
@@ -529,7 +657,8 @@ async def generate_quick_wins(audit_data: Dict[str, Any]) -> List[Dict[str, Any]
             "title": "Zoptymalizuj LCP (Largest Contentful Paint)",
             "description": f"Obecny wynik to {lcp}ms. Skup się na kompresji obrazów i priorytetyzacji zasobów.",
             "impact": "high",
-            "effort": "medium"
+            "effort": "medium",
+            "category": "Performance"
         })
         
     # 3. Performance - TTFB
@@ -539,7 +668,8 @@ async def generate_quick_wins(audit_data: Dict[str, Any]) -> List[Dict[str, Any]
             "title": "Popraw czas odpowiedzi serwera (TTFB)",
             "description": f"Obecny wynik to {ttfb}ms. Rozważ wdrożenie cachowania lub zmianę hostingu.",
             "impact": "high",
-            "effort": "medium"
+            "effort": "medium",
+            "category": "Performance"
         })
         
     # 4. SEO - Missing H1
@@ -549,7 +679,8 @@ async def generate_quick_wins(audit_data: Dict[str, Any]) -> List[Dict[str, Any]
             "title": "Dodaj brakujący nagłówek H1",
             "description": "Strona główna nie posiada nagłówka H1, co jest kluczowe dla hierarchii treści.",
             "impact": "high",
-            "effort": "low"
+            "effort": "easy",
+            "category": "SEO"
         })
         
     # 5. SEO - Missing ALT tags
@@ -559,7 +690,8 @@ async def generate_quick_wins(audit_data: Dict[str, Any]) -> List[Dict[str, Any]
             "title": f"Uzupełnij ALT dla {images_without_alt} obrazów",
             "description": "Opisy alternatywne pomagają w pozycjonowaniu w Google Images i poprawiają dostępność.",
             "impact": "medium",
-            "effort": "low"
+            "effort": "easy",
+            "category": "Images"
         })
 
     # Fallback if no specific issues found
@@ -568,7 +700,8 @@ async def generate_quick_wins(audit_data: Dict[str, Any]) -> List[Dict[str, Any]
             "title": "Optymalizacja Meta Tagów",
             "description": "Regularnie odświeżaj tytuły i opisy, aby utrzymać wysoki współczynnik klikalności (CTR).",
             "impact": "medium",
-            "effort": "low"
+            "effort": "easy",
+            "category": "SEO"
         })
         
     return quick_wins
@@ -831,6 +964,29 @@ async def analyze_visibility_context(
     competitors = senuto_visibility.get("competitors", [])[:5]
     wins = senuto_visibility.get("wins", [])[:5]
     losses = senuto_visibility.get("losses", [])[:5]
+    sections_subdomains = senuto_visibility.get("sections_subdomains", [])[:5]
+    sections_urls = senuto_visibility.get("sections_urls", [])[:5]
+    top3_share = round((stats.get("top3", 0) / max(stats.get("top50", 1), 1)) * 100, 2) if stats else 0
+
+    difficulties = []
+    cpcs = []
+    intents: Dict[str, int] = {}
+    snippets_count = 0
+    for position in positions:
+        statistics = position.get("statistics", {}) or {}
+        difficulty = statistics.get("difficulty")
+        cpc = statistics.get("cpc")
+        if isinstance(difficulty, (int, float)):
+            difficulties.append(difficulty)
+        if isinstance(cpc, (int, float)):
+            cpcs.append(cpc)
+        intent = str(statistics.get("intent") or "").strip().lower()
+        if intent:
+            intents[intent] = intents.get(intent, 0) + 1
+        snippets = position.get("snippets") or []
+        snippets_count += len(snippets) if isinstance(snippets, list) else 0
+    avg_difficulty = round(sum(difficulties) / len(difficulties), 2) if difficulties else 0
+    avg_cpc = round(sum(cpcs) / len(cpcs), 2) if cpcs else 0
     
     positions_summary = ", ".join([f"{p.get('keyword','')}(pos:{p.get('statistics',{}).get('position','')})" for p in positions[:5]])
     competitors_summary = ", ".join([f"{c.get('domain','')}(common:{c.get('common_keywords',0)})" for c in competitors])
@@ -848,14 +1004,20 @@ async def analyze_visibility_context(
     }"""
     
     user_prompt = f"""Widoczność:
-    - TOP3: {stats.get('top3', 0)}, TOP10: {stats.get('top10', 0)}, TOP50: {stats.get('top50', 0)}
+    - TOP3: {stats.get('top3', 0)}, TOP10: {stats.get('top10', 0)}, TOP50: {stats.get('top50', 0)}, udział TOP3/TOP50: {top3_share}%
+    - Domain Rank: {stats.get('domain_rank', 0)}, Ads Equivalent: {stats.get('ads_equivalent', 0)}
+    - AIO keywords: {stats.get('aio_keywords_count', 0)}, AIO avg pos: {stats.get('aio_avg_pos', 0)}, AIO vis loss: {stats.get('aio_vis_loss_percentage', 0)}%
+    - Śr. difficulty (sample): {avg_difficulty}, Śr. CPC (sample): {avg_cpc}, intents(sample): {intents}, snippets(sample): {snippets_count}
     - Top frazy: {positions_summary}
     - Wins (ostatnie wzrosty): {len(wins)} fraz
     - Losses (ostatnie spadki): {len(losses)} fraz
     - Konkurenci: {competitors_summary}
+    - Sekcje/subdomeny: {", ".join([str(s.get("section", s.get("subdomain", ""))) for s in sections_subdomains])}
+    - Top URL sekcji: {", ".join([str(u.get("url", ""))[:70] for u in sections_urls])}
     - Stron w crawlu: {crawl.get('pages_crawled', 0)}
     
-    Max 5 key_findings, 5 recommendations, 3 keyword_opportunities, 3 competitor_gaps."""
+    Uwzględnij wszystkie nowe metryki i zależności (AIO, difficulty, CPC, intencje, snippets, sekcje).
+    Max 6 key_findings, 6 recommendations, 5 quick_wins, 4 keyword_opportunities, 4 competitor_gaps."""
     
     result = await _call_ai_context(system_prompt, user_prompt)
     
@@ -882,6 +1044,19 @@ async def analyze_ai_overviews_context(
     stats = ai_overviews_data.get("statistics", {}) or {}
     keywords = ai_overviews_data.get("keywords", []) or []
     competitors = ai_overviews_data.get("competitors", []) or []
+    keyword_intents: Dict[str, int] = {}
+    difficulty_values = []
+    cpc_values = []
+    for item in keywords[:50]:
+        intent = str(item.get("intent") or "").strip().lower()
+        if intent:
+            keyword_intents[intent] = keyword_intents.get(intent, 0) + 1
+        if isinstance(item.get("difficulty"), (int, float)):
+            difficulty_values.append(item.get("difficulty"))
+        if isinstance(item.get("cpc"), (int, float)):
+            cpc_values.append(item.get("cpc"))
+    avg_difficulty = round(sum(difficulty_values) / len(difficulty_values), 2) if difficulty_values else 0
+    avg_cpc = round(sum(cpc_values) / len(cpc_values), 2) if cpc_values else 0
 
     keyword_preview = ", ".join(
         [
@@ -914,11 +1089,14 @@ async def analyze_ai_overviews_context(
     - Śr. pozycja AIO: {stats.get('aio_avg_pos', 0)}
     - Wzrosty/Spadki AIO: {stats.get('aio_wins_count', 0)}/{stats.get('aio_losses_count', 0)}
     - Utrata visibility: {stats.get('aio_vis_loss_percentage', 0)}%
+    - Intent distribution (sample): {keyword_intents}
+    - Śr. difficulty/CPC (sample): {avg_difficulty}/{avg_cpc}
     - Przykładowe frazy: {keyword_preview}
     - Konkurencja AIO: {competitors_preview}
     - Liczba stron z crawla: {crawl.get('pages_crawled', 0)}
 
-    Przygotuj max 5 key_findings, 5 recommendations, 3 aio_opportunities, 3 competitor_gaps."""
+    Uwzględnij kontekst nowych pól (intencja, difficulty, CPC, porównanie organic vs AIO).
+    Przygotuj max 6 key_findings, 6 recommendations, 5 quick_wins, 4 aio_opportunities, 4 competitor_gaps."""
 
     result = await _call_ai_context(system_prompt, user_prompt)
     return {
@@ -1081,12 +1259,20 @@ async def analyze_cross_tool(all_results: Dict[str, Any]) -> Dict[str, Any]:
         "unified_recommendations": ["rec 1", ...]
     }"""
     
+    senuto_visibility = senuto.get("visibility", {})
+    senuto_stats = senuto_visibility.get("statistics", {}).get("statistics", {})
+    aio_stats = senuto_visibility.get("ai_overviews", {}).get("statistics", {})
+    backlinks_stats = senuto.get("backlinks", {}).get("statistics", {})
+
     user_prompt = f"""Dane cross-tool:
     SF: pages={crawl.get('pages_crawled',0)}, broken_links={crawl.get('technical_seo',{}).get('broken_links',0)}
     LH Desktop: perf={desktop.get('performance_score',0)}, seo={desktop.get('seo_score',0)}, LCP={desktop.get('lcp',0)}ms
-    Senuto: TOP10={senuto.get('visibility',{}).get('statistics',{}).get('statistics',{}).get('top10',0)}
+    Senuto Visibility: TOP10={senuto_stats.get('top10',0)}, TOP3={senuto_stats.get('top3',0)}, domain_rank={senuto_stats.get('domain_rank',0)}, ads_eq={senuto_stats.get('ads_equivalent',0)}
+    Senuto AIO: count={aio_stats.get('aio_keywords_count',0)}, avg_pos={aio_stats.get('aio_avg_pos',0)}, vis_loss={aio_stats.get('aio_vis_loss_percentage',0)}
+    Senuto Backlinks: {backlinks_stats}
     
-    Przygotuj max 5 correlations, 3 synergies, 3 conflicts, 5 unified_recommendations."""
+    Wykryj korelacje między technicznym SEO, Core Web Vitals, visibility/AIO i profilem linków.
+    Przygotuj max 6 correlations, 4 synergies, 4 conflicts, 6 unified_recommendations."""
     
     result = await _call_ai_context(system_prompt, user_prompt)
     
@@ -1115,16 +1301,20 @@ async def generate_roadmap(all_results: Dict[str, Any]) -> Dict[str, Any]:
     
     crawl = all_results.get("crawl", {})
     lh = all_results.get("lighthouse", {}).get("desktop", {})
-    senuto_stats = all_results.get("senuto", {}).get("visibility", {}).get("statistics", {}).get("statistics", {})
+    senuto_visibility = all_results.get("senuto", {}).get("visibility", {})
+    senuto_stats = senuto_visibility.get("statistics", {}).get("statistics", {})
+    aio_stats = senuto_visibility.get("ai_overviews", {}).get("statistics", {})
     
     user_prompt = f"""Podsumowanie audytu:
     - Stron: {crawl.get('pages_crawled',0)}, 404: {crawl.get('technical_seo',{}).get('broken_links',0)}
     - Perf: {lh.get('performance_score',0)}, SEO: {lh.get('seo_score',0)}, LCP: {lh.get('lcp',0)}ms
-    - Visibility TOP10: {senuto_stats.get('top10',0)}, TOP3: {senuto_stats.get('top3',0)}
+    - Visibility TOP10: {senuto_stats.get('top10',0)}, TOP3: {senuto_stats.get('top3',0)}, Domain Rank: {senuto_stats.get('domain_rank',0)}, Ads Eq: {senuto_stats.get('ads_equivalent',0)}
+    - AIO: count={aio_stats.get('aio_keywords_count',0)}, avg_pos={aio_stats.get('aio_avg_pos',0)}, wins/losses={aio_stats.get('aio_wins_count',0)}/{aio_stats.get('aio_losses_count',0)}, vis_loss={aio_stats.get('aio_vis_loss_percentage',0)}
     - Missing canonical: {crawl.get('technical_seo',{}).get('missing_canonical',0)}
     - Images without alt: {crawl.get('images',{}).get('without_alt',0)}
     
-    Stwórz 3-5 pozycji na immediate, 3-5 short_term, 2-3 medium_term, 2-3 long_term."""
+    Zadbaj, żeby "immediate_actions" były granularne i gotowe do realizacji jako taski.
+    Stwórz 5-8 pozycji na immediate, 5-8 short_term, 3-5 medium_term, 3-5 long_term."""
     
     result = await _call_ai_context(system_prompt, user_prompt)
     
