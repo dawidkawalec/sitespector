@@ -27,6 +27,20 @@ def _normalize_effort(value: Any) -> str:
     return "medium"
 
 
+def _to_number(value: Any, default: float = 0.0) -> float:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, dict):
+        for key in ("current", "value", "recent_value", "count", "total"):
+            nested = value.get(key)
+            if isinstance(nested, (int, float)):
+                return float(nested)
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def aggregate_quick_wins_from_results(all_results: Dict[str, Any], max_items: int = 20) -> List[Dict[str, Any]]:
     """
     Build a single prioritized quick wins list from all AI modules.
@@ -966,7 +980,9 @@ async def analyze_visibility_context(
     losses = senuto_visibility.get("losses", [])[:5]
     sections_subdomains = senuto_visibility.get("sections_subdomains", [])[:5]
     sections_urls = senuto_visibility.get("sections_urls", [])[:5]
-    top3_share = round((stats.get("top3", 0) / max(stats.get("top50", 1), 1)) * 100, 2) if stats else 0
+    top3_numeric = _to_number(stats.get("top3", 0))
+    top50_numeric = _to_number(stats.get("top50", 1), default=1.0)
+    top3_share = round((top3_numeric / max(top50_numeric, 1.0)) * 100, 2) if stats else 0
 
     difficulties = []
     cpcs = []
