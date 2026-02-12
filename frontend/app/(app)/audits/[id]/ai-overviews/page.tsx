@@ -35,14 +35,6 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
     enabled: isAuth,
   })
 
-  if (!isAuth || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
   const visibility = audit?.results?.senuto?.visibility || {}
   const aio = visibility?.ai_overviews
   const visibilityStats = visibility?.statistics?.statistics || {}
@@ -142,6 +134,15 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
     { key: 'aio_exclusive_to_me', label: 'Unikalne dla mnie', render: (v: any) => formatNumber(v || 0) },
     { key: 'aio_exclusive_to_competitor', label: 'Unikalne konkurenta', render: (v: any) => formatNumber(v || 0) },
   ]
+
+  // Keep hooks ordering stable across all renders.
+  if (!isAuth || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <AuditPageLayout

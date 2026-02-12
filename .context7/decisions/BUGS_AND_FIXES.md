@@ -412,6 +412,34 @@ refetchInterval: (query) => {
 
 ---
 
+### BUG-013: React #310 on AI Overviews page + missing favicon.ico
+
+**Reported**: 2026-02-12
+
+**Status**: ✅ FIXED (2026-02-12)
+
+**Severity**: HIGH
+
+**Description**:
+- `AI Overviews` route crashed in production with React invariant `#310`.
+- Browser also reported `GET /favicon.ico 404`.
+
+**Root cause**:
+- Same hook-order mismatch pattern as visibility page (conditional return before all memo hooks).
+- No static `favicon.ico` file served at root path.
+
+**Fix**:
+- Moved loading branch in `ai-overviews/page.tsx` below hook declarations to keep stable hook order.
+- Added generated brand-signet style icon file: `frontend/public/favicon.ico`.
+
+**Impact**:
+- `AI Overviews` no longer crashes on rerender.
+- Browser no longer logs `favicon.ico` 404.
+
+**Related**: `frontend/app/(app)/audits/[id]/ai-overviews/page.tsx`, `frontend/public/favicon.ico`
+
+---
+
 ## Known Issues
 
 ### ISSUE-001: PDF Template Incomplete
@@ -575,6 +603,6 @@ When adding new bugs to this file, use this format:
 ---
 
 **Last Updated**: 2026-02-12  
-**Resolved Bugs**: 12 (incl. BUG-012 visibility hook-order runtime crash)  
+**Resolved Bugs**: 13 (incl. BUG-013 ai-overviews hook-order + favicon 404)  
 **Known Issues**: 3  
 **Watching**: 2
