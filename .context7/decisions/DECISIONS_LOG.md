@@ -1,5 +1,17 @@
 # Architectural Decisions Log
 
+## 📜 Content Architecture: Hybrid Markdown + JSON (Feb 2026)
+- **Decision**: Adopted Option B (Hybrid) — content stored as JSON (structured data) + Markdown (long-form pages) in `landing/content/`. Components will read from these files via helper functions.
+- **Rationale**: Enables separate content agent to manage content without touching React code. JSON for structured/repeatable data (testimonials, pricing, FAQ), Markdown for long-form pages (blog, case studies, legal). Git-friendly, type-safe, zero additional dependencies.
+- **Outcome**: 
+  - Created `landing/content/` with 14 JSON data files, 13 page markdowns, 23 blog post templates, 4 case studies, 3 changelog entries, 10 docs sections
+  - Created `landing/src/lib/content.ts` helper library
+  - Created 7 new page route shells (sprawdz-agencje-seo, dla-ecommerce, etc.)
+  - Added sitemap.ts, robots.ts for SEO
+  - Updated nginx with 7 new routes + sitemap/robots
+  - Content agent prompt and update procedure documented
+- **Next Phase**: Refactor existing components to read from content files (currently content files exist alongside hardcoded components).
+
 ## 📜 Landing Page Expansion & Public API (Feb 2026)
 - **Decision**: Expanded the landing page into a full marketing site with blog, documentation, legal pages, and case studies.
 - **Decision**: Renamed `demosite/` to `landing/` to match service naming.

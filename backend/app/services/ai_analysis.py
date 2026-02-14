@@ -4,7 +4,7 @@ AI-powered analysis services using Claude.
 
 import logging
 from typing import Dict, Any, List
-from app.services.ai_client import call_claude
+from app.services.ai_client import call_claude, AIUnavailableError
 
 logger = logging.getLogger(__name__)
 
@@ -867,9 +867,33 @@ async def _call_ai_context(system_prompt: str, user_prompt: str) -> Dict[str, An
             )
 
         return parsed
+    except AIUnavailableError as e:
+        # Explicit, user-facing fallback: do not fabricate insights/quick-wins.
+        logger.warning("AI unavailable for contextual analysis (reason=%s)", getattr(e, "reason", "unknown"))
+        return {
+            "ai_unavailable": True,
+            "message": "AI jest chwilowo niedostepne. Ta sekcja nie zawiera wnioskow AI.",
+            "reason": getattr(e, "reason", "unknown"),
+            "key_findings": [],
+            "recommendations": [],
+            "quick_wins": [],
+            "priority_issues": [],
+        }
     except Exception as e:
         logger.error(f"AI context call failed: {e}")
         return {}
+
+def _ai_meta(result: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract AI availability metadata (kept small for UI)."""
+    if not isinstance(result, dict):
+        return {}
+    if not result.get("ai_unavailable"):
+        return {}
+    return {
+        "ai_unavailable": True,
+        "message": result.get("message") or "AI jest chwilowo niedostepne.",
+        "reason": result.get("reason") or "unavailable",
+    }
 
 
 async def analyze_seo_context(
@@ -920,6 +944,7 @@ async def analyze_seo_context(
     result = await _call_ai_context(system_prompt, user_prompt)
     
     return {
+        **_ai_meta(result),
         "key_findings": result.get("key_findings", []),
         "recommendations": result.get("recommendations", []),
         "quick_wins": result.get("quick_wins", []),
@@ -956,6 +981,7 @@ async def analyze_performance_context(
     result = await _call_ai_context(system_prompt, user_prompt)
     
     return {
+        **_ai_meta(result),
         "key_findings": result.get("key_findings", []),
         "recommendations": result.get("recommendations", []),
         "quick_wins": result.get("quick_wins", []),
@@ -1038,6 +1064,7 @@ async def analyze_visibility_context(
     result = await _call_ai_context(system_prompt, user_prompt)
     
     return {
+        **_ai_meta(result),
         "key_findings": result.get("key_findings", []),
         "recommendations": result.get("recommendations", []),
         "quick_wins": result.get("quick_wins", []),
@@ -1116,6 +1143,7 @@ async def analyze_ai_overviews_context(
 
     result = await _call_ai_context(system_prompt, user_prompt)
     return {
+        **_ai_meta(result),
         "key_findings": result.get("key_findings", []),
         "recommendations": result.get("recommendations", []),
         "quick_wins": result.get("quick_wins", []),
@@ -1165,6 +1193,7 @@ async def analyze_backlinks_context(
     result = await _call_ai_context(system_prompt, user_prompt)
     
     return {
+        **_ai_meta(result),
         "key_findings": result.get("key_findings", []),
         "recommendations": result.get("recommendations", []),
         "quick_wins": result.get("quick_wins", []),
@@ -1205,6 +1234,7 @@ async def analyze_links_context(crawl_data: Dict[str, Any]) -> Dict[str, Any]:
     result = await _call_ai_context(system_prompt, user_prompt)
     
     return {
+        **_ai_meta(result),
         "key_findings": result.get("key_findings", []),
         "recommendations": result.get("recommendations", []),
         "quick_wins": result.get("quick_wins", []),
@@ -1244,6 +1274,7 @@ async def analyze_images_context(crawl_data: Dict[str, Any]) -> Dict[str, Any]:
     result = await _call_ai_context(system_prompt, user_prompt)
     
     return {
+        **_ai_meta(result),
         "key_findings": result.get("key_findings", []),
         "recommendations": result.get("recommendations", []),
         "quick_wins": result.get("quick_wins", []),
@@ -1293,6 +1324,7 @@ async def analyze_cross_tool(all_results: Dict[str, Any]) -> Dict[str, Any]:
     result = await _call_ai_context(system_prompt, user_prompt)
     
     return {
+        **_ai_meta(result),
         "correlations": result.get("correlations", []),
         "synergies": result.get("synergies", []),
         "conflicts": result.get("conflicts", []),
@@ -1335,6 +1367,7 @@ async def generate_roadmap(all_results: Dict[str, Any]) -> Dict[str, Any]:
     result = await _call_ai_context(system_prompt, user_prompt)
     
     return {
+        **_ai_meta(result),
         "immediate_actions": result.get("immediate_actions", []),
         "short_term": result.get("short_term", []),
         "medium_term": result.get("medium_term", []),
@@ -1379,6 +1412,7 @@ async def generate_executive_summary(all_results: Dict[str, Any]) -> Dict[str, A
     result = await _call_ai_context(system_prompt, user_prompt)
     
     return {
+        **_ai_meta(result),
         "overall_health": result.get("overall_health", "moderate"),
         "health_score": result.get("health_score", 50),
         "summary": result.get("summary", ""),

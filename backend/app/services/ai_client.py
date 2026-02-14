@@ -5,11 +5,25 @@ Gemini API client for AI analysis.
 import logging
 import asyncio
 import os
+import time
 from typing import Dict, Any, Optional, List
 import google.generativeai as genai
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+class AIUnavailableError(RuntimeError):
+    """Raised when AI provider is temporarily unavailable or misconfigured."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+
+# Simple in-process circuit breaker to avoid spamming provider after repeated 429s.
+_circuit_open_until: float = 0.0
+_circuit_reason: str = ""
+
 
 def _get_gemini_api_keys() -> List[str]:
     """Return ordered list of Gemini API keys (primary + fallbacks).
@@ -61,19 +75,25 @@ async def call_claude(
     prompt_len = len(prompt or "")
     system_len = len(system_prompt or "")
 
+    # If we've recently hit a hard provider limit, short-circuit quickly.
+    now = time.time()
+    if _circuit_open_until and now < _circuit_open_until:
+        logger.warning(
+            "AI temporarily unavailable (circuit_open reason=%s, open_for_seconds=%s)",
+            _circuit_reason,
+            int(_circuit_open_until - now),
+        )
+        raise AIUnavailableError("temporarily_unavailable")
+
     api_keys = _get_gemini_api_keys()
     if not api_keys:
-        logger.warning(
-            "Gemini API key not configured - returning mock response "
-            "(prompt_len=%s, system_len=%s)",
-            prompt_len,
-            system_len,
-        )
-        return _generate_mock_response(reason="missing_api_key")
+        logger.warning("Gemini API key not configured (prompt_len=%s, system_len=%s)", prompt_len, system_len)
+        raise AIUnavailableError("missing_api_key")
     
     # Use Gemini 3.0 Flash Preview
     model_name = "gemini-3-flash-preview"
     last_reason = "unknown_error"
+    quota_exhausted_count = 0
 
     for idx, key in enumerate(api_keys):
         try:
@@ -132,6 +152,7 @@ async def call_claude(
                 last_reason = "api_key_leaked"
             elif "exceeded your current quota" in msg or "ResourceExhausted" in msg or "429" in msg:
                 last_reason = "quota_exhausted"
+                quota_exhausted_count += 1
             elif "PermissionDenied" in msg or "403" in msg:
                 last_reason = "permission_denied"
             else:
@@ -149,12 +170,14 @@ async def call_claude(
             # If we have another key, try it; otherwise fallback.
             continue
 
-    logger.warning(
-        "Returning mock response after exhausting all Gemini keys (reason=%s, keys_tried=%s)",
-        last_reason,
-        len(api_keys),
-    )
-    return _generate_mock_response(reason=last_reason)
+    # If all keys hit quota, open circuit briefly to avoid hammering provider in the same process.
+    global _circuit_open_until, _circuit_reason
+    if quota_exhausted_count and quota_exhausted_count == len(api_keys):
+        _circuit_open_until = time.time() + 60.0
+        _circuit_reason = "quota_exhausted"
+
+    logger.warning("AI unavailable after trying all Gemini keys (reason=%s, keys_tried=%s)", last_reason, len(api_keys))
+    raise AIUnavailableError(last_reason)
 
 
 def _generate_mock_response(reason: str = "unknown") -> str:
@@ -163,21 +186,21 @@ def _generate_mock_response(reason: str = "unknown") -> str:
     IMPORTANT: Keep schema compatible with contextual and strategy contracts.
     """
     if reason == "quota_exhausted":
-        headline = "AI fallback: przekroczony limit (quota/billing) dla Gemini API."
-        recommendation = "Sprawdz limit i billing w panelu Gemini, a potem uruchom ponownie analizę AI."
-        priority = "Brak quota/billing dla Gemini API - wyniki AI wymagają regeneracji."
+        headline = "AI fallback: AI jest chwilowo niedostepne."
+        recommendation = "Sprobuj ponownie pozniej i uruchom ponownie analize AI."
+        priority = "AI niedostepne - wyniki AI wymagaja regeneracji."
     elif reason == "api_key_leaked":
-        headline = "AI fallback: klucz API został zablokowany jako wyciek (leaked)."
-        recommendation = "Wygeneruj nowy klucz Gemini API i uruchom ponownie analizę AI."
-        priority = "Zablokowany klucz Gemini API - wyniki AI wymagają regeneracji."
+        headline = "AI fallback: AI jest chwilowo niedostepne."
+        recommendation = "Sprobuj ponownie pozniej i uruchom ponownie analize AI."
+        priority = "AI niedostepne - wyniki AI wymagaja regeneracji."
     elif reason == "missing_api_key":
-        headline = "AI fallback: brak konfiguracji klucza Gemini API."
-        recommendation = "Skonfiguruj GEMINI_API_KEY i uruchom ponownie analizę AI."
-        priority = "Brak GEMINI_API_KEY - wyniki AI wymagają regeneracji."
+        headline = "AI fallback: AI jest chwilowo niedostepne."
+        recommendation = "Sprobuj ponownie pozniej i uruchom ponownie analize AI."
+        priority = "AI niedostepne - wyniki AI wymagaja regeneracji."
     else:
-        headline = "AI fallback: model AI chwilowo niedostępny lub wystąpił błąd."
-        recommendation = "Zweryfikuj konfigurację klucza Gemini i uruchom ponownie analizę AI."
-        priority = "Brak wiarygodnej odpowiedzi modelu AI - dane kontekstowe wymagają regeneracji."
+        headline = "AI fallback: AI jest chwilowo niedostepne."
+        recommendation = "Sprobuj ponownie pozniej i uruchom ponownie analize AI."
+        priority = "AI niedostepne - wyniki AI wymagaja regeneracji."
 
     return """
     {

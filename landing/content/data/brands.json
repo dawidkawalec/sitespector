@@ -1,0 +1,34 @@
+{
+  "section_id": "brands",
+  "label": "Technologie, którym ufamy",
+  "items": [
+    {
+      "name": "Lighthouse",
+      "icon": "RiFlashlightFill"
+    },
+    {
+      "name": "Gemini AI",
+      "icon": "RiRobot2Fill"
+    },
+    {
+      "name": "Senuto",
+      "icon": "RiLineChartFill"
+    },
+    {
+      "name": "Google SEO",
+      "icon": "RiGoogleFill"
+    },
+    {
+      "name": "Supabase",
+      "icon": "RiDatabase2Fill"
+    },
+    {
+      "name": "Stripe",
+      "icon": "RiShieldCheckFill"
+    },
+    {
+      "name": "Docker",
+      "icon": "RiTerminalBoxFill"
+    }
+  ]
+}

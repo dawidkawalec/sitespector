@@ -48,7 +48,8 @@ Environment variables (VPS only, never commit secrets):
 
 Behavior:
 - `call_claude()` attempts keys in order and switches automatically on quota/permission errors.
-- If all keys fail, it returns a schema-compatible fallback payload with a reason code (quota/leaked/missing).
+- If all keys fail, the backend marks AI as **unavailable** and returns empty AI insights (no fabricated "mock" quick wins).
+- UI should show a clear banner like **"AI jest chwilowo niedostepne"** and keep technical results intact.
 
 ---
 

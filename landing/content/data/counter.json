@@ -1,0 +1,25 @@
+{
+  "section_id": "counter",
+  "items": [
+    {
+      "icon": "RiTeamLine",
+      "value": "500+",
+      "label": "Aktywnych Agencji"
+    },
+    {
+      "icon": "RiCheckboxLine",
+      "value": "150+",
+      "label": "Krajów Analizy"
+    },
+    {
+      "icon": "RiVidiconLine",
+      "value": "1M+",
+      "label": "Wykrytych Błędów"
+    },
+    {
+      "icon": "RiHourglassFill",
+      "value": "10k+",
+      "label": "Zaoszczędzonych Godzin"
+    }
+  ]
+}

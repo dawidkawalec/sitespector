@@ -164,6 +164,7 @@ export interface Audit {
   ai_status?: 'processing' | 'completed' | 'failed' | 'skipped' | null
   processing_step?: string | null
   processing_logs?: Array<Record<string, any>> | null
+  progress_percent?: number | null
   created_at: string
   started_at?: string | null
   completed_at: string | null

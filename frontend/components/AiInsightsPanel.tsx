@@ -41,6 +41,9 @@ interface AiInsightsPanelProps {
 }
 
 interface AiContextData {
+  ai_unavailable?: boolean
+  message?: string
+  reason?: string
   key_findings?: string[]
   recommendations?: string[]
   quick_wins?: Array<{ title: string; description: string; impact: string; effort: string }>
@@ -173,6 +176,34 @@ export function AiInsightsPanel({ area, audit, onTriggerAi }: AiInsightsPanelPro
 
   // Try ai_contexts first, then fallback to existing AI data
   const contextData = getContextData(audit, area) || getFallbackData(audit, area)
+
+  if (contextData?.ai_unavailable) {
+    return (
+      <div className="space-y-3">
+        <Badge variant="outline" className="text-[9px] gap-1 border-muted-foreground/20 text-muted-foreground">
+          <Sparkles className="h-2.5 w-2.5" />
+          AI niedostepne
+        </Badge>
+        <div className="rounded-lg border border-muted-foreground/15 bg-muted/20 px-3 py-3">
+          <p className="text-xs font-medium">AI jest chwilowo niedostepne</p>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            {contextData.message || 'Ta sekcja nie zawiera wnioskow AI. Sprobuj ponownie pozniej.'}
+          </p>
+        </div>
+        {onTriggerAi && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onTriggerAi}
+            className="gap-2 text-xs"
+          >
+            <Sparkles className="h-3 w-3" />
+            Sprobuj ponownie
+          </Button>
+        )}
+      </div>
+    )
+  }
 
   if (!contextData) {
     if (isAiRunning) {

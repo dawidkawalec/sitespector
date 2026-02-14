@@ -1,0 +1,20 @@
+{
+  "section_id": "home",
+  "badge": "",
+  "headline": "Zdominuj wyniki wyszukiwania z SiteSpector",
+  "headline_highlight": "SiteSpector",
+  "subheadline": "Kompleksowa platforma do audytów SEO, analizy wydajności i monitorowania konkurencji. Wykrywaj błędy, optymalizuj treści z pomocą AI i generuj profesjonalne raporty PDF w kilka minut.",
+  "cta_primary": {
+    "text": "Rozpocznij Darmowy Audyt",
+    "href": "/login"
+  },
+  "cta_secondary": {
+    "text": "Zobacz Demo",
+    "href": "#demo"
+  },
+  "image": {
+    "src": "/images/hero/dashboard.png",
+    "alt": "Dashboard SiteSpector — widok audytu SEO",
+    "placeholder": "PLACEHOLDER: Screenshot głównego dashboardu z widokiem audytu, metryki SEO, wykresy wydajności — 1200x800px"
+  }
+}

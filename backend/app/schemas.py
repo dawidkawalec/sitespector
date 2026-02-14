@@ -211,6 +211,10 @@ class AuditResponse(AuditBase):
     user_id: Optional[UUID] = None
     workspace_id: Optional[UUID] = None
     status: AuditStatus
+    ai_status: Optional[str] = None
+    processing_step: Optional[str] = None
+    processing_logs: Optional[List[Dict[str, Any]]] = None
+    progress_percent: Optional[int] = None
     overall_score: Optional[float] = None
     seo_score: Optional[float] = None
     performance_score: Optional[float] = None

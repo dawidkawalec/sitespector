@@ -232,7 +232,7 @@ async def get_audit(
     audit_id: UUID,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> Audit:
+) -> dict:
     """
     Get a specific audit by ID.
     
@@ -272,7 +272,14 @@ async def get_audit(
                 detail="Not authorized to access this audit"
             )
     
-    return audit
+    # Enrich with progress + processing logs for the UI progress window.
+    # Frontend polls this endpoint while audit is running.
+    payload = AuditResponse.model_validate(audit).model_dump()
+    payload["processing_step"] = audit.processing_step
+    payload["processing_logs"] = audit.processing_logs
+    payload["ai_status"] = audit.ai_status
+    payload["progress_percent"] = _calculate_progress(audit.processing_step, audit.status)
+    return payload
 
 
 @router.get("/{audit_id}/status", response_model=AuditStatusResponse)

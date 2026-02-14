@@ -158,7 +158,7 @@ Worker now emits additional diagnostics for AI pipeline troubleshooting:
 - Post-strategy checkpoint: presence flags for `cross_tool`, `roadmap`, `executive_summary`
 
 This helps identify cases where:
-- AI call falls back to mock payload,
+- AI becomes unavailable (Gemini errors / quota / misconfiguration),
 - parsed JSON schema does not match expected keys,
 - strategy keys are missing from final persisted `results`.
 

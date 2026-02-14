@@ -191,8 +191,10 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     { id: 'senuto', label: 'Analiza Senuto (Widoczność & Linki)', icon: Globe2 },
     { id: 'competitors', label: 'Analiza konkurencji', icon: Users },
     { id: 'ai_content', label: 'Analiza AI - Treść', icon: Sparkles },
-    { id: 'ai_perf_tech', label: 'Analiza AI - Wydajność i Tech', icon: Zap },
-    { id: 'ai_strategic', label: 'Analiza AI - Strategia i Bezpieczeństwo', icon: ShieldCheck },
+    { id: 'ai_parallel', label: 'Analiza AI - Wydajność / UX / Security', icon: Zap },
+    { id: 'ai_strategic', label: 'Analiza AI - Konkurencja / Benchmarki', icon: ShieldCheck },
+    { id: 'ai_contexts', label: 'Analiza AI - Insights per obszar', icon: Sparkles },
+    { id: 'ai_strategy', label: 'Analiza AI - Strategia (Roadmapa)', icon: TrendingUp },
   ]
 
   const getStepStatus = (stepId: string) => {
@@ -205,6 +207,13 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   }
 
   const isTechnicalDone = audit.results?.crawl && audit.results?.lighthouse
+
+  const progressPercent =
+    typeof audit.progress_percent === 'number'
+      ? audit.progress_percent
+      : audit.status === 'completed'
+        ? 100
+        : 5
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
@@ -280,11 +289,11 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                   </CardDescription>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-primary">{audit.progress_percent || 0}%</div>
+                  <div className="text-2xl font-bold text-primary">{progressPercent}%</div>
                   <div className="text-[10px] uppercase font-bold text-muted-foreground">Postęp</div>
                 </div>
               </div>
-              <Progress value={audit.progress_percent || 5} className="h-2 mt-4" />
+              <Progress value={progressPercent} className="h-2 mt-4" />
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -403,7 +412,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
               <Sparkles className="h-4 w-4 text-primary" />
               <AlertDescription className="flex items-center justify-between w-full">
                 <span className="text-sm font-medium">Analiza AI jest w toku... Wyniki techniczne są już dostępne poniżej.</span>
-                <Badge variant="outline" className="ml-2">{audit.progress_percent}%</Badge>
+                <Badge variant="outline" className="ml-2">{progressPercent}%</Badge>
               </AlertDescription>
             </Alert>
           )}

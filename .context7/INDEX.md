@@ -19,6 +19,8 @@ Welcome to the SiteSpector technical and product documentation. This directory i
 - **[LANDING_COPY.md](public/LANDING_COPY.md)** - Landing page sections, claims, and CTA copy.
 - **[PRICING_COPY.md](public/PRICING_COPY.md)** - Subscription plans, limits, and pricing FAQ.
 - **[FAQ_PUBLIC.md](public/FAQ_PUBLIC.md)** - General product FAQ for users.
+- **[CONTENT_ARCHITECTURE.md](public/CONTENT_ARCHITECTURE.md)** - Content file structure, helpers, and workflows.
+- **[CONTENT_UPDATE_PROCEDURE.md](public/CONTENT_UPDATE_PROCEDURE.md)** - Procedure for updating content after new features.
 
 ### ⚙️ Backend (`backend/`)
 - **[API.md](backend/API.md)** - API endpoints and request/response schemas.

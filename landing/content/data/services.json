@@ -1,0 +1,30 @@
+{
+  "section_id": "services",
+  "section_label": "METRYKI WYDAJNOŚCI",
+  "title": "Zwiększ widoczność w Google w Kilka Minut",
+  "description": "Nasze algorytmy analizują setki czynników rankingowych w czasie rzeczywistym. Otrzymujesz priorytetyzowaną listę zadań, które mają największy wpływ na Twoją pozycję w wynikach wyszukiwania.",
+  "stats": [
+    {
+      "value": "200K+",
+      "label": "Przeanalizowanych podstron"
+    },
+    {
+      "value": "98%",
+      "label": "Zadowolonych Agencji",
+      "show_rating": true,
+      "rating": 5
+    }
+  ],
+  "details": [
+    "Analiza techniczna on-site i off-site",
+    "Weryfikacja jakości treści przez AI Gemini",
+    "Monitoring widoczności i pozycji w Google (Senuto)",
+    "Analiza profilu backlinków i linków wewnętrznych",
+    "Porównanie parametrów z liderami branży"
+  ],
+  "image": {
+    "src": "/images/services/metrics-dashboard.png",
+    "alt": "Metryki wydajności w SiteSpector",
+    "placeholder": "PLACEHOLDER: Screenshot panelu z metrykami Core Web Vitals, wykresami i scorami — 1200x800px"
+  }
+}

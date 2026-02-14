@@ -1,0 +1,61 @@
+{
+  "section_id": "about",
+  "section_label": "DLACZEGO SITESPECTOR?",
+  "title": "Narzędzia, które napędzają Twój Wzrost",
+  "items": [
+    {
+      "title": "Audyty Techniczne",
+      "subtitle": "Screaming Frog Engine",
+      "description": "Profesjonalny crawling SEO — analiza meta tagów, nagłówków, linków, obrazów i struktury strony.",
+      "icon": {
+        "src": "/images/icons/audit-technical.png",
+        "placeholder": "PLACEHOLDER: Ikona crawlera/pająka skanującego stronę — 80x80px"
+      }
+    },
+    {
+      "title": "Analiza Wydajności",
+      "subtitle": "Google Lighthouse",
+      "description": "Core Web Vitals, Performance Score, Accessibility — desktop i mobile w jednym audycie.",
+      "icon": {
+        "src": "/images/icons/performance.png",
+        "placeholder": "PLACEHOLDER: Ikona prędkościomierza/wydajności — 80x80px"
+      }
+    },
+    {
+      "title": "Widoczność i Pozycje",
+      "subtitle": "Senuto Integration",
+      "description": "Pełna analiza widoczności w Google — pozycje, trendy, kanibalizacja, AI Overviews.",
+      "icon": {
+        "src": "/images/icons/visibility.png",
+        "placeholder": "PLACEHOLDER: Ikona wykresu wzrostu/widoczności — 80x80px"
+      }
+    },
+    {
+      "title": "Rekomendacje AI",
+      "subtitle": "Powered by Gemini",
+      "description": "Inteligentna analiza treści, strategia SEO, quick wins i roadmapa działań.",
+      "icon": {
+        "src": "/images/icons/ai-recommendations.png",
+        "placeholder": "PLACEHOLDER: Ikona AI/mózgu z rekomendacjami — 80x80px"
+      }
+    },
+    {
+      "title": "Monitoring Konkurencji",
+      "subtitle": "Benchmark Rynkowy",
+      "description": "Porównanie z 3 konkurentami — wydajność, widoczność, backlinki.",
+      "icon": {
+        "src": "/images/icons/competitors.png",
+        "placeholder": "PLACEHOLDER: Ikona porównania/benchmarku — 80x80px"
+      }
+    },
+    {
+      "title": "Raporty PDF",
+      "subtitle": "White-label Ready",
+      "description": "Profesjonalne raporty z 9 sekcjami — gotowe do wysłania klientowi bez edycji.",
+      "icon": {
+        "src": "/images/icons/pdf-reports.png",
+        "placeholder": "PLACEHOLDER: Ikona dokumentu PDF — 80x80px"
+      }
+    }
+  ]
+}

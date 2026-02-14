@@ -1,0 +1,79 @@
+{
+  "_description": "Per-page SEO metadata. Used by sitemap.ts and page metadata exports.",
+  "home": {
+    "title": "SiteSpector — Profesjonalne Audyty SEO, Wydajności i Widoczności",
+    "description": "Kompleksowa platforma do audytów SEO z Screaming Frog, Lighthouse, Senuto i AI Gemini. Raporty PDF, analiza konkurencji, team workspaces. Zacznij za darmo.",
+    "og_image": { "src": "/images/og/home.png", "placeholder": "PLACEHOLDER: OG image — logo SiteSpector + headline + screenshot dashboardu — 1200x630px" },
+    "keywords": ["audyt SEO", "analiza strony", "Core Web Vitals", "Lighthouse", "Screaming Frog", "raport SEO"]
+  },
+  "funkcje": {
+    "title": "Funkcje SiteSpector — Pełna lista narzędzi do audytu SEO",
+    "description": "Crawling SEO, Core Web Vitals, widoczność Senuto, analiza AI, raporty PDF, team workspaces. Wszystko w jednej platformie.",
+    "og_image": { "src": "/images/og/funkcje.png", "placeholder": "PLACEHOLDER: OG image — lista funkcji/ikon — 1200x630px" }
+  },
+  "jak-to-dziala": {
+    "title": "Jak działa SiteSpector — Od URL do raportu w 3 minuty",
+    "description": "Wpisz adres strony, poczekaj 1-3 minuty i otrzymaj profesjonalny raport SEO z rekomendacjami AI. Zobacz jak to działa krok po kroku.",
+    "og_image": { "src": "/images/og/jak-to-dziala.png", "placeholder": "PLACEHOLDER: OG image — 3 kroki procesu — 1200x630px" }
+  },
+  "sprawdz-agencje-seo": {
+    "title": "Sprawdź swoją agencję SEO — Zweryfikuj efekty za darmo | SiteSpector",
+    "description": "Nie wiesz czy Twoja agencja SEO naprawdę pracuje? Uruchom darmowy audyt i porównaj wyniki. Sprawdź Core Web Vitals, widoczność i pozycje swojego sklepu.",
+    "og_image": { "src": "/images/og/sprawdz-agencje.png", "placeholder": "PLACEHOLDER: OG image — 'Sprawdź agencję SEO' z lupą i raportem — 1200x630px" }
+  },
+  "dla-ecommerce": {
+    "title": "Audyt SEO sklepu internetowego — SiteSpector dla E-commerce",
+    "description": "Sprawdź SEO i wydajność swojego sklepu. Core Web Vitals, analiza produktów, widoczność w Google, porównanie z konkurencją. Raport w 3 minuty.",
+    "og_image": { "src": "/images/og/ecommerce.png", "placeholder": "PLACEHOLDER: OG image — sklep + wykres SEO — 1200x630px" }
+  },
+  "dla-agencji-seo": {
+    "title": "SiteSpector dla Agencji SEO — Jeden panel dla wszystkich klientów",
+    "description": "Workspace'y z rolami, automatyczne raporty PDF, analiza konkurencji, harmonogramy audytów. Oszczędź czas i pieniądze swojej agencji.",
+    "og_image": { "src": "/images/og/agencje.png", "placeholder": "PLACEHOLDER: OG image — panel agencji z wieloma workspace'ami — 1200x630px" }
+  },
+  "dla-freelancerow": {
+    "title": "SiteSpector dla Freelancerów SEO — Profesjonalne audyty bez drogich narzędzi",
+    "description": "Darmowy plan z 5 audytami miesięcznie. Lighthouse, Screaming Frog i AI w jednym narzędziu. Raporty PDF gotowe dla klientów.",
+    "og_image": { "src": "/images/og/freelancerzy.png", "placeholder": "PLACEHOLDER: OG image — freelancer + raport — 1200x630px" }
+  },
+  "integracje": {
+    "title": "Integracje SiteSpector — Screaming Frog, Lighthouse, Senuto, Gemini AI",
+    "description": "SiteSpector łączy najlepsze narzędzia SEO w jedną platformę. Sprawdź jak współpracują Screaming Frog, Lighthouse, Senuto i Google Gemini.",
+    "og_image": { "src": "/images/og/integracje.png", "placeholder": "PLACEHOLDER: OG image — loga integracji — 1200x630px" }
+  },
+  "blog": {
+    "title": "Blog SiteSpector — Poradniki SEO, Core Web Vitals, AI w SEO",
+    "description": "Praktyczne poradniki SEO, analizy Core Web Vitals, case studies i nowości z platformy SiteSpector.",
+    "og_image": { "src": "/images/og/blog.png", "placeholder": "PLACEHOLDER: OG image — blog z artykułami — 1200x630px" }
+  },
+  "case-study": {
+    "title": "Case Studies — Historie sukcesu klientów SiteSpector",
+    "description": "Zobacz jak agencje SEO i sklepy internetowe osiągają lepsze wyniki dzięki SiteSpector. Realne dane i metryki.",
+    "og_image": { "src": "/images/og/case-studies.png", "placeholder": "PLACEHOLDER: OG image — wykresy wzrostu — 1200x630px" }
+  },
+  "porownanie": {
+    "title": "SiteSpector vs Ahrefs vs SEMrush vs Screaming Frog — Porównanie 2026",
+    "description": "Szczegółowe porównanie SiteSpector z Ahrefs, SEMrush i Screaming Frog. Ceny, funkcje, Core Web Vitals, AI, raporty PDF.",
+    "og_image": { "src": "/images/og/porownanie.png", "placeholder": "PLACEHOLDER: OG image — tabela porównawcza — 1200x630px" }
+  },
+  "o-nas": {
+    "title": "O SiteSpector — Zespół, misja i technologia",
+    "description": "Poznaj zespół i misję SiteSpector. Budujemy narzędzia SEO przyszłości, łącząc Screaming Frog, Lighthouse, Senuto i AI Gemini.",
+    "og_image": { "src": "/images/og/o-nas.png", "placeholder": "PLACEHOLDER: OG image — zespół/misja — 1200x630px" }
+  },
+  "kontakt": {
+    "title": "Kontakt — SiteSpector",
+    "description": "Skontaktuj się z zespołem SiteSpector. Wsparcie techniczne, pytania o produkt, współpraca.",
+    "og_image": { "src": "/images/og/kontakt.png", "placeholder": "PLACEHOLDER: OG image — kontakt — 1200x630px" }
+  },
+  "docs": {
+    "title": "Centrum pomocy SiteSpector — Dokumentacja i poradniki",
+    "description": "Jak zacząć, panel audytu, raporty PDF, zespoły, subskrypcje, bezpieczeństwo. Wszystko o korzystaniu z SiteSpector.",
+    "og_image": { "src": "/images/og/docs.png", "placeholder": "PLACEHOLDER: OG image — dokumentacja — 1200x630px" }
+  },
+  "changelog": {
+    "title": "Changelog — Co nowego w SiteSpector",
+    "description": "Śledź rozwój platformy SiteSpector. Nowe funkcje, ulepszenia i poprawki.",
+    "og_image": { "src": "/images/og/changelog.png", "placeholder": "PLACEHOLDER: OG image — changelog — 1200x630px" }
+  }
+}

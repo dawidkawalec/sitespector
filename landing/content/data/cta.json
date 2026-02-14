@@ -1,0 +1,20 @@
+{
+  "section_id": "cta",
+  "items": [
+    {
+      "title": "Biuro Główne",
+      "value": "Warszawa, Polska",
+      "icon_file": "address.json"
+    },
+    {
+      "title": "Infolinia",
+      "value": "+48 123 456 789",
+      "icon_file": "phone.json"
+    },
+    {
+      "title": "Wsparcie",
+      "value": "kontakt@sitespector.pl",
+      "icon_file": "mail.json"
+    }
+  ]
+}

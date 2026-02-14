@@ -1,0 +1,67 @@
+{
+  "topbar": {
+    "logo": {
+      "text": "SiteSpector",
+      "icon": "RiSearchEyeFill"
+    },
+    "sections": [
+      { "id": "home", "label": "Start", "href": "/#home", "is_hash": true },
+      { "id": "about", "label": "Funkcje", "href": "/#about", "is_hash": true },
+      { "id": "price", "label": "Cennik", "href": "/#price", "is_hash": true },
+      { "id": "blog", "label": "Blog", "href": "/blog", "is_hash": false },
+      { "id": "docs", "label": "Dokumentacja", "href": "/docs", "is_hash": false },
+      { "id": "kontakt", "label": "Kontakt", "href": "/kontakt", "is_hash": false }
+    ],
+    "cta": {
+      "text": "Zaloguj się / Załóż konto",
+      "href": "/login"
+    }
+  },
+  "footer": {
+    "description": "Profesjonalna platforma do audytów SEO, analizy wydajności i monitorowania widoczności w Google.",
+    "newsletter": {
+      "heading": "Zapisz się do newslettera :",
+      "placeholder": "Twój email"
+    },
+    "columns": [
+      {
+        "title": "Produkt",
+        "links": [
+          { "label": "Funkcje", "href": "/funkcje" },
+          { "label": "Cennik", "href": "/#price" },
+          { "label": "Jak to działa", "href": "/jak-to-dziala" },
+          { "label": "Integracje", "href": "/integracje" },
+          { "label": "Blog", "href": "/blog" },
+          { "label": "Dokumentacja", "href": "/docs" },
+          { "label": "Changelog", "href": "/changelog" }
+        ]
+      },
+      {
+        "title": "Rozwiązania",
+        "links": [
+          { "label": "Dla agencji SEO", "href": "/dla-agencji-seo" },
+          { "label": "Dla freelancerów", "href": "/dla-freelancerow" },
+          { "label": "Dla e-commerce", "href": "/dla-ecommerce" },
+          { "label": "Sprawdź agencję SEO", "href": "/sprawdz-agencje-seo" },
+          { "label": "Case study", "href": "/case-study" },
+          { "label": "Porównanie", "href": "/porownanie" }
+        ]
+      },
+      {
+        "title": "Firma",
+        "links": [
+          { "label": "O nas", "href": "/o-nas" },
+          { "label": "Kontakt", "href": "/kontakt" }
+        ]
+      },
+      {
+        "title": "Prawne",
+        "links": [
+          { "label": "Regulamin", "href": "/regulamin" },
+          { "label": "Polityka prywatności", "href": "/polityka-prywatnosci" },
+          { "label": "Polityka cookies", "href": "/polityka-cookies" }
+        ]
+      }
+    ]
+  }
+}

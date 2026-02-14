@@ -631,6 +631,37 @@ refetchInterval: (query) => {
 
 ---
 
+### BUG-017: Audit Progress Window Stuck at 0% (No Logs)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: HIGH
+
+**Description**:
+- During audit run, the UI progress window showed `0%` and empty logs for minutes.
+- Worker was processing normally, but frontend had no progress/log data to render.
+
+**Root cause**:
+- Frontend polled `GET /api/audits/{id}` (not `/status`) but the response schema did not include:
+  - `progress_percent`
+  - `processing_logs`
+  - `processing_step`
+  - `ai_status`
+- Additionally, some UI step IDs did not match worker step names (e.g. `ai_perf_tech` vs `ai_parallel`).
+
+**Fix**:
+- Extend `AuditResponse` to include progress + processing metadata and enrich `GET /api/audits/{id}` payload.
+- Align frontend step IDs with worker log step names.
+
+**Verification**:
+- While an audit is `pending/processing`, UI updates progress percent and shows step logs in near real-time (polling every 3s).
+
+**Related**: `backend/app/routers/audits.py`, `backend/app/schemas.py`, `frontend/app/(app)/audits/[id]/page.tsx`, `.context7/backend/API.md`
+
+---
+
 ## Future Bugs to Watch
 
 ### WATCH-001: Memory Leak in Worker
