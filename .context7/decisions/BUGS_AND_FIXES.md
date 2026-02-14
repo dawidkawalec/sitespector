@@ -8,6 +8,61 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-006: Alembic migration failed due to duplicate ENUM type
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED (2026-02-14)
+
+**Severity**: HIGH
+
+**Description**:
+- `alembic upgrade head` failed on production with:
+  - `asyncpg.exceptions.DuplicateObjectError: type "taskpriority" already exists`
+- Migration `20260214_add_audit_tasks_table.py` introduced Postgres enums `taskpriority` / `taskstatus` and `audit_tasks` table.
+
+**Root cause**:
+- Migration created enum types manually via `CREATE TYPE ...`.
+- During `op.create_table()`, SQLAlchemy attempted to create the same enum type again for the enum columns, causing a duplicate type error.
+
+**Fix**:
+- Update migration to:
+  - create enums idempotently with `checkfirst=True`
+  - set `create_type=False` to prevent SQLAlchemy auto-creating enum types on table create
+
+**Verification**:
+- Re-run `docker exec sitespector-backend alembic upgrade head` successfully on VPS.
+
+**Related**: `backend/alembic/versions/20260214_add_audit_tasks_table.py`
+
+---
+
+### BUG-007: 502 Bad Gateway after backend recreate (nginx upstream stale)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED (2026-02-14)
+
+**Severity**: MEDIUM
+
+**Description**:
+- After deploying and recreating `backend`, `/health` and `/api/*` intermittently returned `502 Bad Gateway`.
+- Nginx error log showed `connect() failed (111: Connection refused) while connecting to upstream`.
+
+**Root cause**:
+- Nginx resolved the `backend` upstream to an old Docker IP (container got recreated with a new IP).
+- Nginx kept the stale resolved address until restart/reload.
+
+**Fix**:
+```bash
+cd /opt/sitespector
+docker compose -f docker-compose.prod.yml restart nginx
+```
+
+**Related**: `.context7/project/OPERATIONS.md` (Troubleshooting section)
+
+---
+
 ### BUG-001: Frontend Rendering Functions Missing
 
 **Reported**: 2025-01-15

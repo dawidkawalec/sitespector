@@ -198,6 +198,22 @@ docker restart sitespector-nginx
 - **Check**: Worker logs (`docker logs sitespector-worker`).
 - **Fix**: Restart worker container (`docker compose restart worker`).
 
+### Issue: 502 Bad Gateway after backend recreate (nginx upstream stale)
+Symptoms:
+- `curl -sk https://127.0.0.1/health` returns `502 Bad Gateway`
+- Nginx error log contains `connect() failed (111: Connection refused) while connecting to upstream`
+
+Cause:
+- Docker service DNS for `backend` can resolve to an old container IP after `backend` is recreated.
+- Nginx keeps the old resolved IP in memory until reload/restart.
+
+Fix:
+```bash
+cd /opt/sitespector
+docker compose -f docker-compose.prod.yml restart nginx
+curl -sk https://127.0.0.1/health
+```
+
 ### Issue: SSL Certificate Expired
 - **Fix**: Run `certbot renew` on VPS host and restart nginx.
 

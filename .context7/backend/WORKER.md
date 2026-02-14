@@ -47,11 +47,11 @@ async def worker_loop():
 
 ## Audit Processing Flow
 
-### Step-by-Step Process (Two-Phase)
+### Step-by-Step Process (Three-Phase)
 
 **Function**: `async def process_audit(audit_id: str)`
 
-The worker uses a **two-phase architecture** to provide faster feedback to users.
+The worker uses a **three-phase architecture** to provide faster feedback and a concrete implementation plan.
 
 #### Phase 1: Technical Analysis
 Runs technical tools and saves results immediately.
@@ -66,6 +66,12 @@ Enriches technical results with AI insights using Gemini 3.0 Flash.
 1. **AI Content Analysis**
 2. **AI Performance & Tech Stack**
 3. **Strategic AI Analysis** (Security, Local SEO, Competitive)
+
+#### Phase 3: Execution Plan (Tasks)
+Generates an actionable implementation plan as structured tasks (`audit_tasks` table).
+1. **8 module task generators in parallel** (seo, performance, visibility, ai_overviews, backlinks, links, images, security/ux as applicable)
+2. **Synthesis**: deduplication, sorting by priority, quick-win tagging
+3. **Persistence**: bulk insert tasks and set `audit.execution_plan_status`
 
 ### Progress Tracking & Logs
 
@@ -128,6 +134,10 @@ If any step fails in Phase 1, the audit is marked as FAILED. If Phase 2 (AI) fai
 The `run_ai_pipeline` flag on audit controls whether AI runs automatically:
 - `True` (default): Full pipeline with contextual AI analyses
 - `False`: Only technical analysis, audit completes after Phase 1 with `ai_status="skipped"`
+
+The `run_execution_plan` flag controls whether Phase 3 runs automatically:
+- `True` (default): Phase 3 generates tasks after Phase 2
+- `False`: Phase 3 is skipped unless triggered on-demand (API)
 
 ### Phase 2 Extensions (AI Contexts + Strategy)
 
