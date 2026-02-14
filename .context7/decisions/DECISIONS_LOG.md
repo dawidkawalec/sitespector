@@ -50,6 +50,7 @@
 - **OpenGraph/Twitter + canonical**: ujednolicone przez helper `buildMetadata()` w `landing/src/lib/seo.ts` + `metadataBase` w `landing/src/app/layout.tsx`.
 - **Dynamic OG images**: `/og` generowane przez `landing/src/app/og/route.tsx` (Next `ImageResponse`) i używane jako domyślny `og:image` na wszystkich stronach.
 - **Schema.org (JSON-LD)**: globalnie `Organization` + `WebSite` w layout oraz per-typ strony (homepage, blog, case-study, docs) przez `landing/src/lib/schema.ts` + `landing/src/components/JsonLd.tsx`.
+- **Schema.org coverage (landing + frontend)**: wszystkie publiczne strony marketingowe w `landing` mają `WebPage` + `BreadcrumbList` (a homepage także `FAQPage`). Dodatkowo `frontend/app/layout.tsx` publikuje globalne `Organization` + `WebSite`, a `/sitemap` (frontend) ma `WebPage` + `BreadcrumbList`.
 
 ---
 
