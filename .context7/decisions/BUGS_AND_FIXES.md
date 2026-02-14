@@ -1165,6 +1165,34 @@ audit.results.ai_contexts.ai_overviews.key_findings
 
 ---
 
+### BUG-027: Next.js 15 landing build fails on dynamic route props typing (params as Promise)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: MEDIUM
+
+**Description**:
+- `next build` failował na `landing/src/app/docs/[slug]/page.tsx` z błędem typu: `params` nie spełnia `PageProps` (Next.js 15).
+
+**Root cause**:
+- W Next.js 15 `params` w `PageProps` jest typowane jako `Promise` (w Server Components), a strona miała podpis `{ params: { slug: string } }`.
+
+**Fix**:
+- Zmieniono podpisy na:
+  - `export async function generateMetadata({ params }: { params: Promise<{ slug: string }> })`
+  - `export default async function Page({ params }: { params: Promise<{ slug: string }> })`
+  - oraz `await params` przed użyciem `slug`.
+
+**Verification**:
+```bash
+npm --prefix landing run lint
+npm --prefix landing run build
+```
+
+---
+
 **Last Updated**: 2026-02-14  
 **Resolved Bugs**: 26 (incl. BUG-026 cross-module AIO contradiction)  
 **Known Issues**: 3  

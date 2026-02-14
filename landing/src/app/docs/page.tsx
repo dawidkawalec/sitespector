@@ -1,91 +1,96 @@
-'use client';
-
-import React from 'react';
-import { Container, Row, Col, Accordion } from 'react-bootstrap';
+import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
-import { RiBookOpenLine, RiDashboardLine, RiFilePdfLine, RiTeamLine, RiWalletLine, RiShieldLine } from 'react-icons/ri';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
+import {
+  RiBookOpenLine,
+  RiCalendarScheduleLine,
+  RiDashboardLine,
+  RiFilePdfLine,
+  RiLockLine,
+  RiPlugLine,
+  RiRobotLine,
+  RiTeamLine,
+  RiTerminalBoxLine,
+  RiWalletLine,
+} from 'react-icons/ri';
 
-const docsSections = [
+export const metadata: Metadata = {
+  title: 'Dokumentacja — SiteSpector | Centrum pomocy',
+  description:
+    'Pełna dokumentacja SiteSpector: jak zacząć, panel audytu, Execution Plan, raporty PDF, zespoły, harmonogramy, integracje. Wszystkie instrukcje w jednym miejscu.',
+  keywords: ['dokumentacja SiteSpector', 'pomoc audyt SEO', 'Execution Plan', 'Senuto integracja', 'raport PDF'],
+};
+
+type DocCategory = {
+  slug: string;
+  title: string;
+  icon: (props: { size?: number; className?: string }) => ReactNode;
+  bullets: string[];
+};
+
+const categories: DocCategory[] = [
   {
-    id: 'start',
-    icon: RiBookOpenLine,
-    title: 'JAK ZACZĄĆ',
-    content: (
-      <ul className="list-unstyled">
-        <li className="mb-2">• <strong>Utwórz konto:</strong> Możesz zarejestrować się używając adresu email lub konta Google/GitHub.</li>
-        <li className="mb-2">• <strong>Twój pierwszy audyt:</strong> Po zalogowaniu wpisz URL swojej strony w polu na dashboardzie i kliknij &quot;Rozpocznij audyt&quot;.</li>
-        <li className="mb-2">• <strong>Konkurenci:</strong> Opcjonalnie możesz dodać do 3 adresów URL konkurencji, aby porównać wyniki.</li>
-        <li className="mb-2">• <strong>Czas oczekiwania:</strong> Audyt trwa zazwyczaj od 1 do 3 minut. Wyniki pojawią się automatycznie.</li>
-      </ul>
-    )
+    slug: 'jak-zaczac',
+    title: 'Jak zacząć',
+    icon: props => <RiBookOpenLine {...props} />,
+    bullets: ['Rejestracja i pierwsze logowanie', 'Pierwszy audyt krok po kroku', 'Konfiguracja Senuto', 'Plan Free vs Pro — co zawiera'],
   },
   {
-    id: 'panel',
-    icon: RiDashboardLine,
-    title: 'PANEL AUDYTU',
-    content: (
-      <ul className="list-unstyled">
-        <li className="mb-2">• <strong>Zakładka SEO:</strong> Analiza techniczna meta tagów, nagłówków H1-H6, obrazów bez ALT oraz linków wewnętrznych.</li>
-        <li className="mb-2">• <strong>Zakładka Wydajność:</strong> Pełne metryki Core Web Vitals (LCP, FCP, CLS, TTFB) dla wersji desktop i mobile.</li>
-        <li className="mb-2">• <strong>Zakładka Treść:</strong> Ocena jakości contentu, czytelności oraz inteligentne rekomendacje od AI Gemini.</li>
-        <li className="mb-2">• <strong>Zakładka Konkurencja:</strong> Bezpośrednie porównanie Twoich wyników z wybranymi konkurentami.</li>
-        <li className="mb-2">• <strong>Quick Wins:</strong> Lista najważniejszych poprawek, które dadzą najszybszy efekt, posortowana według priorytetu.</li>
-      </ul>
-    )
+    slug: 'panel-audytu',
+    title: 'Panel audytu',
+    icon: props => <RiDashboardLine {...props} />,
+    bullets: ['Zakładki: SEO, Performance, Visibility, AI Overviews', 'Backlinks, Links, Images', 'Quick Wins, AI Strategy, Benchmark', 'Eksport danych i per-page analysis'],
   },
   {
-    id: 'pdf',
-    icon: RiFilePdfLine,
-    title: 'RAPORTY PDF',
-    content: (
-      <ul className="list-unstyled">
-        <li className="mb-2">• <strong>Generowanie:</strong> Przycisk &quot;Pobierz PDF&quot; jest dostępny w prawym górnym rogu strony audytu po jego zakończeniu.</li>
-        <li className="mb-2">• <strong>Zawartość:</strong> Raport składa się z 9 sekcji, w tym Executive Summary, szczegółowych analiz i gotowego planu działań.</li>
-        <li className="mb-2">• <strong>White-label:</strong> W planach Pro i Enterprise raporty nie zawierają brandingu SiteSpector, co pozwala na wysyłkę bezpośrednio do klienta.</li>
-      </ul>
-    )
+    slug: 'execution-plan',
+    title: 'Execution Plan',
+    icon: props => <RiTerminalBoxLine {...props} />,
+    bullets: ['Zadania z priorytetami i kodem', 'Statusy: do zrobienia / w toku / wykonane', 'Filtr quick wins', 'Eksport zadań'],
   },
   {
-    id: 'teams',
-    icon: RiTeamLine,
-    title: 'ZESPOŁY I WORKSPACE\'Y',
-    content: (
-      <ul className="list-unstyled">
-        <li className="mb-2">• <strong>Tworzenie zespołu:</strong> Przejdź do Ustawienia &gt; Zespół, aby utworzyć nową przestrzeń i zaprosić współpracowników.</li>
-        <li className="mb-2">• <strong>Role:</strong> Właściciel (pełny dostęp), Admin (zarządzanie członkami), Członek (wykonywanie audytów).</li>
-        <li className="mb-2">• <strong>Przełączanie:</strong> Możesz być członkiem wielu zespołów. Przełączaj się między nimi za pomocą menu w panelu bocznym.</li>
-        <li className="mb-2">• <strong>Izolacja:</strong> Każdy Workspace ma oddzielną historię audytów, limity i dane.</li>
-      </ul>
-    )
+    slug: 'raporty-pdf',
+    title: 'Raporty PDF',
+    icon: props => <RiFilePdfLine {...props} />,
+    bullets: ['9 sekcji raportu', 'White-label (Pro, Enterprise)', 'Eksport surowych danych', 'Wysyłka do klienta'],
   },
   {
-    id: 'billing',
-    icon: RiWalletLine,
-    title: 'SUBSKRYPCJE I PŁATNOŚCI',
-    content: (
-      <ul className="list-unstyled">
-        <li className="mb-2">• <strong>Plan Free:</strong> 5 audytów miesięcznie, 1 użytkownik, standardowe raporty PDF.</li>
-        <li className="mb-2">• <strong>Plan Pro:</strong> 50 audytów miesięcznie, zespoły, analiza konkurencji, raporty white-label.</li>
-        <li className="mb-2">• <strong>Plan Enterprise:</strong> Nielimitowane audyty, dostęp do API, dedykowane wsparcie.</li>
-        <li className="mb-2">• <strong>Bezpieczeństwo:</strong> Płatności obsługuje Stripe. Akceptujemy karty płatnicze i Apple/Google Pay.</li>
-      </ul>
-    )
+    slug: 'zespoly-workspaces',
+    title: "Zespoły i Workspace'y",
+    icon: props => <RiTeamLine {...props} />,
+    bullets: ['Role: Właściciel, Admin, Członek', 'Zapraszanie użytkowników', "Przełączanie między workspace'ami", 'Współdzielone audyty'],
   },
   {
-    id: 'security',
-    icon: RiShieldLine,
-    title: 'BEZPIECZEŃSTWO I PRYWATNOŚĆ',
-    content: (
-      <ul className="list-unstyled">
-        <li className="mb-2">• <strong>Lokalizacja danych:</strong> Wszystkie dane są przechowywane na serwerach w Unii Europejskiej (Niemcy, Hetzner).</li>
-        <li className="mb-2">• <strong>RODO:</strong> Jesteśmy w pełni zgodni z ogólnym rozporządzeniem o ochronie danych.</li>
-        <li className="mb-2">• <strong>AI Gemini:</strong> Do analizy treści przesyłamy tylko techniczne dane strony. Nigdy nie przesyłamy Twoich danych osobowych.</li>
-        <li className="mb-2">• <strong>Szyfrowanie:</strong> Cała komunikacja z platformą odbywa się przez bezpieczny protokół HTTPS (SSL).</li>
-      </ul>
-    )
-  }
+    slug: 'harmonogramy',
+    title: 'Harmonogramy',
+    icon: props => <RiCalendarScheduleLine {...props} />,
+    bullets: ['Audyty dzienne, tygodniowe, miesięczne', 'Konkurenci w harmonogramie', 'Powiadomienia', 'Zarządzanie harmonogramami'],
+  },
+  {
+    slug: 'subskrypcje-platnosci',
+    title: 'Subskrypcje i płatności',
+    icon: props => <RiWalletLine {...props} />,
+    bullets: ['Plany Free, Pro, Enterprise', 'Stripe — płatność i faktury', 'Customer Portal', 'Limity audytów'],
+  },
+  {
+    slug: 'integracje',
+    title: 'Integracje',
+    icon: props => <RiPlugLine {...props} />,
+    bullets: ['Senuto — konfiguracja API', 'Screaming Frog i Lighthouse (silniki audytu)', 'Stripe i Supabase', 'Co pobieramy i co zapisujemy'],
+  },
+  {
+    slug: 'ai-analiza',
+    title: 'AI analiza',
+    icon: props => <RiRobotLine {...props} />,
+    bullets: ['Co analizuje Gemini', 'Jakie dane wysyłamy do AI', 'Kontekstowe analizy per obszar', 'Prywatność i ograniczenia'],
+  },
+  {
+    slug: 'bezpieczenstwo',
+    title: 'Bezpieczeństwo',
+    icon: props => <RiLockLine {...props} />,
+    bullets: ['Dane w UE (Supabase + VPS Hetzner)', 'RLS (Row Level Security)', 'SSL i szyfrowanie', 'RODO/GDPR'],
+  },
 ];
 
 export default function DocsPage() {
@@ -93,47 +98,98 @@ export default function DocsPage() {
     <>
       <Topbar />
       <main className="pt-5 mt-5">
-        <section className="section py-5">
-          <Container>
-            <Row className="justify-content-center mb-5">
-              <Col lg={8} className="text-center">
-                <h1 className="display-4 fw-bold text-primary mb-3">Centrum pomocy SiteSpector</h1>
-                <p className="lead text-muted">Wszystko, co musisz wiedzieć o korzystaniu z naszej platformy.</p>
-              </Col>
-            </Row>
-
-            <Row className="justify-content-center">
-              <Col lg={9}>
-                <Accordion defaultActiveKey="start" className="shadow-sm rounded-4 overflow-hidden border-0">
-                  {docsSections.map((section) => (
-                    <Accordion.Item eventKey={section.id} key={section.id} className="border-bottom">
-                      <Accordion.Header>
-                        <div className="d-flex align-items-center py-2">
-                          <div className="bg-orange-subtle p-2 rounded-3 text-orange me-3">
-                            <section.icon size={24} />
-                          </div>
-                          <span className="fw-bold text-primary">{section.title}</span>
-                        </div>
-                      </Accordion.Header>
-                      <Accordion.Body className="p-4 bg-white">
-                        <div className="text-muted lh-lg">
-                          {section.content}
-                        </div>
-                      </Accordion.Body>
-                    </Accordion.Item>
-                  ))}
-                </Accordion>
-
-                <div className="mt-5 p-5 bg-light rounded-4 text-center border">
-                  <h4 className="text-primary mb-3">Nie znalazłeś odpowiedzi?</h4>
-                  <p className="text-muted mb-4">Nasz zespół wsparcia chętnie pomoże Ci w rozwiązaniu każdego problemu.</p>
-                  <Link href="/kontakt" className="btn btn-orange px-5 py-3 fw-bold text-white">
-                    Skontaktuj się z nami
-                  </Link>
+        <section className="section py-5 bg-white">
+          <div className="container">
+            <div className="row justify-content-center mb-5">
+              <div className="col-lg-9 text-center">
+                <div className="text-orange mb-3">
+                  <RiBookOpenLine size={44} />
                 </div>
-              </Col>
-            </Row>
-          </Container>
+                <h1 className="display-4 fw-bold text-primary mb-3">Centrum pomocy SiteSpector</h1>
+                <p className="lead text-muted mb-0">
+                  Wszystko, co musisz wiedzieć, aby skutecznie korzystać z audytów: od pierwszego uruchomienia po zaawansowane funkcje — Execution Plan, PDF,
+                  zespoły i integracje.
+                </p>
+              </div>
+            </div>
+
+            <div className="row justify-content-center">
+              <div className="col-lg-11">
+                <div className="title-sm">
+                  <span>WYBIERZ TEMAT</span>
+                </div>
+                <div className="main-title mt-3 mb-4">
+                  <h2 className="text-primary">
+                    Kategorie <span className="text-orange text-line">dokumentacji</span>
+                  </h2>
+                </div>
+
+                <div className="row g-4">
+                  {categories.map(cat => {
+                    const Icon = cat.icon;
+                    return (
+                      <div className="col-md-6 col-lg-4" key={cat.slug}>
+                        <Link href={`/docs/${cat.slug}`} className="text-decoration-none">
+                          <div className="card border-0 shadow-sm rounded-4 h-100 hover-lift transition-all">
+                            <div className="card-body p-4">
+                              <div className="bg-orange-subtle rounded-circle d-inline-flex p-3 mb-3">
+                                <span className="text-orange">{Icon({ size: 26 })}</span>
+                              </div>
+                              <h3 className="h5 text-primary fw-bold">{cat.title}</h3>
+                              <div className="text-muted small mt-2">
+                                {cat.bullets.slice(0, 4).map(b => (
+                                  <div key={b}>• {b}</div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-5">
+                  <div className="bg-light rounded-4 border p-4">
+                    <div className="fw-bold text-primary mb-2">Szybkie linki</div>
+                    <div className="d-flex flex-column flex-md-row flex-wrap gap-2">
+                      <Link href="/docs/jak-zaczac" className="btn btn-sm btn-outline-primary">
+                        Jak dodać pierwszy audyt?
+                      </Link>
+                      <Link href="/docs/execution-plan" className="btn btn-sm btn-outline-primary">
+                        Gdzie znaleźć Execution Plan?
+                      </Link>
+                      <Link href="/docs/integracje" className="btn btn-sm btn-outline-primary">
+                        Jak skonfigurować Senuto?
+                      </Link>
+                      <Link href="/docs/raporty-pdf" className="btn btn-sm btn-outline-primary">
+                        Jak wygenerować raport PDF?
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 p-4 p-lg-5 bg-light rounded-4 text-center border shadow-sm">
+                  <div className="title-sm">
+                    <span>POTRZEBUJESZ POMOCY?</span>
+                  </div>
+                  <h3 className="text-primary fw-bold mt-2 mb-2">Nie znalazłeś odpowiedzi na swoje pytanie?</h3>
+                  <p className="text-muted mb-4">
+                    Napisz do nas. Odpowiadamy w 24 godziny w dni robocze. Możesz też wypróbować SiteSpector — wiele rzeczy odkryjesz, eksperymentując z
+                    pierwszym audytem.
+                  </p>
+                  <div className="d-flex justify-content-center flex-column flex-sm-row gap-2">
+                    <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
+                      Skontaktuj się z nami
+                    </Link>
+                    <Link href="/login" className="btn btn-outline-primary px-5 py-3 fw-bold">
+                      Rozpocznij darmowy audyt
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
       <Footer />

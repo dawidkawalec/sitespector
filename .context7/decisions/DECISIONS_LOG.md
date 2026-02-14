@@ -465,6 +465,23 @@ Backend: 100% complete | Frontend foundation: 100% complete | Module refactoring
 
 ---
 
+## ADR-030: Landing pages metadata + Client Components (Next.js 15)
+**Date**: 2026-02-14
+**Status**: ✅ Done
+**Decision**:
+- Dla stron landingu, które muszą być Client Component (np. formularze / elementy interaktywne), `metadata` jest eksportowane w Server Component wrapperze `page.tsx`.
+- UI/interakcje są przenoszone do osobnego komponentu `*Client.tsx` z `'use client'` (np. `KontaktClient`, `PorownanieClient`).
+- Dla nowych dynamicznych tras w Next.js 15 (`app/.../[slug]/page.tsx`), `params` traktujemy jako `Promise` i obsługujemy przez `await` w `generateMetadata()` i w komponencie strony.
+**Rationale**:
+- `metadata` nie jest wspierane w Client Components.
+- W repo pojawiają się elementy React-Bootstrap / interaktywne UI, które wymagają `'use client'`, a SEO nadal potrzebuje `metadata`.
+- Next.js 15 typuje `params` jako `Promise` w PageProps, co w przeciwnym razie łamie `next build` (typecheck).
+**Outcome**:
+- Landing ma spójny wzorzec: `page.tsx` (server) + `*Client.tsx` (client) dla stron wymagających interakcji.
+- `/docs/[slug]` używa `generateStaticParams()` + `async generateMetadata({ params: Promise<...> })`.
+
+---
+
 **Last Updated**: 2026-02-14
 **Total Decisions**: 29 accepted
 **Review**: Update when making significant architectural changes.

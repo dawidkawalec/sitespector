@@ -46,3 +46,51 @@
 - **Primary CTA**: Rozpocznij za darmo (link: `/login`)
 - **Secondary CTA**: Zobacz plan Free (anchor: `#plan-free`)
 - **Key proof**: Free: 5 audytów/mc + PDF + AI; ścieżka wzrostu Free -> Pro ($29) gdy rośnie liczba klientów.
+
+## Campaign Page: Integracje
+- **Angle**: "Deep-dive techniczny" — jak dzialaja integracje (SF, LH, Senuto, Gemini, Stripe, Supabase).
+- **Headline**: Zbudowany na sprawdzonych narzędziach
+- **Primary CTA**: Rozpocznij darmowy audyt (link: `/login`)
+- **Secondary CTA**: Zobacz jak to działa (link: `/jak-to-dziala`)
+- **Key proof**: Brak instalacji i konfiguracji po stronie użytkownika; narzedzia uruchamiane w tle (Docker/Integracje API) i zasilaja jeden dashboard.
+
+## Campaign Page: Dla menedżerów
+- **Angle**: "Monitoruj SEO bez wiedzy technicznej" — health score, executive summary, benchmark, PDF dla zarządu.
+- **Headline**: Monitoruj kondycję SEO swojej firmy bez wiedzy technicznej
+- **Primary CTA**: Sprawdź kondycję za darmo (link: `/login`)
+- **Secondary CTA**: Zobacz Executive Summary (anchor: `#executive-summary`)
+- **Key proof**: Jedna strona z wnioskami (mocne strony + krytyczne problemy) + harmonogram miesięczny i PDF do prezentacji.
+
+## Page: O nas
+- **Angle**: "Jedna platforma zamiast pięciu narzędzi" + story + misja + technologia + Senuto.
+- **Headline**: Zespół, który uprościł audyt SEO
+- **Primary CTA**: Rozpocznij Darmowy Audyt (link: `/login`)
+- **Secondary CTA**: Zobacz cennik (anchor: `#price`)
+- **Key proof**: Execution Plan z kodem + dane w UE + oficjalna integracja Senuto.
+
+## Page: Kontakt
+- **Angle**: "Szybki kontakt i jasne dane" + formularz (UI-first) + CTA do audytu.
+- **Headline**: Skontaktuj się z nami
+- **Primary CTA**: Rozpocznij darmowy audyt (link: `/login`)
+- **Secondary CTA**: Dokumentacja (link: `/docs`)
+- **Key proof**: Odpowiedź w 24h (dni robocze), Warszawa/PL, proste tematy wiadomości.
+
+## Page: Porównanie
+- **Angle**: "Execution Plan + AI Overviews + 3-fazowy audyt w cenie jednej licencji" (SiteSpector vs SF/Ahrefs/SEMrush).
+- **Headline**: SiteSpector vs konkurencja
+- **Primary CTA**: Wypróbuj za darmo (link: `/login`)
+- **Secondary CTA**: Zobacz cennik (anchor: `#price`)
+- **Key proof**: Tabela funkcji + sekcja cen + 5 powodów "dlaczego wygrywa".
+
+## Page: Dokumentacja
+- **Angle**: Help center z 10 kategoriami (start, panel audytu, execution plan, PDF, teams, schedules, billing, integracje, AI, bezpieczeństwo).
+- **Headline**: Centrum pomocy SiteSpector
+- **Primary CTA**: Skontaktuj się z nami (link: `/kontakt`)
+- **Secondary CTA**: Rozpocznij darmowy audyt (link: `/login`)
+- **Key proof**: Linki do `/docs/[slug]` (SSG) jako lekkie podstrony kategorii.
+
+## Page: Changelog
+- **Angle**: "Co nowego" w formacie miesiąc → wpisy Feature/Improvement/Fix.
+- **Headline**: Changelog — co nowego w SiteSpector
+- **Primary CTA**: Rozpocznij darmowy audyt (link: `/login`)
+- **Key proof**: Nacisk na Senuto, AI Overviews, Execution Plan, 3-fazowy audyt i harmonogramy.
