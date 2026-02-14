@@ -30,7 +30,10 @@
 ```bash
 # Production VPS uses SSH keys only.
 # Root SSH login is disabled; use the deploy user.
-ssh deploy@<VPS_IP>
+ssh -i ~/.ssh/hetzner_sitespector_2026 deploy@<VPS_IP>
+
+# If you have an SSH config entry (recommended), this also works:
+# ssh sitespector-prod
 ```
 
 **URLs**:
