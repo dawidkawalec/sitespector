@@ -23,6 +23,8 @@ const footerData: FooterColumn[] = [
       { label: 'Jak to działa', link: '/jak-to-dziala' },
       { label: 'Sprawdź agencję SEO', link: '/sprawdz-agencje-seo' },
       { label: 'Dla e-commerce', link: '/dla-ecommerce' },
+      { label: 'Dla agencji SEO', link: '/dla-agencji-seo' },
+      { label: 'Dla freelancerów', link: '/dla-freelancerow' },
       { label: 'Cennik', link: '/#price' },
       { label: 'Blog', link: '/blog' },
       { label: 'Dokumentacja', link: '/docs' },
