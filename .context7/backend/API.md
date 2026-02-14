@@ -805,6 +805,12 @@ Raw ZIP export now includes:
 - `senuto/ai_overviews.json`
 - `senuto/sections_detail.json`
 
+### Schema Normalization (Feb 2026)
+
+The `GET /api/audits/{id}` endpoint performs on-the-fly normalization for older audits to ensure UI consistency:
+- **Senuto Backlinks**: Injects `backlinks_count` and `domains_count` into `senuto.backlinks.statistics` if missing.
+- **Sitemap Detection**: Performs best-effort sitemap detection (robots.txt + common endpoints) if the stored crawl results lack sitemap info.
+
 ---
 
 ## CORS

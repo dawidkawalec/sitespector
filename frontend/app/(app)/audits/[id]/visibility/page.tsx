@@ -208,7 +208,12 @@ function OverviewTab({
           { label: 'TOP 3', value: stats.top3?.recent_value, diff: stats.top3?.diff, id: 'senuto_top3' },
           { label: 'TOP 10', value: stats.top10?.recent_value, diff: stats.top10?.diff, id: 'senuto_top10' },
           { label: 'TOP 50', value: stats.top50?.recent_value, diff: stats.top50?.diff, id: 'senuto_top50' },
-          { label: 'Widoczność', value: dash.statistics?.visibility?.recent_value || 0, diff: dash.statistics?.visibility?.diff, id: 'senuto_visibility' },
+          { 
+            label: 'Widoczność', 
+            value: stats.visibility?.recent_value || dash.statistics?.visibility?.recent_value || 0, 
+            diff: stats.visibility?.diff || dash.statistics?.visibility?.diff, 
+            id: 'senuto_visibility' 
+          },
         ].map((card, i) => (
           <Card key={i}>
             <CardHeader className="pb-2">
