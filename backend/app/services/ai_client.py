@@ -72,6 +72,8 @@ async def call_claude(
     Returns:
         AI response text
     """
+    global _circuit_open_until, _circuit_reason
+
     prompt_len = len(prompt or "")
     system_len = len(system_prompt or "")
 
@@ -171,7 +173,6 @@ async def call_claude(
             continue
 
     # If all keys hit quota, open circuit briefly to avoid hammering provider in the same process.
-    global _circuit_open_until, _circuit_reason
     if quota_exhausted_count and quota_exhausted_count == len(api_keys):
         _circuit_open_until = time.time() + 60.0
         _circuit_reason = "quota_exhausted"
