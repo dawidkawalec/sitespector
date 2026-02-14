@@ -1,14 +1,14 @@
-import { MetadataRoute } from 'next';
+import type { MetadataRoute } from 'next';
 import { getAllContentSlugs } from '@/lib/content';
 import { getSortedPostsData } from '@/lib/blog';
 
 const BASE_URL = 'https://sitespector.app';
 
-export default async function sitemap(): Promise<MetadataRoute['sitemap']> {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { pages, caseStudies } = getAllContentSlugs();
 
   // Static pages
-  const staticPages: MetadataRoute['sitemap'] = [
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
       lastModified: new Date(),
@@ -24,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute['sitemap']> {
   ];
 
   // Content pages
-  const contentPages: MetadataRoute['sitemap'] = pages
+  const contentPages: MetadataRoute.Sitemap = pages
     .filter((slug) => !slug.startsWith('_'))
     .map((slug) => ({
       url: `${BASE_URL}/${slug}`,
@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute['sitemap']> {
 
   // Blog posts
   const blogPosts = await getSortedPostsData();
-  const blogPages: MetadataRoute['sitemap'] = blogPosts.map((post) => ({
+  const blogPages: MetadataRoute.Sitemap = blogPosts.map((post) => ({
     url: `${BASE_URL}/blog/${post.slug}`,
     lastModified: new Date(post.date),
     changeFrequency: 'monthly' as const,
@@ -43,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute['sitemap']> {
   }));
 
   // Blog index
-  const blogIndex: MetadataRoute['sitemap'] = [
+  const blogIndex: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/blog`,
       lastModified: new Date(),
@@ -53,7 +53,7 @@ export default async function sitemap(): Promise<MetadataRoute['sitemap']> {
   ];
 
   // Case studies
-  const caseStudyPages: MetadataRoute['sitemap'] = caseStudies.map((slug) => ({
+  const caseStudyPages: MetadataRoute.Sitemap = caseStudies.map((slug) => ({
     url: `${BASE_URL}/case-study/${slug}`,
     lastModified: new Date(),
     changeFrequency: 'monthly' as const,
@@ -61,7 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute['sitemap']> {
   }));
 
   // Case study index
-  const caseStudyIndex: MetadataRoute['sitemap'] = [
+  const caseStudyIndex: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/case-study`,
       lastModified: new Date(),
@@ -71,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute['sitemap']> {
   ];
 
   // Other fixed pages
-  const otherPages: MetadataRoute['sitemap'] = [
+  const otherPages: MetadataRoute.Sitemap = [
     { url: `${BASE_URL}/docs`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/changelog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.6 },
   ];
