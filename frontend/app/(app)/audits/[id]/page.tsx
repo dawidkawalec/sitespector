@@ -502,7 +502,12 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                   <Link href={`/audits/${params.id}/visibility`} className="block">
                     <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
                       <CardContent className="pt-6 text-center">
-                        <div className="text-2xl font-bold text-primary">{formatNumber(senuto.visibility.dashboard?.statistics?.visibility?.recent_value || 0)}</div>
+                        <div className="text-2xl font-bold text-primary">
+                          {formatNumber(
+                            senuto.visibility.statistics?.statistics?.visibility?.recent_value || 
+                            senuto.visibility.dashboard?.statistics?.visibility?.recent_value || 0
+                          )}
+                        </div>
                         <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1">Widoczność</div>
                       </CardContent>
                     </Card>
