@@ -7,7 +7,7 @@ import logging
 import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import AsyncSessionLocal
 from app.models import Audit, AuditStatus, Competitor, CompetitorStatus, AuditSchedule, ScheduleFrequency, AuditTask, TaskPriority
@@ -548,17 +548,36 @@ async def run_execution_plan(audit_id: str, tech_data: Dict[str, Any]) -> None:
             synthesized_tasks = ai_execution_plan.synthesize_execution_plan(all_tasks)
             
             # Persist tasks to database (bulk insert)
+            # If plan is regenerated, replace existing tasks for this audit.
+            await db.execute(delete(AuditTask).where(AuditTask.audit_id == audit.id))
+
             task_objects = []
             for task_data in synthesized_tasks:
+                # Normalize enums coming from LLM (it sometimes returns uppercase).
+                priority_raw = task_data.get("priority", "medium")
+                priority_value = str(priority_raw).strip().lower()
+                if priority_value not in ("critical", "high", "medium", "low"):
+                    priority_value = "medium"
+
+                impact_raw = task_data.get("impact", "medium")
+                impact_value = str(impact_raw).strip().lower()
+                if impact_value not in ("high", "medium", "low"):
+                    impact_value = "medium"
+
+                effort_raw = task_data.get("effort", "medium")
+                effort_value = str(effort_raw).strip().lower()
+                if effort_value not in ("easy", "medium", "hard"):
+                    effort_value = "medium"
+
                 task_obj = AuditTask(
                     audit_id=audit.id,
                     module=task_data.get("module", "unknown"),
                     title=task_data.get("title", "Untitled task"),
                     description=task_data.get("description", ""),
                     category=task_data.get("category", "technical"),
-                    priority=TaskPriority(task_data.get("priority", "medium")),
-                    impact=task_data.get("impact", "medium"),
-                    effort=task_data.get("effort", "medium"),
+                    priority=TaskPriority(priority_value),
+                    impact=impact_value,
+                    effort=effort_value,
                     is_quick_win=task_data.get("is_quick_win", False),
                     fix_data=task_data.get("fix_data"),
                     source=task_data.get("source", "execution_plan"),
@@ -568,6 +587,8 @@ async def run_execution_plan(audit_id: str, tech_data: Dict[str, Any]) -> None:
             
             # Bulk insert
             db.add_all(task_objects)
+            # Force flush to catch enum/constraint issues before we set status=completed.
+            await db.flush()
             
             duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
             
@@ -586,8 +607,11 @@ async def run_execution_plan(audit_id: str, tech_data: Dict[str, Any]) -> None:
             logger.info(f"✅ Phase 3 completed for audit {audit_id}: {len(task_objects)} tasks")
             
         except Exception as e:
+            # If flush/commit failed, the session is in rollback-only state.
+            await db.rollback()
             logger.error(f"❌ Phase 3 failed for audit {audit_id}: {e}")
             audit.execution_plan_status = "failed"
+            audit.processing_step = "execution_plan:failed"
             await add_audit_log(audit, "execution_plan", "error", f"Execution plan generation failed: {str(e)}")
             await db.commit()
 

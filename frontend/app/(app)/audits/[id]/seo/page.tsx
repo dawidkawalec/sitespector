@@ -10,7 +10,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -283,16 +283,24 @@ export default function SeoPage({ params }: { params: { id: string } }) {
     checkAuth()
   }, [router])
 
-  const { data: audit, isLoading } = useQuery({
+  const { data: audit, isLoading, refetch: refetchAudit } = useQuery({
     queryKey: ['audit', params.id],
     queryFn: () => auditsAPI.get(params.id),
     enabled: isAuth,
+    refetchInterval: (query) => {
+      const data = query?.state?.data as Audit | undefined
+      const isRunning = data?.status === 'processing' || data?.status === 'pending'
+      const isAiRunning = data?.ai_status === 'processing'
+      const isPlanRunning = data?.execution_plan_status === 'processing'
+      return (isRunning || isAiRunning || isPlanRunning) ? 3000 : false
+    },
   })
 
   const { data: tasksResponse, refetch: refetchTasks } = useQuery({
     queryKey: ['tasks', params.id, 'seo'],
     queryFn: () => auditsAPI.getTasks(params.id, { module: 'seo' }),
-    enabled: isAuth && !!audit && mode === 'plan'
+    enabled: isAuth && !!audit && mode === 'plan',
+    refetchInterval: mode === 'plan' && audit?.execution_plan_status === 'processing' ? 3000 : false,
   })
 
   const tasks = tasksResponse?.items || []
@@ -318,6 +326,18 @@ export default function SeoPage({ params }: { params: { id: string } }) {
       toast.error('Nie udało się zapisać notatek')
     }
   }
+
+  const generatePlanMutation = useMutation({
+    mutationFn: () => auditsAPI.runExecutionPlan(params.id),
+    onSuccess: async () => {
+      await refetchAudit()
+      await refetchTasks()
+      toast.success('Rozpoczęto generowanie planu wykonania')
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Nie udało się uruchomić generowania planu')
+    },
+  })
 
   const handleGetFixSuggestion = async (issueType: string, urls: string[]) => {
     if (loadingFix) return
@@ -428,6 +448,9 @@ export default function SeoPage({ params }: { params: { id: string } }) {
           module="seo"
           onStatusChange={handleStatusChange}
           onNotesChange={handleNotesChange}
+          executionPlanStatus={audit?.execution_plan_status ?? null}
+          isGeneratingPlan={generatePlanMutation.isPending || audit?.execution_plan_status === 'processing'}
+          onGeneratePlan={() => generatePlanMutation.mutate()}
         />
       )}
     </div>

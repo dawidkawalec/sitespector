@@ -94,13 +94,12 @@ export function ModeSwitcher({
         {/* Plan Mode */}
         <button
           onClick={() => onModeChange('plan')}
-          disabled={!hasExecutionPlan && !isExecutionPlanLoading}
           className={cn(
             'px-4 py-2 rounded-md text-sm font-medium transition-all relative flex items-center gap-2',
             mode === 'plan'
               ? `${modeConfig.plan.bgColor} ${modeConfig.plan.textColor}`
               : 'text-muted-foreground hover:text-foreground',
-            (!hasExecutionPlan && !isExecutionPlanLoading) && 'opacity-50 cursor-not-allowed'
+            (!hasExecutionPlan && !isExecutionPlanLoading) && 'opacity-70'
           )}
         >
           {modeConfig.plan.label}

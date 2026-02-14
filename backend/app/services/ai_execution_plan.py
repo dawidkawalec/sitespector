@@ -848,11 +848,58 @@ def synthesize_execution_plan(all_tasks: List[Dict[str, Any]]) -> List[Dict[str,
     - Assigns final priorities
     - Sorts by priority and impact
     """
+    def _norm_str(v: Any) -> str:
+        return str(v or "").strip()
+
+    def _norm_lower(v: Any) -> str:
+        return _norm_str(v).lower()
+
+    def _normalize_priority(v: Any) -> str:
+        p = _norm_lower(v) or "medium"
+        mapping = {
+            "crit": "critical",
+            "critical": "critical",
+            "high": "high",
+            "medium": "medium",
+            "med": "medium",
+            "low": "low",
+        }
+        return mapping.get(p, "medium")
+
+    def _normalize_impact(v: Any) -> str:
+        i = _norm_lower(v) or "medium"
+        return i if i in ("high", "medium", "low") else "medium"
+
+    def _normalize_effort(v: Any) -> str:
+        e = _norm_lower(v) or "medium"
+        mapping = {
+            "easy": "easy",
+            "low": "easy",
+            "medium": "medium",
+            "med": "medium",
+            "hard": "hard",
+            "high": "hard",
+        }
+        return mapping.get(e, "medium")
+
     # Deduplicate by normalized title
     seen_titles = set()
     unique_tasks = []
     
     for task in all_tasks:
+        if not isinstance(task, dict):
+            continue
+
+        # Normalize core fields early to avoid enum/validation problems later.
+        task["title"] = _norm_str(task.get("title") or "Untitled task")
+        task["description"] = _norm_str(task.get("description") or "")
+        task["category"] = _norm_lower(task.get("category") or "technical") or "technical"
+        task["priority"] = _normalize_priority(task.get("priority"))
+        task["impact"] = _normalize_impact(task.get("impact"))
+        task["effort"] = _normalize_effort(task.get("effort"))
+        task["module"] = _norm_lower(task.get("module") or "unknown") or "unknown"
+        task["source"] = _norm_lower(task.get("source") or "execution_plan") or "execution_plan"
+
         title_normalized = task.get("title", "").lower().strip()
         if title_normalized and title_normalized not in seen_titles:
             seen_titles.add(title_normalized)

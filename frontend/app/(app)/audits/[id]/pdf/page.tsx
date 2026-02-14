@@ -114,7 +114,7 @@ export default function PDFPage({ params }: { params: { id: string } }) {
                 {downloading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Generowanie...
+                    Generowanie PDF...
                   </>
                 ) : (
                   <>

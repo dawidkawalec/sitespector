@@ -16,7 +16,7 @@ import {
   ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle, 
   FileJson, CheckCircle, Search, Gauge, Sparkles, ImageIcon, 
   Link as LinkIcon, Users, Clock, ShieldCheck, Zap, ChevronDown, ChevronRight, ExternalLink,
-  Terminal, Activity, Check, Timer, Globe2, TrendingUp
+  Terminal, Activity, Check, CheckCheck, Timer, Globe2, TrendingUp
 } from 'lucide-react'
 import Link from 'next/link'
 import { PageStatusChart } from '@/components/AuditCharts'
@@ -75,8 +75,9 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
       const data = query?.state?.data as Audit | undefined
       const isAuditRunning = data?.status === 'processing' || data?.status === 'pending'
       const isAiRunning = data?.ai_status === 'processing'
+      const isPlanRunning = data?.execution_plan_status === 'processing'
       // Poll every 3 seconds while technical audit or AI pipeline is running
-      if (isAuditRunning || isAiRunning) {
+      if (isAuditRunning || isAiRunning || isPlanRunning) {
         return 3000
       }
       return false
@@ -195,6 +196,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     { id: 'ai_strategic', label: 'Analiza AI - Konkurencja / Benchmarki', icon: ShieldCheck },
     { id: 'ai_contexts', label: 'Analiza AI - Insights per obszar', icon: Sparkles },
     { id: 'ai_strategy', label: 'Analiza AI - Strategia (Roadmapa)', icon: TrendingUp },
+    { id: 'execution_plan', label: 'Plan wykonania - lista zadań', icon: CheckCheck },
   ]
 
   const getStepStatus = (stepId: string) => {

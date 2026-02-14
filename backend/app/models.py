@@ -66,6 +66,11 @@ class TaskPriority(str, enum.Enum):
     LOW = "low"
 
 
+def _enum_values(enum_cls):
+    """Persist Enum values (not member names) to Postgres ENUM."""
+    return [e.value for e in enum_cls]
+
+
 class User(Base):
     """User model for authentication and subscription management."""
 
@@ -282,7 +287,12 @@ class AuditTask(Base):
 
     # Classification
     category = Column(String(50), nullable=False)  # technical|content|offsite|ux|security
-    priority = Column(SQLEnum(TaskPriority), nullable=False, index=True)
+    # DB enum type `taskpriority` stores lowercase values; persist `.value` instead of `.name`.
+    priority = Column(
+        SQLEnum(TaskPriority, name="taskpriority", values_callable=_enum_values),
+        nullable=False,
+        index=True,
+    )
     impact = Column(String(20), nullable=False)  # high|medium|low
     effort = Column(String(20), nullable=False)  # easy|medium|hard
     is_quick_win = Column(Boolean, default=False, nullable=False, index=True)
@@ -291,7 +301,13 @@ class AuditTask(Base):
     fix_data = Column(JSONB, nullable=True)  # {"current_value": "...", "suggested_value": "...", "code_snippet": "..."}
 
     # Interactive state
-    status = Column(SQLEnum(TaskStatus), default=TaskStatus.PENDING, nullable=False, index=True)
+    # DB enum type `taskstatus` stores lowercase values; persist `.value` instead of `.name`.
+    status = Column(
+        SQLEnum(TaskStatus, name="taskstatus", values_callable=_enum_values),
+        default=TaskStatus.PENDING,
+        nullable=False,
+        index=True,
+    )
     notes = Column(Text, nullable=True)
 
     # Metadata

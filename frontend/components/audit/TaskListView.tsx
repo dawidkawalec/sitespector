@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Search, Filter, CheckCheck } from 'lucide-react'
+import { Search, Filter, CheckCheck, Loader2 } from 'lucide-react'
 
 interface Task {
   id: string
@@ -29,6 +29,9 @@ interface TaskListViewProps {
   onStatusChange: (taskId: string, status: 'pending' | 'done') => void
   onNotesChange: (taskId: string, notes: string) => void
   showModuleFilter?: boolean
+  executionPlanStatus?: 'processing' | 'completed' | 'failed' | 'skipped' | null
+  onGeneratePlan?: () => void | Promise<void>
+  isGeneratingPlan?: boolean
 }
 
 export function TaskListView({
@@ -36,7 +39,10 @@ export function TaskListView({
   module,
   onStatusChange,
   onNotesChange,
-  showModuleFilter = false
+  showModuleFilter = false,
+  executionPlanStatus = null,
+  onGeneratePlan,
+  isGeneratingPlan = false,
 }: TaskListViewProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
@@ -100,15 +106,42 @@ export function TaskListView({
   }, [filteredTasks])
 
   if (tasks.length === 0) {
+    const isProcessing = executionPlanStatus === 'processing' || isGeneratingPlan
+    const isFailed = executionPlanStatus === 'failed'
+
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <CheckCheck className="w-8 h-8 text-muted-foreground" />
+          {isProcessing ? (
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          ) : (
+            <CheckCheck className="w-8 h-8 text-muted-foreground" />
+          )}
         </div>
-        <h3 className="text-lg font-semibold mb-2">Brak zadań</h3>
+        <h3 className="text-lg font-semibold mb-2">
+          {isProcessing ? 'Generowanie planu...' : isFailed ? 'Plan nie został wygenerowany' : 'Brak zadań'}
+        </h3>
         <p className="text-sm text-muted-foreground max-w-sm">
-          Plan wykonania nie został jeszcze wygenerowany. Wygeneruj plan, aby zobaczyć konkretne zadania do wdrożenia.
+          {isProcessing
+            ? 'Plan wykonania jest w trakcie generowania. To może potrwać 1-3 minuty. Zostaw tę kartę otwartą - zadania pojawią się automatycznie.'
+            : isFailed
+              ? 'Poprzednia próba generowania planu nie powiodła się. Spróbuj ponownie.'
+              : 'Plan wykonania nie został jeszcze wygenerowany. Wygeneruj plan, aby zobaczyć konkretne zadania do wdrożenia.'}
         </p>
+        {onGeneratePlan && !isProcessing && (
+          <div className="mt-6">
+            <Button onClick={() => onGeneratePlan()} disabled={isGeneratingPlan}>
+              {isGeneratingPlan ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generowanie...
+                </>
+              ) : (
+                'Wygeneruj plan'
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     )
   }

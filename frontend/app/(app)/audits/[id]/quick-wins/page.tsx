@@ -9,12 +9,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Loader2, Flame, Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { TaskListView } from '@/components/audit/TaskListView'
 import { toast } from 'sonner'
 
@@ -36,10 +37,17 @@ export default function QuickWinsPage({ params }: { params: { id: string } }) {
   }, [router])
 
   // Fetch audit
-  const { data: audit, isLoading: auditLoading } = useQuery({
+  const { data: audit, isLoading: auditLoading, refetch: refetchAudit } = useQuery({
     queryKey: ['audit', params.id],
     queryFn: () => auditsAPI.get(params.id),
     enabled: isAuth,
+    refetchInterval: (query) => {
+      const data = query?.state?.data as any
+      const isRunning = data?.status === 'processing' || data?.status === 'pending'
+      const isAiRunning = data?.ai_status === 'processing'
+      const isPlanRunning = data?.execution_plan_status === 'processing'
+      return (isRunning || isAiRunning || isPlanRunning) ? 3000 : false
+    },
   })
 
   // Fetch quick wins tasks
@@ -47,6 +55,7 @@ export default function QuickWinsPage({ params }: { params: { id: string } }) {
     queryKey: ['tasks', params.id, 'quick-wins'],
     queryFn: () => auditsAPI.getTasks(params.id, { is_quick_win: true }),
     enabled: isAuth && !!audit,
+    refetchInterval: audit?.execution_plan_status === 'processing' ? 3000 : false,
   })
 
   const tasks = tasksResponse?.items || []
@@ -71,6 +80,18 @@ export default function QuickWinsPage({ params }: { params: { id: string } }) {
       toast.error('Nie udało się zapisać notatek')
     }
   }
+
+  const generatePlanMutation = useMutation({
+    mutationFn: () => auditsAPI.runExecutionPlan(params.id),
+    onSuccess: async () => {
+      await refetchAudit()
+      await refetchTasks()
+      toast.success('Rozpoczęto generowanie planu wykonania')
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Nie udało się uruchomić generowania planu')
+    },
+  })
 
   if (!isAuth || auditLoading) {
     return (
@@ -121,12 +142,34 @@ export default function QuickWinsPage({ params }: { params: { id: string } }) {
             <CardContent className="py-4">
               <div className="flex items-center gap-3">
                 <Sparkles className="w-5 h-5 text-orange-500" />
-                <div>
-                  <p className="text-sm font-medium">Plan wykonania nie został wygenerowany</p>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">
+                    {audit?.execution_plan_status === 'processing'
+                      ? 'Generowanie planu wykonania...'
+                      : 'Plan wykonania nie został wygenerowany'}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    Wygeneruj plan, aby zobaczyć quick wins
+                    {audit?.execution_plan_status === 'processing'
+                      ? 'To może potrwać 1-3 minuty. Quick wins pojawią się automatycznie.'
+                      : 'Wygeneruj plan, aby zobaczyć quick wins.'}
                   </p>
                 </div>
+                {audit?.execution_plan_status !== 'processing' && (
+                  <Button
+                    size="sm"
+                    onClick={() => generatePlanMutation.mutate()}
+                    disabled={generatePlanMutation.isPending}
+                  >
+                    {generatePlanMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generowanie...
+                      </>
+                    ) : (
+                      'Wygeneruj plan'
+                    )}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -178,6 +221,8 @@ export default function QuickWinsPage({ params }: { params: { id: string } }) {
                   onStatusChange={handleStatusChange}
                   onNotesChange={handleNotesChange}
                   showModuleFilter={false}
+                  executionPlanStatus={audit?.execution_plan_status ?? null}
+                  isGeneratingPlan={generatePlanMutation.isPending || audit?.execution_plan_status === 'processing'}
                 />
               </CardContent>
             </Card>
