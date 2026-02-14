@@ -4,7 +4,7 @@ import Dashboard from '@/assets/images/dashbord-4.png';
 import Image from 'next/image';
 import { Col, Container, Row } from 'react-bootstrap';
 import CountUp from 'react-countup';
-import { RiCheckboxBlankCircleFill, RiStarFill, RiStarHalfFill } from 'react-icons/ri';
+import { RiCheckboxBlankCircleFill, RiStarFill } from 'react-icons/ri';
 
 const Services = () => {
   return (
@@ -25,7 +25,9 @@ const Services = () => {
                   <span className="text-orange text-line">Kilka Minut</span>
                 </h2>
                 <p className="my-3">
-                  Nasze algorytmy analizują setki czynników rankingowych w czasie rzeczywistym. Otrzymujesz priorytetyzowaną listę zadań, które mają największy wpływ na Twoją pozycję w wynikach wyszukiwania.
+                  Nasze algorytmy analizują setki czynników rankingowych. Otrzymujesz priorytetyzowaną listę zadań w Execution
+                  Plan — nie tylko „co poprawić”, ale konkretne kroki z gotowym kodem. 3 fazy audytu: technika → AI → plan
+                  wykonania.
                 </p>
               </div>
               <Row className="mt-4">
@@ -62,19 +64,39 @@ const Services = () => {
                     </ul>
                   </div>
                 </Col>
+                <Col lg={6} className="mt-4 mt-lg-0">
+                  <div className="counter">
+                    <h3 className="text-primary fw-bold">
+                      <CountUp end={1} duration={5} suffix="M+" />
+                    </h3>
+                    <h6 className="text-muted">Wykrytych błędów</h6>
+                  </div>
+                </Col>
+                <Col lg={6} className="mt-4 mt-lg-0">
+                  <div className="counter">
+                    <h3 className="text-primary fw-bold">
+                      <CountUp end={10} duration={5} suffix="k+" />
+                    </h3>
+                    <h6 className="text-muted">Zaoszczędzonych godzin</h6>
+                  </div>
+                </Col>
               </Row>
               <ul className="services-detail mt-4">
                 <li>
                   <RiCheckboxBlankCircleFill className="text-orange me-3" />
-                  <h6 className="text-dark">Analiza techniczna on-site i off-site</h6>
+                  <h6 className="text-dark">Analiza techniczna on-site i off-site (Senuto backlinks)</h6>
                 </li>
                 <li className="my-3">
                   <RiCheckboxBlankCircleFill className="text-orange me-3" />
-                  <h6 className="text-dark">Weryfikacja unikalności treści przez AI</h6>
+                  <h6 className="text-dark">Analiza treści, UX i bezpieczeństwa przez AI</h6>
+                </li>
+                <li className="my-3">
+                  <RiCheckboxBlankCircleFill className="text-orange me-3" />
+                  <h6 className="text-dark">Porównanie z konkurencją i benchmarki branżowe</h6>
                 </li>
                 <li>
                   <RiCheckboxBlankCircleFill className="text-orange me-3" />
-                  <h6 className="text-dark">Porównanie parametrów z liderami branży</h6>
+                  <h6 className="text-dark">Execution Plan z zadaniami do odznaczania i notatkami</h6>
                 </li>
               </ul>
             </Col>

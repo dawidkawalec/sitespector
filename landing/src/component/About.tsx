@@ -27,18 +27,18 @@ const featuresData: FeatureItem[] = [
   },
   {
     icon: icon3,
-    title: 'Praca Zespołowa',
-    subtitle: 'Team Workspaces',
+    title: 'Widoczność i Backlinki',
+    subtitle: 'Integracja Senuto',
   },
   {
     icon: icon4,
-    title: 'Rekomendacje AI',
-    subtitle: 'Powered by Gemini',
+    title: 'AI Overviews',
+    subtitle: 'Monitoring odpowiedzi AI',
   },
   {
     icon: icon5,
-    title: 'Monitoring Konkurencji',
-    subtitle: 'Benchmark Rynkowy',
+    title: 'Execution Plan',
+    subtitle: 'Zadania z kodem z AI',
   },
   {
     icon: icon6,

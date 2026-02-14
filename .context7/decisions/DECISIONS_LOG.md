@@ -7,6 +7,11 @@
 - **Previous approach (discarded)**: JSON + Markdown CMS system with content.ts helper. Files deleted, only blog posts and case studies markdown kept.
 - **Outcome**: AI content agent can now work independently — reads brief, builds page, generates graphics.
 
+## Landing Pages: Server Markup over React-Bootstrap for Metadata (2026-02-14)
+- **Decision**: New landing subpages that export `metadata` are implemented as Server Components using plain Bootstrap markup (`div.container`, `div.row`, `div.col-*`) instead of importing components from `react-bootstrap`.
+- **Rationale**: In this repo setup, `react-bootstrap` components are treated as client-only during prerender, which breaks `next build` for Server Component pages.
+- **Outcome**: Pages can export `metadata` and still use Bootstrap styling without runtime prerender errors.
+
 ## Landing Brief Files — 10 Page Refresh Briefs (2026-02-14)
 
 - **o-nas.md**: Strona O nas — Hero, historia (frustracja z narzędziami → SiteSpector), misja (demokratyzacja SEO), 5 punktów różnic (Execution Plan, AI Overviews, PDF, zespoły, EU), technologia (SF, LH, Senuto, Gemini), partnerstwo Senuto, placeholder zespołu, CTA.

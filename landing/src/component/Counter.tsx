@@ -1,10 +1,11 @@
 'use client';
+import type { ReactNode } from 'react';
 import { Col, Container, Row } from 'react-bootstrap';
 import CountUp from 'react-countup';
 import { RiCheckboxLine, RiHourglassFill, RiTeamLine, RiVidiconLine } from 'react-icons/ri';
 
 type CounterItem = {
-  icon: any;
+  icon: ReactNode;
   end: number;
   suffix?: string;
   label: string;

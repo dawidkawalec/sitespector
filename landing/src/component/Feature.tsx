@@ -16,10 +16,19 @@ const featureData: featureType[] = [
     name: 'Core Web Vitals (Lighthouse)',
   },
   {
-    name: 'Analiza Treści i Słów Kluczowych',
+    name: 'Widoczność i backlinki (Senuto)',
   },
   {
-    name: 'Zarządzanie Subskrypcjami i Zespołem',
+    name: 'AI Overviews (monitoring odpowiedzi AI)',
+  },
+  {
+    name: 'Analiza AI (treść, wydajność, UX, bezpieczeństwo)',
+  },
+  {
+    name: 'Execution Plan (zadania z gotowym kodem)',
+  },
+  {
+    name: 'Zespoły i Workspaces',
   },
 ];
 
@@ -52,7 +61,7 @@ const Feature = () => {
                 ))}
               </Row>
               <div className="feature-link mt-5">
-                <Link href="/login" className="btn btn-primary">
+                <Link href="/funkcje" className="btn btn-primary">
                   Poznaj pełną specyfikację
                 </Link>
               </div>

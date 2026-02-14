@@ -145,6 +145,16 @@ After existing AI analyses, the worker now runs:
 1. **Contextual AI** (`ai_contexts:start/done`): Parallel per-area AI (seo, performance, visibility, ai_overviews, backlinks, links, images)
 2. **Strategy** (`ai_strategy:start/done`): Cross-tool analysis, roadmap, executive summary
 
+#### Cross-Module Consistency (Global Snapshot)
+
+To reduce contradictory AI outputs between modules, the worker injects a compact, canonical `GLOBAL_SNAPSHOT`
+into AI prompts (Phase 2 + Phase 3). The snapshot includes cross-module facts like:
+- `ai_overviews.has_aio` + canonical AIO stats from `results.senuto.visibility.ai_overviews`
+- basic lighthouse scores and visibility toplines
+
+If module-local metrics conflict with `GLOBAL_SNAPSHOT`, AI is instructed to treat the snapshot as canonical
+and avoid claims like "brak AIO" when AIO data exists.
+
 Results stored in `audit.results`:
 - `results.ai_contexts.{area}` - per-area contextual insights
 - `results.cross_tool` - cross-tool correlations

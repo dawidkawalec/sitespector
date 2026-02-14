@@ -16,7 +16,9 @@ const Hero = () => {
                 <span className="text-orange text-line">SiteSpector</span>
               </h1>
               <p className="mt-4">
-                Kompleksowa platforma do audytów SEO, analizy wydajności i monitorowania konkurencji. Wykrywaj błędy, optymalizuj treści z pomocą AI i generuj profesjonalne raporty PDF w kilka minut.
+                Audyt SEO, wydajności i widoczności w jednym narzędziu. Crawling (Screaming Frog), Core Web Vitals (Lighthouse),
+                widoczność i backlinki (Senuto), analiza AI (Gemini). Otrzymujesz gotowy plan wykonania z kodem — nie tylko
+                „co poprawić”, ale „jak to zrobić”.
               </p>
               <div className="main-btn my-5">
                 <Link href="/login" className="btn btn-primary my-2">

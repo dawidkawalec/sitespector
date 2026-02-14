@@ -20,6 +20,18 @@ The UI explicitly shows when data comes from fallback (and why), instead of sile
 
 ---
 
+## Cross-Module Consistency
+
+Some AI modules run with different subsets of input data (e.g. Visibility vs AI Overviews). To prevent
+contradictory conclusions (like "brak AIO" in Visibility while AI Overviews has data), the backend uses:
+
+- **Global snapshot injection**: a compact `GLOBAL_SNAPSHOT` JSON block appended to AI prompts (Phase 2 + Phase 3).
+  It contains canonical cross-module facts (AIO presence, topline visibility metrics, lighthouse scores).
+- **Canonical AIO source**: AIO metrics are treated as canonical only when read from
+  `results.senuto.visibility.ai_overviews` (not from generic visibility statistics).
+
+---
+
 ## AI Model Configuration
 
 ### Model

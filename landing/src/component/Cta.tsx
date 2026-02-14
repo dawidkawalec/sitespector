@@ -7,6 +7,7 @@ import addressIcon from '@/assets/icons/address.json';
 import mailIcon from '@/assets/icons/mail.json';
 import phoneIcon from '@/assets/icons/phone.json';
 import { Col, Container, Row } from 'react-bootstrap';
+import Link from 'next/link';
 
 export interface CtaItem {
   icon: object;
@@ -68,6 +69,17 @@ const Cta = () => {
               </div>
             </Col>
           ))}
+        </Row>
+        <Row className="justify-content-center text-center mt-5">
+          <Col lg={8}>
+            <h3 className="text-primary fw-bold mb-3">Chcesz sprawdzić swoją stronę?</h3>
+            <p className="text-muted mb-4">
+              Uruchom darmowy audyt SEO i wydajności w SiteSpector. Wyniki w 1-3 minuty, a potem gotowy Execution Plan do wdrożenia.
+            </p>
+            <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
+              Rozpocznij darmowy audyt
+            </Link>
+          </Col>
         </Row>
       </Container>
     </section>

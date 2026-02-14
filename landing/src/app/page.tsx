@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import About from '@/component/About';
 import Brands from '@/component/Brands';
 import Counter from '@/component/Counter';
@@ -13,6 +14,12 @@ import TrustBadges from '@/component/TrustBadges';
 import DemoVideo from '@/component/DemoVideo';
 import IntegrationsSection from '@/component/IntegrationsSection';
 import Hero from './Hero';
+
+export const metadata: Metadata = {
+  title: 'SiteSpector — Kompleksowe audyty SEO z AI i planem wykonania',
+  description:
+    'Audyt SEO, wydajności i widoczności w jednym narzędziu. Screaming Frog + Lighthouse + Senuto + AI. Plan wykonania z kodem, 3 fazy, od $0. Dane w UE.',
+};
 
 const Page = () => {
   return (

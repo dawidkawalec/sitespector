@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Container, Row, Col, Accordion, Card } from 'react-bootstrap';
+import { Container, Row, Col, Accordion } from 'react-bootstrap';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import { RiBookOpenLine, RiDashboardLine, RiFilePdfLine, RiTeamLine, RiWalletLine, RiShieldLine } from 'react-icons/ri';
+import Link from 'next/link';
 
 const docsSections = [
   {
@@ -14,7 +15,7 @@ const docsSections = [
     content: (
       <ul className="list-unstyled">
         <li className="mb-2">• <strong>Utwórz konto:</strong> Możesz zarejestrować się używając adresu email lub konta Google/GitHub.</li>
-        <li className="mb-2">• <strong>Twój pierwszy audyt:</strong> Po zalogowaniu wpisz URL swojej strony w polu na dashboardzie i kliknij "Rozpocznij audyt".</li>
+        <li className="mb-2">• <strong>Twój pierwszy audyt:</strong> Po zalogowaniu wpisz URL swojej strony w polu na dashboardzie i kliknij &quot;Rozpocznij audyt&quot;.</li>
         <li className="mb-2">• <strong>Konkurenci:</strong> Opcjonalnie możesz dodać do 3 adresów URL konkurencji, aby porównać wyniki.</li>
         <li className="mb-2">• <strong>Czas oczekiwania:</strong> Audyt trwa zazwyczaj od 1 do 3 minut. Wyniki pojawią się automatycznie.</li>
       </ul>
@@ -40,7 +41,7 @@ const docsSections = [
     title: 'RAPORTY PDF',
     content: (
       <ul className="list-unstyled">
-        <li className="mb-2">• <strong>Generowanie:</strong> Przycisk "Pobierz PDF" jest dostępny w prawym górnym rogu strony audytu po jego zakończeniu.</li>
+        <li className="mb-2">• <strong>Generowanie:</strong> Przycisk &quot;Pobierz PDF&quot; jest dostępny w prawym górnym rogu strony audytu po jego zakończeniu.</li>
         <li className="mb-2">• <strong>Zawartość:</strong> Raport składa się z 9 sekcji, w tym Executive Summary, szczegółowych analiz i gotowego planu działań.</li>
         <li className="mb-2">• <strong>White-label:</strong> W planach Pro i Enterprise raporty nie zawierają brandingu SiteSpector, co pozwala na wysyłkę bezpośrednio do klienta.</li>
       </ul>
@@ -126,9 +127,9 @@ export default function DocsPage() {
                 <div className="mt-5 p-5 bg-light rounded-4 text-center border">
                   <h4 className="text-primary mb-3">Nie znalazłeś odpowiedzi?</h4>
                   <p className="text-muted mb-4">Nasz zespół wsparcia chętnie pomoże Ci w rozwiązaniu każdego problemu.</p>
-                  <a href="/kontakt" className="btn btn-orange px-5 py-3 fw-bold text-white">
+                  <Link href="/kontakt" className="btn btn-orange px-5 py-3 fw-bold text-white">
                     Skontaktuj się z nami
-                  </a>
+                  </Link>
                 </div>
               </Col>
             </Row>

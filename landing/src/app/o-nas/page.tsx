@@ -56,7 +56,7 @@ export default function ONasPage() {
                     <RiCheckLine size={24} className="text-orange flex-shrink-0 mt-1" />
                     <div className="ms-3">
                       <h5 className="mb-1">Dla agencji i zespołów</h5>
-                      <p className="text-muted small">Workspace'y z rolami i izolacją danych zapewniają bezpieczeństwo i porządek w pracy.</p>
+                      <p className="text-muted small">Workspace’y z rolami i izolacją danych zapewniają bezpieczeństwo i porządek w pracy.</p>
                     </div>
                   </div>
 

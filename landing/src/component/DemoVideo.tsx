@@ -20,7 +20,9 @@ const DemoVideo = () => {
               Od URL do raportu w <span className="text-orange text-line">3 minuty</span>
             </h2>
             <p className="text-muted mt-4">
-              Wpisz adres strony, dodaj konkurentów i poczekaj na wyniki. SiteSpector przeanalizuje techniczne SEO (Screaming Frog), wydajność (Lighthouse) i treść (AI Gemini), a następnie wygeneruje profesjonalny raport PDF.
+              Wpisz adres strony, skonfiguruj audyt (konkurenci, kraj Senuto) i poczekaj na wyniki. SiteSpector przeprowadza
+              pełny 3-fazowy audyt: techniczny (Screaming Frog + Lighthouse + Senuto), analizę AI (treść, wydajność, UX,
+              bezpieczeństwo, widoczność) i automatyczny Execution Plan z zadaniami i gotowym kodem.
             </p>
           </Col>
         </Row>
@@ -54,7 +56,7 @@ const DemoVideo = () => {
                 <RiSearchLine size={40} />
               </div>
               <h5 className="fw-bold text-primary">1. Wpisz URL strony</h5>
-              <p className="text-muted small">Dodaj adres i opcjonalnie do 3 konkurentów.</p>
+              <p className="text-muted small">Dodaj adres strony i opcjonalnie do 3 konkurentów oraz kraj analizy Senuto.</p>
             </div>
           </Col>
           <Col md={4}>
@@ -63,7 +65,9 @@ const DemoVideo = () => {
                 <RiTimerLine size={40} />
               </div>
               <h5 className="fw-bold text-primary">2. Poczekaj 1-3 minuty</h5>
-              <p className="text-muted small">Screaming Frog crawluje stronę, Lighthouse mierzy wydajność, AI analizuje treść.</p>
+              <p className="text-muted small">
+                Crawl SEO, Lighthouse desktop/mobile, Senuto, a następnie analiza AI w tle.
+              </p>
             </div>
           </Col>
           <Col md={4}>
@@ -71,8 +75,10 @@ const DemoVideo = () => {
               <div className="mb-3 text-orange">
                 <RiFilePaper2Line size={40} />
               </div>
-              <h5 className="fw-bold text-primary">3. Pobierz raport PDF</h5>
-              <p className="text-muted small">Otrzymujesz profesjonalny raport z rekomendacjami – gotowy do wysłania klientowi.</p>
+              <h5 className="fw-bold text-primary">3. Przejrzyj wyniki i Execution Plan</h5>
+              <p className="text-muted small">
+                Dashboard z zakładkami, raport PDF oraz zadania z kodem gotowe do wdrożenia.
+              </p>
             </div>
           </Col>
         </Row>

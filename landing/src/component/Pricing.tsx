@@ -22,7 +22,7 @@ export const pricingPlans: PricingPlan[] = [
     description: 'Dla freelancerów i małych stron.',
     price: 0,
     period: 'mc',
-    features: ['5 Audytów miesięcznie', 'Podstawowa analiza SEO', '1 Użytkownik', 'Brak historii audytów'],
+    features: ['5 audytów miesięcznie', 'Podstawowa analiza SEO', '1 użytkownik', 'PDF standard'],
     button: {
       label: 'Rozpocznij',
       link: '/login',
@@ -32,10 +32,18 @@ export const pricingPlans: PricingPlan[] = [
   {
     title: 'Pro',
     description: 'Dla profesjonalistów i małych agencji.',
-    price: 199,
+    price: 29,
     period: 'mc',
     isPopular: true,
-    features: ['50 Audytów miesięcznie', 'Pełna analiza AI + PDF', '3 Konkurentów na audyt', 'Priorytetowe przetwarzanie'],
+    features: [
+      '50 audytów miesięcznie',
+      'Pełna analiza + Senuto',
+      '3 konkurentów na audyt',
+      'Execution Plan z kodem',
+      'Harmonogramy audytów',
+      'White-label PDF',
+      'API',
+    ],
     button: {
       label: 'Rozpocznij',
       link: '/login',
@@ -45,9 +53,9 @@ export const pricingPlans: PricingPlan[] = [
   {
     title: 'Enterprise',
     description: 'Dla dużych agencji i zespołów.',
-    price: 499,
+    price: 99,
     period: 'mc',
-    features: ['Nielimitowane Audyty', 'API Access', 'Nielimitowani Użytkownicy', 'Dedykowane wsparcie'],
+    features: ['Bez limitów', 'Wszystko z Pro', 'Nielimitowani użytkownicy', 'Dedykowane wsparcie', 'SLA'],
     button: {
       label: 'Rozpocznij',
       link: '/login',

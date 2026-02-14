@@ -2,7 +2,15 @@
 
 import React from 'react';
 import { Container, Row, Col, Card, Badge } from 'react-bootstrap';
-import { RiSearchEyeLine, RiFlashlightLine, RiRobotLine, RiBankCardLine, RiShieldUserLine, RiTerminalBoxLine } from 'react-icons/ri';
+import {
+  RiSearchEyeLine,
+  RiFlashlightLine,
+  RiRobotLine,
+  RiBankCardLine,
+  RiShieldUserLine,
+  RiTerminalBoxLine,
+  RiLineChartLine,
+} from 'react-icons/ri';
 
 const integrationsData = [
   {
@@ -18,6 +26,13 @@ const integrationsData = [
     title: 'Google Lighthouse',
     description: 'Oficjalne narzędzie Google. Core Web Vitals, Performance Score, Accessibility – desktop i mobile.',
     color: 'warning'
+  },
+  {
+    id: 7,
+    icon: RiLineChartLine,
+    title: 'Senuto',
+    description: 'Widoczność, pozycje i trendy oraz backlinki. Dodatkowo monitoring AI Overviews na polskim rynku.',
+    color: 'orange'
   },
   {
     id: 3,

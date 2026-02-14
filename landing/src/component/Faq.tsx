@@ -1,9 +1,10 @@
+import type { ElementType } from 'react';
 import { Col, Container, Row } from 'react-bootstrap';
 import { RiNumber1, RiNumber2, RiNumber3, RiNumber4, RiNumber5, RiNumber6, RiNumber7, RiNumber8 } from 'react-icons/ri';
 
 export interface FaqItem {
   id: number;
-  icon: any;
+  icon: ElementType<{ size?: number; className?: string }>;
   question: string;
   answer: string;
 }
@@ -14,56 +15,56 @@ export const faqData: FaqItem[] = [
     icon: RiNumber1,
     question: 'Jak działa audyt SiteSpector?',
     answer:
-      'Nasze roboty skanują Twoją stronę podobnie jak Googlebot, analizując kod, treść i wydajność. Następnie AI przetwarza dane i generuje listę rekomendacji.',
+      '3 fazy: techniczna (Screaming Frog + Lighthouse + Senuto), analiza AI oraz Execution Plan. Wyniki pojawiają się zwykle w 1-3 minuty.',
   },
   {
     id: 2,
     icon: RiNumber2,
     question: 'Czy mogę generować raporty PDF dla klientów?',
     answer:
-      'Tak, w planach Pro i Enterprise możesz generować profesjonalne, białe raporty PDF gotowe do wysłania klientowi.',
+      'Tak. Raport PDF jest dostępny po zakończeniu audytu. W planach Pro i Enterprise możesz generować wersje white-label gotowe do wysyłki klientom.',
   },
   {
     id: 3,
     icon: RiNumber3,
     question: 'Ile trwa analiza strony?',
     answer:
-      'Standardowy audyt trwa od 1 do 3 minut, w zależności od wielkości strony i obciążenia serwerów.',
+      'Zazwyczaj 1-3 minuty. Faza techniczna trwa ok. 1-2 min, a analiza AI może dogrywać się w tle.',
   },
   {
     id: 4,
     icon: RiNumber4,
     question: 'Czy mogę zaprosić zespół?',
     answer:
-      'Tak, SiteSpector obsługuje Workspace\'y. Możesz tworzyć zespoły, zapraszać członków i przydzielać im role (Właściciel, Admin, Członek).',
+      'Tak. Możesz tworzyć Workspace’y, zapraszać członków i przydzielać role (Właściciel, Admin, Członek).',
   },
   {
     id: 5,
     icon: RiNumber5,
-    question: 'Jak działa analiza konkurencji?',
+    question: 'Co to jest Execution Plan?',
     answer:
-      'Możesz dodać do 3 konkurentów do każdego audytu. Porównamy Twoją stronę z nimi pod kątem słów kluczowych, szybkości i struktury.',
+      'To lista zadań generowana przez AI z priorytetami i gotowym kodem. Możesz odznaczać wykonane elementy i dodawać notatki do wdrożenia.',
   },
   {
     id: 6,
     icon: RiNumber6,
     question: 'Czy dane moich klientów są bezpieczne?',
     answer:
-      'Tak, stosujemy szyfrowanie SSL, a dane są izolowane w ramach Twojego Workspace\'u (Row Level Security).',
+      'Tak. Stosujemy SSL (TLS), a dane są izolowane w ramach Workspace’u (Row Level Security).',
   },
   {
     id: 7,
     icon: RiNumber7,
     question: 'Gdzie przechowywane są moje dane?',
     answer:
-      'Dane użytkowników i zespołów są w Supabase (infrastruktura AWS EU). Wyniki audytów na naszym VPS w Niemczech (Hetzner). Wszystko w Unii Europejskiej, zgodnie z RODO.',
+      'Supabase przechowuje dane kont i zespołów, a wyniki audytów trzymamy na VPS w Niemczech (Hetzner). Wszystko w Unii Europejskiej, zgodnie z RODO.',
   },
   {
     id: 8,
     icon: RiNumber8,
-    question: 'Jakie dane przesyłane są do AI?',
+    question: 'Co to jest AI Overviews?',
     answer:
-      'Do Google Gemini przesyłamy wyłącznie dane techniczne strony: tytuł, meta opis, nagłówki, liczbę słów. Nie przesyłamy danych osobowych ani informacji o Twoim koncie.',
+      'To monitoring, czy Twoje słowa kluczowe pojawiają się w odpowiedziach AI w wyszukiwarce. SiteSpector analizuje to w ramach integracji z Senuto.',
   },
 ];
 
@@ -119,7 +120,7 @@ const Faq = () => {
           </Row>
         </Container>
         <div className="faq-back">
-          <h1 className="fw-bold">FaQ's</h1>
+          <h1 className="fw-bold">FAQ</h1>
         </div>
       </section>
     </>

@@ -48,7 +48,7 @@ export default function RegulaminPage() {
                   <ul className="list-unstyled ms-3">
                     <li>• Dane przechowywane na serwerach w UE (Hetzner, Niemcy).</li>
                     <li>• Izolacja danych: Row Level Security na poziomie Workspace.</li>
-                    <li>• Szyfrowanie: SSL/TLS (Let's Encrypt).</li>
+                    <li>• Szyfrowanie: SSL/TLS (Let&apos;s Encrypt).</li>
                   </ul>
 
                   <h3 className="text-primary mt-4 mb-3">6. ODPOWIEDZIALNOŚĆ</h3>

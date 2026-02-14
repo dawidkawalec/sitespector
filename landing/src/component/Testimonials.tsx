@@ -3,7 +3,6 @@
 import React from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
 import { RiDoubleQuotesL } from 'react-icons/ri';
-import Image from 'next/image';
 
 const testimonialsData = [
   {
@@ -11,7 +10,7 @@ const testimonialsData = [
     name: 'Marek W.',
     role: 'SEO Manager',
     company: 'Agencja WebPro',
-    quote: 'SiteSpector zastąpił nam trzy osobne narzędzia. Audyt techniczny, Lighthouse i rekomendacje AI – wszystko w jednym panelu. Raporty PDF wysyłamy klientom od razu, bez dodatkowego formatowania.',
+    quote: 'SiteSpector zastąpił nam trzy narzędzia. Execution Plan z kodem to killer feature — klienci dostają nie tylko raport, ale gotowe zadania do wdrożenia.',
     avatar: 'https://i.pravatar.cc/150?u=marek'
   },
   {
@@ -19,23 +18,23 @@ const testimonialsData = [
     name: 'Anna K.',
     role: 'Właścicielka',
     company: 'Studio Graficzne Pixel',
-    quote: 'Jako mała firma nie mogłam sobie pozwolić na drogie narzędzia SEO. Darmowy plan SiteSpector dał mi dokładnie to, czego potrzebowałam – szybki audyt mojej strony z konkretnymi wskazówkami co poprawić.',
+    quote: 'Darmowy plan dał mi szybki audyt mojej strony. Teraz wiem, co naprawić. Za $29 mam pełny dostęp — warto.',
     avatar: 'https://i.pravatar.cc/150?u=anna'
   },
   {
     id: 3,
-    name: 'Tomek R.',
-    role: 'CTO',
-    company: 'E-commerce Fashion House',
-    quote: 'Core Web Vitals były naszym problemem. SiteSpector pokazał dokładnie gdzie gubimy miliseundy – LCP, TTFB, CLS. Po wdrożeniu rekomendacji nasz Performance Score wzrósł z 45 do 82.',
-    avatar: 'https://i.pravatar.cc/150?u=tomek'
+    name: 'Paweł D.',
+    role: 'Właściciel sklepu',
+    company: 'ModaOnline.pl',
+    quote: 'Płaciłem agencji 3k miesięcznie. SiteSpector pokazał, że meta tagi produktów są puste i strona wolna. Zweryfikowałem agencję — zmieniłem na lepszą.',
+    avatar: 'https://i.pravatar.cc/150?u=pawel'
   },
   {
     id: 4,
     name: 'Karolina M.',
     role: 'Head of Digital',
-    company: 'Agencja SEO Rank+',
-    quote: 'Workspace\'y i role w zespole to game-changer. Każdy z naszych 8 specjalistów ma dostęp do własnych projektów, a ja widzę wszystko. Porównanie z konkurencją oszczędza nam godziny ręcznej analizy.',
+    company: 'Rank+',
+    quote: 'Workspace’y, Senuto, AI Overviews — wszystko w jednym. Execution Plan oszczędza nam dziesiątki godzin. Polecam agencjom.',
     avatar: 'https://i.pravatar.cc/150?u=karolina'
   }
 ];
@@ -62,9 +61,7 @@ const Testimonials = () => {
                   <div className="text-orange mb-3">
                     <RiDoubleQuotesL size={40} />
                   </div>
-                  <Card.Text className="text-muted mb-4 flex-grow-1 italic">
-                    "{t.quote}"
-                  </Card.Text>
+                  <Card.Text className="text-muted mb-4 flex-grow-1 italic">{t.quote}</Card.Text>
                   <div className="d-flex align-items-center mt-auto">
                     <div className="flex-shrink-0">
                       <div className="rounded-circle overflow-hidden" style={{ width: '50px', height: '50px' }}>

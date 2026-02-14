@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Container, Row, Col, Card, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card } from 'react-bootstrap';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import { RiRocketLine, RiBugLine, RiFileChartLine, RiTeamLine } from 'react-icons/ri';
+import Link from 'next/link';
 
 const changelogData = [
   {
@@ -130,9 +131,9 @@ export default function ChangelogPage() {
                 <div className="mt-5 p-5 bg-orange text-white rounded-4 text-center shadow">
                   <h3 className="fw-bold mb-3">Bądź na bieżąco z nowościami</h3>
                   <p className="mb-4 opacity-75">Zapisz się do naszego newslettera w stopce strony, aby otrzymywać powiadomienia o nowych funkcjach.</p>
-                  <a href="/#home" className="btn btn-light px-5 py-3 fw-bold text-orange shadow-sm">
+                  <Link href="/#home" className="btn btn-light px-5 py-3 fw-bold text-orange shadow-sm">
                     Wróć do strony głównej
-                  </a>
+                  </Link>
                 </div>
               </Col>
             </Row>

@@ -4,7 +4,8 @@ import React from 'react';
 import { Container, Row, Col, Card, Badge } from 'react-bootstrap';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
-import { RiArrowRightUpLine, RiCheckLine } from 'react-icons/ri';
+import { RiCheckLine } from 'react-icons/ri';
+import Link from 'next/link';
 
 const caseStudies = [
   {
@@ -94,9 +95,9 @@ export default function CaseStudyPage() {
 
             <div className="mt-5 text-center py-5">
               <h3 className="text-primary mb-4">Chcesz dołączyć do grona zadowolonych klientów?</h3>
-              <a href="/login" className="btn btn-orange px-5 py-3 fw-bold text-white">
+              <Link href="/login" className="btn btn-orange px-5 py-3 fw-bold text-white">
                 Rozpocznij darmowy audyt teraz
-              </a>
+              </Link>
             </div>
           </Container>
         </section>

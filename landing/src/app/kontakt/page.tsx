@@ -45,7 +45,7 @@ export default function KontaktPage() {
         setStatus('error');
         setResponseMessage(data.detail || 'Wystąpił błąd podczas wysyłania wiadomości.');
       }
-    } catch (err) {
+    } catch {
       setStatus('error');
       setResponseMessage('Błąd połączenia. Spróbuj ponownie później.');
     }

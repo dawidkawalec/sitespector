@@ -3,7 +3,7 @@
 import { currentYear } from '@/component/CurrentYear';
 import Link from 'next/link';
 import React, { useState } from 'react';
-import { Col, Container, Row, Form, Spinner, Alert } from 'react-bootstrap';
+import { Col, Container, Row, Form, Spinner } from 'react-bootstrap';
 import { RiSearchEyeFill, RiSendPlane2Line, RiTwitterFill } from 'react-icons/ri';
 
 interface FooterColumn {
@@ -19,6 +19,10 @@ const footerData: FooterColumn[] = [
     heading: 'Produkt :',
     links: [
       { label: 'Funkcje', link: '/#about' },
+      { label: 'Funkcje (pełna specyfikacja)', link: '/funkcje' },
+      { label: 'Jak to działa', link: '/jak-to-dziala' },
+      { label: 'Sprawdź agencję SEO', link: '/sprawdz-agencje-seo' },
+      { label: 'Dla e-commerce', link: '/dla-ecommerce' },
       { label: 'Cennik', link: '/#price' },
       { label: 'Blog', link: '/blog' },
       { label: 'Dokumentacja', link: '/docs' },
@@ -82,7 +86,7 @@ const Footer = () => {
         setStatus('error');
         setMessage(data.detail || 'Wystąpił błąd. Spróbuj ponownie.');
       }
-    } catch (err) {
+    } catch {
       setStatus('error');
       setMessage('Błąd połączenia. Spróbuj ponownie później.');
     }

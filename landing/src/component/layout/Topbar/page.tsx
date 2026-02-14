@@ -27,7 +27,7 @@ const Topbar = () => {
 
   useEffect(() => {
     if (!isMainPage || isAuthPage) return;
-    for (let section of sections) {
+    for (const section of sections) {
       if (!section.isHash) continue;
       const el = document.getElementById(section.id);
       if (el) {
