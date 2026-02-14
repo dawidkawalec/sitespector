@@ -250,8 +250,8 @@ export default function FunkcjePage() {
                   <span>FUNKCJE</span>
                 </div>
                 <div className="main-title mt-3">
-                  <h1 className="text-primary">
-                    Pełna lista funkcji <span className="text-orange text-line">SiteSpector</span>
+                  <h1 className="display-4 fw-bold text-primary mb-0">
+                    Pełna lista funkcji <span className="text-gradient text-line">SiteSpector</span>
                   </h1>
                 </div>
                 <p className="text-muted mt-4">

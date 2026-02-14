@@ -105,7 +105,9 @@ export default function DocsPage() {
                 <div className="text-orange mb-3">
                   <RiBookOpenLine size={44} />
                 </div>
-                <h1 className="display-4 fw-bold text-primary mb-3">Centrum pomocy SiteSpector</h1>
+                <h1 className="display-4 fw-bold text-primary mb-3">
+                  Centrum pomocy <span className="text-gradient text-line">SiteSpector</span>
+                </h1>
                 <p className="lead text-muted mb-0">
                   Wszystko, co musisz wiedzieć, aby skutecznie korzystać z audytów: od pierwszego uruchomienia po zaawansowane funkcje — Execution Plan, PDF,
                   zespoły i integracje.

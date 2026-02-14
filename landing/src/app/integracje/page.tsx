@@ -59,8 +59,8 @@ export default function IntegracjePage() {
                   <span>TECHNOLOGIA</span>
                 </div>
                 <div className="main-title mt-3">
-                  <h1 className="text-primary">
-                    Zbudowany na <span className="text-orange text-line">sprawdzonych narzędziach</span>
+                  <h1 className="display-4 fw-bold text-primary mb-0">
+                    Zbudowany na <span className="text-gradient text-line">sprawdzonych narzędziach</span>
                   </h1>
                 </div>
                 <p className="text-muted mt-4 mb-0">

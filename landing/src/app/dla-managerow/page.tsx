@@ -61,8 +61,8 @@ export default function DlaManagerowPage() {
                   <span>DLA MENEDŻERÓW I CEO</span>
                 </div>
                 <div className="main-title mt-3">
-                  <h1 className="text-primary">
-                    Monitoruj kondycję <span className="text-orange text-line">SEO swojej firmy</span> bez wiedzy technicznej
+                  <h1 className="display-4 fw-bold text-primary mb-0">
+                    Monitoruj kondycję <span className="text-gradient text-line">SEO swojej firmy</span> bez wiedzy technicznej
                   </h1>
                 </div>
                 <p className="text-muted mt-4 mb-0">

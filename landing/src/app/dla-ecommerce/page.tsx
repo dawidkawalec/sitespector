@@ -144,8 +144,8 @@ export default function DlaEcommercePage() {
                   <span>E-COMMERCE</span>
                 </div>
                 <div className="main-title mt-3">
-                  <h1 className="text-primary">
-                    Audyt SEO Twojego sklepu w <span className="text-orange text-line">3 minuty</span>
+                  <h1 className="display-4 fw-bold text-primary mb-0">
+                    Audyt SEO Twojego sklepu w <span className="text-gradient text-line">3 minuty</span>
                   </h1>
                 </div>
                 <p className="text-muted mt-4 mb-0">

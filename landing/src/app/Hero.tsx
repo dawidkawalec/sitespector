@@ -13,7 +13,7 @@ const Hero = () => {
             <Col lg={10}>
               <h1 className="display-3 fw-semibold lh-base text-primary">
                 Zdominuj wyniki wyszukiwania z{' '}
-                <span className="text-orange text-line">SiteSpector</span>
+                <span className="text-gradient text-line">SiteSpector</span>
               </h1>
               <p className="mt-4">
                 Audyt SEO, wydajności i widoczności w jednym narzędziu. Crawling (Screaming Frog), Core Web Vitals (Lighthouse),

@@ -32,8 +32,8 @@ export default function ONasPage() {
           <div className="container">
             <div className="row justify-content-center text-center">
               <div className="col-lg-10">
-                <h1 className="display-3 fw-bold text-primary mb-3">
-                  Zespół, który <span className="text-orange text-line">uprościł audyt SEO</span>
+                <h1 className="display-4 fw-bold text-primary mb-3">
+                  Zespół, który <span className="text-gradient text-line">uprościł audyt SEO</span>
                 </h1>
                 <p className="text-muted lead mb-0">
                   Stworzyliśmy SiteSpector, bo zmęczyliśmy się przełączaniem między pięcioma narzędziami. Teraz wszystko jest w jednym miejscu — z planem

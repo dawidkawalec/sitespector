@@ -95,7 +95,9 @@ export default function KontaktClient() {
       <Container>
         <Row className="justify-content-center mb-5">
           <Col lg={8} className="text-center">
-            <h1 className="display-4 fw-bold text-primary mb-3">Skontaktuj się z nami</h1>
+            <h1 className="display-4 fw-bold text-primary mb-3">
+              Skontaktuj się <span className="text-gradient text-line">z nami</span>
+            </h1>
             <p className="lead text-muted mb-0">
               Masz pytania? Potrzebujesz pomocy technicznej lub informacji o planach? Napisz — odpowiemy w ciągu 24 godzin w dni robocze.
             </p>

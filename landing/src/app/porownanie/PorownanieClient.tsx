@@ -53,7 +53,7 @@ export default function PorownanieClient() {
         <Row className="justify-content-center mb-5">
           <Col lg={10} className="text-center">
             <h1 className="display-4 fw-bold text-primary mb-3">
-              SiteSpector vs <span className="text-orange text-line">konkurencja</span>
+              SiteSpector vs <span className="text-gradient text-line">konkurencja</span>
             </h1>
             <p className="lead text-muted mb-4">
               Jedno narzędzie zamiast pięciu. Execution Plan z kodem, AI Overviews, integracja Senuto i 3-fazowy audyt — w cenie jednej licencji Screaming Frog.

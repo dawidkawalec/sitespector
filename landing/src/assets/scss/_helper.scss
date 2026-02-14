@@ -24,3 +24,11 @@
 .ls-5 {
   letter-spacing: 5px;
 }
+
+// Text gradient utility (used in H1 highlight spans)
+.text-gradient {
+  background: linear-gradient(90deg, #ff8945 0%, #0b363d 55%, #ffb07a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

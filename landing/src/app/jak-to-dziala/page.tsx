@@ -153,8 +153,8 @@ export default function JakToDzialaPage() {
                   <span>JAK TO DZIAŁA</span>
                 </div>
                 <div className="main-title mt-3">
-                  <h1 className="text-primary">
-                    Jak działa audyt <span className="text-orange text-line">SiteSpector</span>?
+                  <h1 className="display-4 fw-bold text-primary mb-0">
+                    Jak działa audyt <span className="text-gradient text-line">SiteSpector</span>?
                   </h1>
                 </div>
                 <p className="text-muted mt-4 mb-0">

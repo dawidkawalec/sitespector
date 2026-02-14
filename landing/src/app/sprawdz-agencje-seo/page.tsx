@@ -128,8 +128,8 @@ export default function SprawdzAgencjeSeoPage() {
                   <span>WERYFIKACJA SEO</span>
                 </div>
                 <div className="main-title mt-3">
-                  <h1 className="text-primary">
-                    Płacisz agencji SEO. <span className="text-orange text-line">Czy na pewno</span> dostajesz wyniki?
+                  <h1 className="display-4 fw-bold text-primary mb-0">
+                    Płacisz agencji SEO. <span className="text-gradient text-line">Czy na pewno</span> dostajesz wyniki?
                   </h1>
                 </div>
                 <p className="text-muted mt-4 mb-0">

@@ -53,7 +53,9 @@ export default async function CaseStudyPage({
           <div className="container">
             <div className="row justify-content-center mb-5">
               <div className="col-lg-9 text-center">
-                <h1 className="display-4 fw-bold text-primary mb-3">Case studies — prawdziwe wyniki</h1>
+                <h1 className="display-4 fw-bold text-primary mb-3">
+                  Case studies — prawdziwe <span className="text-gradient text-line">wyniki</span>
+                </h1>
                 <p className="lead text-muted mb-0">
                   Zobacz, jak agencje SEO, sklepy e-commerce i freelancerzy wykorzystują SiteSpector do audytów, weryfikacji agencji i wzrostu widoczności.
                 </p>

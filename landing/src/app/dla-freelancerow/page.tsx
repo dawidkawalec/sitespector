@@ -65,8 +65,8 @@ export default function DlaFreelancerowPage() {
                   <span>DLA FREELANCERÓW SEO</span>
                 </div>
                 <div className="main-title mt-3">
-                  <h1 className="text-primary">
-                    Profesjonalne audyty <span className="text-orange text-line">bez drogich narzędzi</span>
+                  <h1 className="display-4 fw-bold text-primary mb-0">
+                    Profesjonalne audyty <span className="text-gradient text-line">bez drogich narzędzi</span>
                   </h1>
                 </div>
                 <p className="text-muted mt-4 mb-0">

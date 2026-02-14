@@ -109,3 +109,6 @@
 - **Secondary CTA**: Czytaj wpis (link: `/blog/[slug]`)
 - **Key proof**: Posty w markdown (`landing/content/blog/*.md`) + filtry po kategorii i paginacja (query params).
 - **Images**: Placeholder okładki: `/images/placeholder.svg` (do podmiany na docelowe grafiki).
+
+## UI Note: H1 Gradient
+- **Rule**: H1 w hero podstron powinien używać spójnych klas (np. `display-4 fw-bold`) i akcentu `text-gradient` dla wyróżnionego fragmentu.

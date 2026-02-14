@@ -103,7 +103,9 @@ export default async function BlogPage({
           <div className="container">
             <div className="row justify-content-center mb-5">
               <div className="col-lg-8 text-center">
-                <h1 className="display-4 fw-bold text-primary mb-3">Blog SiteSpector</h1>
+                <h1 className="display-4 fw-bold text-primary mb-3">
+                  Blog <span className="text-gradient text-line">SiteSpector</span>
+                </h1>
                 <p className="lead text-muted mb-0">
                   Artykuły o audytach SEO, wydajności stron, AI w wyszukiwarkach i praktycznych poradach dla agencji i właścicieli witryn.
                 </p>

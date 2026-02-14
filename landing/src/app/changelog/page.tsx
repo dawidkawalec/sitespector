@@ -161,7 +161,9 @@ export default function ChangelogPage() {
           <div className="container">
             <div className="row justify-content-center mb-5">
               <div className="col-lg-9 text-center">
-                <h1 className="display-4 fw-bold text-primary mb-3">Changelog — co nowego w SiteSpector</h1>
+                <h1 className="display-4 fw-bold text-primary mb-3">
+                  Changelog — co nowego w <span className="text-gradient text-line">SiteSpector</span>
+                </h1>
                 <p className="lead text-muted mb-0">Śledź rozwój platformy. Nowe funkcje, ulepszenia i poprawki w jednym miejscu.</p>
               </div>
             </div>

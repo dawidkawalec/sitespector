@@ -18,18 +18,29 @@ const footerData: FooterColumn[] = [
   {
     heading: 'Produkt :',
     links: [
-      { label: 'Funkcje', link: '/#about' },
-      { label: 'Funkcje (pełna specyfikacja)', link: '/funkcje' },
+      { label: 'Funkcje', link: '/funkcje' },
       { label: 'Jak to działa', link: '/jak-to-dziala' },
       { label: 'Integracje', link: '/integracje' },
-      { label: 'Sprawdź agencję SEO', link: '/sprawdz-agencje-seo' },
+      { label: 'Porównanie', link: '/porownanie' },
+      { label: 'Cennik', link: '/#price' },
+    ],
+  },
+  {
+    heading: 'Dla kogo :',
+    links: [
       { label: 'Dla e-commerce', link: '/dla-ecommerce' },
       { label: 'Dla agencji SEO', link: '/dla-agencji-seo' },
       { label: 'Dla freelancerów', link: '/dla-freelancerow' },
       { label: 'Dla menedżerów', link: '/dla-managerow' },
-      { label: 'Cennik', link: '/#price' },
+      { label: 'Sprawdź agencję SEO', link: '/sprawdz-agencje-seo' },
+    ],
+  },
+  {
+    heading: 'Zasoby :',
+    links: [
       { label: 'Blog', link: '/blog' },
-      { label: 'Dokumentacja', link: '/docs' },
+      { label: 'Case studies', link: '/case-study' },
+      { label: 'Centrum pomocy', link: '/docs' },
       { label: 'Changelog', link: '/changelog' },
     ],
   },
@@ -38,24 +49,10 @@ const footerData: FooterColumn[] = [
     links: [
       { label: 'O nas', link: '/o-nas' },
       { label: 'Kontakt', link: '/kontakt' },
-      { label: 'Case study', link: '/case-study' },
-      { label: 'Porównanie', link: '/porownanie' },
-    ],
-  },
-  {
-    heading: 'Prawne :',
-    links: [
       { label: 'Regulamin', link: '/regulamin' },
       { label: 'Polityka prywatności', link: '/polityka-prywatnosci' },
       { label: 'Polityka cookies', link: '/polityka-cookies' },
-    ],
-  },
-  {
-    heading: 'Wsparcie :',
-    links: [
-      { label: 'Zaloguj się / Załóż konto', link: '/login' },
-      { label: 'Centrum pomocy', link: '/docs' },
-      { label: 'Mapa strony', link: '/sitemap' },
+      { label: 'Sitemap', link: '/sitemap.xml' },
     ],
   },
 ];
