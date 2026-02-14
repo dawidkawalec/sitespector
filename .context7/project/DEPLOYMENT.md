@@ -153,7 +153,7 @@ docker compose -f docker-compose.prod.yml ps
 
 **If requirements.txt changed**:
 ```bash
-docker compose -f docker-compose.prod.yml build --no-cache backend
+docker compose -f docker-compose.prod.yml build --no-cache backend worker
 docker compose -f docker-compose.prod.yml up -d backend worker
 ```
 
@@ -166,7 +166,9 @@ docker compose -f docker-compose.prod.yml up -d backend worker
 2. Restart worker: `docker compose -f docker-compose.prod.yml restart worker`
 3. Check logs: `docker logs sitespector-worker --tail 100`
 
-**Critical**: Worker shares backend image, so rebuild backend if needed
+**Note**: In production, `backend` and `worker` are built from the same Dockerfile but as separate images.
+If you change Python dependencies or shared code, rebuild both:
+`docker compose -f docker-compose.prod.yml build --no-cache backend worker`
 
 ### Frontend Changes
 

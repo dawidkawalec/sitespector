@@ -63,6 +63,36 @@ docker compose -f docker-compose.prod.yml restart nginx
 
 ---
 
+### BUG-008: Execution plan tasks failed to persist (ENUM value mismatch)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED (2026-02-14)
+
+**Severity**: CRITICAL
+
+**Description**:
+- Phase 3 (execution plan) started, but tasks were not saved; UI "Plan" stayed empty/blocked.
+- Worker logs showed DB error:
+  - `invalid input value for enum taskpriority: "CRITICAL"`
+
+**Root cause**:
+- Postgres ENUM types `taskpriority` / `taskstatus` were created with lowercase values:
+  - `critical|high|medium|low` and `pending|done`
+- SQLAlchemy `Enum(TaskPriority)` / `Enum(TaskStatus)` persisted enum *names* (`CRITICAL`, `PENDING`) instead of enum *values*.
+
+**Fix**:
+- Update `AuditTask.priority` and `AuditTask.status` columns to persist `.value`:
+  - `values_callable=[e.value for e in enum]` and `name='taskpriority'/'taskstatus'`
+- Add normalization + `rollback()` in `run_execution_plan()` error handling.
+
+**Verification**:
+- Re-run Phase 3: `execution_plan_status=completed` and tasks inserted into `audit_tasks`.
+
+**Related**: `backend/app/models.py`, `backend/worker.py`
+
+---
+
 ### BUG-001: Frontend Rendering Functions Missing
 
 **Reported**: 2025-01-15
