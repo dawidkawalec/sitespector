@@ -1092,7 +1092,39 @@ docker compose -f docker-compose.prod.yml exec backend-db psql -U sitespector_pr
 
 ---
 
+### BUG-025: Alembic migration aborted due to try/except DDL (transaction poisoned)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: HIGH
+
+**Description**:
+- Deploy na VPS wywalał się na `alembic upgrade head` w migracji `20260214_missing_columns_and_schedules.py`
+- Objaw: `asyncpg.exceptions.InFailedSQLTransactionError: current transaction is aborted...`
+
+**Root cause**:
+- Migracja próbowała być "idempotent" przez `try/except` wokół `op.add_column(...)`
+- W PostgreSQL DDL jest transakcyjne: pierwszy błąd (np. kolumna już istnieje) abortuje transakcję i kolejne DDL/query w tej samej transakcji zawsze failuje, nawet jeśli Python złapie wyjątek
+
+**Fix**:
+- `backend/alembic/versions/20260214_missing_columns_and_schedules.py`:
+  - użyto `sa.inspect(op.get_bind())` do sprawdzenia istniejących kolumn/tabel/indexów
+  - wykonywane jest tylko DDL, które jest naprawdę potrzebne (bez generowania błędów)
+
+**Verification**:
+```bash
+cd /opt/sitespector
+docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head
+curl -sk https://127.0.0.1/health
+```
+
+**Related**: Deploy 2026-02-14
+
+---
+
 **Last Updated**: 2026-02-14  
-**Resolved Bugs**: 24 (incl. BUG-024 delete cascade + cache)  
+**Resolved Bugs**: 25 (incl. BUG-025 alembic transactional DDL)  
 **Known Issues**: 3  
 **Watching**: 2
