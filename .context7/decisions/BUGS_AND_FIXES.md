@@ -1243,7 +1243,29 @@ npm --prefix landing run build
 
 ---
 
+### BUG-030: `/og` returns 404 in production (Nginx routed to wrong container)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: MEDIUM (breaks social previews + OG/Twitter images)
+
+**Root cause**:
+- `landing` implemented `/og` (`landing/src/app/og/route.tsx`), but Nginx did not proxy `/og` to `landing`, so requests were handled by `frontend` and returned 404.
+
+**Fix**:
+- Added `location /og { proxy_pass http://landing; }` in `docker/nginx/nginx.conf`.
+- Deployment: rebuild/restart `nginx` container after `git pull` on VPS.
+
+**Verification**:
+```bash
+curl -I https://sitespector.app/og?title=Test
+```
+
+---
+
 **Last Updated**: 2026-02-14  
-**Resolved Bugs**: 27 (incl. BUG-026 cross-module AIO contradiction)  
+**Resolved Bugs**: 28 (incl. BUG-026 cross-module AIO contradiction)  
 **Known Issues**: 3  
 **Watching**: 2
