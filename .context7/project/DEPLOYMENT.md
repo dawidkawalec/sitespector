@@ -19,20 +19,22 @@
 ### VPS Details
 
 **Provider**: Hetzner Cloud  
-**IP**: 77.42.79.46 (static)  
+**IP**: 46.225.134.48 (current)  
 **Specs**: 2 vCPU, 8GB RAM, 40GB SSD  
-**OS**: Ubuntu 22.04 LTS  
+**OS**: Ubuntu 24.04 LTS  
 **Location**: `/opt/sitespector`
 
 ### Access
 
 **SSH**: 
 ```bash
-ssh root@77.42.79.46
+# Production VPS uses SSH keys only.
+# Root SSH login is disabled; use the deploy user.
+ssh deploy@<VPS_IP>
 ```
 
 **URLs**:
-- Frontend: https://sitespector.app (primary), https://77.42.79.46 (IP fallback)
+- Frontend: https://sitespector.app
 - API: https://sitespector.app/api
 - Health check: https://sitespector.app/health
 
@@ -91,7 +93,7 @@ git push origin release
 **SSH to VPS**:
 
 ```bash
-ssh root@77.42.79.46
+ssh deploy@<VPS_IP>
 cd /opt/sitespector
 git pull origin release
 ```
@@ -235,6 +237,12 @@ docker compose -f docker-compose.prod.yml restart nginx
 
 **Never commit** .env to Git
 
+### SSL Certificates (Let's Encrypt)
+
+- Certbot standalone requires DNS to already point to the VPS IP and inbound port 80 reachable.
+- If DNS is still propagating during first deploy, you can temporarily use a short-lived self-signed cert
+  to bring the stack up, then rerun Certbot once DNS is correct.
+
 **Contents** (production):
 ```bash
 # Database
@@ -258,13 +266,13 @@ DEBUG=false
 LOG_LEVEL=WARNING
 
 # CORS
-CORS_ORIGINS=["https://sitespector.app","https://www.sitespector.app","https://77.42.79.46","http://77.42.79.46"]
+CORS_ORIGINS=["https://sitespector.app","https://www.sitespector.app"]
 ```
 
 ### Updating Environment Variables
 
 **Process**:
-1. SSH to VPS: `ssh root@77.42.79.46`
+1. SSH to VPS: `ssh deploy@46.225.134.48`
 2. Edit: `nano /opt/sitespector/.env`
 3. Save and exit
 4. Restart services:
@@ -285,7 +293,7 @@ docker compose -f docker-compose.prod.yml restart backend worker
 
 ```bash
 # 1. SSH to VPS
-ssh root@77.42.79.46
+ssh deploy@46.225.134.48
 cd /opt/sitespector
 
 # 2. Pull latest code
@@ -309,7 +317,7 @@ docker logs sitespector-frontend --tail 50
 
 ```bash
 # 1. SSH to VPS
-ssh root@77.42.79.46
+ssh deploy@46.225.134.48
 cd /opt/sitespector
 
 # 2. Pull latest code
@@ -444,7 +452,7 @@ docker exec -it sitespector-postgres psql -U sitespector_user -d sitespector_db
 
 ```bash
 # 1. SSH to VPS
-ssh root@77.42.79.46
+ssh deploy@46.225.134.48
 cd /opt/sitespector
 
 # 2. View commit history
@@ -546,7 +554,7 @@ docker compose -f docker-compose.prod.yml restart nginx
    ```
 6. Verify services: `docker ps`
 7. Check logs: `docker logs sitespector-backend --tail 100`
-8. Test frontend: Open https://sitespector.app (or https://77.42.79.46)
+8. Test frontend: Open https://sitespector.app
 
 ---
 
@@ -658,7 +666,7 @@ worker:
 
 ```bash
 # SSH to VPS
-ssh root@77.42.79.46
+ssh deploy@46.225.134.48
 
 # Navigate to project
 cd /opt/sitespector
@@ -688,5 +696,5 @@ docker exec sitespector-backend printenv | grep -E "DATABASE|JWT|GEMINI"
 ---
 
 **Last Updated**: 2026-02-09  
-**Deployment target**: Hetzner VPS (77.42.79.46), domain sitespector.app  
+**Deployment target**: Hetzner VPS (46.225.134.48), domain sitespector.app  
 **Status**: Production-ready, Let's Encrypt SSL, manual deployment workflow

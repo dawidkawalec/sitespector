@@ -250,6 +250,23 @@
 
 ---
 
+## ADR-023: Production VPS Security Baseline (Key-Only SSH + Firewall + Fail2ban)
+**Date**: 2026-02-13
+**Status**: ✅ Done
+**Decision**:
+- Provision production VPS with SSH keys from the start (no password-based SSH).
+- Disable root SSH login; use a dedicated `deploy` user with controlled sudo.
+- Enable UFW immediately (allow inbound: 22/80/443; default deny incoming).
+- Enable fail2ban for SSH brute-force protection.
+- Add explicit outbound block for UDP/9021 as defense-in-depth after abuse incident.
+**Rationale**:
+- Reduce time-to-compromise risk on public IPs.
+- Make abuse/compromise less likely and incident response faster.
+**Outcome**:
+- New VPS deployed with hardened SSH, UFW, fail2ban, and Docker-based app deployment.
+
+---
+
 **Last Updated**: 2026-02-12
 **Total Decisions**: 22 accepted
 **Review**: Update when making significant architectural changes.

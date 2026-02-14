@@ -2,7 +2,7 @@
 
 ## Base URL
 
-**Production**: `https://sitespector.app/api` (IP fallback: `https://77.42.79.46/api`)  
+**Production**: `https://sitespector.app/api`  
 **Local** (not used): `http://localhost:8000/api`
 
 ---
@@ -808,7 +808,7 @@ Raw ZIP export now includes:
 **Allowed origins**:
 - `https://sitespector.app`
 - `https://www.sitespector.app`
-- `https://77.42.79.46`
+- (Deprecated) direct IP access is not documented; use `https://sitespector.app`
 
 **Allowed methods**: All (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`)
 

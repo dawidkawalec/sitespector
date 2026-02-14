@@ -83,7 +83,9 @@ nginx:
       - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
       - ENVIRONMENT=production
       - DEBUG=false
-      - CORS_ORIGINS=["https://sitespector.app","https://www.sitespector.app","https://77.42.79.46"]
+      # Prefer setting CORS in `/opt/sitespector/.env` (not hardcoded in compose).
+      # Example:
+      # CORS_ORIGINS=["https://sitespector.app","https://www.sitespector.app"]
     env_file:
       - .env
   volumes:

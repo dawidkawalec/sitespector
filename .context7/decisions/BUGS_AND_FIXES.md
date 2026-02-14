@@ -127,7 +127,7 @@ timeout_threshold = datetime.utcnow() - timedelta(minutes=10)
 
 **Error message**:
 ```
-Access to fetch at '...' from origin 'https://77.42.79.46' has been blocked by CORS policy
+Access to fetch at '...' from origin 'https://<OLD_VPS_IP>' has been blocked by CORS policy
 ```
 
 **Root cause**:
@@ -519,7 +519,7 @@ refetchInterval: (query) => {
 **Description**:
 - Browser showed "Your connection is not private" when using IP.
 
-**Solution**: Domain sitespector.app configured with Let's Encrypt. Production uses valid HTTPS at https://sitespector.app. IP (77.42.79.46) may still use self-signed if configured.
+**Solution**: Domain sitespector.app configured with Let's Encrypt. Production uses valid HTTPS at https://sitespector.app. Direct IP access is considered deprecated (IPs change during rebuilds).
 
 **Related**: ADR-006, DECISIONS_LOG (domain migration)
 
@@ -571,6 +571,63 @@ refetchInterval: (query) => {
 **Impact**: Medium (data loss risk)
 
 **Related**: infrastructure/DATABASE.md
+
+---
+
+### BUG-015: VPS Compromise Caused Outbound Abuse Traffic
+
+**Reported**: 2026-02-13
+
+**Status**: ✅ FIXED (mitigated via rebuild)
+
+**Severity**: CRITICAL
+
+**Description**:
+- Hetzner abuse report flagged outbound UDP traffic from the production IP.
+- VPS became unreachable (ports blocked) during incident response.
+- Investigation found a suspicious binary (`/x86_64.kok`) consuming CPU, consistent with a compromised host.
+
+**Root cause**:
+- Host-level compromise risk (SSH/password exposure and/or weak baseline hardening).
+- Once compromised, attacker-controlled process generated unexpected outbound traffic.
+
+**Fix**:
+- Rebuilt infrastructure on a new VPS + new IP (clean host).
+- Enforced SSH key authentication and disabled root SSH login.
+- Enabled UFW + fail2ban immediately on bootstrap.
+- Added an explicit outbound block for UDP/9021 (defense-in-depth).
+
+**Verification**:
+- `fail2ban-client status sshd` active, UFW enabled, only 22/80/443 inbound allowed.
+- App health responds on the new host (`/health`) and containers are healthy.
+
+**Related**: `project/DEPLOYMENT.md`, `project/OPERATIONS.md`, `infrastructure/NGINX.md`
+
+---
+
+### BUG-016: New Audit 500 (audits.user_id NOT NULL)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: HIGH
+
+**Description**:
+- Creating a new workspace-based audit returned `500 Internal Server Error`.
+- Backend stacktrace showed `NOT NULL` violation: `audits.user_id` was `NULL`.
+
+**Root cause**:
+- Workspace-based audits intentionally set `user_id=None`, but the database schema still enforced `audits.user_id NOT NULL`.
+
+**Fix**:
+- Make `audits.user_id` nullable.
+- Add Alembic migration: `20260214_make_audits_user_id_nullable.py`.
+
+**Verification**:
+- Audit creation no longer fails on insert due to `user_id` constraint.
+
+**Related**: `backend/app/routers/audits.py`, `backend/app/models.py`, `backend/alembic/versions/20260214_make_audits_user_id_nullable.py`
 
 ---
 

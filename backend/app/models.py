@@ -91,7 +91,9 @@ class Audit(Base):
     __tablename__ = "audits"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    # Legacy field: workspace-based audits no longer require user_id.
+    # Keep nullable for backward compatibility with old user-owned audits.
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True)
     workspace_id = Column(UUID(as_uuid=True), nullable=True, index=True)  # Added for multi-tenancy
     url = Column(String(2048), nullable=False)
     status = Column(

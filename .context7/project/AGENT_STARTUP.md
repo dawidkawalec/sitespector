@@ -10,7 +10,7 @@ You are working on **SiteSpector**, an AI-powered SEO & technical audit platform
 
 ### Critical Information
 - **Status**: Production SaaS (teams, billing, workspaces); domain sitespector.app, Let's Encrypt SSL.
-- **Deployment**: Hetzner VPS (IP: 77.42.79.46).
+- **Deployment**: Hetzner VPS (current IP: 46.225.134.48). SSH uses `deploy` user + key-only auth (no root SSH).
 - **Environment**: **NO LOCAL DOCKER** - all containers run on VPS only.
 - **Workflow**: Code locally in Cursor, deploy via SSH to VPS.
 - **Branch**: `release` (most up-to-date).
