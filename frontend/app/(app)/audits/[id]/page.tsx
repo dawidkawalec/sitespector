@@ -16,7 +16,7 @@ import {
   ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle, 
   FileJson, CheckCircle, Search, Gauge, Sparkles, ImageIcon, 
   Link as LinkIcon, Users, Clock, ShieldCheck, Zap, ChevronDown, ChevronRight, ExternalLink,
-  Terminal, Activity, Check, Timer, Globe2
+  Terminal, Activity, Check, Timer, Globe2, TrendingUp
 } from 'lucide-react'
 import Link from 'next/link'
 import { PageStatusChart } from '@/components/AuditCharts'
