@@ -42,10 +42,66 @@ from app.services.ai_analysis import (
     analyze_cross_tool, generate_roadmap, generate_executive_summary, analyze_ai_overviews_context,
     aggregate_quick_wins_from_results,
 )
+from app.services.screaming_frog import _detect_sitemaps
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/audits", tags=["Audits"])
+
+def _normalize_senuto_for_response(results: Any) -> None:
+    """Patch Senuto payload shape for backwards compatibility in API responses."""
+    if not isinstance(results, dict):
+        return
+    senuto = results.get("senuto")
+    if not isinstance(senuto, dict):
+        return
+
+    backlinks = senuto.get("backlinks")
+    if not isinstance(backlinks, dict):
+        return
+
+    stats = backlinks.get("statistics")
+    if not isinstance(stats, dict):
+        stats = {}
+
+    bl_list = backlinks.get("list")
+    if not isinstance(bl_list, list):
+        bl_list = []
+
+    ref_domains = backlinks.get("ref_domains")
+    if not isinstance(ref_domains, list):
+        ref_domains = []
+
+    stats.setdefault("backlinks_count", len(bl_list))
+    stats.setdefault("domains_count", len(ref_domains))
+    stats.setdefault("ref_domains_count", len(ref_domains))
+    backlinks["statistics"] = stats
+
+
+async def _normalize_crawl_for_response(results: Any, audit_url: str, audit_status: AuditStatus) -> None:
+    """Enrich crawl payload for completed audits (sitemap detection)."""
+    if audit_status != AuditStatus.COMPLETED:
+        return
+    if not isinstance(results, dict):
+        return
+    crawl = results.get("crawl")
+    if not isinstance(crawl, dict):
+        return
+
+    # If crawl says "no sitemap", double-check via robots + common endpoints.
+    if crawl.get("has_sitemap") or crawl.get("sitemap_url") or crawl.get("sitemaps"):
+        return
+
+    try:
+        info = await _detect_sitemaps(audit_url)
+        crawl["has_sitemap"] = bool(info.get("has_sitemap"))
+        if info.get("sitemap_url"):
+            crawl["sitemap_url"] = info.get("sitemap_url")
+        if info.get("sitemaps") is not None:
+            crawl["sitemaps"] = info.get("sitemaps")
+    except Exception:
+        # Never fail audit fetch due to best-effort enrichment.
+        return
 
 
 @router.post("", response_model=AuditResponse, status_code=status.HTTP_201_CREATED)
@@ -279,6 +335,11 @@ async def get_audit(
     payload["processing_logs"] = audit.processing_logs
     payload["ai_status"] = audit.ai_status
     payload["progress_percent"] = _calculate_progress(audit.processing_step, audit.status)
+
+    # Backwards-compatible normalization for older stored payload shapes.
+    results = payload.get("results")
+    _normalize_senuto_for_response(results)
+    await _normalize_crawl_for_response(results, audit.url, audit.status)
     return payload
 
 
