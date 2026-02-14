@@ -356,6 +356,19 @@ class SenutoClient:
         backlinks_ref_domains = s(group_c[3], [])
         backlinks_list = s(group_c[4], [])
 
+        # Normalize backlink stats for frontend (some endpoints return nested / unexpected shapes).
+        # Frontend expects `senuto.backlinks.statistics.backlinks_count` and `.domains_count`.
+        if not isinstance(backlinks_statistics, dict):
+            backlinks_statistics = {}
+        if not isinstance(backlinks_ref_domains, list):
+            backlinks_ref_domains = []
+        if not isinstance(backlinks_list, list):
+            backlinks_list = []
+
+        backlinks_statistics.setdefault("backlinks_count", len(backlinks_list))
+        backlinks_statistics.setdefault("domains_count", len(backlinks_ref_domains))
+        backlinks_statistics.setdefault("ref_domains_count", len(backlinks_ref_domains))
+
         aio_statistics = s(group_d[0], {})
         aio_keywords = s(group_d[1], [])
         aio_competitors = s(group_d[2], [])

@@ -8,8 +8,70 @@ import asyncio
 from typing import Dict, Any
 import csv
 import io
+from urllib.parse import urlparse
+
+import httpx
 
 logger = logging.getLogger(__name__)
+
+def _origin_from_url(url: str) -> str:
+    """Return scheme://host for any input URL."""
+    p = urlparse(url)
+    if not p.scheme or not p.netloc:
+        return url.rstrip("/")
+    return f"{p.scheme}://{p.netloc}".rstrip("/")
+
+
+async def _detect_sitemaps(base_url: str) -> Dict[str, Any]:
+    """Detect sitemap(s) via common endpoints + robots.txt.
+
+    Returns:
+      { "has_sitemap": bool, "sitemap_url": str|None, "sitemaps": [str] }
+    """
+    origin = _origin_from_url(base_url)
+    candidates = [
+        f"{origin}/sitemap.xml",
+        f"{origin}/sitemap_index.xml",
+        f"{origin}/wp-sitemap.xml",
+    ]
+
+    found: list[str] = []
+
+    def _add(u: str) -> None:
+        u = (u or "").strip()
+        if u and u not in found:
+            found.append(u)
+
+    timeout = httpx.Timeout(10.0, connect=5.0)
+    async with httpx.AsyncClient(follow_redirects=True, timeout=timeout) as client:
+        # 1) robots.txt Sitemap: lines
+        try:
+            r = await client.get(f"{origin}/robots.txt", headers={"User-Agent": "SiteSpector/1.0"})
+            if r.status_code == 200 and r.text:
+                for line in r.text.splitlines():
+                    if line.lower().startswith("sitemap:"):
+                        _add(line.split(":", 1)[1].strip())
+        except Exception:
+            pass
+
+        # 2) Common sitemap endpoints (follow redirects)
+        for u in candidates:
+            try:
+                r = await client.get(u, headers={"User-Agent": "SiteSpector/1.0"})
+                if r.status_code != 200:
+                    continue
+                ct = (r.headers.get("content-type") or "").lower()
+                if "xml" in ct or r.text.lstrip().startswith("<?xml"):
+                    _add(str(r.url))
+            except Exception:
+                continue
+
+    return {
+        "has_sitemap": bool(found),
+        "sitemap_url": found[0] if found else None,
+        "sitemaps": found,
+    }
+
 
 async def crawl_url(url: str) -> Dict[str, Any]:
     """
@@ -95,7 +157,20 @@ async def crawl_url(url: str) -> Dict[str, Any]:
             logger.error("❌ Screaming Frog returned empty internal_all data")
             raise Exception("Screaming Frog returned empty internal_all data")
 
-        return _transform_sf_data(crawl_data_tabs, url)
+        crawl_data = _transform_sf_data(crawl_data_tabs, url)
+
+        # Correct sitemap detection (SF output doesn't reliably include it for all setups).
+        try:
+            sitemap_info = await _detect_sitemaps(url)
+            crawl_data["has_sitemap"] = bool(sitemap_info.get("has_sitemap"))
+            if sitemap_info.get("sitemap_url"):
+                crawl_data["sitemap_url"] = sitemap_info.get("sitemap_url")
+            if sitemap_info.get("sitemaps") is not None:
+                crawl_data["sitemaps"] = sitemap_info.get("sitemaps")
+        except Exception as e:
+            logger.warning("Sitemap detection failed for %s: %s", url, e)
+
+        return crawl_data
             
     except Exception as e:
         # Re-raise any exception - NO FALLBACKS
@@ -197,6 +272,7 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
         "total_images": len(images_data),
         "images_without_alt": images_without_alt,
         "pages_crawled": len(all_pages),
+        # Determined after crawl via `_detect_sitemaps()`.
         "has_sitemap": False,
         "flesch_reading_ease": float(homepage.get('Flesch Reading Ease Score', 0) or 0),
         "all_pages": all_pages,
