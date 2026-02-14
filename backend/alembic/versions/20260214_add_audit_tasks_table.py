@@ -8,6 +8,7 @@ Create Date: 2026-02-14
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 
@@ -23,15 +24,13 @@ def upgrade() -> None:
     op.add_column('audits', sa.Column('run_execution_plan', sa.Boolean(), nullable=False, server_default='true'))
     op.add_column('audits', sa.Column('execution_plan_status', sa.String(length=20), nullable=True))
 
-    # Create task status enum
-    op.execute("""
-        CREATE TYPE taskstatus AS ENUM ('pending', 'done')
-    """)
-
-    # Create task priority enum
-    op.execute("""
-        CREATE TYPE taskpriority AS ENUM ('critical', 'high', 'medium', 'low')
-    """)
+    # Create enums once (idempotent) and reuse the same objects in table columns.
+    # Avoids DuplicateObjectError when SQLAlchemy also tries to create types on table create.
+    taskstatus = postgresql.ENUM('pending', 'done', name='taskstatus')
+    taskpriority = postgresql.ENUM('critical', 'high', 'medium', 'low', name='taskpriority')
+    bind = op.get_bind()
+    taskstatus.create(bind, checkfirst=True)
+    taskpriority.create(bind, checkfirst=True)
 
     # Create audit_tasks table
     op.create_table(
@@ -42,12 +41,12 @@ def upgrade() -> None:
         sa.Column('title', sa.String(length=500), nullable=False),
         sa.Column('description', sa.Text(), nullable=False),
         sa.Column('category', sa.String(length=50), nullable=False),
-        sa.Column('priority', sa.Enum('critical', 'high', 'medium', 'low', name='taskpriority'), nullable=False),
+        sa.Column('priority', taskpriority, nullable=False),
         sa.Column('impact', sa.String(length=20), nullable=False),
         sa.Column('effort', sa.String(length=20), nullable=False),
         sa.Column('is_quick_win', sa.Boolean(), nullable=False, server_default='false'),
         sa.Column('fix_data', JSONB, nullable=True),
-        sa.Column('status', sa.Enum('pending', 'done', name='taskstatus'), nullable=False, server_default='pending'),
+        sa.Column('status', taskstatus, nullable=False, server_default='pending'),
         sa.Column('notes', sa.Text(), nullable=True),
         sa.Column('source', sa.String(length=50), nullable=False),
         sa.Column('sort_order', sa.Integer(), nullable=False, server_default='0'),
@@ -80,8 +79,8 @@ def downgrade() -> None:
     op.drop_table('audit_tasks')
 
     # Drop enums
-    op.execute('DROP TYPE taskpriority')
-    op.execute('DROP TYPE taskstatus')
+    op.execute('DROP TYPE IF EXISTS taskpriority')
+    op.execute('DROP TYPE IF EXISTS taskstatus')
 
     # Remove execution plan fields from audits
     op.drop_column('audits', 'execution_plan_status')
