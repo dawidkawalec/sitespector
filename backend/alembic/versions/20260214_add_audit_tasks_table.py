@@ -26,8 +26,8 @@ def upgrade() -> None:
 
     # Create enums once (idempotent) and reuse the same objects in table columns.
     # Avoids DuplicateObjectError when SQLAlchemy also tries to create types on table create.
-    taskstatus = postgresql.ENUM('pending', 'done', name='taskstatus')
-    taskpriority = postgresql.ENUM('critical', 'high', 'medium', 'low', name='taskpriority')
+    taskstatus = postgresql.ENUM('pending', 'done', name='taskstatus', create_type=False)
+    taskpriority = postgresql.ENUM('critical', 'high', 'medium', 'low', name='taskpriority', create_type=False)
     bind = op.get_bind()
     taskstatus.create(bind, checkfirst=True)
     taskpriority.create(bind, checkfirst=True)
