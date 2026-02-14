@@ -18,6 +18,8 @@ import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'Sprawdź agencję SEO — Czy Twoja agencja naprawdę działa? | SiteSpector',
@@ -120,6 +122,20 @@ const reportSections = [
 export default function SprawdzAgencjeSeoPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/sprawdz-agencje-seo',
+            title: 'Sprawdź agencję SEO — Czy Twoja agencja naprawdę działa? | SiteSpector',
+            description:
+              'Płacisz agencji SEO tysiące miesięcznie, a wyniki stoją w miejscu? Uruchom darmowy audyt SiteSpector i porównaj z raportem agencji. Zobacz, co jest nie tak.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Sprawdź agencję SEO', path: '/sprawdz-agencje-seo' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white" id="top">

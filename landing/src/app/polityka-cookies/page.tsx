@@ -2,6 +2,8 @@ import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'Polityka cookies — SiteSpector | Pliki cookies',
@@ -15,6 +17,20 @@ export const metadata = buildMetadata({
 export default function PolitykaCookiesPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/polityka-cookies',
+            title: 'Polityka cookies — SiteSpector | Pliki cookies',
+            description:
+              'Jak SiteSpector używa plików cookies. Lista cookies: Supabase (sesja), Stripe, next-auth. Brak cookies śledzących. Instrukcje zarządzania.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Polityka cookies', path: '/polityka-cookies' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white">

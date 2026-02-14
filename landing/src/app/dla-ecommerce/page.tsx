@@ -18,6 +18,8 @@ import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'Audyt SEO dla sklepów internetowych | SiteSpector',
@@ -136,6 +138,20 @@ const executionExamples = [
 export default function DlaEcommercePage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/dla-ecommerce',
+            title: 'Audyt SEO dla sklepów internetowych | SiteSpector',
+            description:
+              'Audyt SEO Twojego sklepu w 3 minuty. Wolne strony produktowe, brakujące meta, duplikaty, CLS z bannerów — SiteSpector to sprawdza. Dane z Senuto, Execution Plan z kodem.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Dla e-commerce', path: '/dla-ecommerce' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white" id="top">

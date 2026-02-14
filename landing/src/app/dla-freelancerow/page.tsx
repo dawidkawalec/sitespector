@@ -14,6 +14,8 @@ import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'Dla Freelancerów SEO — Profesjonalne audyty bez drogich narzędzi | SiteSpector',
@@ -57,6 +59,20 @@ const executionExamples = [
 export default function DlaFreelancerowPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/dla-freelancerow',
+            title: 'Dla Freelancerów SEO — Profesjonalne audyty bez drogich narzędzi | SiteSpector',
+            description:
+              'Plan Free: 5 audytów miesięcznie, Screaming Frog + Lighthouse + AI. Profesjonalne raporty PDF, Execution Plan z kodem. Zacznij za $0, bez karty kredytowej.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Dla freelancerów', path: '/dla-freelancerow' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white" id="top">

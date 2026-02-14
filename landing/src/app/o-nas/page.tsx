@@ -15,6 +15,8 @@ import {
   RiTerminalBoxLine,
 } from 'react-icons/ri';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'O nas — SiteSpector | Audyty SEO z AI i planem wykonania',
@@ -28,6 +30,20 @@ export const metadata = buildMetadata({
 export default function ONasPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/o-nas',
+            title: 'O nas — SiteSpector | Audyty SEO z AI i planem wykonania',
+            description:
+              'Poznaj zespół SiteSpector. Stworzyliśmy narzędzie łączące Screaming Frog, Lighthouse, Senuto i Gemini AI. Jedna platforma zamiast pięciu. Dane w UE.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'O nas', path: '/o-nas' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-light">

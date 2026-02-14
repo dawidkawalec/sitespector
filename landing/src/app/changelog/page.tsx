@@ -3,6 +3,8 @@ import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
 import { RiAddCircleLine, RiBugLine, RiMagicLine } from 'react-icons/ri';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'Changelog — SiteSpector | Co nowego',
@@ -157,6 +159,20 @@ function entryMeta(type: EntryType) {
 export default function ChangelogPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/changelog',
+            title: 'Changelog — SiteSpector | Co nowego',
+            description:
+              'Historia aktualizacji SiteSpector: nowe funkcje, ulepszenia i poprawki. Senuto, AI Overviews, Execution Plan, 3-fazowy audyt, harmonogramy — sprawdź, co się zmieniło.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Changelog', path: '/changelog' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white">

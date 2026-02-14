@@ -16,6 +16,8 @@ import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'Integracje — Screaming Frog, Lighthouse, Senuto, Gemini AI | SiteSpector',
@@ -51,6 +53,20 @@ function BulletList({ items }: { items: string[] }) {
 export default function IntegracjePage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/integracje',
+            title: 'Integracje — Screaming Frog, Lighthouse, Senuto, Gemini AI | SiteSpector',
+            description:
+              'Pełny opis integracji SiteSpector: Screaming Frog (crawling), Google Lighthouse (Core Web Vitals), Senuto (widoczność, AI Overviews), Gemini AI (analiza), Stripe, Supabase. REST API w przygotowaniu.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Integracje', path: '/integracje' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white" id="top">

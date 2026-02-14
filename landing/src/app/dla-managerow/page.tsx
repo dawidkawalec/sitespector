@@ -19,6 +19,8 @@ import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'Dla Managerów — Monitoruj SEO swojej firmy bez wiedzy technicznej | SiteSpector',
@@ -53,6 +55,20 @@ const quickWins = ['Dodaj 5 brakujących ALT na kluczowych stronach (15–30 min
 export default function DlaManagerowPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/dla-managerow',
+            title: 'Dla Managerów — Monitoruj SEO swojej firmy bez wiedzy technicznej | SiteSpector',
+            description:
+              'Executive Summary, benchmark branżowy, raporty miesięczne. SiteSpector daje jasność: jeden zdrowy wynik, lista problemów, PDF na prezentację. $29/mc zamiast setek za agencję.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Dla managerów', path: '/dla-managerow' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white" id="top">

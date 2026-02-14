@@ -2,6 +2,8 @@ import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'Polityka prywatności — SiteSpector | Ochrona danych',
@@ -15,6 +17,20 @@ export const metadata = buildMetadata({
 export default function PolitykaPrywatnosciPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/polityka-prywatnosci',
+            title: 'Polityka prywatności — SiteSpector | Ochrona danych',
+            description:
+              'Polityka prywatności SiteSpector. Jak zbieramy, przetwarzamy i przechowujemy dane. Supabase, Hetzner, Stripe, Gemini, Senuto. Zgodność z RODO.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Polityka prywatności', path: '/polityka-prywatnosci' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white">

@@ -18,6 +18,8 @@ import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'Dla Agencji SEO — Jeden panel dla wszystkich klientów | SiteSpector',
@@ -97,6 +99,20 @@ const quickWinsExamples = [
 export default function DlaAgencjiSeoPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/dla-agencji-seo',
+            title: 'Dla Agencji SEO — Jeden panel dla wszystkich klientów | SiteSpector',
+            description:
+              'SiteSpector dla agencji: workspace per klient, raporty PDF white-label, harmonogramy audytów, Execution Plan z kodem. Zastąp SF+Ahrefs+PageSpeed za $29/mc zamiast $300+/mc.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Dla agencji SEO', path: '/dla-agencji-seo' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white" id="top">

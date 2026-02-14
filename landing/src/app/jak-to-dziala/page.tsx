@@ -21,6 +21,8 @@ import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'Jak to działa — SiteSpector | 3-fazowy audyt w 3 minuty',
@@ -145,6 +147,20 @@ const stepNumberIconMap: Record<string, ComponentType<{ size?: number; className
 export default function JakToDzialaPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/jak-to-dziala',
+            title: 'Jak to działa — SiteSpector | 3-fazowy audyt w 3 minuty',
+            description:
+              'Wpisz URL, skonfiguruj audyt i poczekaj. SiteSpector: faza 1 (techniczna), faza 2 (AI), faza 3 (Execution Plan). Wyniki w 1–3 minuty.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Jak to działa', path: '/jak-to-dziala' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white" id="top">

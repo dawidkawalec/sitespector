@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { RiSearchEyeFill } from 'react-icons/ri'
+import { JsonLd } from '@/components/JsonLd'
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema'
 
 const sitemapSections = [
   {
@@ -54,6 +56,19 @@ const sitemapSections = [
 export default function SitemapPage() {
   return (
     <div className="container mx-auto max-w-4xl px-4 py-16">
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/sitemap',
+            title: 'Mapa strony | SiteSpector',
+            description: 'Pełna struktura strony SiteSpector – szybki dostęp do wszystkich sekcji i podstron.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Mapa strony', path: '/sitemap' },
+          ]),
+        ]}
+      />
       <div className="mb-12 flex items-center gap-3">
         <RiSearchEyeFill size={32} className="text-[#ff8945]" />
         <h1 className="text-3xl font-bold text-[#0b363d]">Mapa strony</h1>

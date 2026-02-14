@@ -2,6 +2,8 @@ import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
   title: 'Regulamin — SiteSpector | Warunki korzystania z serwisu',
@@ -14,6 +16,20 @@ export const metadata = buildMetadata({
 export default function RegulaminPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/regulamin',
+            title: 'Regulamin — SiteSpector | Warunki korzystania z serwisu',
+            description:
+              'Regulamin świadczenia usług SiteSpector. Plany, płatności, ochrona danych, odpowiedzialność. Pro $29, Enterprise $99.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Regulamin', path: '/regulamin' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white">

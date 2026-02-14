@@ -133,3 +133,30 @@ export function buildFAQSchema(items: Array<{ question: string; answer: string }
   };
 }
 
+export function buildContactPageSchema(args: { path: string; title: string; description?: string; email?: string }) {
+  const email = (args.email || '').trim();
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    name: args.title,
+    description: args.description,
+    url: absoluteUrl(args.path),
+    mainEntity: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+      ...(email
+        ? {
+            contactPoint: [
+              {
+                '@type': 'ContactPoint',
+                contactType: 'customer support',
+                email,
+              },
+            ],
+          }
+        : {}),
+    },
+  };
+}
+
