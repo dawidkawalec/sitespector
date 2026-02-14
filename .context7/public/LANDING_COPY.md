@@ -112,3 +112,8 @@
 
 ## UI Note: H1 Gradient
 - **Rule**: H1 w hero podstron powinien używać spójnych klas (np. `display-4 fw-bold`) i akcentu `text-gradient` dla wyróżnionego fragmentu.
+
+## UI Note: Heading Typography (Global)
+- **Goal**: Spójny wygląd nagłówków w całym landing (wagi fontu, rytm, skala).
+- **Rule**: H1/H2 są “grubsze” (preferowane) i mają spójne `line-height`; skala jest responsywna przez `clamp()` w SCSS.
+- **Implementation**: `landing/src/assets/scss/_general.scss` (globalne wagi `h1-h6` + skala dla `.hero-section` i `.main-title`).

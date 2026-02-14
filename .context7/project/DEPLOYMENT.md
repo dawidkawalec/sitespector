@@ -188,6 +188,21 @@ If you change Python dependencies or shared code, rebuild both:
 
 **Why rebuild?** Next.js standalone build embeds code at build time (not runtime)
 
+### Landing Changes
+
+**Files**: `landing/src/**/*.tsx`, `landing/src/assets/scss/**/*.scss`, `landing/content/**`
+
+**Process** (REQUIRES REBUILD):
+1. Commit changes
+2. Push (after asking)
+3. SSH to VPS
+4. `git pull origin release`
+5. **REBUILD** (critical): `docker compose -f docker-compose.prod.yml build --no-cache landing`
+6. Restart: `docker compose -f docker-compose.prod.yml up -d landing`
+7. Check logs: `docker logs sitespector-landing --tail 100`
+
+**Why rebuild?** Landing is also a Next.js standalone build (code baked at build time).
+
 ### Database Changes (Migrations)
 
 **Files**: `backend/app/models.py`

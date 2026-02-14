@@ -11,7 +11,7 @@ const Hero = () => {
         <Container>
           <Row className="align-items-center justify-content-center text-center">
             <Col lg={10}>
-              <h1 className="display-3 fw-semibold lh-base text-primary">
+              <h1 className="display-3 fw-bold lh-base text-primary">
                 Zdominuj wyniki wyszukiwania z{' '}
                 <span className="text-gradient text-line">SiteSpector</span>
               </h1>

@@ -12,6 +12,12 @@
 - **Rationale**: In this repo setup, `react-bootstrap` components are treated as client-only during prerender, which breaks `next build` for Server Component pages.
 - **Outcome**: Pages can export `metadata` and still use Bootstrap styling without runtime prerender errors.
 
+## Landing: Unified Heading Typography (2026-02-14)
+- **Decision**: Enforce consistent heading weights and a responsive font-size scale globally for landing pages.
+- **Rationale**: Mixed usage of `fw-*` classes + global SCSS overrides caused inconsistent H1/H2 appearance across subpages (thin vs bold, different rhythm).
+- **Implementation**: `landing/src/assets/scss/_general.scss` defines heading weights (`h1-h6`) + responsive `clamp()` scale for `.hero-section` and `.main-title` patterns; remove conflicting overrides in section SCSS.
+- **Outcome**: Holistic, predictable typography across the entire landing, while keeping existing hero underline/gradient accents (`text-line`, `text-gradient`).
+
 ## Landing Brief Files — 10 Page Refresh Briefs (2026-02-14)
 
 - **o-nas.md**: Strona O nas — Hero, historia (frustracja z narzędziami → SiteSpector), misja (demokratyzacja SEO), 5 punktów różnic (Execution Plan, AI Overviews, PDF, zespoły, EU), technologia (SF, LH, Senuto, Gemini), partnerstwo Senuto, placeholder zespołu, CTA.
