@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
@@ -21,13 +20,16 @@ import {
 import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Jak to działa — SiteSpector | 3-fazowy audyt w 3 minuty',
   description:
     'Wpisz URL, skonfiguruj audyt i poczekaj. SiteSpector: faza 1 (techniczna), faza 2 (AI), faza 3 (Execution Plan). Wyniki w 1–3 minuty.',
   keywords: ['jak działa SiteSpector', 'audyt SEO krok po kroku', '3 fazy audytu', 'Execution Plan', 'jak zrobić audyt strony'],
-};
+  path: '/jak-to-dziala',
+  ogImageType: 'page',
+});
 
 type Step = {
   id: string;

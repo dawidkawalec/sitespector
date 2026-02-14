@@ -302,6 +302,7 @@ docker compose -f docker-compose.prod.yml restart backend worker
 
 **Frontend env vars** (build-time):
 - `NEXT_PUBLIC_API_URL=https://sitespector.app` (and Supabase URLs)
+- `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=...` (opcjonalnie; weryfikacja Google Search Console)
 - Set in `docker-compose.prod.yml` under `args` or `environment`
 - Requires rebuild if changed
 

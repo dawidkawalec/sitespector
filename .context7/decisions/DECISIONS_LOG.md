@@ -44,9 +44,12 @@
 
 ## SEO & AI Crawler Files (2026-02-14)
 
-- **sitemap.xml** (landing/sitemap.ts): Pełna mapa stron – static, content, blog, case-study, docs, changelog, pricing, register, sitemap. Next.js generuje XML.
-- **robots.txt** (landing/robots.ts): Dyrektywy dla * + GPTBot, ChatGPT-User, Claude-Web, Google-Extended. Disallow: /api/, /dashboard, /audits/, /settings/, /invite/, /auth/, /_next/, /logs.
+- **sitemap.xml** (`landing/src/app/sitemap.ts`): Next.js App Router generuje XML (static pages + blog + case-study + docs). W sitemap uwzględniamy tylko strony publiczne/indexowalne (bez login/register/dashboard).
+- **robots.txt** (`landing/src/app/robots.ts`): Dyrektywy dla `*` oraz botów AI (`GPTBot`, `ChatGPT-User`, `Claude-Web`, `Google-Extended`). Blokujemy ścieżki aplikacji i techniczne: `/api/`, `/dashboard/`, `/audits/`, `/settings/`, `/invite/`, `/auth/`, `/_next/`, `/logs/`.
 - **llms.txt** (frontend/public/llms.txt): Standard llmstxt.org – Markdown z opisem SiteSpector i linkami do głównych sekcji. Nginx: location /llms.txt → frontend, Content-Type: text/markdown.
+- **OpenGraph/Twitter + canonical**: ujednolicone przez helper `buildMetadata()` w `landing/src/lib/seo.ts` + `metadataBase` w `landing/src/app/layout.tsx`.
+- **Dynamic OG images**: `/og` generowane przez `landing/src/app/og/route.tsx` (Next `ImageResponse`) i używane jako domyślny `og:image` na wszystkich stronach.
+- **Schema.org (JSON-LD)**: globalnie `Organization` + `WebSite` w layout oraz per-typ strony (homepage, blog, case-study, docs) przez `landing/src/lib/schema.ts` + `landing/src/components/JsonLd.tsx`.
 
 ---
 

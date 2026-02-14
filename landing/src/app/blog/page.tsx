@@ -1,17 +1,21 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import { getSortedPostsData } from '@/lib/blog';
 import Link from 'next/link';
 import Image from 'next/image';
 import NewsletterClient from './NewsletterClient';
+import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Blog — SiteSpector | Artykuły o SEO, audytach i widoczności',
   description:
     'Artykuły o audytach SEO, Core Web Vitals, Execution Plan, AI Overviews i optymalizacji stron. Porady, case studies i poradniki od zespołu SiteSpector.',
   keywords: ['blog SEO', 'audyt strony', 'poradniki SEO', 'SiteSpector blog'],
-};
+  path: '/blog',
+  ogImageType: 'blog',
+});
 
 const FILTER_CATEGORIES = [
   'Wszystkie',
@@ -97,6 +101,20 @@ export default async function BlogPage({
 
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/blog',
+            title: 'Blog — SiteSpector | Artykuły o SEO, audytach i widoczności',
+            description:
+              'Artykuły o audytach SEO, Core Web Vitals, Execution Plan, AI Overviews i optymalizacji stron. Porady, case studies i poradniki od zespołu SiteSpector.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Blog', path: '/blog' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-light">

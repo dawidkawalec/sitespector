@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
@@ -18,8 +17,9 @@ import {
 import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Dla Agencji SEO — Jeden panel dla wszystkich klientów | SiteSpector',
   description:
     'SiteSpector dla agencji: workspace per klient, raporty PDF white-label, harmonogramy audytów, Execution Plan z kodem. Zastąp SF+Ahrefs+PageSpeed za $29/mc zamiast $300+/mc.',
@@ -31,7 +31,9 @@ export const metadata: Metadata = {
     'workspace SEO',
     'SiteSpector agencja',
   ],
-};
+  path: '/dla-agencji-seo',
+  ogImageType: 'page',
+});
 
 const painPoints = [
   { icon: RiErrorWarningLine, title: 'Licencje per użytkownik', desc: 'Oddzielna licencja Screaming Frog na osobę i kolejne koszty per seat.' },

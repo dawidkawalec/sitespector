@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
@@ -18,13 +17,16 @@ import {
 import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Sprawdź agencję SEO — Czy Twoja agencja naprawdę działa? | SiteSpector',
   description:
     'Płacisz agencji SEO tysiące miesięcznie, a wyniki stoją w miejscu? Uruchom darmowy audyt SiteSpector i porównaj z raportem agencji. Zobacz, co jest nie tak.',
   keywords: ['sprawdzenie agencji SEO', 'weryfikacja agencji', 'audyt SEO agencji', 'czy agencja SEO działa', 'zweryfikuj agencję'],
-};
+  path: '/sprawdz-agencje-seo',
+  ogImageType: 'page',
+});
 
 const painCards = [
   {

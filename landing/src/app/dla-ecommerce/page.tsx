@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
@@ -18,13 +17,16 @@ import {
 import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Audyt SEO dla sklepów internetowych | SiteSpector',
   description:
     'Audyt SEO Twojego sklepu w 3 minuty. Wolne strony produktowe, brakujące meta, duplikaty, CLS z bannerów — SiteSpector to sprawdza. Dane z Senuto, Execution Plan z kodem.',
   keywords: ['audyt SEO e-commerce', 'SEO sklep internetowy', 'optymalizacja sklepu', 'Core Web Vitals sklep', 'audyt sklepu online'],
-};
+  path: '/dla-ecommerce',
+  ogImageType: 'page',
+});
 
 const problems = [
   {

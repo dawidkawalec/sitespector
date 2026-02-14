@@ -5,6 +5,9 @@ import { getPostData, getSortedPostsData } from '@/lib/blog';
 import Link from 'next/link';
 import Image from 'next/image';
 import { RiArrowLeftLine } from 'react-icons/ri';
+import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildArticleSchema, buildBreadcrumbSchema } from '@/lib/schema';
 
 export async function generateStaticParams() {
   const posts = await getSortedPostsData();
@@ -15,10 +18,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   try {
     const post = await getPostData(slug);
-    return {
-      title: `${post.title} — Blog | SiteSpector`,
-      description: post.excerpt || 'Artykuł na blogu SiteSpector.',
-    };
+    const title = `${post.title} — Blog`;
+    const description = post.excerpt || 'Artykuł na blogu SiteSpector.';
+    return buildMetadata({
+      title,
+      description,
+      path: `/blog/${post.slug}`,
+      type: 'article',
+      ogImageType: 'blog',
+      publishedTime: post.date,
+      authors: [post.author].filter(Boolean),
+    });
   } catch {
     return { title: 'Blog | SiteSpector' };
   }
@@ -30,6 +40,24 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <>
+      <JsonLd
+        data={[
+          buildArticleSchema({
+            path: `/blog/${post.slug}`,
+            title: post.title,
+            description: post.excerpt,
+            datePublished: post.date,
+            authorName: post.author,
+            image: post.coverImage?.src || undefined,
+            type: 'BlogPosting',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Blog', path: '/blog' },
+            { name: post.title, path: `/blog/${post.slug}` },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <article className="section py-5 bg-white">

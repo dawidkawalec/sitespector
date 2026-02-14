@@ -1,17 +1,21 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
 import Image from 'next/image';
 import { RiFilter3Line, RiLineChartLine } from 'react-icons/ri';
 import { getSortedCaseStudiesData } from '@/lib/caseStudies';
+import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Case studies — SiteSpector | Przykłady sukcesów SEO',
   description:
     'Sprawdź, jak agencje, sklepy i freelancerzy wykorzystują SiteSpector do audytów SEO. Przed i po, kluczowe metryki, wyzwania i rozwiązania.',
   keywords: ['case study SEO', 'audyt strony case study', 'SiteSpector przykłady', 'sukces SEO'],
-};
+  path: '/case-study',
+  ogImageType: 'casestudy',
+});
 
 function formatDate(date: string): string {
   const d = new Date(date);
@@ -47,6 +51,20 @@ export default async function CaseStudyPage({
 
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/case-study',
+            title: 'Case studies — SiteSpector | Przykłady sukcesów SEO',
+            description:
+              'Sprawdź, jak agencje, sklepy i freelancerzy wykorzystują SiteSpector do audytów SEO. Przed i po, kluczowe metryki, wyzwania i rozwiązania.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Case studies', path: '/case-study' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-light">

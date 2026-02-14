@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
@@ -19,8 +18,9 @@ import {
 import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Dla Managerów — Monitoruj SEO swojej firmy bez wiedzy technicznej | SiteSpector',
   description:
     'Executive Summary, benchmark branżowy, raporty miesięczne. SiteSpector daje jasność: jeden zdrowy wynik, lista problemów, PDF na prezentację. $29/mc zamiast setek za agencję.',
@@ -33,7 +33,9 @@ export const metadata: Metadata = {
     'SiteSpector manager',
     'kondycja strony',
   ],
-};
+  path: '/dla-managerow',
+  ogImageType: 'page',
+});
 
 const painCards = [
   { icon: RiFilePdfLine, title: 'Raporty agencji = żargon', desc: 'Wykresy, skróty i „branżowe” sformułowania bez jasnej odpowiedzi: czy jest dobrze?' },

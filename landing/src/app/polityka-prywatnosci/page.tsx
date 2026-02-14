@@ -1,14 +1,16 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Polityka prywatności — SiteSpector | Ochrona danych',
   description:
     'Polityka prywatności SiteSpector. Jak zbieramy, przetwarzamy i przechowujemy dane. Supabase, Hetzner, Stripe, Gemini, Senuto. Zgodność z RODO.',
   keywords: ['polityka prywatności SiteSpector', 'RODO', 'ochrona danych', 'dane osobowe'],
-};
+  path: '/polityka-prywatnosci',
+  ogImageType: 'page',
+});
 
 export default function PolitykaPrywatnosciPage() {
   return (

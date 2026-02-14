@@ -1217,7 +1217,33 @@ npm --prefix landing run build
 
 ---
 
+### BUG-029: `/sitemap.xml` and `/robots.txt` not working (missing Next.js routes)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: HIGH (blocks indexing + discovery)
+
+**Description**:
+- `docker/nginx/nginx.conf` proxied `/sitemap.xml` and `/robots.txt` to the `landing` container, but the landing Next.js app did not implement these routes, so crawlers received a non-XML response / 404.
+
+**Fix**:
+- Implemented Next.js App Router routes:
+  - `landing/src/app/sitemap.ts` (MetadataRoute sitemap)
+  - `landing/src/app/robots.ts` (MetadataRoute robots)
+- Added canonical + OpenGraph/Twitter metadata helper (`landing/src/lib/seo.ts`) and dynamic OG image endpoint (`landing/src/app/og/route.tsx`) to support consistent social previews and SEO defaults.
+- Added Schema.org JSON-LD (Organization/WebSite global + per page-type) via `landing/src/lib/schema.ts` and `landing/src/components/JsonLd.tsx`.
+
+**Verification**:
+```bash
+npm --prefix landing run lint
+npm --prefix landing run build
+```
+
+---
+
 **Last Updated**: 2026-02-14  
-**Resolved Bugs**: 26 (incl. BUG-026 cross-module AIO contradiction)  
+**Resolved Bugs**: 27 (incl. BUG-026 cross-module AIO contradiction)  
 **Known Issues**: 3  
 **Watching**: 2

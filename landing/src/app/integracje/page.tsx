@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
@@ -16,8 +15,9 @@ import {
 import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Integracje — Screaming Frog, Lighthouse, Senuto, Gemini AI | SiteSpector',
   description:
     'Pełny opis integracji SiteSpector: Screaming Frog (crawling), Google Lighthouse (Core Web Vitals), Senuto (widoczność, AI Overviews), Gemini AI (analiza), Stripe, Supabase. REST API w przygotowaniu.',
@@ -29,7 +29,9 @@ export const metadata: Metadata = {
     'Gemini AI audyt SEO',
     'technologia SiteSpector',
   ],
-};
+  path: '/integracje',
+  ogImageType: 'page',
+});
 
 function BulletList({ items }: { items: string[] }) {
   return (

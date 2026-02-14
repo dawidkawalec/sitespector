@@ -1,14 +1,16 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Polityka cookies — SiteSpector | Pliki cookies',
   description:
     'Jak SiteSpector używa plików cookies. Lista cookies: Supabase (sesja), Stripe, next-auth. Brak cookies śledzących. Instrukcje zarządzania.',
   keywords: ['polityka cookies SiteSpector', 'cookies', 'pliki cookies', 'RODO'],
-};
+  path: '/polityka-cookies',
+  ogImageType: 'page',
+});
 
 export default function PolitykaCookiesPage() {
   return (

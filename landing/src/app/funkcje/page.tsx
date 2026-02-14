@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
@@ -19,8 +18,9 @@ import {
 import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Funkcje — SiteSpector | Audyt SEO, wydajność, widoczność, AI',
   description:
     'Pełna lista funkcji SiteSpector: crawling SEO (Screaming Frog), Lighthouse, Senuto, AI Overviews, backlinki, analiza AI, Execution Plan, raporty PDF, zespoły, harmonogramy.',
@@ -34,7 +34,9 @@ export const metadata: Metadata = {
     'raport PDF',
     'audyt SEO',
   ],
-};
+  path: '/funkcje',
+  ogImageType: 'page',
+});
 
 type Module = {
   id: string;

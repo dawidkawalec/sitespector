@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
@@ -15,13 +14,18 @@ import {
   RiTerminalBoxLine,
   RiWalletLine,
 } from 'react-icons/ri';
+import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Dokumentacja — SiteSpector | Centrum pomocy',
   description:
     'Pełna dokumentacja SiteSpector: jak zacząć, panel audytu, Execution Plan, raporty PDF, zespoły, harmonogramy, integracje. Wszystkie instrukcje w jednym miejscu.',
   keywords: ['dokumentacja SiteSpector', 'pomoc audyt SEO', 'Execution Plan', 'Senuto integracja', 'raport PDF'],
-};
+  path: '/docs',
+  ogImageType: 'docs',
+});
 
 type DocCategory = {
   slug: string;
@@ -96,6 +100,20 @@ const categories: DocCategory[] = [
 export default function DocsPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageSchema({
+            path: '/docs',
+            title: 'Dokumentacja — SiteSpector | Centrum pomocy',
+            description:
+              'Pełna dokumentacja SiteSpector: jak zacząć, panel audytu, Execution Plan, raporty PDF, zespoły, harmonogramy, integracje. Wszystkie instrukcje w jednym miejscu.',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Dokumentacja', path: '/docs' },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white">

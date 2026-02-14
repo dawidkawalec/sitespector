@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
@@ -14,13 +13,16 @@ import {
 import DashboardHero from '@/assets/images/Dashboard.png';
 import DashboardWide from '@/assets/images/dashbord-3.png';
 import DashboardMetrics from '@/assets/images/dashbord-4.png';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Dla Freelancerów SEO — Profesjonalne audyty bez drogich narzędzi | SiteSpector',
   description:
     'Plan Free: 5 audytów miesięcznie, Screaming Frog + Lighthouse + AI. Profesjonalne raporty PDF, Execution Plan z kodem. Zacznij za $0, bez karty kredytowej.',
   keywords: ['freelancer SEO', 'audyt SEO freelancer', 'narzędzie SEO za darmo', 'audyt strony darmowy', 'SiteSpector free', 'konsultant SEO'],
-};
+  path: '/dla-freelancerow',
+  ogImageType: 'page',
+});
 
 const challengeCards = [
   { icon: RiTimerLine, title: 'Narzędzia zjadają marże', desc: 'Koszty $200–400/mc robią się bolesne, gdy masz 1–2 klientów.' },

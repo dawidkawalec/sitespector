@@ -1,15 +1,17 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
 import { RiAddCircleLine, RiBugLine, RiMagicLine } from 'react-icons/ri';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Changelog — SiteSpector | Co nowego',
   description:
     'Historia aktualizacji SiteSpector: nowe funkcje, ulepszenia i poprawki. Senuto, AI Overviews, Execution Plan, 3-fazowy audyt, harmonogramy — sprawdź, co się zmieniło.',
   keywords: ['changelog SiteSpector', 'co nowego', 'aktualizacje', 'nowe funkcje'],
-};
+  path: '/changelog',
+  ogImageType: 'page',
+});
 
 type EntryType = 'feature' | 'improvement' | 'fix';
 

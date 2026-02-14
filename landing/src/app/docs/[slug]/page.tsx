@@ -4,80 +4,10 @@ import Link from 'next/link';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import { RiArrowLeftLine, RiBookOpenLine } from 'react-icons/ri';
-
-type DocPage = {
-  slug: string;
-  title: string;
-  description: string;
-  bullets: string[];
-};
-
-const DOC_PAGES: DocPage[] = [
-  {
-    slug: 'jak-zaczac',
-    title: 'Jak zacząć',
-    description: 'Pierwszy audyt krok po kroku, konfiguracja Senuto i różnice między planami.',
-    bullets: ['Rejestracja i pierwsze logowanie', 'Uruchomienie pierwszego audytu', 'Konfiguracja Senuto (kraj analizy)', 'Plan Free vs Pro — limity i funkcje'],
-  },
-  {
-    slug: 'panel-audytu',
-    title: 'Panel audytu',
-    description: 'Przegląd zakładek i wyników audytu oraz gdzie szukać najważniejszych danych.',
-    bullets: ['SEO, Performance, Visibility, AI Overviews', 'Backlinks, Links, Images', 'Quick Wins, Benchmark i konkurenci', 'Eksport danych i analiza per-page'],
-  },
-  {
-    slug: 'execution-plan',
-    title: 'Execution Plan',
-    description: 'Zadania z priorytetami, quick wins i gotowym kodem do wdrożenia.',
-    bullets: ['Jak AI generuje zadania', 'Statusy: do zrobienia / w toku / wykonane', 'Notatki i śledzenie postępu', 'Eksport zadań do wdrożenia'],
-  },
-  {
-    slug: 'raporty-pdf',
-    title: 'Raporty PDF',
-    description: 'Generowanie raportu, 9 sekcji i white-label w planach Pro/Enterprise.',
-    bullets: ['9 sekcji raportu', 'White-label', 'Eksport surowych danych', 'Wysyłka do klienta'],
-  },
-  {
-    slug: 'zespoly-workspaces',
-    title: "Zespoły i Workspace'y",
-    description: 'Role, zaproszenia i współdzielenie audytów w zespole.',
-    bullets: ['Role: Właściciel, Admin, Członek', 'Zapraszanie użytkowników', "Przełączanie między workspace'ami", 'Współdzielone audyty'],
-  },
-  {
-    slug: 'harmonogramy',
-    title: 'Harmonogramy',
-    description: 'Audyty cykliczne oraz powiadomienia i zarządzanie harmonogramami.',
-    bullets: ['Audyty dzienne, tygodniowe, miesięczne', 'Konkurenci w harmonogramie', 'Powiadomienia', 'Zarządzanie harmonogramami'],
-  },
-  {
-    slug: 'subskrypcje-platnosci',
-    title: 'Subskrypcje i płatności',
-    description: 'Plany, Stripe, faktury oraz zmiana/anulowanie subskrypcji.',
-    bullets: ['Free, Pro, Enterprise', 'Stripe — płatność i faktury', 'Customer Portal', 'Limity audytów'],
-  },
-  {
-    slug: 'integracje',
-    title: 'Integracje',
-    description: 'Senuto, silniki audytu (Screaming Frog, Lighthouse) oraz integracje infrastrukturalne.',
-    bullets: ['Senuto — konfiguracja API', 'Screaming Frog + Lighthouse', 'Stripe i Supabase', 'Jakie dane pobieramy i zapisujemy'],
-  },
-  {
-    slug: 'ai-analiza',
-    title: 'AI analiza',
-    description: 'Jak działa analiza Gemini i jakie dane są przetwarzane.',
-    bullets: ['Co analizuje Gemini', 'Jakie dane wysyłamy do AI', 'Ograniczenia i prywatność', 'Rekomendacje i kontekst'],
-  },
-  {
-    slug: 'bezpieczenstwo',
-    title: 'Bezpieczeństwo',
-    description: 'RODO, dane w UE, RLS oraz podstawy szyfrowania i SSL.',
-    bullets: ['Dane w UE', 'RLS (Row Level Security)', 'SSL i szyfrowanie', 'RODO/GDPR'],
-  },
-];
-
-function getDocPage(slug: string): DocPage | undefined {
-  return DOC_PAGES.find(p => p.slug === slug);
-}
+import { DOC_PAGES, getDocPage } from '@/lib/docs';
+import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildArticleSchema, buildBreadcrumbSchema } from '@/lib/schema';
 
 export function generateStaticParams() {
   return DOC_PAGES.map(p => ({ slug: p.slug }));
@@ -88,10 +18,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const page = getDocPage(slug);
   if (!page) return { title: 'Dokumentacja — SiteSpector' };
 
-  return {
-    title: `${page.title} — Dokumentacja | SiteSpector`,
+  return buildMetadata({
+    title: `${page.title} — Dokumentacja`,
     description: page.description,
-  };
+    path: `/docs/${page.slug}`,
+    ogImageType: 'docs',
+  });
 }
 
 export default async function DocsSlugPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -101,6 +33,22 @@ export default async function DocsSlugPage({ params }: { params: Promise<{ slug:
 
   return (
     <>
+      <JsonLd
+        data={[
+          buildArticleSchema({
+            path: `/docs/${page.slug}`,
+            title: page.title,
+            description: page.description,
+            authorName: 'SiteSpector',
+            type: 'TechArticle',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Dokumentacja', path: '/docs' },
+            { name: page.title, path: `/docs/${page.slug}` },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <section className="section py-5 bg-white">

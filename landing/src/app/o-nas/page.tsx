@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
@@ -15,13 +14,16 @@ import {
   RiTeamLine,
   RiTerminalBoxLine,
 } from 'react-icons/ri';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'O nas — SiteSpector | Audyty SEO z AI i planem wykonania',
   description:
     'Poznaj zespół SiteSpector. Stworzyliśmy narzędzie łączące Screaming Frog, Lighthouse, Senuto i Gemini AI. Jedna platforma zamiast pięciu. Dane w UE.',
   keywords: ['SiteSpector o nas', 'audyt SEO', 'narzędzie SEO', 'Senuto partner', 'Execution Plan', 'AI analiza'],
-};
+  path: '/o-nas',
+  ogImageType: 'page',
+});
 
 export default function ONasPage() {
   return (

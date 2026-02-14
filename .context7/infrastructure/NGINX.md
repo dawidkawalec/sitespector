@@ -195,6 +195,12 @@ location /robots.txt { proxy_pass http://landing; }
 location /llms.txt { proxy_pass http://frontend; add_header Content-Type text/markdown; }
 ```
 
+**Notes**:
+- `landing` implements `sitemap.xml` and `robots.txt` via Next.js App Router metadata routes:
+  - `landing/src/app/sitemap.ts`
+  - `landing/src/app/robots.ts`
+- Social sharing images are generated dynamically by `landing` at `/og` (`landing/src/app/og/route.tsx`).
+
 **WebSocket support**: Yes (upgrade header)
 
 ---

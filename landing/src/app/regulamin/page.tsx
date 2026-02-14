@@ -1,13 +1,15 @@
-import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import Link from 'next/link';
+import { buildMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: 'Regulamin — SiteSpector | Warunki korzystania z serwisu',
   description: 'Regulamin świadczenia usług SiteSpector. Plany, płatności, ochrona danych, odpowiedzialność. Pro $29, Enterprise $99.',
   keywords: ['regulamin SiteSpector', 'warunki korzystania', 'terms of service'],
-};
+  path: '/regulamin',
+  ogImageType: 'page',
+});
 
 export default function RegulaminPage() {
   return (

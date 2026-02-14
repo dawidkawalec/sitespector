@@ -6,6 +6,9 @@ import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import { getCaseStudyData, getSortedCaseStudiesData } from '@/lib/caseStudies';
 import { RiArrowLeftLine, RiQuoteText } from 'react-icons/ri';
+import { buildMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { buildArticleSchema, buildBreadcrumbSchema } from '@/lib/schema';
 
 export async function generateStaticParams() {
   const all = await getSortedCaseStudiesData();
@@ -16,10 +19,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   try {
     const cs = await getCaseStudyData(slug);
-    return {
-      title: `${cs.title} — Case study | SiteSpector`,
-      description: cs.resultsSummary || cs.challengeSummary || 'Case study SiteSpector.',
-    };
+    const title = `${cs.title} — Case study`;
+    const description = cs.resultsSummary || cs.challengeSummary || 'Case study SiteSpector.';
+    return buildMetadata({
+      title,
+      description,
+      path: `/case-study/${cs.slug}`,
+      type: 'article',
+      ogImageType: 'casestudy',
+      publishedTime: cs.date,
+      authors: ['SiteSpector'],
+    });
   } catch {
     return { title: 'Case study | SiteSpector' };
   }
@@ -46,6 +56,24 @@ export default async function CaseStudySlugPage({ params }: { params: Promise<{ 
 
   return (
     <>
+      <JsonLd
+        data={[
+          buildArticleSchema({
+            path: `/case-study/${cs.slug}`,
+            title: cs.title,
+            description: cs.resultsSummary || cs.challengeSummary,
+            datePublished: cs.date,
+            authorName: 'SiteSpector',
+            image: cs.coverImage?.src || undefined,
+            type: 'Article',
+          }),
+          buildBreadcrumbSchema([
+            { name: 'SiteSpector', path: '/' },
+            { name: 'Case studies', path: '/case-study' },
+            { name: cs.title, path: `/case-study/${cs.slug}` },
+          ]),
+        ]}
+      />
       <Topbar />
       <main className="pt-5 mt-5">
         <article className="section py-5 bg-white">
