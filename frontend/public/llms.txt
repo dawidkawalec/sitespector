@@ -1,0 +1,44 @@
+# SiteSpector
+
+> Profesjonalna platforma do audytów SEO, analizy wydajności i monitorowania widoczności w Google. Audyty techniczne (Screaming Frog, Lighthouse), integracja Senuto, rekomendacje AI (Gemini). SaaS z zespołami, workspace'ami i rozliczeniami.
+
+## Główne
+
+- [Strona główna](https://sitespector.app/): Landing i wejście do aplikacji
+- [Zaloguj się](https://sitespector.app/login): Logowanie i rejestracja
+- [Cennik](https://sitespector.app/pricing): Plany subskrypcji
+- [Mapa strony](https://sitespector.app/sitemap): Pełna struktura serwisu
+- [Dokumentacja](https://sitespector.app/docs): Centrum pomocy i przewodniki
+- [Blog](https://sitespector.app/blog): Artykuły SEO i produkt
+- [Changelog](https://sitespector.app/changelog): Historia zmian
+
+## Produkt
+
+- [Funkcje](https://sitespector.app/funkcje): Przegląd możliwości platformy – crawling, SEO, wydajność, widoczność, AI
+- [Jak to działa](https://sitespector.app/jak-to-dziala): Proces audytu od URL do raportu
+- [Integracje](https://sitespector.app/integracje): Screaming Frog, Lighthouse, Senuto, Google Gemini
+- [Case study](https://sitespector.app/case-study): Przykłady wdrożeń
+- [Porównanie](https://sitespector.app/porownanie): SiteSpector vs inne narzędzia
+
+## Rozwiązania
+
+- [Dla agencji SEO](https://sitespector.app/dla-agencji-seo): Współpraca z klientami, zespoły, raporty
+- [Dla freelancerów](https://sitespector.app/dla-freelancerow): Audyty pojedyncze i seria
+- [Dla e-commerce](https://sitespector.app/dla-ecommerce): Sklepy, katalogi, widoczność
+- [Sprawdź agencję SEO](https://sitespector.app/sprawdz-agencje-seo): Narzędzie weryfikacji agencji
+
+## Firma
+
+- [O nas](https://sitespector.app/o-nas): Kim jesteśmy, misja
+- [Kontakt](https://sitespector.app/kontakt): Formularz, e-mail
+
+## Prawne
+
+- [Regulamin](https://sitespector.app/regulamin): Warunki użytkowania
+- [Polityka prywatności](https://sitespector.app/polityka-prywatnosci): Ochrona danych
+- [Polityka cookies](https://sitespector.app/polityka-cookies): Pliki cookies
+
+## Optional
+
+- [API Documentation](https://sitespector.app/api/docs): Swagger/OpenAPI – wymaga uwierzytelnienia
+- [LLMs.txt spec](https://llmstxt.org/): Standard llms.txt dla AI crawlerów

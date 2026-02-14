@@ -269,14 +269,31 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
 
   return (
     <div className="flex h-screen w-64 flex-col border-r border-white/10 bg-gradient-to-b from-[#0b363d] to-[#001113] text-white">
-      {/* Logo */}
-      <div className="flex h-16 items-center px-6 border-b border-white/10 bg-black/10">
-        <Link href="/dashboard" className="flex items-center gap-2 group" onClick={onAction}>
-          <div className="p-1.5 rounded-lg bg-accent/20 text-accent group-hover:bg-accent group-hover:text-white transition-all duration-300">
+      {/* Logo + Strona główna */}
+      <div className="flex h-16 items-center justify-between gap-2 px-4 border-b border-white/10 bg-black/10">
+        <Link href="/dashboard" className="flex items-center gap-2 group shrink-0 min-w-0" onClick={onAction}>
+          <div className="p-1.5 rounded-lg bg-accent/20 text-accent group-hover:bg-accent group-hover:text-white transition-all duration-300 shrink-0">
             <RiSearchEyeFill className="h-5 w-5" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-white">SiteSpector</span>
+          <span className="text-xl font-bold tracking-tight text-white truncate">SiteSpector</span>
         </Link>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href="/"
+                onClick={onAction}
+                className="flex items-center justify-center h-8 w-8 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors shrink-0"
+                aria-label="Strona główna"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-[#0b363d] border-white/10">
+              <p>Strona główna</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {/* Workspace switcher */}

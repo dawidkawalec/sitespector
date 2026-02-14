@@ -85,8 +85,9 @@ Every image reference includes a `placeholder` field:
 
 ## SEO Infrastructure
 
-- `landing/src/app/sitemap.ts` — dynamic sitemap from all content files
-- `landing/src/app/robots.ts` — robots.txt (allows /, disallows /login, /api/)
+- `landing/src/app/sitemap.ts` — sitemap.xml (dynamic, wszystkie publiczne strony)
+- `landing/src/app/robots.ts` — robots.txt (dyrektywy crawlerów + GPTBot, Claude-Web, Google-Extended)
+- `frontend/public/llms.txt` — llms.txt (standard llmstxt.org dla AI/LLM crawlerów)
 - `landing/content/data/metadata.json` — per-page title, description, OG image
 
 ## New Routes (7 new pages)

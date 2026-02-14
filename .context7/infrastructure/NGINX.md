@@ -188,6 +188,11 @@ location /docs { proxy_pass http://landing; }
 location /case-study { proxy_pass http://landing; }
 location /porownanie { proxy_pass http://landing; }
 location /changelog { proxy_pass http://landing; }
+
+# SEO & AI crawlers
+location /sitemap.xml { proxy_pass http://landing; }
+location /robots.txt { proxy_pass http://landing; }
+location /llms.txt { proxy_pass http://frontend; add_header Content-Type text/markdown; }
 ```
 
 **WebSocket support**: Yes (upgrade header)
@@ -347,7 +352,7 @@ docker exec sitespector-nginx nginx -s reload
 
 ---
 
-**Last Updated**: 2026-02-09  
+**Last Updated**: 2026-02-14  
 **Version**: Nginx 1.25 (Alpine)  
 **SSL**: Let's Encrypt (sitespector.app)  
 **Status**: Production-ready

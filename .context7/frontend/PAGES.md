@@ -18,7 +18,8 @@ app/
 │   ├── layout.tsx             # Public layout (navbar, main, footer)
 │   ├── page.tsx               # Homepage (/) – redirect to /dashboard when logged in
 │   ├── login/page.tsx         # Auth (/login) – tabs: Zaloguj | Zarejestruj (Supabase)
-│   └── register/page.tsx      # Redirect to /login?mode=register
+│   ├── register/page.tsx      # Redirect to /login?mode=register
+│   └── sitemap/page.tsx       # Mapa strony (human-readable) – pełna struktura linków
 ├── (app)/                     # Authenticated app with UnifiedSidebar
 │   ├── layout.tsx             # Sidebar layout (workspace switcher)
 │   ├── dashboard/page.tsx     # Dashboard + workspace analytics
@@ -240,6 +241,6 @@ if (isError) {
 
 ---
 
-**Last Updated**: 2026-02-12  
+**Last Updated**: 2026-02-14  
 **Framework**: Next.js 14 (App Router)  
 **Status**: Tool-agnostic IA implemented with RAW data explorers.

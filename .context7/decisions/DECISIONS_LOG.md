@@ -1,5 +1,13 @@
 # Architectural Decisions Log
 
+## SEO & AI Crawler Files (2026-02-14)
+
+- **sitemap.xml** (landing/sitemap.ts): Pełna mapa stron – static, content, blog, case-study, docs, changelog, pricing, register, sitemap. Next.js generuje XML.
+- **robots.txt** (landing/robots.ts): Dyrektywy dla * + GPTBot, ChatGPT-User, Claude-Web, Google-Extended. Disallow: /api/, /dashboard, /audits/, /settings/, /invite/, /auth/, /_next/, /logs.
+- **llms.txt** (frontend/public/llms.txt): Standard llmstxt.org – Markdown z opisem SiteSpector i linkami do głównych sekcji. Nginx: location /llms.txt → frontend, Content-Type: text/markdown.
+
+---
+
 ## ADR-008: 3-Phase Audit System with Interactive Tasks (2026-02-14)
 
 ### Context

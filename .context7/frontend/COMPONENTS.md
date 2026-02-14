@@ -667,6 +667,7 @@ import { ThemeProvider } from 'next-themes'
 **Purpose**: Single sidebar for the entire application, context-aware.
 
 **Features**:
+- **Logo + Strona główna**: Logotyp linkuje do /dashboard; przycisk (strzałka wstecz) obok logotypu kieruje na stronę główną (/) z tooltipem „Strona główna”.
 - **Main Navigation**: Dashboard and core links.
 - **Audit Context**: Automatically shows audit-specific sections (Overview, Reports, Advanced, Tools) when on an audit route.
 - **Collapsible Sections**: Uses `NavSection` with smooth CSS grid animations for expanding/collapsing.

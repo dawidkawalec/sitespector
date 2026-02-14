@@ -6,29 +6,23 @@ const BASE_URL = 'https://sitespector.app';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { pages, caseStudies } = getAllContentSlugs();
+  const now = new Date();
 
-  // Static pages
+  // Static pages – główne wejścia
   const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: BASE_URL,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 1.0,
-    },
-    {
-      url: `${BASE_URL}/login`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
+    { url: BASE_URL, lastModified: now, changeFrequency: 'weekly', priority: 1.0 },
+    { url: `${BASE_URL}/login`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/register`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/pricing`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${BASE_URL}/sitemap`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
   ];
 
-  // Content pages
+  // Content pages (o-nas, kontakt, regulamin, funkcje, etc.)
   const contentPages: MetadataRoute.Sitemap = pages
     .filter((slug) => !slug.startsWith('_'))
     .map((slug) => ({
       url: `${BASE_URL}/${slug}`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     }));
@@ -70,10 +64,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Other fixed pages
+  // Docs, changelog, inne stałe
   const otherPages: MetadataRoute.Sitemap = [
-    { url: `${BASE_URL}/docs`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${BASE_URL}/changelog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${BASE_URL}/docs`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${BASE_URL}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
   ];
 
   return [

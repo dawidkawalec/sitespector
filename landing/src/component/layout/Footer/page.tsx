@@ -47,6 +47,7 @@ const footerData: FooterColumn[] = [
     links: [
       { label: 'Zaloguj się / Załóż konto', link: '/login' },
       { label: 'Centrum pomocy', link: '/docs' },
+      { label: 'Mapa strony', link: '/sitemap' },
     ],
   },
 ];
