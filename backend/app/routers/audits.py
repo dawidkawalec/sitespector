@@ -867,6 +867,13 @@ async def trigger_ai_context(
     crawl_data = audit.results.get("crawl", {})
     lighthouse_data = audit.results.get("lighthouse", {})
     senuto_data = audit.results.get("senuto", {})
+    from app.services.global_context import build_global_snapshot
+    global_snapshot = build_global_snapshot(
+        crawl=crawl_data,
+        lighthouse=lighthouse_data,
+        senuto=senuto_data,
+        extra={"source": "trigger_ai_context"},
+    )
     
     valid_areas = ["seo", "performance", "visibility", "ai_overviews", "backlinks", "links", "images"]
     areas_to_run = [area] if area and area in valid_areas else valid_areas
@@ -876,26 +883,35 @@ async def trigger_ai_context(
     tasks = {}
     for a in areas_to_run:
         if a == "seo":
-            tasks[a] = analyze_seo_context(crawl_data, lighthouse_data, senuto_data)
+            tasks[a] = analyze_seo_context(crawl_data, lighthouse_data, senuto_data, global_snapshot=global_snapshot)
         elif a == "performance":
             tasks[a] = analyze_performance_context(
                 lighthouse_data.get("desktop", {}),
                 lighthouse_data.get("mobile", {}),
-                crawl_data
+                crawl_data,
+                global_snapshot=global_snapshot,
             )
         elif a == "visibility" and senuto_data.get("visibility"):
-            tasks[a] = analyze_visibility_context(senuto_data["visibility"], crawl_data)
+            tasks[a] = analyze_visibility_context(
+                senuto_data["visibility"],
+                crawl_data,
+                ai_overviews_data=senuto_data.get("visibility", {}).get("ai_overviews", {}),
+                global_snapshot=global_snapshot,
+            )
         elif a == "ai_overviews" and senuto_data.get("visibility", {}).get("ai_overviews"):
             tasks[a] = analyze_ai_overviews_context(
                 senuto_data["visibility"].get("ai_overviews", {}),
-                crawl_data
+                crawl_data,
+                global_snapshot=global_snapshot,
             )
         elif a == "backlinks" and senuto_data.get("backlinks"):
-            tasks[a] = analyze_backlinks_context(senuto_data["backlinks"], crawl_data)
+            tasks[a] = analyze_backlinks_context(
+                senuto_data["backlinks"], crawl_data, global_snapshot=global_snapshot
+            )
         elif a == "links":
-            tasks[a] = analyze_links_context(crawl_data)
+            tasks[a] = analyze_links_context(crawl_data, global_snapshot=global_snapshot)
         elif a == "images":
-            tasks[a] = analyze_images_context(crawl_data)
+            tasks[a] = analyze_images_context(crawl_data, global_snapshot=global_snapshot)
     
     if not tasks:
         return {"status": "skipped", "message": "No valid areas to analyze"}
@@ -917,9 +933,9 @@ async def trigger_ai_context(
     # Also regenerate cross-tool, roadmap, summary if full re-run
     if not area:
         try:
-            cross_tool = await analyze_cross_tool(results)
-            roadmap = await generate_roadmap(results)
-            exec_summary = await generate_executive_summary(results)
+            cross_tool = await analyze_cross_tool(results, global_snapshot=global_snapshot)
+            roadmap = await generate_roadmap(results, global_snapshot=global_snapshot)
+            exec_summary = await generate_executive_summary(results, global_snapshot=global_snapshot)
             results["cross_tool"] = cross_tool
             results["roadmap"] = roadmap
             results["executive_summary"] = exec_summary

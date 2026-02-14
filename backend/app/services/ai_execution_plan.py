@@ -10,8 +10,14 @@ Phase 3 of the audit pipeline - transforms analysis into executable plans.
 import logging
 from typing import Dict, List, Any, Optional
 from app.services.ai_client import call_claude
+from app.services.global_context import build_global_snapshot, format_global_snapshot_for_prompt
 
 logger = logging.getLogger(__name__)
+
+
+def _with_global_snapshot(user_message: str, snapshot: Dict[str, Any]) -> str:
+    block = format_global_snapshot_for_prompt(snapshot)
+    return f"{block}\n{user_message}" if block else user_message
 
 # ============================================
 # Task Generation Functions (Per Module)
@@ -129,6 +135,11 @@ WYMAGANIA:
 7. Jeśli brak canonical - konkretne instrukcje dodania
 
 Wygeneruj 5-12 zadań, priorytetyzując według impact/effort. Każde zadanie musi być gotowe do realizacji (developer/SEO może od razu wdrożyć)."""
+
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(crawl=crawl, lighthouse=lighthouse, senuto=senuto),
+    )
 
     try:
         response = await call_claude(user_message, system_prompt, max_tokens=20000)
@@ -292,6 +303,11 @@ WYMAGANIA:
 
 Wygeneruj 5-10 zadań technicznych gotowych do wdrożenia."""
 
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(crawl=crawl, lighthouse=lighthouse, senuto=None),
+    )
+
     try:
         response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
@@ -442,6 +458,11 @@ WYMAGANIA:
 
 Wygeneruj 5-10 zadań strategicznych."""
 
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(crawl=crawl, lighthouse=None, senuto=senuto),
+    )
+
     try:
         response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
@@ -527,6 +548,15 @@ Przykładowe keywords: {keywords[:10]}
 
 Wygeneruj 3-8 zadań rewrite contentu pod AIO."""
 
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(
+            crawl=crawl,
+            lighthouse=None,
+            senuto={"visibility": {"ai_overviews": senuto_aio}},
+        ),
+    )
+
     try:
         response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
@@ -603,6 +633,11 @@ Backlinks: {bl_stats}
 
 Wygeneruj 3-8 zadań linkowania."""
 
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(crawl=crawl, lighthouse=None, senuto=senuto_backlinks),
+    )
+
     try:
         response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
@@ -672,6 +707,11 @@ Total: {total_images}, Bez ALT: {without_alt}, Avg size: {avg_size}KB
 
 Wygeneruj 3-6 zadań optymalizacji obrazów."""
 
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(crawl=crawl, lighthouse=None, senuto=None),
+    )
+
     try:
         response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
@@ -735,6 +775,11 @@ JSON format:
 Accessibility: {accessibility_score}/100
 
 Wygeneruj 3-5 zadań UX."""
+
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(crawl=None, lighthouse=lighthouse, senuto=None),
+    )
 
     try:
         response = await call_claude(user_message, system_prompt, max_tokens=20000)
@@ -802,6 +847,11 @@ JSON format:
 HTTPS: {is_https}
 
 Wygeneruj 2-5 zadań security."""
+
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(crawl=crawl, lighthouse=None, senuto=None),
+    )
 
     try:
         response = await call_claude(user_message, system_prompt, max_tokens=20000)

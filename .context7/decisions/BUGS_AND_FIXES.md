@@ -1124,7 +1124,48 @@ curl -sk https://127.0.0.1/health
 
 ---
 
+### BUG-026: Visibility AI claims "brak AIO" despite AIO module having data (cross-module contradiction)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: HIGH
+
+**Description**:
+- W module `Widocznosc` (Visibility) AI potrafilo wypisac "brak widocznosci w AI Overviews"
+- Jednoczesnie modul `AI Overviews` mial komplet danych i wnioski o obecnosci w AIO
+
+**Root cause**:
+- Agent `Visibility` bazowal na ogolnych `visibility.statistics` (gdzie pola `aio_*` bywaly puste/0 lub innego znaczenia)
+- Agent `AI Overviews` bazowal na dedykowanym payloadzie `senuto.visibility.ai_overviews` (kanoniczne dane AIO)
+- Brak wspolnego "globalnego kontekstu" w promptach → model mogl halucynowac/wnioskowac na podstawie niepelnych danych
+
+**Fix**:
+1. **Opcja A (canonical injection)**:
+   - `backend/app/services/ai_analysis.py`: `analyze_visibility_context()` dostaje `ai_overviews_data` i w promptcie pokazuje AIO (canonical) + twarda regula: nie wolno stwierdzic "brak AIO" gdy canonical count > 0
+2. **Opcja B (global snapshot)**:
+   - `backend/app/services/global_context.py`: `build_global_snapshot()` + `format_global_snapshot_for_prompt()`
+   - `backend/app/services/ai_analysis.py`: `_call_ai_context()` dokleja GLOBAL_SNAPSHOT do kazdego promptu (context + strategy)
+   - `backend/app/services/ai_execution_plan.py`: task generatory doklejaja GLOBAL_SNAPSHOT do promptu (Phase 3)
+   - `backend/worker.py` + `backend/app/routers/audits.py`: global snapshot przekazywany do wszystkich analiz
+
+**Verification**:
+```bash
+# 1) Wygeneruj ai_contexts ponownie
+POST /audits/{id}/run-ai-context?area=visibility
+POST /audits/{id}/run-ai-context?area=ai_overviews
+
+# 2) Sprawdz ze Visibility nie ma juz "brak AIO" gdy AIO istnieje
+audit.results.ai_contexts.visibility.key_findings
+audit.results.ai_contexts.ai_overviews.key_findings
+```
+
+**Related**: User report (Visibility vs AIO contradiction)
+
+---
+
 **Last Updated**: 2026-02-14  
-**Resolved Bugs**: 25 (incl. BUG-025 alembic transactional DDL)  
+**Resolved Bugs**: 26 (incl. BUG-026 cross-module AIO contradiction)  
 **Known Issues**: 3  
 **Watching**: 2

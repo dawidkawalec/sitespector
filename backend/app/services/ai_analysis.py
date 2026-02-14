@@ -4,8 +4,9 @@ AI-powered analysis services using Claude.
 
 import logging
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from app.services.ai_client import call_claude, AIUnavailableError
+from app.services.global_context import format_global_snapshot_for_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -825,9 +826,18 @@ def _safe_json_parse(text: str) -> Dict[str, Any]:
     return {}
 
 
-async def _call_ai_context(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+async def _call_ai_context(
+    system_prompt: str,
+    user_prompt: str,
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """Call AI and parse JSON response for context analysis."""
     try:
+        global_block = format_global_snapshot_for_prompt(global_snapshot)
+        if global_block:
+            user_prompt = f"{global_block}\n{user_prompt}"
+
         response = await call_claude(user_prompt, system_prompt, max_tokens=20000)
         parsed = _safe_json_parse(response)
         parsed_keys = list(parsed.keys()) if isinstance(parsed, dict) else []
@@ -901,7 +911,9 @@ def _ai_meta(result: Dict[str, Any]) -> Dict[str, Any]:
 async def analyze_seo_context(
     crawl: Dict[str, Any],
     lighthouse: Dict[str, Any],
-    senuto: Dict[str, Any]
+    senuto: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     SEO insights crossing data from SF + LH + Senuto.
@@ -943,7 +955,7 @@ async def analyze_seo_context(
     
     Przygotuj max 5 key_findings, 5 recommendations, 3 quick_wins, 3 priority_issues."""
     
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
     return {
         **_ai_meta(result),
@@ -957,7 +969,9 @@ async def analyze_seo_context(
 async def analyze_performance_context(
     lighthouse_desktop: Dict[str, Any],
     lighthouse_mobile: Dict[str, Any],
-    crawl: Dict[str, Any]
+    crawl: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Performance insights from Lighthouse Desktop + Mobile + SF crawl.
@@ -980,7 +994,7 @@ async def analyze_performance_context(
     
     Max 5 key_findings, 5 recommendations, 3 quick_wins."""
     
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
     return {
         **_ai_meta(result),
@@ -994,7 +1008,10 @@ async def analyze_performance_context(
 
 async def analyze_visibility_context(
     senuto_visibility: Dict[str, Any],
-    crawl: Dict[str, Any]
+    crawl: Dict[str, Any],
+    *,
+    ai_overviews_data: Optional[Dict[str, Any]] = None,
+    global_snapshot: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Visibility strategy from Senuto + crawl data.
@@ -1034,6 +1051,12 @@ async def analyze_visibility_context(
     
     positions_summary = ", ".join([f"{p.get('keyword','')}(pos:{p.get('statistics',{}).get('position','')})" for p in positions[:5]])
     competitors_summary = ", ".join([f"{c.get('domain','')}(common:{c.get('common_keywords',0)})" for c in competitors])
+
+    # Canonical AIO metrics should come from dedicated AIO payload (not generic visibility stats).
+    aio_stats = (ai_overviews_data or {}).get("statistics", {}) if isinstance(ai_overviews_data, dict) else {}
+    canonical_aio_keywords_with_domain = aio_stats.get("aio_keywords_with_domain_count", 0)
+    canonical_aio_keywords_count = aio_stats.get("aio_keywords_count", 0)
+    canonical_aio_avg_pos = aio_stats.get("aio_avg_pos", 0)
     
     system_prompt = """Jesteś ekspertem widoczności SEO. Na podstawie danych Senuto przygotuj strategię 
     widoczności. Odpowiedz w JSON:
@@ -1050,7 +1073,8 @@ async def analyze_visibility_context(
     user_prompt = f"""Widoczność:
     - TOP3: {stats.get('top3', 0)}, TOP10: {stats.get('top10', 0)}, TOP50: {stats.get('top50', 0)}, udział TOP3/TOP50: {top3_share}%
     - Domain Rank: {stats.get('domain_rank', 0)}, Ads Equivalent: {stats.get('ads_equivalent', 0)}
-    - AIO keywords: {stats.get('aio_keywords_count', 0)}, AIO avg pos: {stats.get('aio_avg_pos', 0)}, AIO vis loss: {stats.get('aio_vis_loss_percentage', 0)}%
+    - AIO (canonical, z dedykowanego modułu): cytowania={canonical_aio_keywords_with_domain}, słowa={canonical_aio_keywords_count}, avg_pos={canonical_aio_avg_pos}
+    - AIO (legacy z visibility stats): keywords={stats.get('aio_keywords_count', 0)}, avg_pos={stats.get('aio_avg_pos', 0)}, vis_loss={stats.get('aio_vis_loss_percentage', 0)}%
     - Śr. difficulty (sample): {avg_difficulty}, Śr. CPC (sample): {avg_cpc}, intents(sample): {intents}, snippets(sample): {snippets_count}
     - Top frazy: {positions_summary}
     - Wins (ostatnie wzrosty): {len(wins)} fraz
@@ -1061,9 +1085,10 @@ async def analyze_visibility_context(
     - Stron w crawlu: {crawl.get('pages_crawled', 0)}
     
     Uwzględnij wszystkie nowe metryki i zależności (AIO, difficulty, CPC, intencje, snippets, sekcje).
+    WAŻNE: nie wolno Ci stwierdzić "brak AIO" jeśli AIO (canonical) ma cytowania>0 lub słowa>0.
     Max 6 key_findings, 6 recommendations, 5 quick_wins, 4 keyword_opportunities, 4 competitor_gaps."""
     
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
     return {
         **_ai_meta(result),
@@ -1080,6 +1105,8 @@ async def analyze_visibility_context(
 async def analyze_ai_overviews_context(
     ai_overviews_data: Dict[str, Any],
     crawl: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     AI Overviews strategy from Senuto AIO data.
@@ -1143,7 +1170,7 @@ async def analyze_ai_overviews_context(
     Uwzględnij kontekst nowych pól (intencja, difficulty, CPC, porównanie organic vs AIO).
     Przygotuj max 6 key_findings, 6 recommendations, 5 quick_wins, 4 aio_opportunities, 4 competitor_gaps."""
 
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     return {
         **_ai_meta(result),
         "key_findings": result.get("key_findings", []),
@@ -1158,7 +1185,9 @@ async def analyze_ai_overviews_context(
 
 async def analyze_backlinks_context(
     senuto_backlinks: Dict[str, Any],
-    crawl: Dict[str, Any]
+    crawl: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Backlink profile analysis from Senuto.
@@ -1192,7 +1221,7 @@ async def analyze_backlinks_context(
     
     Max 5 key_findings, 5 recommendations, 3 link_building_suggestions."""
     
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
     return {
         **_ai_meta(result),
@@ -1206,7 +1235,11 @@ async def analyze_backlinks_context(
     }
 
 
-async def analyze_links_context(crawl_data: Dict[str, Any]) -> Dict[str, Any]:
+async def analyze_links_context(
+    crawl_data: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """
     Internal linking analysis from crawl data.
     """
@@ -1233,7 +1266,7 @@ async def analyze_links_context(crawl_data: Dict[str, Any]) -> Dict[str, Any]:
     
     Max 5 key_findings, 5 recommendations, 3 silo_suggestions."""
     
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
     return {
         **_ai_meta(result),
@@ -1247,7 +1280,11 @@ async def analyze_links_context(crawl_data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-async def analyze_images_context(crawl_data: Dict[str, Any]) -> Dict[str, Any]:
+async def analyze_images_context(
+    crawl_data: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """
     Image optimization analysis from crawl data.
     """
@@ -1273,7 +1310,7 @@ async def analyze_images_context(crawl_data: Dict[str, Any]) -> Dict[str, Any]:
     
     Max 5 key_findings, 5 recommendations, 3 format_suggestions."""
     
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
     return {
         **_ai_meta(result),
@@ -1287,7 +1324,11 @@ async def analyze_images_context(crawl_data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-async def analyze_cross_tool(all_results: Dict[str, Any]) -> Dict[str, Any]:
+async def analyze_cross_tool(
+    all_results: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """
     Cross-tool correlation analysis (for /ai-strategy page).
     """
@@ -1323,7 +1364,7 @@ async def analyze_cross_tool(all_results: Dict[str, Any]) -> Dict[str, Any]:
     Wykryj korelacje między technicznym SEO, Core Web Vitals, visibility/AIO i profilem linków.
     Przygotuj max 6 correlations, 4 synergies, 4 conflicts, 6 unified_recommendations."""
     
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
     return {
         **_ai_meta(result),
@@ -1334,7 +1375,11 @@ async def analyze_cross_tool(all_results: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-async def generate_roadmap(all_results: Dict[str, Any]) -> Dict[str, Any]:
+async def generate_roadmap(
+    all_results: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """
     Priority roadmap generation from all data.
     """
@@ -1366,7 +1411,7 @@ async def generate_roadmap(all_results: Dict[str, Any]) -> Dict[str, Any]:
     Zadbaj, żeby "immediate_actions" były granularne i gotowe do realizacji jako taski.
     Stwórz 5-8 pozycji na immediate, 5-8 short_term, 3-5 medium_term, 3-5 long_term."""
     
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
     return {
         **_ai_meta(result),
@@ -1377,7 +1422,11 @@ async def generate_roadmap(all_results: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-async def generate_executive_summary(all_results: Dict[str, Any]) -> Dict[str, Any]:
+async def generate_executive_summary(
+    all_results: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """
     Executive summary from all data.
     """
@@ -1411,7 +1460,7 @@ async def generate_executive_summary(all_results: Dict[str, Any]) -> Dict[str, A
     
     Max 3 strengths, 3 critical_issues."""
     
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
     return {
         **_ai_meta(result),
@@ -1427,7 +1476,9 @@ async def generate_executive_summary(all_results: Dict[str, Any]) -> Dict[str, A
 
 async def analyze_security_context(
     security_data: Dict[str, Any],
-    crawl: Dict[str, Any]
+    crawl: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Security context insights from security analysis and crawl data.
@@ -1457,7 +1508,7 @@ async def analyze_security_context(
     
     Przygotuj max 5 key_findings, 5 recommendations, 3 quick_wins, 3 priority_issues."""
     
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
     return {
         **_ai_meta(result),
@@ -1470,7 +1521,9 @@ async def analyze_security_context(
 
 async def analyze_ux_context(
     ux_data: Dict[str, Any],
-    lighthouse: Dict[str, Any]
+    lighthouse: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     UX context insights from UX analysis and Lighthouse data.
@@ -1498,7 +1551,7 @@ async def analyze_ux_context(
     
     Przygotuj max 5 key_findings, 5 recommendations, 3 quick_wins, 3 priority_issues."""
     
-    result = await _call_ai_context(system_prompt, user_prompt)
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
     return {
         **_ai_meta(result),

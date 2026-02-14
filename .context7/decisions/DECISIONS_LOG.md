@@ -441,6 +441,25 @@ Backend: 100% complete | Frontend foundation: 100% complete | Module refactoring
 
 ---
 
+## ADR-029: Global Snapshot Injection (Cross-Module Consistency)
+**Date**: 2026-02-14
+**Status**: ✅ Done
+**Decision**:
+- Doklejac do promptow AI maly, kanoniczny "GLOBAL_SNAPSHOT" z najwazniejszymi faktami cross-modulowymi.
+- Snapshot jest wstrzykiwany do:
+  - Phase 2: contextual AI (`ai_contexts.*`) + strategic AI (cross_tool/roadmap/executive_summary)
+  - Phase 3: execution plan task generators (`generate_*_tasks()`)
+**Rationale**:
+- Moduly AI dzialaja rownolegle i dostaja rozne podzbiory danych, co powodowalo sprzeczne wnioski (np. Visibility: "brak AIO" vs AI Overviews: "jest AIO").
+- Snapshot ustala "kanoniczne fakty" (np. `ai_overviews.has_aio=true`) i wymusza na modelu brak sprzecznosci + komunikat "brak danych" zamiast zgadywania.
+**Outcome**:
+- `backend/app/services/global_context.py`: `build_global_snapshot()` + `format_global_snapshot_for_prompt()`.
+- `backend/app/services/ai_analysis.py`: `_call_ai_context(..., global_snapshot=...)` dokleja snapshot do promptu.
+- `backend/app/services/ai_execution_plan.py`: `_with_global_snapshot()` dokleja snapshot do promptu task generatorow.
+- `backend/worker.py` i `backend/app/routers/audits.py`: przekazuja global snapshot do wszystkich wywolan analiz.
+
+---
+
 **Last Updated**: 2026-02-14
-**Total Decisions**: 28 accepted
+**Total Decisions**: 29 accepted
 **Review**: Update when making significant architectural changes.

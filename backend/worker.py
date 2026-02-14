@@ -308,34 +308,49 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
             step_start = datetime.utcnow()
             
             senuto_data = results.get("senuto", {})
+            from app.services.global_context import build_global_snapshot
+            global_snapshot = build_global_snapshot(
+                crawl=crawl_data,
+                lighthouse=lighthouse_data,
+                senuto=senuto_data,
+                extra={"phase": "ai_contexts"},
+            )
             
             context_tasks = {
-                "seo": ai_analysis.analyze_seo_context(crawl_data, lighthouse_data, senuto_data),
+                "seo": ai_analysis.analyze_seo_context(crawl_data, lighthouse_data, senuto_data, global_snapshot=global_snapshot),
                 "performance": ai_analysis.analyze_performance_context(
                     lighthouse_data.get("desktop", {}),
                     lighthouse_data.get("mobile", {}),
-                    crawl_data
+                    crawl_data,
+                    global_snapshot=global_snapshot,
                 ),
-                "links": ai_analysis.analyze_links_context(crawl_data),
-                "images": ai_analysis.analyze_images_context(crawl_data),
+                "links": ai_analysis.analyze_links_context(crawl_data, global_snapshot=global_snapshot),
+                "images": ai_analysis.analyze_images_context(crawl_data, global_snapshot=global_snapshot),
                 "security": ai_analysis.analyze_security_context(
                     results.get("security", {}),
-                    crawl_data
+                    crawl_data,
+                    global_snapshot=global_snapshot,
                 ),
                 "ux": ai_analysis.analyze_ux_context(
                     results.get("ux", {}),
-                    lighthouse_data
+                    lighthouse_data,
+                    global_snapshot=global_snapshot,
                 ),
             }
             
             # Add Senuto-dependent contexts only if data exists
             if senuto_data.get("visibility"):
                 context_tasks["visibility"] = ai_analysis.analyze_visibility_context(
-                    senuto_data["visibility"], crawl_data
+                    senuto_data["visibility"],
+                    crawl_data,
+                    ai_overviews_data=senuto_data.get("visibility", {}).get("ai_overviews", {}),
+                    global_snapshot=global_snapshot,
                 )
             if senuto_data.get("backlinks"):
                 context_tasks["backlinks"] = ai_analysis.analyze_backlinks_context(
-                    senuto_data["backlinks"], crawl_data
+                    senuto_data["backlinks"],
+                    crawl_data,
+                    global_snapshot=global_snapshot,
                 )
             if (
                 senuto_data.get("visibility", {}).get("ai_overviews", {}).get("keywords")
@@ -344,6 +359,7 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 context_tasks["ai_overviews"] = ai_analysis.analyze_ai_overviews_context(
                     senuto_data["visibility"].get("ai_overviews", {}),
                     crawl_data,
+                    global_snapshot=global_snapshot,
                 )
             
             ctx_names = list(context_tasks.keys())
@@ -394,10 +410,16 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
             
             step_start = datetime.utcnow()
             
+            strategy_snapshot = build_global_snapshot(
+                crawl=crawl_data,
+                lighthouse=lighthouse_data,
+                senuto=results.get("senuto", {}),
+                extra={"phase": "ai_strategy"},
+            )
             strategy_tasks = {
-                "cross_tool": ai_analysis.analyze_cross_tool(results),
-                "roadmap": ai_analysis.generate_roadmap(results),
-                "executive_summary": ai_analysis.generate_executive_summary(results),
+                "cross_tool": ai_analysis.analyze_cross_tool(results, global_snapshot=strategy_snapshot),
+                "roadmap": ai_analysis.generate_roadmap(results, global_snapshot=strategy_snapshot),
+                "executive_summary": ai_analysis.generate_executive_summary(results, global_snapshot=strategy_snapshot),
             }
             
             strat_names = list(strategy_tasks.keys())
