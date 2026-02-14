@@ -1,15 +1,11 @@
 'use client'
 
 /**
- * SEO Analysis Page
- * 
- * Displays comprehensive SEO metrics including:
- * - Meta tags (title, description)
- * - Header structure (H1 tags)
- * - Technical metrics (status code, load time, word count, page size)
- * - All Pages table (Screaming Frog view)
- * - Status Code distribution chart
- * - Technical SEO panel
+ * SEO Analysis Page - 3-Phase System
+ *
+ * Dane: SEO metrics, technical SEO, All Pages table, status distribution
+ * Analiza: AI SEO insights from ai_contexts.seo
+ * Plan: Actionable SEO improvement tasks
  */
 
 import { useEffect, useState } from 'react'
@@ -23,31 +19,14 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
-  Info,
-  ExternalLink,
-  Download,
   Search,
   Filter,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Eye,
-  Lightbulb,
-  Sparkles
+  Sparkles,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import {
   Select,
   SelectContent,
@@ -63,11 +42,12 @@ import {
 } from "@/components/ui/accordion"
 import { PageStatusChart } from '@/components/AuditCharts'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
-import { AuditPageLayout } from '@/components/AuditPageLayout'
-import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
-
+import { ModeSwitcher, useAuditMode } from '@/components/audit/ModeSwitcher'
+import { AnalysisView } from '@/components/audit/AnalysisView'
+import { TaskListView } from '@/components/audit/TaskListView'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Audit } from '@/lib/api'
 
 function OverviewTab({ crawl, allPages, params, renderFixSuggestion, exportToCSV }: { crawl: any; allPages: any[]; params: any; renderFixSuggestion: any; exportToCSV: any }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -289,6 +269,7 @@ function RawDataTab({ crawl, audit }: { crawl: any; audit: Audit }) {
 export default function SeoPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
+  const [mode, setMode] = useAuditMode('data')
   const [activeTab, setActiveTab] = useState('overview')
   const [loadingFix, setLoadingFix] = useState<string | null>(null)
   const [fixSuggestions, setFixSuggestions] = useState<Record<string, any>>({})
@@ -308,6 +289,50 @@ export default function SeoPage({ params }: { params: { id: string } }) {
     enabled: isAuth,
   })
 
+  const { data: tasksResponse, refetch: refetchTasks } = useQuery({
+    queryKey: ['tasks', params.id, 'seo'],
+    queryFn: () => auditsAPI.getTasks(params.id, { module: 'seo' }),
+    enabled: isAuth && !!audit && mode === 'plan'
+  })
+
+  const tasks = tasksResponse?.items || []
+  const crawl = audit?.results?.crawl
+  const aiContext = audit?.results?.ai_contexts?.seo
+
+  const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { status })
+      refetchTasks()
+      toast.success('Zaktualizowano status zadania')
+    } catch (error) {
+      toast.error('Nie udało się zaktualizować zadania')
+    }
+  }
+
+  const handleNotesChange = async (taskId: string, notes: string) => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { notes })
+      refetchTasks()
+      toast.success('Zapisano notatki')
+    } catch (error) {
+      toast.error('Nie udało się zapisać notatek')
+    }
+  }
+
+  const handleGetFixSuggestion = async (issueType: string, urls: string[]) => {
+    if (loadingFix) return
+    setLoadingFix(issueType)
+    try {
+      const suggestion = await auditsAPI.getFixSuggestion(params.id, issueType, urls)
+      setFixSuggestions(prev => ({ ...prev, [issueType]: suggestion }))
+      toast.success('Wygenerowano sugestię AI')
+    } catch (error) {
+      toast.error('Błąd AI')
+    } finally {
+      setLoadingFix(null)
+    }
+  }
+
   if (!isAuth || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -324,37 +349,33 @@ export default function SeoPage({ params }: { params: { id: string } }) {
     )
   }
 
-  const crawl = audit.results?.crawl
-  const hasAiData = !!(audit.results?.ai_contexts?.seo || audit.results?.content_analysis)
-
-  const handleGetFixSuggestion = async (issueType: string, urls: string[]) => {
-    if (loadingFix) return
-    setLoadingFix(issueType)
-    try {
-      const suggestion = await auditsAPI.getFixSuggestion(params.id, issueType, urls)
-      setFixSuggestions(prev => ({ ...prev, [issueType]: suggestion }))
-      toast.success('Wygenerowano sugestię AI')
-    } catch (error) {
-      toast.error('Błąd AI')
-    } finally {
-      setLoadingFix(null)
-    }
+  if (!crawl) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <p className="text-muted-foreground">Brak danych SEO (crawl).</p>
+      </div>
+    )
   }
 
   return (
-    <AuditPageLayout
-      aiPanel={<AiInsightsPanel area="seo" audit={audit} />}
-      aiPanelTitle="AI: SEO"
-      hasAiData={hasAiData}
-      isAiLoading={audit.ai_status === 'processing'}
-    >
-      <div className="space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-primary">
-            <span className="text-line">Analiza SEO</span>
-          </h1>
-        </div>
+    <div className="container mx-auto py-8 px-4 space-y-6">
+      <div className="flex items-center gap-3">
+        <Search className="h-8 w-8 text-primary" />
+        <h1 className="text-3xl font-bold">Analiza SEO</h1>
+      </div>
 
+      <ModeSwitcher
+        mode={mode}
+        onModeChange={setMode}
+        taskCount={tasks.length}
+        pendingTaskCount={tasks.filter(t => t.status === 'pending').length}
+        hasAiData={!!aiContext}
+        hasExecutionPlan={audit?.execution_plan_status === 'completed'}
+        isAiLoading={audit?.ai_status === 'processing'}
+        isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
+      />
+
+      {mode === 'data' && (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList>
             <TabsTrigger value="overview">Przegląd</TabsTrigger>
@@ -362,9 +383,9 @@ export default function SeoPage({ params }: { params: { id: string } }) {
           </TabsList>
 
           <TabsContent value="overview" className="pt-6">
-            <OverviewTab 
-              crawl={crawl} 
-              allPages={crawl.all_pages || []} 
+            <OverviewTab
+              crawl={crawl}
+              allPages={crawl.all_pages || []}
               params={params}
               renderFixSuggestion={(type: string, urls: string[]) => (
                 <div className="mt-4">
@@ -391,7 +412,24 @@ export default function SeoPage({ params }: { params: { id: string } }) {
             <RawDataTab crawl={crawl} audit={audit} />
           </TabsContent>
         </Tabs>
-      </div>
-    </AuditPageLayout>
+      )}
+
+      {mode === 'analysis' && (
+        <AnalysisView
+          area="seo"
+          aiContext={aiContext}
+          isLoading={audit?.ai_status === 'processing'}
+        />
+      )}
+
+      {mode === 'plan' && (
+        <TaskListView
+          tasks={tasks}
+          module="seo"
+          onStatusChange={handleStatusChange}
+          onNotesChange={handleNotesChange}
+        />
+      )}
+    </div>
   )
 }

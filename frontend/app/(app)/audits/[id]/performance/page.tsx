@@ -1,13 +1,11 @@
 'use client'
 
 /**
- * Performance Analysis Page
- * 
- * Displays Lighthouse performance metrics including:
- * - Core Web Vitals (FCP, LCP, CLS, etc.)
- * - Desktop and mobile scores
- * - Opportunities and Diagnostics
- * - Detailed audit lists
+ * Performance Analysis Page - 3-Phase System
+ *
+ * Dane: Lighthouse metrics (Desktop/Mobile), Core Web Vitals
+ * Analiza: AI performance insights (ai_contexts.performance)
+ * Plan: Actionable performance improvement tasks
  */
 
 import { useEffect, useState } from 'react'
@@ -16,22 +14,24 @@ import { useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Zap, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Monitor, Smartphone, Activity, ExternalLink, Lightbulb, Database } from 'lucide-react'
+import { Loader2, Zap, AlertTriangle, CheckCircle2, Monitor, Smartphone, Activity, ExternalLink, Database } from 'lucide-react'
 import { formatScore, getScoreColor } from '@/lib/utils'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from '@/components/ui/accordion'
 import { ResponseTimeChart } from '@/components/AuditCharts'
-import { AuditPageLayout } from '@/components/AuditPageLayout'
-import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
+import { ModeSwitcher, useAuditMode } from '@/components/audit/ModeSwitcher'
+import { AnalysisView } from '@/components/audit/AnalysisView'
+import { TaskListView } from '@/components/audit/TaskListView'
+import { toast } from 'sonner'
 import type { Audit } from '@/lib/api'
 
 function DeviceTab({ lhData, device, audit }: { lhData: any; device: string; audit: Audit }) {
@@ -346,6 +346,7 @@ function RawDataTab({ audit }: { audit: Audit }) {
 export default function PerformancePage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
+  const [mode, setMode] = useAuditMode('data')
   const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
@@ -365,6 +366,35 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
     enabled: isAuth,
   })
 
+  const { data: tasksResponse, refetch: refetchTasks } = useQuery({
+    queryKey: ['tasks', params.id, 'performance'],
+    queryFn: () => auditsAPI.getTasks(params.id, { module: 'performance' }),
+    enabled: isAuth && !!audit && mode === 'plan'
+  })
+
+  const tasks = tasksResponse?.items || []
+  const aiContext = audit?.results?.ai_contexts?.performance ?? audit?.results?.performance_analysis
+
+  const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { status })
+      refetchTasks()
+      toast.success('Zaktualizowano status zadania')
+    } catch (error) {
+      toast.error('Nie udało się zaktualizować zadania')
+    }
+  }
+
+  const handleNotesChange = async (taskId: string, notes: string) => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { notes })
+      refetchTasks()
+      toast.success('Zapisano notatki')
+    } catch (error) {
+      toast.error('Nie udało się zapisać notatek')
+    }
+  }
+
   if (!isAuth || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -383,22 +413,26 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
 
   const lhDesktop = audit.results?.lighthouse?.desktop
   const lhMobile = audit.results?.lighthouse?.mobile
-  const hasAiData = !!(audit.results?.ai_contexts?.performance || audit.results?.performance_analysis)
 
   return (
-    <AuditPageLayout
-      aiPanel={<AiInsightsPanel area="performance" audit={audit} />}
-      aiPanelTitle="AI: Wydajność"
-      hasAiData={hasAiData}
-      isAiLoading={audit.ai_status === 'processing'}
-    >
-      <div className="space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h1 className="text-3xl font-bold text-primary">
-            <span className="text-line">Analiza Wydajności</span>
-          </h1>
-        </div>
+    <div className="container mx-auto py-8 px-4 space-y-6">
+      <div className="flex items-center gap-3">
+        <Activity className="h-8 w-8 text-primary" />
+        <h1 className="text-3xl font-bold">Analiza Wydajności</h1>
+      </div>
 
+      <ModeSwitcher
+        mode={mode}
+        onModeChange={setMode}
+        taskCount={tasks.length}
+        pendingTaskCount={tasks.filter(t => t.status === 'pending').length}
+        hasAiData={!!aiContext}
+        hasExecutionPlan={audit?.execution_plan_status === 'completed'}
+        isAiLoading={audit?.ai_status === 'processing'}
+        isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
+      />
+
+      {mode === 'data' && (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="overview">Przegląd</TabsTrigger>
@@ -472,7 +506,24 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
             <RawDataTab audit={audit} />
           </TabsContent>
         </Tabs>
-      </div>
-    </AuditPageLayout>
+      )}
+
+      {mode === 'analysis' && (
+        <AnalysisView
+          area="performance"
+          aiContext={aiContext}
+          isLoading={audit?.ai_status === 'processing'}
+        />
+      )}
+
+      {mode === 'plan' && (
+        <TaskListView
+          tasks={tasks}
+          module="performance"
+          onStatusChange={handleStatusChange}
+          onNotesChange={handleNotesChange}
+        />
+      )}
+    </div>
   )
 }

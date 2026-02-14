@@ -10,9 +10,10 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import AsyncSessionLocal
-from app.models import Audit, AuditStatus, Competitor, CompetitorStatus, AuditSchedule, ScheduleFrequency
+from app.models import Audit, AuditStatus, Competitor, CompetitorStatus, AuditSchedule, ScheduleFrequency, AuditTask, TaskPriority
 from app.config import settings
 from app.services import screaming_frog, lighthouse, ai_analysis, senuto
+from app.services import ai_execution_plan
 
 # Configure logging
 logging.basicConfig(
@@ -430,6 +431,167 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
             await db.commit()
 
 
+async def run_execution_plan(audit_id: str, tech_data: Dict[str, Any]) -> None:
+    """
+    Phase 3: Execution Plan Generation
+    Generates concrete, actionable tasks from audit results.
+    """
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(Audit).where(Audit.id == audit_id))
+        audit = result.scalar_one_or_none()
+        if not audit:
+            raise Exception(f"Audit {audit_id} not found")
+        
+        try:
+            audit.execution_plan_status = "processing"
+            audit.processing_step = "execution_plan:start"
+            await add_audit_log(audit, "execution_plan", "running", "Starting execution plan generation...")
+            await db.commit()
+            
+            step_start = datetime.utcnow()
+            
+            # Get Phase 1 and Phase 2 results
+            crawl_data = tech_data.get("crawl", {})
+            lighthouse_data = tech_data.get("lighthouse", {})
+            senuto_data = tech_data.get("senuto", {})
+            
+            results = audit.results or {}
+            ai_contexts = results.get("ai_contexts", {})
+            
+            # Run all module task generators in parallel
+            tasks_futures = []
+            
+            # SEO
+            tasks_futures.append(
+                ai_execution_plan.generate_seo_tasks(
+                    crawl_data,
+                    lighthouse_data,
+                    senuto_data,
+                    ai_contexts.get("seo")
+                )
+            )
+            
+            # Performance
+            tasks_futures.append(
+                ai_execution_plan.generate_performance_tasks(
+                    lighthouse_data,
+                    crawl_data,
+                    ai_contexts.get("performance")
+                )
+            )
+            
+            # Visibility (if Senuto data exists)
+            if senuto_data.get("visibility"):
+                tasks_futures.append(
+                    ai_execution_plan.generate_visibility_tasks(
+                        senuto_data,
+                        crawl_data,
+                        ai_contexts.get("visibility")
+                    )
+                )
+            
+            # AI Overviews (if data exists)
+            if senuto_data.get("visibility", {}).get("ai_overviews"):
+                tasks_futures.append(
+                    ai_execution_plan.generate_ai_overviews_tasks(
+                        senuto_data["visibility"]["ai_overviews"],
+                        crawl_data,
+                        ai_contexts.get("ai_overviews")
+                    )
+                )
+            
+            # Links
+            tasks_futures.append(
+                ai_execution_plan.generate_links_tasks(
+                    crawl_data,
+                    senuto_data.get("backlinks"),
+                    ai_contexts.get("links")
+                )
+            )
+            
+            # Images
+            tasks_futures.append(
+                ai_execution_plan.generate_images_tasks(
+                    crawl_data,
+                    ai_contexts.get("images")
+                )
+            )
+            
+            # UX
+            tasks_futures.append(
+                ai_execution_plan.generate_ux_tasks(
+                    lighthouse_data,
+                    results.get("ux")
+                )
+            )
+            
+            # Security
+            tasks_futures.append(
+                ai_execution_plan.generate_security_tasks(
+                    crawl_data,
+                    results.get("security")
+                )
+            )
+            
+            # Execute all in parallel
+            all_module_tasks = await asyncio.gather(*tasks_futures, return_exceptions=True)
+            
+            # Flatten results
+            all_tasks = []
+            for module_result in all_module_tasks:
+                if isinstance(module_result, Exception):
+                    logger.error(f"Task generation failed: {module_result}")
+                elif isinstance(module_result, list):
+                    all_tasks.extend(module_result)
+            
+            # Synthesize execution plan (dedup, tag quick wins, sort)
+            synthesized_tasks = ai_execution_plan.synthesize_execution_plan(all_tasks)
+            
+            # Persist tasks to database (bulk insert)
+            task_objects = []
+            for task_data in synthesized_tasks:
+                task_obj = AuditTask(
+                    audit_id=audit.id,
+                    module=task_data.get("module", "unknown"),
+                    title=task_data.get("title", "Untitled task"),
+                    description=task_data.get("description", ""),
+                    category=task_data.get("category", "technical"),
+                    priority=TaskPriority(task_data.get("priority", "medium")),
+                    impact=task_data.get("impact", "medium"),
+                    effort=task_data.get("effort", "medium"),
+                    is_quick_win=task_data.get("is_quick_win", False),
+                    fix_data=task_data.get("fix_data"),
+                    source=task_data.get("source", "execution_plan"),
+                    sort_order=task_data.get("sort_order", 0),
+                )
+                task_objects.append(task_obj)
+            
+            # Bulk insert
+            db.add_all(task_objects)
+            
+            duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
+            
+            audit.execution_plan_status = "completed"
+            audit.processing_step = "execution_plan:done"
+            await add_audit_log(
+                audit,
+                "execution_plan",
+                "success",
+                f"Generated {len(task_objects)} tasks ({sum(1 for t in task_objects if t.is_quick_win)} quick wins)",
+                duration
+            )
+            
+            await db.commit()
+            
+            logger.info(f"✅ Phase 3 completed for audit {audit_id}: {len(task_objects)} tasks")
+            
+        except Exception as e:
+            logger.error(f"❌ Phase 3 failed for audit {audit_id}: {e}")
+            audit.execution_plan_status = "failed"
+            await add_audit_log(audit, "execution_plan", "error", f"Execution plan generation failed: {str(e)}")
+            await db.commit()
+
+
 async def process_audit(audit_id: str) -> None:
     """Main entry point for processing an audit."""
     try:
@@ -441,6 +603,7 @@ async def process_audit(audit_id: str) -> None:
             result = await db.execute(select(Audit).where(Audit.id == audit_id))
             audit = result.scalar_one_or_none()
             should_run_ai = audit.run_ai_pipeline if audit else True
+            should_run_execution_plan = audit.run_execution_plan if audit else True
         
         if should_run_ai:
             await run_ai_analysis(audit_id, tech_data)
@@ -455,6 +618,18 @@ async def process_audit(audit_id: str) -> None:
                     audit.completed_at = datetime.utcnow()
                     audit.processing_step = "completed"
                     await add_audit_log(audit, "ai", "skipped", "AI pipeline disabled by user")
+                    await db.commit()
+        
+        # Phase 3: Execution Plan (runs after Phase 2, unless disabled)
+        if should_run_execution_plan:
+            await run_execution_plan(audit_id, tech_data)
+        else:
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(Audit).where(Audit.id == audit_id))
+                audit = result.scalar_one_or_none()
+                if audit:
+                    audit.execution_plan_status = "skipped"
+                    await add_audit_log(audit, "execution_plan", "skipped", "Execution plan disabled by user")
                     await db.commit()
         
     except Exception as e:

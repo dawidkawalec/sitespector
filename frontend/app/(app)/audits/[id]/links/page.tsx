@@ -1,13 +1,11 @@
 'use client'
 
 /**
- * Links Analysis Page
+ * Links Analysis Page - 3-Phase System
  * 
- * Displays comprehensive link analysis including:
- * - Summary metrics (internal, external, broken, redirects)
- * - Broken links list
- * - Redirect chains analysis
- * - External links list
+ * Dane: Internal links, incoming links, raw data
+ * Analiza: AI link insights
+ * Plan: Actionable link tasks
  */
 
 import { useEffect, useState } from 'react'
@@ -36,8 +34,10 @@ import {
 } from "@/components/ui/select"
 import { Button } from '@/components/ui/button'
 import type { Audit } from '@/lib/api'
-import { AuditPageLayout } from '@/components/AuditPageLayout'
-import { AiInsightsPanel } from '@/components/AiInsightsPanel'
+import { ModeSwitcher, useAuditMode } from '@/components/audit/ModeSwitcher'
+import { AnalysisView } from '@/components/audit/AnalysisView'
+import { TaskListView } from '@/components/audit/TaskListView'
+import { toast } from 'sonner'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
 import { LinkAttributesPieChart } from '@/components/AuditCharts'
 import { formatNumber } from '@/lib/utils'
@@ -352,6 +352,7 @@ export default function LinksPage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams()
   const [isAuth, setIsAuth] = useState(false)
   const [activeTab, setActiveTab] = useState('internal')
+  const [mode, setMode] = useAuditMode('data')
 
   useEffect(() => {
     const tab = searchParams.get('tab')
@@ -377,6 +378,35 @@ export default function LinksPage({ params }: { params: { id: string } }) {
     enabled: isAuth,
   })
 
+  const { data: tasksResponse, refetch: refetchTasks } = useQuery({
+    queryKey: ['tasks', params.id, 'links'],
+    queryFn: () => auditsAPI.getTasks(params.id, { module: 'links' }),
+    enabled: isAuth && !!audit && mode === 'plan'
+  })
+
+  const tasks = tasksResponse?.items || []
+  const aiContext = audit?.results?.ai_contexts?.links
+
+  const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { status })
+      refetchTasks()
+      toast.success('Zaktualizowano status zadania')
+    } catch (error) {
+      toast.error('Nie udało się zaktualizować zadania')
+    }
+  }
+
+  const handleNotesChange = async (taskId: string, notes: string) => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { notes })
+      refetchTasks()
+      toast.success('Zapisano notatki')
+    } catch (error) {
+      toast.error('Nie udało się zapisać notatek')
+    }
+  }
+
   if (!isAuth || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -399,18 +429,24 @@ export default function LinksPage({ params }: { params: { id: string } }) {
   const hasAiData = !!(audit?.results?.ai_contexts?.links || audit?.results?.ai_contexts?.backlinks)
 
   return (
-    <AuditPageLayout
-      aiPanel={<AiInsightsPanel area="links" audit={audit!} />}
-      aiPanelTitle="AI: Linki"
-      hasAiData={hasAiData}
-      isAiLoading={audit?.ai_status === 'processing'}
-    >
-      <div className="space-y-8">
-        <div className="flex items-center gap-3">
-          <LinkIcon className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Analiza Linków</h1>
-        </div>
+    <div className="container mx-auto py-8 px-4 space-y-6">
+      <div className="flex items-center gap-3">
+        <LinkIcon className="h-8 w-8 text-primary" />
+        <h1 className="text-3xl font-bold">Analiza Linków</h1>
+      </div>
 
+      <ModeSwitcher
+        mode={mode}
+        onModeChange={setMode}
+        taskCount={tasks.length}
+        pendingTaskCount={tasks.filter(t => t.status === 'pending').length}
+        hasAiData={hasAiData}
+        hasExecutionPlan={audit?.execution_plan_status === 'completed'}
+        isAiLoading={audit?.ai_status === 'processing'}
+        isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
+      />
+
+      {mode === 'data' && (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList>
             <TabsTrigger value="internal">
@@ -440,7 +476,24 @@ export default function LinksPage({ params }: { params: { id: string } }) {
             <RawDataTab audit={audit!} />
           </TabsContent>
         </Tabs>
-      </div>
-    </AuditPageLayout>
+      )}
+
+      {mode === 'analysis' && (
+        <AnalysisView
+          area="links"
+          aiContext={aiContext}
+          isLoading={audit?.ai_status === 'processing'}
+        />
+      )}
+
+      {mode === 'plan' && (
+        <TaskListView
+          tasks={tasks}
+          module="links"
+          onStatusChange={handleStatusChange}
+          onNotesChange={handleNotesChange}
+        />
+      )}
+    </div>
   )
 }

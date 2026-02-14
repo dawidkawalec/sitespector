@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { X, AlertCircle, Globe, Layers, Sparkles } from 'lucide-react'
+import { X, AlertCircle, Globe, Layers, Sparkles, CheckCircle2 } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -60,6 +60,7 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
   const [senutoCountry, setSenutoCountry] = useState('200')
   const [senutoFetchMode, setSenutoFetchMode] = useState('subdomain')
   const [runAiPipeline, setRunAiPipeline] = useState(true)
+  const [runExecutionPlan, setRunExecutionPlan] = useState(true)
   const { currentWorkspace } = useWorkspace()
 
   const {
@@ -126,6 +127,7 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
         senuto_country_id: parseInt(senutoCountry),
         senuto_fetch_mode: senutoFetchMode,
         run_ai_pipeline: runAiPipeline,
+        run_execution_plan: runExecutionPlan,
       }
 
       const newAudit = await auditsAPI.create(currentWorkspace.id, auditData)
@@ -287,22 +289,43 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
           </div>
 
           {/* AI Pipeline Toggle */}
-          <div className="flex items-center gap-3 py-2 border-t border-primary/5 mt-2">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={runAiPipeline}
-                onChange={(e) => setRunAiPipeline(e.target.checked)}
-                className="rounded border-primary/20 text-accent focus:ring-accent h-4 w-4"
-              />
-              <span className="text-xs font-medium flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3 text-accent" />
-                Uruchom analizę AI automatycznie
+          <div className="space-y-2 py-2 border-t border-primary/5 mt-2">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={runAiPipeline}
+                  onChange={(e) => setRunAiPipeline(e.target.checked)}
+                  className="rounded border-primary/20 text-accent focus:ring-accent h-4 w-4"
+                />
+                <span className="text-xs font-medium flex items-center gap-1.5">
+                  <Sparkles className="h-3 w-3 text-accent" />
+                  Uruchom analizę AI automatycznie
+                </span>
+              </label>
+              <span className="text-[10px] text-muted-foreground">
+                (można uruchomić później ręcznie)
               </span>
-            </label>
-            <span className="text-[10px] text-muted-foreground">
-              (można uruchomić później ręcznie)
-            </span>
+            </div>
+
+            {/* Execution Plan Toggle */}
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={runExecutionPlan}
+                  onChange={(e) => setRunExecutionPlan(e.target.checked)}
+                  className="rounded border-primary/20 text-emerald-500 focus:ring-emerald-500 h-4 w-4"
+                />
+                <span className="text-xs font-medium flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                  Wygeneruj plan wykonania automatycznie
+                </span>
+              </label>
+              <span className="text-[10px] text-muted-foreground">
+                (konkretne zadania do wdrożenia)
+              </span>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-6">

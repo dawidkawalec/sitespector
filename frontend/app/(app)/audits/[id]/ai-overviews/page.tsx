@@ -1,5 +1,13 @@
 'use client'
 
+/**
+ * AI Overviews Page - 3-Phase System
+ *
+ * Dane: AIO metrics, keywords, competitors, charts
+ * Analiza: AI insights from ai_contexts.ai_overviews
+ * Plan: Actionable AI Overviews improvement tasks
+ */
+
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
@@ -7,17 +15,20 @@ import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Sparkles, Users, Target, TrendingDown, TrendingUp } from 'lucide-react'
-import { AuditPageLayout } from '@/components/AuditPageLayout'
-import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
 import { formatNumber, formatScore } from '@/lib/utils'
 import { IntentBadge } from '@/components/ui/intent-badge'
 import { AIOCompetitorsChart, AIOPositionDistributionChart, IntentDistributionPieChart } from '@/components/AuditCharts'
+import { ModeSwitcher, useAuditMode } from '@/components/audit/ModeSwitcher'
+import { AnalysisView } from '@/components/audit/AnalysisView'
+import { TaskListView } from '@/components/audit/TaskListView'
+import { toast } from 'sonner'
 
 export default function AiOverviewsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
+  const [mode, setMode] = useAuditMode('data')
   const [activeTab, setActiveTab] = useState('keywords')
 
   useEffect(() => {
@@ -34,6 +45,35 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
     queryFn: () => auditsAPI.get(params.id),
     enabled: isAuth,
   })
+
+  const { data: tasksResponse, refetch: refetchTasks } = useQuery({
+    queryKey: ['tasks', params.id, 'ai_overviews'],
+    queryFn: () => auditsAPI.getTasks(params.id, { module: 'ai_overviews' }),
+    enabled: isAuth && !!audit && mode === 'plan'
+  })
+
+  const tasks = tasksResponse?.items || []
+  const aiContext = audit?.results?.ai_contexts?.ai_overviews
+
+  const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { status })
+      refetchTasks()
+      toast.success('Zaktualizowano status zadania')
+    } catch (error) {
+      toast.error('Nie udało się zaktualizować zadania')
+    }
+  }
+
+  const handleNotesChange = async (taskId: string, notes: string) => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { notes })
+      refetchTasks()
+      toast.success('Zapisano notatki')
+    } catch (error) {
+      toast.error('Nie udało się zapisać notatek')
+    }
+  }
 
   const visibility = audit?.results?.senuto?.visibility || {}
   const aio = visibility?.ai_overviews
@@ -145,21 +185,28 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
   }
 
   return (
-    <AuditPageLayout
-      aiPanel={<AiInsightsPanel area="visibility" audit={audit!} />}
-      aiPanelTitle="AI: AI Overviews"
-      hasAiData={!!audit?.results?.ai_contexts?.ai_overviews}
-      isAiLoading={audit?.ai_status === 'processing'}
-    >
-      <div className="space-y-8">
-        <div className="flex items-center gap-3">
-          <Sparkles className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">AI Overviews</h1>
-            <p className="text-sm text-muted-foreground">Analiza obecności domeny w AI Overviews</p>
-          </div>
+    <div className="container mx-auto py-8 px-4 space-y-6">
+      <div className="flex items-center gap-3">
+        <Sparkles className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-bold">AI Overviews</h1>
+          <p className="text-sm text-muted-foreground">Analiza obecności domeny w AI Overviews</p>
         </div>
+      </div>
 
+      <ModeSwitcher
+        mode={mode}
+        onModeChange={setMode}
+        taskCount={tasks.length}
+        pendingTaskCount={tasks.filter(t => t.status === 'pending').length}
+        hasAiData={!!aiContext}
+        hasExecutionPlan={audit?.execution_plan_status === 'completed'}
+        isAiLoading={audit?.ai_status === 'processing'}
+        isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
+      />
+
+      {mode === 'data' && (
+        <div className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
@@ -262,8 +309,26 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
             />
           </TabsContent>
         </Tabs>
-      </div>
-    </AuditPageLayout>
+        </div>
+      )}
+
+      {mode === 'analysis' && (
+        <AnalysisView
+          area="ai_overviews"
+          aiContext={aiContext}
+          isLoading={audit?.ai_status === 'processing'}
+        />
+      )}
+
+      {mode === 'plan' && (
+        <TaskListView
+          tasks={tasks}
+          module="ai_overviews"
+          onStatusChange={handleStatusChange}
+          onNotesChange={handleNotesChange}
+        />
+      )}
+    </div>
   )
 }
 

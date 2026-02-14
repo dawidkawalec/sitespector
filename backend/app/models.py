@@ -52,6 +52,20 @@ class CompetitorStatus(str, enum.Enum):
     FAILED = "failed"
 
 
+class TaskStatus(str, enum.Enum):
+    """Task completion status."""
+    PENDING = "pending"
+    DONE = "done"
+
+
+class TaskPriority(str, enum.Enum):
+    """Task priority levels."""
+    CRITICAL = "critical"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
 class User(Base):
     """User model for authentication and subscription management."""
 
@@ -137,6 +151,12 @@ class Audit(Base):
     # AI pipeline toggle
     run_ai_pipeline = Column(Boolean, default=True, nullable=False)
 
+    # Execution plan toggle
+    run_execution_plan = Column(Boolean, default=True, nullable=False)
+
+    # Execution plan status (None, "processing", "completed", "failed")
+    execution_plan_status = Column(String(20), nullable=True)
+
     # Timestamps
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
@@ -147,6 +167,7 @@ class Audit(Base):
     # Relationships
     user = relationship("User", back_populates="audits")
     competitors = relationship("Competitor", back_populates="audit", cascade="all, delete-orphan")
+    tasks = relationship("AuditTask", back_populates="audit", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Audit(id={self.id}, url={self.url}, status={self.status})>"
@@ -244,3 +265,45 @@ class NewsletterSubscriber(Base):
 
     def __repr__(self) -> str:
         return f"<NewsletterSubscriber(id={self.id}, email={self.email}, active={self.is_active})>"
+
+
+class AuditTask(Base):
+    """Task model for execution plan items."""
+
+    __tablename__ = "audit_tasks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    audit_id = Column(UUID(as_uuid=True), ForeignKey("audits.id"), nullable=False, index=True)
+
+    # Identity
+    module = Column(String(50), nullable=False, index=True)  # seo|performance|visibility|ai_overviews|links|images|ux|security
+    title = Column(String(500), nullable=False)
+    description = Column(Text, nullable=False)
+
+    # Classification
+    category = Column(String(50), nullable=False)  # technical|content|offsite|ux|security
+    priority = Column(SQLEnum(TaskPriority), nullable=False, index=True)
+    impact = Column(String(20), nullable=False)  # high|medium|low
+    effort = Column(String(20), nullable=False)  # easy|medium|hard
+    is_quick_win = Column(Boolean, default=False, nullable=False, index=True)
+
+    # Concrete fix (AI-generated specifics)
+    fix_data = Column(JSONB, nullable=True)  # {"current_value": "...", "suggested_value": "...", "code_snippet": "..."}
+
+    # Interactive state
+    status = Column(SQLEnum(TaskStatus), default=TaskStatus.PENDING, nullable=False, index=True)
+    notes = Column(Text, nullable=True)
+
+    # Metadata
+    source = Column(String(50), nullable=False)  # execution_plan|ai_context
+    sort_order = Column(Integer, default=0, nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    audit = relationship("Audit", back_populates="tasks")
+
+    def __repr__(self) -> str:
+        return f"<AuditTask(id={self.id}, module={self.module}, title={self.title[:50]}, status={self.status})>"

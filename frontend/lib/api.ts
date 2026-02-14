@@ -162,6 +162,7 @@ export interface Audit {
   url: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
   ai_status?: 'processing' | 'completed' | 'failed' | 'skipped' | null
+  execution_plan_status?: 'processing' | 'completed' | 'failed' | 'skipped' | null
   processing_step?: string | null
   processing_logs?: Array<Record<string, any>> | null
   progress_percent?: number | null
@@ -191,6 +192,7 @@ export interface CreateAuditData {
   senuto_country_id?: number
   senuto_fetch_mode?: string
   run_ai_pipeline?: boolean
+  run_execution_plan?: boolean
 }
 
 export interface AuditListResponse {
@@ -309,6 +311,46 @@ export const auditsAPI = {
       `/api/audits/${auditId}/run-ai-context${area ? `?area=${area}` : ''}`,
       { method: 'POST' }
     ),
+
+  runExecutionPlan: (auditId: string) =>
+    apiRequest<{ status: string; message: string }>(`/api/audits/${auditId}/run-execution-plan`, {
+      method: 'POST',
+    }),
+
+  // Tasks
+  getTasks: (auditId: string, params?: { module?: string; priority?: string; status?: string; is_quick_win?: boolean }) => {
+    const query = new URLSearchParams()
+    if (params?.module) query.set('module', params.module)
+    if (params?.priority) query.set('priority', params.priority)
+    if (params?.status) query.set('status', params.status)
+    if (params?.is_quick_win !== undefined) query.set('is_quick_win', String(params.is_quick_win))
+    
+    const queryString = query.toString() ? `?${query.toString()}` : ''
+    return apiRequest<{ total: number; items: any[] }>(`/api/audits/${auditId}/tasks${queryString}`)
+  },
+
+  getTaskSummary: (auditId: string) =>
+    apiRequest<{
+      total: number
+      pending: number
+      done: number
+      quick_wins_total: number
+      quick_wins_done: number
+      by_module: Record<string, { total: number; pending: number; done: number }>
+      by_priority: Record<string, number>
+    }>(`/api/audits/${auditId}/tasks/summary`),
+
+  updateTask: (auditId: string, taskId: string, data: { status?: string; notes?: string; priority?: string }) =>
+    apiRequest<any>(`/api/audits/${auditId}/tasks/${taskId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  bulkUpdateTasks: (auditId: string, data: { task_ids: string[]; status?: string; priority?: string }) =>
+    apiRequest<{ updated: number }>(`/api/audits/${auditId}/tasks/bulk`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 
   // Schedules
   listSchedules: (workspaceId: string) =>

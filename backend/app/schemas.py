@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field, validator
-from app.models import SubscriptionTier, AuditStatus, CompetitorStatus, ScheduleFrequency
+from app.models import SubscriptionTier, AuditStatus, CompetitorStatus, ScheduleFrequency, TaskStatus, TaskPriority
 
 
 # ============================================
@@ -180,6 +180,7 @@ class AuditCreate(AuditBase):
     senuto_country_id: Optional[int] = Field(default=200, description="Senuto country ID")
     senuto_fetch_mode: Optional[str] = Field(default="subdomain", description="Senuto fetch mode")
     run_ai_pipeline: Optional[bool] = Field(default=True, description="Run AI analysis automatically")
+    run_execution_plan: Optional[bool] = Field(default=True, description="Generate execution plan automatically")
 
     @validator("competitors")
     def validate_competitors(cls, v: List[str]) -> List[str]:
@@ -212,6 +213,7 @@ class AuditResponse(AuditBase):
     workspace_id: Optional[UUID] = None
     status: AuditStatus
     ai_status: Optional[str] = None
+    execution_plan_status: Optional[str] = None
     processing_step: Optional[str] = None
     processing_logs: Optional[List[Dict[str, Any]]] = None
     progress_percent: Optional[int] = None
@@ -290,7 +292,77 @@ class AuditStatusResponse(BaseModel):
     completed_at: Optional[datetime] = None
     processing_logs: Optional[List[Dict[str, Any]]] = None
     ai_status: Optional[str] = None
+    execution_plan_status: Optional[str] = None
     progress_percent: Optional[int] = None
+
+
+# ============================================
+# Task Schemas
+# ============================================
+
+class AuditTaskBase(BaseModel):
+    """Base audit task schema."""
+    module: str = Field(..., max_length=50)
+    title: str = Field(..., max_length=500)
+    description: str
+    category: str = Field(..., max_length=50)
+    priority: TaskPriority
+    impact: str = Field(..., max_length=20)
+    effort: str = Field(..., max_length=20)
+    is_quick_win: bool = False
+    fix_data: Optional[Dict[str, Any]] = None
+    source: str = Field(..., max_length=50)
+    sort_order: int = 0
+
+
+class AuditTaskCreate(AuditTaskBase):
+    """Schema for creating audit task."""
+    audit_id: UUID
+
+
+class AuditTaskUpdate(BaseModel):
+    """Schema for updating audit task."""
+    status: Optional[TaskStatus] = None
+    notes: Optional[str] = None
+    priority: Optional[TaskPriority] = None
+
+
+class AuditTaskBulkUpdate(BaseModel):
+    """Schema for bulk updating audit tasks."""
+    task_ids: List[UUID] = Field(..., min_items=1)
+    status: Optional[TaskStatus] = None
+    priority: Optional[TaskPriority] = None
+
+
+class AuditTaskResponse(AuditTaskBase):
+    """Schema for audit task response."""
+    id: UUID
+    audit_id: UUID
+    status: TaskStatus
+    notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    completed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TaskSummaryResponse(BaseModel):
+    """Schema for task summary statistics."""
+    total: int
+    pending: int
+    done: int
+    quick_wins_total: int
+    quick_wins_done: int
+    by_module: Dict[str, Dict[str, int]]
+    by_priority: Dict[str, int]
+
+
+class AuditTaskListResponse(BaseModel):
+    """Schema for paginated task list."""
+    total: int
+    items: List[AuditTaskResponse]
 
 
 # ============================================

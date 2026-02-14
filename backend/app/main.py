@@ -13,7 +13,7 @@ from slowapi.errors import RateLimitExceeded
 import logging
 from app.config import settings
 from app.database import init_db, close_db
-from app.routers import auth, audits, billing, schedules, public
+from app.routers import auth, audits, billing, schedules, public, tasks
 from app.schemas import HealthCheck, ErrorResponse
 
 # Configure logging
@@ -327,6 +327,7 @@ async def get_system_status():
 # Include routers
 app.include_router(auth.router, prefix="/api")
 app.include_router(audits.router, prefix="/api")
+app.include_router(tasks.router, prefix="/api")
 app.include_router(billing.router, prefix="/api")
 app.include_router(schedules.router, prefix="/api")
 app.include_router(public.router, prefix="/api")

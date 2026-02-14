@@ -1,5 +1,13 @@
 'use client'
 
+/**
+ * Visibility Analysis Page - 3-Phase System
+ *
+ * Dane: Visibility metrics, positions, gains/losses, competitors, features, sections, cannibalization
+ * Analiza: AI visibility insights from ai_contexts.visibility
+ * Plan: Actionable visibility improvement tasks
+ */
+
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
@@ -27,9 +35,11 @@ import {
 } from '@/components/AuditCharts'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import type { Audit } from '@/lib/api'
-import { AuditPageLayout } from '@/components/AuditPageLayout'
-import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
+import { ModeSwitcher, useAuditMode } from '@/components/audit/ModeSwitcher'
+import { AnalysisView } from '@/components/audit/AnalysisView'
+import { TaskListView } from '@/components/audit/TaskListView'
+import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { formatNumber, formatScore } from '@/lib/utils'
 import { IntentBadge } from '@/components/ui/intent-badge'
@@ -547,6 +557,7 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+  const [mode, setMode] = useAuditMode('data')
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -563,12 +574,40 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
     enabled: isAuth,
   })
 
+  const { data: tasksResponse, refetch: refetchTasks } = useQuery({
+    queryKey: ['tasks', params.id, 'visibility'],
+    queryFn: () => auditsAPI.getTasks(params.id, { module: 'visibility' }),
+    enabled: isAuth && !!audit && mode === 'plan'
+  })
+
+  const tasks = tasksResponse?.items || []
+  const aiContext = audit?.results?.ai_contexts?.visibility
+
+  const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { status })
+      refetchTasks()
+      toast.success('Zaktualizowano status zadania')
+    } catch (error) {
+      toast.error('Nie udało się zaktualizować zadania')
+    }
+  }
+
+  const handleNotesChange = async (taskId: string, notes: string) => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { notes })
+      refetchTasks()
+      toast.success('Zapisano notatki')
+    } catch (error) {
+      toast.error('Nie udało się zapisać notatek')
+    }
+  }
+
   // Keep all hooks above conditional returns to avoid hook-order mismatch between renders.
   const senuto = audit?.results?.senuto
   const vis = senuto?.visibility || {}
   const stats = vis.statistics?.statistics || {}
   const dash = vis.dashboard || {}
-  const hasAiData = !!(audit?.results?.ai_contexts?.visibility)
   const positions = vis.positions || []
   const wins = vis.wins || []
   const losses = vis.losses || []
@@ -697,21 +736,27 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <AuditPageLayout
-      aiPanel={<AiInsightsPanel area="visibility" audit={audit!} />}
-      aiPanelTitle="AI: Widoczność"
-      hasAiData={hasAiData}
-      isAiLoading={audit?.ai_status === 'processing'}
-    >
-      <div className="space-y-8">
-        <div className="flex items-center gap-3">
-          <Globe2 className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Analiza Widoczności</h1>
-            <p className="text-sm text-muted-foreground">Baza: {senuto.country_id === 200 ? 'Polska 2.0' : 'Inna'} • Tryb: {senuto.fetch_mode}</p>
-          </div>
+    <div className="container mx-auto py-8 px-4 space-y-6">
+      <div className="flex items-center gap-3">
+        <Globe2 className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-bold">Analiza Widoczności</h1>
+          <p className="text-sm text-muted-foreground">Baza: {senuto.country_id === 200 ? 'Polska 2.0' : 'Inna'} • Tryb: {senuto.fetch_mode}</p>
         </div>
+      </div>
 
+      <ModeSwitcher
+        mode={mode}
+        onModeChange={setMode}
+        taskCount={tasks.length}
+        pendingTaskCount={tasks.filter(t => t.status === 'pending').length}
+        hasAiData={!!aiContext}
+        hasExecutionPlan={audit?.execution_plan_status === 'completed'}
+        isAiLoading={audit?.ai_status === 'processing'}
+        isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
+      />
+
+      {mode === 'data' && (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList>
             <TabsTrigger value="overview">Przegląd</TabsTrigger>
@@ -798,7 +843,24 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
             <RawDataTab vis={vis} />
           </TabsContent>
         </Tabs>
-      </div>
-    </AuditPageLayout>
+      )}
+
+      {mode === 'analysis' && (
+        <AnalysisView
+          area="visibility"
+          aiContext={aiContext}
+          isLoading={audit?.ai_status === 'processing'}
+        />
+      )}
+
+      {mode === 'plan' && (
+        <TaskListView
+          tasks={tasks}
+          module="visibility"
+          onStatusChange={handleStatusChange}
+          onNotesChange={handleNotesChange}
+        />
+      )}
+    </div>
   )
 }

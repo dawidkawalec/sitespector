@@ -153,6 +153,7 @@ async def create_audit(
         senuto_country_id=audit_data.senuto_country_id,
         senuto_fetch_mode=audit_data.senuto_fetch_mode,
         run_ai_pipeline=audit_data.run_ai_pipeline if audit_data.run_ai_pipeline is not None else True,
+        run_execution_plan=audit_data.run_execution_plan if audit_data.run_execution_plan is not None else True,
     )
     
     db.add(new_audit)
@@ -926,4 +927,45 @@ async def trigger_ai_context(
         "areas_analyzed": task_names,
         "message": f"Przeanalizowano {len(task_names)} obszarów"
     }
+
+
+@router.post("/{audit_id}/run-execution-plan")
+async def trigger_execution_plan(
+    audit_id: UUID,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Manually trigger execution plan generation for a completed audit.
+    Generates concrete, actionable tasks with implementation instructions.
+    """
+    import asyncio
+    from worker import run_execution_plan as worker_run_execution_plan
+    
+    result = await db.execute(select(Audit).where(Audit.id == audit_id))
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    
+    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
+    if not has_access:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if audit.status != AuditStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="Audit must be completed first")
+    
+    if audit.execution_plan_status == "processing":
+        raise HTTPException(status_code=409, detail="Execution plan generation already in progress")
+    
+    # Prepare tech data
+    tech_data = {
+        "crawl": audit.results.get("crawl", {}),
+        "lighthouse": audit.results.get("lighthouse", {}),
+        "senuto": audit.results.get("senuto", {}),
+    }
+    
+    # Launch in background
+    asyncio.create_task(worker_run_execution_plan(str(audit_id), tech_data))
+    
+    return {"status": "execution_plan_started", "message": "Generowanie planu wykonania uruchomione w tle"}
 

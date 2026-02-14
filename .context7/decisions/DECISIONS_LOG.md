@@ -1,5 +1,38 @@
 # Architectural Decisions Log
 
+## ADR-008: 3-Phase Audit System with Interactive Tasks (2026-02-14)
+
+### Context
+Users needed more than just analysis - they needed concrete, actionable execution plans. The existing 2-phase system (Data + AI Analysis) generated recommendations but lacked specific implementation instructions and task tracking.
+
+### Decision
+Expand to a 3-phase audit system:
+- **Phase 1:** Data Collection (Screaming Frog + Lighthouse + Senuto)
+- **Phase 2:** AI Analysis (7 specialist context analyses + strategy synthesis)  
+- **Phase 3:** Execution Plan (8 module-specific task generators with concrete fix instructions)
+
+Tasks stored in separate `audit_tasks` table (not JSONB) to enable interactive features: status toggling, notes, priority changes, filtering.
+
+### Implementation
+
+**Backend:** AuditTask model, ai_execution_plan.py service (8 generators + synthesis), tasks router, worker Phase 3  
+**Frontend:** ModeSwitcher (3 modes: Dane/Analiza/Plan), AnalysisView, TaskListView, TaskCard components  
+**Database:** audit_tasks table with 6 indexes, run_execution_plan flag
+
+### Consequences
+
+**Positive:** Concrete tasks with code snippets, interactive tracking, quick wins auto-tagged, full-width analysis view, scalable  
+**Negative:** +30-60s Phase 3 time, +8-12h frontend module refactoring, +$0.001/audit AI cost  
+**Mitigation:** Phase 3 optional, pattern documented, costs negligible
+
+### Status
+Backend: 100% complete | Frontend foundation: 100% complete | Module refactoring: SEO, Links, Performance, Images, UX-Check, Security, AI Overviews, **Visibility**
+
+### Related Files
+`backend/app/models.py`, `backend/app/services/ai_execution_plan.py`, `backend/worker.py`, `frontend/components/audit/`, `frontend/app/(app)/audits/[id]/ai-overviews/page.tsx`, `IMPLEMENTATION_GUIDE_3_PHASE.md`, `3_PHASE_IMPLEMENTATION_SUMMARY.md`
+
+---
+
 ## 📜 Content Architecture: Hybrid Markdown + JSON (Feb 2026)
 - **Decision**: Adopted Option B (Hybrid) — content stored as JSON (structured data) + Markdown (long-form pages) in `landing/content/`. Components will read from these files via helper functions.
 - **Rationale**: Enables separate content agent to manage content without touching React code. JSON for structured/repeatable data (testimonials, pricing, FAQ), Markdown for long-form pages (blog, case studies, legal). Git-friendly, type-safe, zero additional dependencies.
