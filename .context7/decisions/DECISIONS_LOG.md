@@ -29,6 +29,11 @@
 - **Rationale**: Ensure AI agents have a single, up-to-date source of truth.
 - **Outcome**: `docs/` folder reduced to public/marketing materials. `.context7/INDEX.md` created.
 
+## 📜 Audit Response Enrichment for Schema Drift (Feb 2026)
+- **Decision**: Add best-effort normalization/enrichment in `GET /api/audits/{id}` for older stored `results` payload shapes.
+- **Rationale**: Production audits are stored as JSONB and payload shapes evolve; UI must remain correct without forcing re-runs.
+- **Outcome**: Response now fills missing Senuto backlink summary counts and can detect sitemap (robots + common endpoints) when crawl payload lacks it.
+
 ## 🎨 Unified Context-Aware Sidebar (Feb 2026)
 - **Decision**: Implement a single `UnifiedSidebar` that handles all navigation contexts.
 - **Rationale**: Improve UX consistency and eliminate duplicate menu items.
