@@ -61,7 +61,7 @@ export default function UXCheckPage({ params }: { params: { id: string } }) {
 
   const tasks = tasksResponse?.items || []
   const ux = audit?.results?.ux
-  const aiContext = audit?.results?.ux
+  const aiContext = audit?.results?.ai_contexts?.ux
 
   const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
     try {

@@ -99,7 +99,12 @@ async function apiRequest<T>(
 
   const contentType = response.headers.get('content-type') || ''
   if (contentType.includes('application/json')) {
-    return JSON.parse(bodyText) as T
+    try {
+      return JSON.parse(bodyText) as T
+    } catch (error) {
+      console.error('Failed to parse JSON response:', error)
+      throw new Error(`Invalid JSON response from server: ${bodyText.substring(0, 100)}`)
+    }
   }
 
   // Fallback for non-JSON success responses (rare in this app).

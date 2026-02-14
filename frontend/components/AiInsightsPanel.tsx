@@ -93,34 +93,34 @@ function getFallbackData(audit: Audit, area: AiArea): AiContextData | null {
 
   switch (area) {
     case 'seo': {
-      const content = results.content_analysis
-      const local = results.local_seo
-      const contentDeep = results.content_deep
+      const content = results?.content_analysis
+      const local = results?.local_seo
+      const contentDeep = results?.content_deep
       if (!content && !local) return null
       return {
         key_findings: [
           content?.summary,
           content?.tone_voice ? `Ton komunikacji: ${content.tone_voice}` : null,
           local?.is_local_business ? 'Wykryto lokalny biznes' : null,
-          contentDeep?.thin_content_count > 0 ? `${contentDeep.thin_content_count} stron z thin content` : null,
-          contentDeep?.duplicate_content_count > 0 ? `${contentDeep.duplicate_content_count} duplikatów treści` : null,
+          contentDeep?.thin_content_count ? `${contentDeep.thin_content_count} stron z thin content` : null,
+          contentDeep?.duplicate_content_count ? `${contentDeep.duplicate_content_count} duplikatów treści` : null,
         ].filter(Boolean) as string[],
         recommendations: [
           ...(content?.recommendations || []),
           ...(local?.recommendations || []),
         ],
         quick_wins: content?.roi_action_plan?.map((a: any) => ({
-          title: a.action,
+          title: a?.action || '',
           description: '',
-          impact: a.impact,
-          effort: a.effort,
-        })),
+          impact: a?.impact || 'medium',
+          effort: a?.effort || 'medium',
+        })) || [],
       }
     }
     case 'performance': {
-      const perf = results.performance_analysis
-      const ux = results.ux
-      const benchmarks = results.benchmarks
+      const perf = results?.performance_analysis
+      const ux = results?.ux
+      const benchmarks = results?.benchmarks
       if (!perf && !ux) return null
       return {
         key_findings: [
@@ -136,14 +136,14 @@ function getFallbackData(audit: Audit, area: AiArea): AiContextData | null {
       }
     }
     case 'crawl': {
-      const tech = results.tech_stack
-      const security = results.security
+      const tech = results?.tech_stack
+      const security = results?.security
       if (!tech && !security) return null
       return {
         key_findings: [
           tech?.server ? `Server: ${tech.server}` : null,
-          security?.is_https ? 'HTTPS aktywne' : 'Brak HTTPS!',
-          security?.mixed_content_count > 0 ? `${security.mixed_content_count} zasobów mixed content` : null,
+          security?.is_https ? 'HTTPS aktywne' : security?.is_https === false ? 'Brak HTTPS!' : null,
+          security?.mixed_content_count ? `${security.mixed_content_count} zasobów mixed content` : null,
           security?.security_score ? `Security score: ${security.security_score}/100` : null,
         ].filter(Boolean) as string[],
         recommendations: [
@@ -153,8 +153,8 @@ function getFallbackData(audit: Audit, area: AiArea): AiContextData | null {
       }
     }
     case 'lighthouse': {
-      const perf = results.performance_analysis
-      const ux = results.ux
+      const perf = results?.performance_analysis
+      const ux = results?.ux
       if (!perf && !ux) return null
       return {
         key_findings: perf?.issues || [],

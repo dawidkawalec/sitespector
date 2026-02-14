@@ -381,7 +381,7 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
   })
 
   const tasks = tasksResponse?.items || []
-  const aiContext = audit?.results?.ai_contexts?.performance ?? audit?.results?.performance_analysis
+  const aiContext = audit?.results?.ai_contexts?.performance
 
   const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
     try {

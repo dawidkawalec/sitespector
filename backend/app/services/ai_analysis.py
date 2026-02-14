@@ -3,6 +3,7 @@ AI-powered analysis services using Claude.
 """
 
 import logging
+from datetime import datetime
 from typing import Dict, Any, List
 from app.services.ai_client import call_claude, AIUnavailableError
 
@@ -801,32 +802,33 @@ def _safe_json_parse(text: str) -> Dict[str, Any]:
     # Try direct parse first
     try:
         return json.loads(text)
-    except (json.JSONDecodeError, TypeError):
-        pass
+    except (json.JSONDecodeError, TypeError) as e:
+        logger.warning(f"Direct JSON parse failed: {str(e)[:100]}")
     
     # Try finding JSON block
     json_match = re.search(r'\{.*\}', text or '', re.DOTALL)
     if json_match:
         try:
             return json.loads(json_match.group())
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as e:
+            logger.warning(f"JSON block regex parse failed: {str(e)[:100]}")
     
     # Try finding JSON array
     arr_match = re.search(r'\[.*\]', text or '', re.DOTALL)
     if arr_match:
         try:
             return {"items": json.loads(arr_match.group())}
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as e:
+            logger.warning(f"JSON array regex parse failed: {str(e)[:100]}")
     
+    logger.warning(f"All JSON parse attempts failed. Returning empty dict. Text preview: {(text or '')[:200]}")
     return {}
 
 
 async def _call_ai_context(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
     """Call AI and parse JSON response for context analysis."""
     try:
-        response = await call_claude(user_prompt, system_prompt, max_tokens=4096)
+        response = await call_claude(user_prompt, system_prompt, max_tokens=20000)
         parsed = _safe_json_parse(response)
         parsed_keys = list(parsed.keys()) if isinstance(parsed, dict) else []
         response_preview = (response or "")[:200].replace("\n", " ")
@@ -1420,4 +1422,148 @@ async def generate_executive_summary(all_results: Dict[str, Any]) -> Dict[str, A
         "critical_issues": result.get("critical_issues", []),
         "growth_potential": result.get("growth_potential", ""),
         "estimated_impact": result.get("estimated_impact", ""),
+    }
+
+
+async def analyze_security_context(
+    security_data: Dict[str, Any],
+    crawl: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Security context insights from security analysis and crawl data.
+    Returns key_findings, recommendations, quick_wins, priority_issues.
+    """
+    logger.info("Analyzing security context")
+    
+    url = crawl.get("url", "")
+    is_https = url.startswith("https")
+    security_score = security_data.get("security_score", 0)
+    mixed_content_count = security_data.get("mixed_content_count", 0)
+    
+    system_prompt = """Jesteś ekspertem bezpieczeństwa web. Na podstawie danych security 
+    przygotuj kontekstową analizę bezpieczeństwa. Odpowiedz w JSON:
+    {
+        "key_findings": ["finding1", "finding2", ...],
+        "recommendations": ["rec1", "rec2", ...],
+        "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+        "priority_issues": ["issue1", "issue2", ...]
+    }"""
+    
+    user_prompt = f"""Dane Security do analizy:
+    - HTTPS: {is_https}
+    - Security Score: {security_score}/100
+    - Mixed Content: {mixed_content_count} zasobów
+    - URL: {url}
+    
+    Przygotuj max 5 key_findings, 5 recommendations, 3 quick_wins, 3 priority_issues."""
+    
+    result = await _call_ai_context(system_prompt, user_prompt)
+    
+    return {
+        **_ai_meta(result),
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+    }
+
+
+async def analyze_ux_context(
+    ux_data: Dict[str, Any],
+    lighthouse: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    UX context insights from UX analysis and Lighthouse data.
+    Returns key_findings, recommendations, quick_wins, priority_issues.
+    """
+    logger.info("Analyzing UX context")
+    
+    mobile_friendly = ux_data.get("mobile_friendly", False)
+    accessibility_score = lighthouse.get("desktop", {}).get("accessibility_score", 0)
+    best_practices = lighthouse.get("desktop", {}).get("best_practices_score", 0)
+    
+    system_prompt = """Jesteś ekspertem UX i dostępności (accessibility). Na podstawie danych UX 
+    przygotuj kontekstową analizę doświadczenia użytkownika. Odpowiedz w JSON:
+    {
+        "key_findings": ["finding1", "finding2", ...],
+        "recommendations": ["rec1", "rec2", ...],
+        "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+        "priority_issues": ["issue1", "issue2", ...]
+    }"""
+    
+    user_prompt = f"""Dane UX do analizy:
+    - Mobile Friendly: {mobile_friendly}
+    - Accessibility Score: {accessibility_score}/100
+    - Best Practices: {best_practices}/100
+    
+    Przygotuj max 5 key_findings, 5 recommendations, 3 quick_wins, 3 priority_issues."""
+    
+    result = await _call_ai_context(system_prompt, user_prompt)
+    
+    return {
+        **_ai_meta(result),
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+    }
+
+
+def validate_cross_module_consistency(ai_contexts: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Validate consistency between modules (e.g., Visibility vs AI Overviews).
+    Returns a consistency report with detected conflicts.
+    """
+    logger.info("Validating cross-module consistency")
+    
+    conflicts = []
+    warnings = []
+    
+    # Check Visibility vs AI Overviews consistency
+    visibility = ai_contexts.get("visibility", {})
+    ai_overviews = ai_contexts.get("ai_overviews", {})
+    
+    if visibility and ai_overviews:
+        # If AI Overviews has data, Visibility shouldn't say "no AIO"
+        vis_findings = " ".join(visibility.get("key_findings", [])).lower()
+        vis_issues = " ".join(visibility.get("priority_issues", [])).lower()
+        
+        aio_findings = " ".join(ai_overviews.get("key_findings", [])).lower()
+        aio_keywords = ai_overviews.get("aio_opportunities", [])
+        
+        if ("brak" in vis_findings or "nie ma" in vis_findings or "brak" in vis_issues) and "aio" in vis_findings:
+            if aio_keywords or len(aio_findings) > 50:
+                conflicts.append({
+                    "modules": ["visibility", "ai_overviews"],
+                    "issue": "Visibility reports 'no AIO' but AI Overviews has data",
+                    "severity": "medium"
+                })
+    
+    # Check if contexts have contradictory priority_issues
+    all_modules = ["seo", "performance", "visibility", "backlinks", "links", "images", "security", "ux"]
+    priority_map = {}
+    
+    for module in all_modules:
+        ctx = ai_contexts.get(module, {})
+        issues = ctx.get("priority_issues", [])
+        for issue in issues:
+            issue_lower = issue.lower()
+            if issue_lower not in priority_map:
+                priority_map[issue_lower] = []
+            priority_map[issue_lower].append(module)
+    
+    # Detect duplicated priority issues across modules (informational, not an error)
+    for issue_text, modules in priority_map.items():
+        if len(modules) > 1:
+            warnings.append({
+                "issue": f"Priority issue mentioned in multiple modules: {', '.join(modules)}",
+                "text": issue_text,
+                "severity": "info"
+            })
+    
+    return {
+        "conflicts": conflicts,
+        "warnings": warnings,
+        "is_consistent": len(conflicts) == 0,
+        "checked_at": datetime.utcnow().isoformat()
     }

@@ -836,7 +836,220 @@ When adding new bugs to this file, use this format:
 
 ---
 
-**Last Updated**: 2026-02-12  
-**Resolved Bugs**: 14 (incl. BUG-014 quick wins alignment + chart style consistency)  
+### BUG-015: Frontend bledne sciezki AI context (Security i UX)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: CRITICAL
+
+**Description**:
+- Security i UX pages czytaly `audit.results.security` i `audit.results.ux` zamiast `audit.results.ai_contexts.security/ux`
+- W trybie "Analiza" wyswietlaly surowe dane Phase 2 zamiast wnioskow AI
+- AiInsightsPanel mialo bezposredni dostep do `results.content_analysis` bez null check -> crash gdy results === null
+
+**Root cause**:
+- Stare patterny z okresu przed refaktorem 3-Phase System
+- Brak walidacji null w fallback functions
+
+**Fix**:
+- `frontend/app/(app)/audits/[id]/security/page.tsx`: zmieniono `audit?.results?.security` → `audit?.results?.ai_contexts?.security`
+- `frontend/app/(app)/audits/[id]/ux-check/page.tsx`: zmieniono `audit?.results?.ux` → `audit?.results?.ai_contexts?.ux`
+- `frontend/components/AiInsightsPanel.tsx`: dodano optional chaining (`results?.content_analysis`) w getFallbackData
+
+**Related**: C1, C2, C6 z comprehensive_system_audit
+
+---
+
+### BUG-016: Brak execution_plan_status w /status endpoint
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: CRITICAL
+
+**Description**:
+- GET `/audits/{id}/status` nie zwracal `execution_plan_status` mimo ze frontend oczekiwal tego pola
+- Polling w UI nie widzial statusu generowania planu
+
+**Root cause**:
+- Pole zostalo dodane do modelu i schema, ale zapomniane w endpoincie `/status`
+
+**Fix**:
+- `backend/app/routers/audits.py`: dodano `"execution_plan_status": audit.execution_plan_status` do return dict
+
+**Related**: B3/G1 z comprehensive_system_audit
+
+---
+
+### BUG-017: HTTPS detection w generate_security_tasks
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: HIGH
+
+**Description**:
+- `generate_security_tasks()` uzywal `status_code == 200` do okreslenia czy strona ma HTTPS
+- Status code nie ma nic wspolnego z protokolem SSL/TLS
+- Security taski generowaly bledne zalecenia
+
+**Root cause**:
+- Simplified check z komentarzem "# Simplified" ktory byl niepoprawny
+
+**Fix**:
+- `backend/app/services/ai_execution_plan.py`: zmieniono `is_https = status_code == 200` → `is_https = url.startswith("https")`
+
+**Related**: A1 z comprehensive_system_audit
+
+---
+
+### BUG-018: Phase 3 uruchamial sie bez Phase 2
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: HIGH
+
+**Description**:
+- `run_execution_plan()` (Phase 3) startowal niezaleznie od statusu Phase 2
+- Jesli AI Analysis zawiodla, `ai_contexts` byly puste/niekompletne ale plan byl generowany "na bazie niczego"
+- Audit z `ai_status="failed"` dostal execution plan ze zdegradowanych danych
+
+**Root cause**:
+- Brak warunku sprawdzajacego status Phase 2 przed rozpoczeciem Phase 3
+
+**Fix**:
+- `backend/worker.py`: dodano HARD BLOCK przed `run_execution_plan()`:
+  - Sprawdza `audit.ai_status != "completed"` → ustawia `execution_plan_status = "blocked"` i loguje
+  - Phase 3 nie uruchamia sie jesli Phase 2 nie ma statusu "completed"
+
+**Related**: B1 z comprehensive_system_audit
+
+---
+
+### BUG-019: Brak AI contexts dla Security i UX
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: HIGH
+
+**Description**:
+- Backend generowal `ai_contexts` dla: seo, performance, visibility, backlinks, links, images, ai_overviews
+- Brakowalo: **security** i **ux** -- te moduly nie mialy dedykowanych `analyze_*_context()` funkcji
+- Obecne `security` i `ux` w `results` to surowe analizy Phase 2, nie kontekstowe wnioski AI
+
+**Root cause**:
+- Podczas budowy 3-Phase System dodano contexty tylko dla kluczowych modulow SEO/Performance/Content
+- Security i UX pozostaly z "old school" analizami bez kontekstu
+
+**Fix**:
+- `backend/app/services/ai_analysis.py`: dodano `analyze_security_context()` i `analyze_ux_context()`
+- `backend/worker.py`: dodano wywolania tych funkcji do `context_tasks` w Phase 2
+
+**Related**: H1 z comprehensive_system_audit
+
+---
+
+### BUG-020: Za male max_tokens w promptach AI
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: MEDIUM
+
+**Description**:
+- `max_tokens` wahaly sie od 2048 do 4096 w zaleznosci od funkcji
+- Gemini 3 Flash ma okno 1M tokenow -- nie ma powodu oszczedzac
+- Niektore odpowiedzi AI byly obcinane (szczegolnie execution plan tasks)
+
+**Root cause**:
+- Konserwatywne ustawienia z czasow gdy AI API bylo drogie
+
+**Fix**:
+- Ustawiono `max_tokens=20000` we wszystkich wywolaniach AI:
+  - `backend/app/services/ai_analysis.py`: `_call_ai_context()`
+  - `backend/app/services/ai_execution_plan.py`: wszystkie `generate_*_tasks()` funkcje
+
+**Related**: A4 z comprehensive_system_audit
+
+---
+
+### BUG-021: Brak limitu liczby taskow
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: MEDIUM
+
+**Description**:
+- `synthesize_execution_plan()` nie mial gornego limitu -- jesli AI wygeneruje 500 taskow, wszystkie zostana zapisane
+- Potencjalnie problemy z performance UI i bazy danych
+
+**Root cause**:
+- Brak przemyslenia edge case'ow (np. sklep 70k produktow)
+
+**Fix**:
+- `backend/app/services/ai_execution_plan.py`: dodano `MAX_TASKS = 200` w `synthesize_execution_plan()`
+- Taski sa obcinane po sortowaniu wg priorytetu (najwazniejsze zostaja)
+
+**Related**: A5 z comprehensive_system_audit
+
+---
+
+### BUG-022: Ciche bledy w _safe_json_parse
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: MEDIUM
+
+**Description**:
+- Kiedy AI zwracal zle sformatowany JSON, `_safe_json_parse()` zwracal pusty `{}` bez logowania bledu
+- Niemozliwe bylo debugowanie dlaczego AI contexts sa puste
+
+**Root cause**:
+- Fallback logic bez logowania
+
+**Fix**:
+- `backend/app/services/ai_analysis.py`: dodano `logger.warning()` przy kazdym fallback attempt w `_safe_json_parse()`
+
+**Related**: A2 z comprehensive_system_audit
+
+---
+
+### BUG-023: Brak ostrzezenia o bledzie AI w UI
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: MEDIUM
+
+**Description**:
+- Kiedy `ai_status == "failed"`, frontend nie wyswietlal zadnego ostrzezenia
+- Uzytkownik widzial puste sekcje bez wyjasnienia
+
+**Root cause**:
+- Brak handlera dla `ai_status === "failed"` w main audit page
+
+**Fix**:
+- `frontend/app/(app)/audits/[id]/page.tsx`: dodano banner ostrzezenia z AlertTriangle gdy `ai_status === "failed"`
+
+**Related**: D1 z comprehensive_system_audit
+
+---
+
+**Last Updated**: 2026-02-14  
+**Resolved Bugs**: 23 (incl. BUG-015 do BUG-023 z comprehensive system audit)  
 **Known Issues**: 3  
 **Watching**: 2

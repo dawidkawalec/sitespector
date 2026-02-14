@@ -275,6 +275,26 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
         </div>
       </div>
 
+      {/* AI Failed Warning Banner */}
+      {audit.ai_status === 'failed' && (
+        <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-yellow-900 dark:text-yellow-200">
+                  Analiza AI nie powiodła się
+                </h3>
+                <p className="text-sm text-yellow-800 dark:text-yellow-300 mt-1">
+                  Dane techniczne zostały zebrane pomyślnie, ale analiza AI nie mogła zostać ukończona. 
+                  Niektóre sekcje mogą być niekompletne. Możesz ponownie uruchomić audyt.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {audit.status === 'processing' || audit.status === 'pending' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Progress Dashboard */}

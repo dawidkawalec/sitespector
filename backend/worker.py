@@ -318,6 +318,14 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 ),
                 "links": ai_analysis.analyze_links_context(crawl_data),
                 "images": ai_analysis.analyze_images_context(crawl_data),
+                "security": ai_analysis.analyze_security_context(
+                    results.get("security", {}),
+                    crawl_data
+                ),
+                "ux": ai_analysis.analyze_ux_context(
+                    results.get("ux", {}),
+                    lighthouse_data
+                ),
             }
             
             # Add Senuto-dependent contexts only if data exists
@@ -358,6 +366,16 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
             
             results = dict(audit.results)
             results["ai_contexts"] = ai_contexts
+            
+            # Validate cross-module consistency
+            consistency_report = ai_analysis.validate_cross_module_consistency(ai_contexts)
+            results["consistency_report"] = consistency_report
+            
+            if not consistency_report.get("is_consistent"):
+                logger.warning(f"Cross-module inconsistencies detected for audit {audit_id}: {len(consistency_report.get('conflicts', []))} conflicts")
+                for conflict in consistency_report.get("conflicts", []):
+                    logger.warning(f"  - {conflict['issue']} (modules: {conflict['modules']})")
+            
             # Ensure SQLAlchemy sees JSONB mutation as a new value.
             from sqlalchemy.orm.attributes import flag_modified
             audit.results = dict(results)
@@ -646,7 +664,26 @@ async def process_audit(audit_id: str) -> None:
         
         # Phase 3: Execution Plan (runs after Phase 2, unless disabled)
         if should_run_execution_plan:
-            await run_execution_plan(audit_id, tech_data)
+            # HARD BLOCK: Phase 3 MUST NOT run if Phase 2 (AI Analysis) did not complete successfully
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(Audit).where(Audit.id == audit_id))
+                audit = result.scalar_one_or_none()
+                
+                if audit and audit.ai_status != "completed":
+                    # Block Phase 3 - AI Analysis did not complete
+                    audit.execution_plan_status = "blocked"
+                    await add_audit_log(
+                        audit, 
+                        "execution_plan", 
+                        "blocked", 
+                        f"Execution plan blocked: AI Analysis status is '{audit.ai_status}' (must be 'completed')"
+                    )
+                    await db.commit()
+                    logger.warning(f"⛔ Phase 3 blocked for audit {audit_id}: AI status is '{audit.ai_status}', not 'completed'")
+                else:
+                    # AI completed successfully - proceed with Phase 3
+                    await db.commit()
+                    await run_execution_plan(audit_id, tech_data)
         else:
             async with AsyncSessionLocal() as db:
                 result = await db.execute(select(Audit).where(Audit.id == audit_id))

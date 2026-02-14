@@ -356,6 +356,91 @@ Backend: 100% complete | Frontend foundation: 100% complete | Module refactoring
 
 ---
 
-**Last Updated**: 2026-02-12
-**Total Decisions**: 22 accepted
+## ADR-024: HARD BLOCK Phase 2 → Phase 3 (AI Analysis Required)
+**Date**: 2026-02-14
+**Status**: ✅ Done
+**Decision**:
+- Phase 3 (Execution Plan) **NIE MOZE** wystartowac jesli Phase 2 (AI Analysis) nie zakonczyla sie sukcesem (`ai_status != "completed"`).
+- Jesli AI Analysis zawiodla/zostala skipnięta, `execution_plan_status` dostaje status `"blocked"` zamiast uruchamiac generowanie planu.
+**Rationale**:
+- Phase 3 potrzebuje `ai_contexts` z Phase 2 do generowania konkretnych taskow z fix_data.
+- Generowanie planu "na bazie niczego" (gdy Phase 2 failed) prowadzi do niskiej jakosci/generycznych taskow.
+- HARD BLOCK zapewnia ze uzytkownik dostanie albo **pelny plan z AI insights**, albo **jasny komunikat ze plan nie mogl byc wygenerowany**.
+**Outcome**:
+- `backend/worker.py`: dodano sprawdzenie `audit.ai_status == "completed"` przed wywolaniem `run_execution_plan()`.
+- Jesli warunek nie jest spelniony: `execution_plan_status = "blocked"` + log z powodem.
+- Frontend widzi `execution_plan_status === "blocked"` i moze wyswietlic odpowiedni komunikat.
+
+---
+
+## ADR-025: Cross-Module Consistency Validator
+**Date**: 2026-02-14
+**Status**: ✅ Done
+**Decision**:
+- Dodac `validate_cross_module_consistency()` funkcję do sprawdzania sprzecznosci miedzy modulami AI (np. Visibility mowi "brak AIO" ale AI Overviews ma dane).
+- Validator uruchamiany automatycznie po zakonczeniu Phase 2 (po wygenerowaniu `ai_contexts`).
+- Wyniki zapisywane w `audit.results.consistency_report` z listami `conflicts` i `warnings`.
+**Rationale**:
+- AI moduly generuja wnioski niezaleznie -- moga pojawic sie sprzecznosci (np. jeden modul mowi "brak X", drugi modul pokazuje dane X).
+- Wykrywanie konfliktow pozwala na debugging promptow AI i poprawe jakosci analiz.
+- Logi konfliktow pomagaja identyfikowac problemy z danymi wejsciowymi (np. Senuto zwraca incomplete payload).
+**Outcome**:
+- `backend/app/services/ai_analysis.py`: dodano `validate_cross_module_consistency()`.
+- `backend/worker.py`: wywolanie validatora po `ai_contexts` + logowanie konfliktow.
+- `audit.results.consistency_report` zawiera: `conflicts`, `warnings`, `is_consistent`, `checked_at`.
+
+---
+
+## ADR-026: Dedykowane AI Contexts dla Security i UX
+**Date**: 2026-02-14
+**Status**: ✅ Done
+**Decision**:
+- Dodac dedykowane `analyze_security_context()` i `analyze_ux_context()` funkcje generujace kontekstowe wnioski AI dla modulow Security i UX.
+- Przed tym Security i UX mialy tylko surowe analizy Phase 2 (`results.security`, `results.ux`) -- brakowalo im struktury `ai_contexts.{module}` z `key_findings`, `recommendations`, `quick_wins`, `priority_issues`.
+**Rationale**:
+- Wszystkie inne moduly (SEO, Performance, Visibility, Links, Images) maja AI contexty -- Security i UX byly "second-class citizens".
+- Frontend oczekiwal `ai_contexts.security` i `ai_contexts.ux` (zgodnie z 3-Phase System pattern).
+- Dodanie AI contexts dla Security/UX zapewnia spojnosc UX/API i lepsze wnioski dla uzytkownika.
+**Outcome**:
+- `backend/app/services/ai_analysis.py`: dodano `analyze_security_context()` i `analyze_ux_context()`.
+- `backend/worker.py`: dodano wywolania do `context_tasks` w Phase 2.
+- Frontend Security/UX pages teraz czytaja `audit.results.ai_contexts.security/ux` zamiast `audit.results.security/ux`.
+
+---
+
+## ADR-027: Zwiększenie max_tokens do 20000 (Gemini 3 Flash Optimization)
+**Date**: 2026-02-14
+**Status**: ✅ Done
+**Decision**:
+- Ustawic `max_tokens=20000` (20k) we **wszystkich** wywolaniach AI (zamiast 2048-4096).
+- Gemini 3 Flash ma okno kontekstu 1M tokenow -- nie ma powodu oszczedzac na max_tokens.
+**Rationale**:
+- Obserwowalismy ze niektore odpowiedzi AI (szczegolnie execution plan tasks) byly obcinane przy 2048-4096 tokenach.
+- Gemini 3 Flash jest szybki i tani nawet przy 20k output -- bottleneck to czas myslenia modelu, nie liczba tokenow.
+- Bogate odpowiedzi AI (z konkretnymi przykladami, code snippets, pelnym fix_data) wymagaja wiecej miejsca.
+**Outcome**:
+- `backend/app/services/ai_analysis.py`: `_call_ai_context()` teraz uzywa `max_tokens=20000`.
+- `backend/app/services/ai_execution_plan.py`: wszystkie `generate_*_tasks()` uzywaja `max_tokens=20000`.
+- Execution plan tasks maja teraz wiecej miejsca na szczegoly (np. proposed meta title, JSON-LD schema, instrukcje wdrozenia).
+
+---
+
+## ADR-028: Task Limit 200 (Holistyczne Podejście do Dużych Stron)
+**Date**: 2026-02-14
+**Status**: ✅ Done
+**Decision**:
+- Ustawic `MAX_TASKS = 200` w `synthesize_execution_plan()` -- obcinac taski po sortowaniu wg priorytetu (najwazniejsze zostaja).
+- Dla duzych stron (np. sklep 70k produktow) taski powinny byc **holistyczne** (np. "Popraw meta title w kategorii Elektronika"), nie **per-produkt** (np. 70k taskow "Popraw meta title produktu #XYZ").
+**Rationale**:
+- Bez limitu AI moze wygenerowac setki/tysiace taskow dla duzych stron.
+- 200 priorytetowych taskow to wiecej niz wystarczy dla wiekszosci klientow (real-world projekty maja 20-50 taskow "do zrobienia").
+- Holistyczne taski sa bardziej uzyteczne niz szczegolowe per-item (klient chce znac **co** zrobic, nie dostac 5000 linijek TODO).
+**Outcome**:
+- `backend/app/services/ai_execution_plan.py`: `synthesize_execution_plan()` obcina do 200 taskow.
+- Prompt engineering w `generate_*_tasks()` sugeruje grupowanie taskow (np. "dla kategorii", "dla typu strony") zamiast per-URL.
+
+---
+
+**Last Updated**: 2026-02-14
+**Total Decisions**: 28 accepted
 **Review**: Update when making significant architectural changes.

@@ -399,6 +399,7 @@ async def get_audit_status(
         "completed_at": audit.completed_at,
         "processing_logs": audit.processing_logs,
         "ai_status": audit.ai_status,
+        "execution_plan_status": audit.execution_plan_status,
         "progress_percent": _calculate_progress(audit.processing_step, audit.status)
     }
 

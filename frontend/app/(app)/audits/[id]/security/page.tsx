@@ -61,7 +61,7 @@ export default function SecurityPage({ params }: { params: { id: string } }) {
 
   const tasks = tasksResponse?.items || []
   const security = audit?.results?.security
-  const aiContext = audit?.results?.security
+  const aiContext = audit?.results?.ai_contexts?.security
 
   const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
     try {

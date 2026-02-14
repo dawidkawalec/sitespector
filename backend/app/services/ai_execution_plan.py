@@ -131,7 +131,7 @@ WYMAGANIA:
 Wygeneruj 5-12 zadań, priorytetyzując według impact/effort. Każde zadanie musi być gotowe do realizacji (developer/SEO może od razu wdrożyć)."""
 
     try:
-        response = await call_claude(user_message, system_prompt, max_tokens=4096)
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
         import json
         import re
@@ -293,7 +293,7 @@ WYMAGANIA:
 Wygeneruj 5-10 zadań technicznych gotowych do wdrożenia."""
 
     try:
-        response = await call_claude(user_message, system_prompt, max_tokens=4096)
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
         import json
         import re
@@ -443,7 +443,7 @@ WYMAGANIA:
 Wygeneruj 5-10 zadań strategicznych."""
 
     try:
-        response = await call_claude(user_message, system_prompt, max_tokens=4096)
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
         import json
         import re
@@ -528,7 +528,7 @@ Przykładowe keywords: {keywords[:10]}
 Wygeneruj 3-8 zadań rewrite contentu pod AIO."""
 
     try:
-        response = await call_claude(user_message, system_prompt, max_tokens=3072)
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
         import json
         import re
@@ -604,7 +604,7 @@ Backlinks: {bl_stats}
 Wygeneruj 3-8 zadań linkowania."""
 
     try:
-        response = await call_claude(user_message, system_prompt, max_tokens=3072)
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
         import json
         import re
@@ -673,7 +673,7 @@ Total: {total_images}, Bez ALT: {without_alt}, Avg size: {avg_size}KB
 Wygeneruj 3-6 zadań optymalizacji obrazów."""
 
     try:
-        response = await call_claude(user_message, system_prompt, max_tokens=2048)
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
         import json
         import re
@@ -737,7 +737,7 @@ Accessibility: {accessibility_score}/100
 Wygeneruj 3-5 zadań UX."""
 
     try:
-        response = await call_claude(user_message, system_prompt, max_tokens=2048)
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
         import json
         import re
@@ -795,8 +795,8 @@ JSON format:
     ]
 }"""
 
-    status_code = crawl.get("status_code", 200)
-    is_https = status_code == 200  # Simplified
+    url = crawl.get("url", "")
+    is_https = url.startswith("https")
     
     user_message = f"""Security data:
 HTTPS: {is_https}
@@ -804,7 +804,7 @@ HTTPS: {is_https}
 Wygeneruj 2-5 zadań security."""
 
     try:
-        response = await call_claude(user_message, system_prompt, max_tokens=2048)
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
         
         import json
         import re
@@ -929,6 +929,12 @@ def synthesize_execution_plan(all_tasks: List[Dict[str, Any]]) -> List[Dict[str,
     
     # Sort by sort_order (highest priority first)
     unique_tasks.sort(key=lambda t: t.get("sort_order", 0))
+    
+    # Limit to MAX_TASKS (200) - keep highest priority tasks
+    MAX_TASKS = 200
+    if len(unique_tasks) > MAX_TASKS:
+        logger.warning(f"Task count ({len(unique_tasks)}) exceeds MAX_TASKS ({MAX_TASKS}). Trimming to top {MAX_TASKS} by priority.")
+        unique_tasks = unique_tasks[:MAX_TASKS]
     
     # Re-assign sort_order as sequential integers
     for i, task in enumerate(unique_tasks):
