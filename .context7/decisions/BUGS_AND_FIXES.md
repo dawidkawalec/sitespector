@@ -662,6 +662,34 @@ refetchInterval: (query) => {
 
 ---
 
+### BUG-018: Sitemap Always Missing + Senuto Backlinks Show 0
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: HIGH
+
+**Description**:
+- Audit UI showed "Brak sitemapy" even when sitemap existed (e.g. WP RankMath redirects `/sitemap.xml` -> `/sitemap_index.xml`).
+- Audit UI showed Senuto backlink stats (Backlinki / Domeny Ref.) as `0` despite Senuto step succeeding and collecting data.
+
+**Root cause**:
+- `backend/app/services/screaming_frog.py` hardcoded `has_sitemap=false` and never detected sitemap endpoints.
+- Senuto backlinks payload stores raw API response in `senuto.backlinks.statistics`, but frontend expects summary keys like `backlinks_count` and `domains_count`.
+
+**Fix**:
+- Add sitemap detection via `robots.txt` + common endpoints and persist `has_sitemap`, `sitemap_url`, `sitemaps` in crawl results.
+- Normalize Senuto backlinks statistics by injecting computed `backlinks_count` and `domains_count` based on collected arrays.
+
+**Verification**:
+- For domains with `/sitemap_index.xml`, audits now show sitemap present.
+- Senuto cards show non-zero backlink/ref-domain counts when data exists.
+
+**Related**: `backend/app/services/screaming_frog.py`, `backend/app/services/senuto.py`, `frontend/app/(app)/audits/[id]/page.tsx`
+
+---
+
 ## Future Bugs to Watch
 
 ### WATCH-001: Memory Leak in Worker
