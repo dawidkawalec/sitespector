@@ -4,6 +4,12 @@ date: "2026-02-15"
 excerpt: "Kompletny przewodnik po audycie SEO – od analizy technicznej po rekomendacje AI."
 author: "Zespół SiteSpector"
 slug: "jak-przeprowadzic-audyt-seo"
+category: "Audyty SEO"
+reading_time: 7
+cover_image:
+  src: "/images/blog/jak-przeprowadzic-audyt-seo.png"
+  alt: "Jak przeprowadzić audyt SEO w 2026 - przewodnik krok po kroku"
+  placeholder: "PLACEHOLDER: Okładka wpisu o audycie SEO (checklista + lupa) — 1200x630px"
 ---
 
 ## Dlaczego audyt SEO jest ważny

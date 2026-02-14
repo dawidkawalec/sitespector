@@ -4,7 +4,7 @@ date: "2026-04-15"
 excerpt: "Jednorazowy audyt to za mało. Dowiedz się dlaczego regularne monitorowanie SEO jest kluczem do utrzymania pozycji."
 author: "Zespół SiteSpector"
 slug: "automatyczne-audyty-regularnosc"
-category: "Funkcje"
+category: "Audyty SEO"
 tags: ["automatyzacja", "harmonogramy", "monitoring", "audyt"]
 reading_time: 6
 cover_image:

@@ -94,3 +94,17 @@
 - **Headline**: Changelog — co nowego w SiteSpector
 - **Primary CTA**: Rozpocznij darmowy audyt (link: `/login`)
 - **Key proof**: Nacisk na Senuto, AI Overviews, Execution Plan, 3-fazowy audyt i harmonogramy.
+
+## Page: Case studies
+- **Angle**: "Prawdziwe wyniki" — karty z kategoriami, metrykami i linkami do pełnych studiów.
+- **Headline**: Case studies — prawdziwe wyniki
+- **Primary CTA**: Rozpocznij darmowy audyt (link: `/login`)
+- **Secondary CTA**: Czytaj pełne studium (link: `/case-study/[slug]`)
+- **Key proof**: Case studies w markdown (`landing/content/case-studies/*.md`) + SSG `/case-study/[slug]`.
+
+## Page: Blog
+- **Angle**: Wiedza o SEO, CWV, AI i praktycznych wdrożeniach — z filtrami kategorii i newsletterem.
+- **Headline**: Blog SiteSpector
+- **Primary CTA**: Rozpocznij darmowy audyt (link: `/login`)
+- **Secondary CTA**: Czytaj wpis (link: `/blog/[slug]`)
+- **Key proof**: Posty w markdown (`landing/content/blog/*.md`) + filtry po kategorii i paginacja (query params).

@@ -4,7 +4,7 @@ date: "2026-05-20"
 excerpt: "Audyt SEO to inwestycja, nie koszt. Policz realny ROI — od poprawek technicznych po wzrost konwersji. Z kalkulatorem."
 author: "Zespół SiteSpector"
 slug: "roi-audyt-seo"
-category: "Biznes"
+category: "Poradniki"
 tags: ["roi", "koszty", "oszczednosci", "audyt"]
 reading_time: 8
 cover_image:

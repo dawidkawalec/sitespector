@@ -4,7 +4,7 @@ date: "2026-04-25"
 excerpt: "Ile backlinków potrzebujesz? Jakie? Analiza profilu linków z Senuto w SiteSpector pokazuje co naprawdę działa."
 author: "Zespół SiteSpector"
 slug: "backlinki-2026-jakosc-ilosc"
-category: "SEO"
+category: "AI i widoczność"
 tags: ["backlinki", "link-building", "senuto", "autorytet"]
 reading_time: 8
 cover_image:

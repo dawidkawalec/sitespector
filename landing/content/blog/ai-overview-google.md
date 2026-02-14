@@ -4,7 +4,7 @@ date: "2026-03-25"
 excerpt: "AI Overview zmienia zasady gry w wyszukiwarce. Sprawdź co to jest, jak wpływa na CTR i jak monitorować obecność Twojej strony."
 author: "Zespół SiteSpector"
 slug: "ai-overview-google"
-category: "Technologia"
+category: "AI i widoczność"
 tags: ["ai-overview", "google", "ruch-organiczny", "senuto"]
 reading_time: 7
 cover_image:

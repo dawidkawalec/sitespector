@@ -1193,6 +1193,30 @@ npm --prefix landing run build
 
 ---
 
+### BUG-028: Landing build fails due to invalid Remix icon import (react-icons/ri)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: LOW
+
+**Description**:
+- `next build` failował, gdy zaimportowano nieistniejącą ikonę z `react-icons/ri` (np. `RiTrendingUpLine`).
+
+**Root cause**:
+- Remix icon nie istnieje w paczce `react-icons/ri` (pomyłka w nazwie).
+
+**Fix**:
+- Podmiana na istniejącą ikonę (`RiLineChartLine`) używaną już w repo.
+
+**Verification**:
+```bash
+npm --prefix landing run build
+```
+
+---
+
 **Last Updated**: 2026-02-14  
 **Resolved Bugs**: 26 (incl. BUG-026 cross-module AIO contradiction)  
 **Known Issues**: 3  

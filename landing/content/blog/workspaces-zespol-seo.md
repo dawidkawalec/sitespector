@@ -4,7 +4,7 @@ date: "2026-06-01"
 excerpt: "Owner, Admin, Member — jak ustawić workspace'y w SiteSpector żeby każdy miał dostęp do tego co potrzebuje. Poradnik dla agencji."
 author: "Zespół SiteSpector"
 slug: "workspaces-zespol-seo"
-category: "Funkcje"
+category: "Poradniki"
 tags: ["workspaces", "zespol", "role", "organizacja"]
 reading_time: 6
 cover_image:

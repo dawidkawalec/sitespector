@@ -4,7 +4,7 @@ date: "2026-03-10"
 excerpt: "AI to nie buzzword — to realna zmiana w SEO. Sprawdź jak Google Gemini analizuje Twoją stronę i generuje konkretne rekomendacje."
 author: "Zespół SiteSpector"
 slug: "ai-w-seo-audyty"
-category: "Technologia"
+category: "AI i widoczność"
 tags: ["ai", "gemini", "seo", "audyt", "sztuczna-inteligencja"]
 reading_time: 9
 cover_image:

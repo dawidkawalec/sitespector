@@ -4,7 +4,7 @@ date: "2026-03-15"
 excerpt: "Pozycje, trendy, backlinki, AI Overviews — jak integracja Senuto z SiteSpector daje pełen obraz SEO Twojej strony."
 author: "Zespół SiteSpector"
 slug: "senuto-sitespector-widocznosc"
-category: "Integracje"
+category: "AI i widoczność"
 tags: ["senuto", "widocznosc", "pozycje", "integracja"]
 reading_time: 8
 cover_image:

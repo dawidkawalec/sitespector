@@ -4,7 +4,7 @@ date: "2026-03-05"
 excerpt: "Spadek ruchu, mniej zamówień, gorsze pozycje? Oto 5 konkretnych sygnałów i jak je wykryć zanim będzie za późno."
 author: "Zespół SiteSpector"
 slug: "5-sygnalow-sklep-traci-pozycje"
-category: "E-commerce"
+category: "Audyty SEO"
 tags: ["e-commerce", "pozycje", "google", "sklep-internetowy"]
 reading_time: 7
 cover_image:

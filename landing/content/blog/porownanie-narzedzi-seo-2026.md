@@ -4,7 +4,7 @@ date: "2026-05-25"
 excerpt: "Które narzędzie SEO wybrać w 2026? Szczegółowe porównanie cen, funkcji, Core Web Vitals, AI i raportów."
 author: "Zespół SiteSpector"
 slug: "porownanie-narzedzi-seo-2026"
-category: "Porównania"
+category: "Poradniki"
 tags: ["porownanie", "ahrefs", "semrush", "screaming-frog", "narzedzia"]
 reading_time: 10
 cover_image:

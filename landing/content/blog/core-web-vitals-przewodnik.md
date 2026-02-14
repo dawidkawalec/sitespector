@@ -4,6 +4,12 @@ date: "2026-02-20"
 excerpt: "LCP, FCP, CLS, TTFB – co znaczą te skróty i jak je poprawić, aby zadowolić Google."
 author: "Zespół SiteSpector"
 slug: "core-web-vitals-przewodnik"
+category: "Wydajność (Core Web Vitals)"
+reading_time: 6
+cover_image:
+  src: "/images/blog/core-web-vitals-przewodnik.png"
+  alt: "Core Web Vitals - przewodnik po metrykach LCP, CLS, INP"
+  placeholder: "PLACEHOLDER: Okładka CWV (LCP/CLS/INP) — 1200x630px"
 ---
 
 ## Czym są Core Web Vitals?

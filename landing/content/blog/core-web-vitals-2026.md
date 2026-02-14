@@ -4,7 +4,7 @@ date: "2026-04-20"
 excerpt: "LCP, CLS, INP — Google aktualizuje metryki. Sprawdź co się zmieniło w 2026, jakie są nowe progi i jak je poprawić."
 author: "Zespół SiteSpector"
 slug: "core-web-vitals-2026"
-category: "Technologia"
+category: "Wydajność (Core Web Vitals)"
 tags: ["core-web-vitals", "lighthouse", "wydajnosc", "google"]
 reading_time: 9
 cover_image:

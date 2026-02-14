@@ -4,7 +4,7 @@ date: "2026-05-15"
 excerpt: "HTTPS, mixed content, nagłówki bezpieczeństwa — sprawdź jak bezpieczeństwo wpływa na pozycje i co SiteSpector sprawdza."
 author: "Zespół SiteSpector"
 slug: "bezpieczenstwo-strony-seo"
-category: "Technologia"
+category: "Poradniki"
 tags: ["bezpieczenstwo", "ssl", "https", "google"]
 reading_time: 7
 cover_image:

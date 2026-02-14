@@ -1,74 +1,115 @@
-import React from 'react';
-import { Container, Row, Col, Table } from 'react-bootstrap';
+import type { Metadata } from 'next';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
+import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Polityka cookies — SiteSpector | Pliki cookies',
+  description:
+    'Jak SiteSpector używa plików cookies. Lista cookies: Supabase (sesja), Stripe, next-auth. Brak cookies śledzących. Instrukcje zarządzania.',
+  keywords: ['polityka cookies SiteSpector', 'cookies', 'pliki cookies', 'RODO'],
+};
 
 export default function PolitykaCookiesPage() {
   return (
     <>
       <Topbar />
       <main className="pt-5 mt-5">
-        <section className="section py-5">
-          <Container>
-            <Row className="justify-content-center">
-              <Col lg={10}>
-                <h1 className="display-4 fw-bold text-primary mb-4">Polityka cookies</h1>
+        <section className="section py-5 bg-white">
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col-lg-10">
+                <h1 className="display-4 fw-bold text-primary mb-2">Polityka cookies</h1>
                 <p className="text-muted mb-5">Ostatnia aktualizacja: 11 lutego 2026</p>
 
                 <div className="content-text">
-                  <h3 className="text-primary mt-4 mb-3">1. CZYM SĄ PLIKI COOKIES</h3>
-                  <p>Pliki cookies (tzw. „ciasteczka”) stanowią dane informatyczne, w szczególności pliki tekstowe, które przechowywane są w urządzeniu końcowym Użytkownika Serwisu i przeznaczone są do korzystania ze stron internetowych Serwisu.</p>
+                  <h2 className="h4 text-primary mt-4 mb-3">1. Czym są cookies</h2>
+                  <p className="text-muted">
+                    Pliki cookies to niewielkie pliki tekstowe zapisywane na Twoim urządzeniu podczas odwiedzania stron internetowych. Służą m.in. do utrzymania
+                    sesji, zapamiętania preferencji i obsługi płatności. Serwis SiteSpector korzysta wyłącznie z cookies niezbędnych do działania platformy i nie
+                    stosuje cookies śledzących w celach reklamowych.
+                  </p>
 
-                  <h3 className="text-primary mt-4 mb-3">2. COOKIES UŻYWANE PRZEZ SITESPECTOR</h3>
-                  <Table responsive striped bordered hover className="mt-4">
-                    <thead>
-                      <tr>
-                        <th>Nazwa</th>
-                        <th>Cel</th>
-                        <th>Typ</th>
-                        <th>Ważność</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>sb-*</td>
-                        <td>Sesja Supabase Auth</td>
-                        <td>Niezbędne</td>
-                        <td>Sesja</td>
-                      </tr>
-                      <tr>
-                        <td>_stripe_mid</td>
-                        <td>Płatności Stripe</td>
-                        <td>Niezbędne</td>
-                        <td>1 rok</td>
-                      </tr>
-                      <tr>
-                        <td>next-auth.session</td>
-                        <td>Sesja Next.js</td>
-                        <td>Niezbędne</td>
-                        <td>7 dni</td>
-                      </tr>
-                    </tbody>
-                  </Table>
+                  <h2 className="h4 text-primary mt-4 mb-3">2. Tabela cookies</h2>
+                  <div className="table-responsive">
+                    <table className="table table-bordered align-middle bg-white">
+                      <thead className="bg-light">
+                        <tr>
+                          <th>Nazwa / prefiks</th>
+                          <th>Dostawca</th>
+                          <th>Cel</th>
+                          <th>Czas przechowywania</th>
+                          <th>Wymagane</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>sb-*</td>
+                          <td>Supabase</td>
+                          <td>Sesja użytkownika, autentykacja</td>
+                          <td>Sesja / do 7 dni</td>
+                          <td>Tak</td>
+                        </tr>
+                        <tr>
+                          <td>_stripe_mid</td>
+                          <td>Stripe</td>
+                          <td>Identyfikacja użytkownika przy płatnościach (anty-fraud)</td>
+                          <td>1 rok</td>
+                          <td>Tak (przy płatnościach)</td>
+                        </tr>
+                        <tr>
+                          <td>next-auth.session-token</td>
+                          <td>NextAuth</td>
+                          <td>Sesja logowania</td>
+                          <td>Sesja</td>
+                          <td>Tak</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-muted small mb-0">
+                    `sb-*` oznacza prefiks plików cookies Supabase (np. `sb-xxxxx-auth-token`). Konkretne nazwy mogą się różnić w zależności od konfiguracji.
+                  </p>
+                  <p className="text-muted mt-3">
+                    <strong>Brak cookies śledzących:</strong> nie używamy Google Analytics, Facebook Pixel ani innych narzędzi śledzenia w celach reklamowych.
+                  </p>
 
-                  <h3 className="text-primary mt-4 mb-3">3. COOKIES STRON TRZECICH</h3>
-                  <ul className="list-unstyled ms-3">
-                    <li>• <strong>Stripe:</strong> obsługa płatności i zapobieganie oszustwom.</li>
-                    <li>• <strong>Brak:</strong> nie używamy Google Analytics, Facebook Pixel ani żadnych innych narzędzi śledzących lub marketingowych.</li>
+                  <h2 className="h4 text-primary mt-4 mb-3">3. Zarządzanie cookies</h2>
+                  <p className="text-muted mb-2">Możesz zarządzać cookies w ustawieniach przeglądarki:</p>
+                  <ul className="list-unstyled ms-3 text-muted">
+                    <li>• Chrome: Ustawienia → Prywatność i bezpieczeństwo → Pliki cookie i inne dane witryn</li>
+                    <li>• Firefox: Ustawienia → Prywatność i bezpieczeństwo → Ciasteczka i dane stron</li>
+                    <li>• Safari: Preferencje → Prywatność → Zarządzaj danymi witryn</li>
+                    <li>• Edge: Ustawienia → Pliki cookie i uprawnienia witryny</li>
                   </ul>
+                  <p className="text-muted">
+                    Ograniczenie lub zablokowanie cookies niezbędnych może skutkować brakiem możliwości logowania lub korzystania z pełnej funkcjonalności serwisu
+                    (np. płatności przez Stripe).
+                  </p>
 
-                  <h3 className="text-primary mt-4 mb-3">4. ZARZĄDZANIE PLIKAMI COOKIES</h3>
-                  <p>Użytkownik może w każdej chwili dokonać zmiany ustawień dotyczących plików cookies w swojej przeglądarce:</p>
-                  <ul className="list-unstyled ms-3">
-                    <li>• Chrome: Ustawienia &gt; Prywatność i bezpieczeństwo</li>
-                    <li>• Firefox: Ustawienia &gt; Prywatność i bezpieczeństwo</li>
-                    <li>• Safari: Preferencje &gt; Prywatność</li>
-                    <li>• Edge: Ustawienia &gt; Uprawnienia witryny</li>
-                  </ul>
+                  <h2 className="h4 text-primary mt-4 mb-3">4. Aktualizacje</h2>
+                  <p className="text-muted">
+                    Polityka cookies może być aktualizowana w miarę zmian w Serwisie lub przepisach. O istotnych zmianach poinformujemy na stronie.
+                  </p>
+                  <p className="text-muted mb-0">
+                    Więcej informacji o przetwarzaniu danych znajdziesz w{' '}
+                    <Link href="/polityka-prywatnosci">Polityce prywatności</Link>.
+                  </p>
                 </div>
-              </Col>
-            </Row>
-          </Container>
+
+                <div className="bg-light rounded-4 border p-4 p-lg-5 mt-5 text-center shadow-sm">
+                  <div className="title-sm">
+                    <span>GOTOWY NA AUDYT?</span>
+                  </div>
+                  <h3 className="text-primary fw-bold mt-2 mb-2">Sprawdź SiteSpector na własnej stronie</h3>
+                  <p className="text-muted mb-4">Plan Free: 5 audytów miesięcznie, bez karty kredytowej.</p>
+                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
+                    Rozpocznij darmowy audyt
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
       <Footer />

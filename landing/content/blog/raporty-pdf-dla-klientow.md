@@ -4,6 +4,12 @@ date: "2026-02-25"
 excerpt: "Raporty PDF z SiteSpector – 9 sekcji, które zachwycą Twoich klientów i oszczędzą Twój czas."
 author: "Zespół SiteSpector"
 slug: "raporty-pdf-dla-klientow"
+category: "Poradniki"
+reading_time: 6
+cover_image:
+  src: "/images/blog/raporty-pdf-dla-klientow.png"
+  alt: "Raporty PDF dla klientów - 9 sekcji i white-label"
+  placeholder: "PLACEHOLDER: Okładka wpisu o raportach PDF (ikona PDF + wykres/sekcje) — 1200x630px"
 ---
 
 ## Problem: Ręczne raporty są czasochłonne
