@@ -1049,7 +1049,50 @@ When adding new bugs to this file, use this format:
 
 ---
 
+### BUG-024: Problemy z usuwaniem auditów (cache + CASCADE)
+
+**Reported**: 2026-02-14
+
+**Status**: ✅ FIXED
+
+**Severity**: CRITICAL
+
+**Description**:
+- Po usunięciu audytu UI pokazywało "zombie" audits do czasu force refresh
+- Nie można było usunąć auditu - przycisk się zawiesał
+- Stare audity nie pokazywały wyników poprawnie
+
+**Root cause** (3 problemy):
+1. **React Query cache nie był invalidowany** - deleteMutation tylko robił `router.push()` ale nie usuwał cache
+2. **Brak ON DELETE CASCADE w DB** - initial migration dla `competitors` table nie miała `ondelete='CASCADE'` → orphaned records w DB
+3. **Brak walidacji** - można było usunąć audit w trakcie processing → race condition z workerem
+
+**Fix**:
+1. Frontend:
+   - `frontend/app/(app)/audits/[id]/page.tsx`: dodano `useQueryClient()` + invalidacja `['audits']` i `['audit', id]` w `deleteMutation.onSuccess`
+   - `frontend/app/(app)/dashboard/page.tsx`: dodano `queryClient.invalidateQueries()` w `deleteMutation.onSuccess`
+   - Dodano toast error handler
+
+2. Backend:
+   - `backend/app/routers/audits.py`: dodano walidację `audit.status in (PENDING, PROCESSING)` → 409 Conflict
+   - Dodano logging po successful delete
+
+3. Migracja:
+   - `backend/alembic/versions/20260214_fix_competitors_cascade.py`: naprawiono ForeignKey constraint z `ondelete='CASCADE'`
+
+**Verification**:
+```bash
+# Po deployment sprawdź:
+docker logs sitespector-backend | grep "deleted successfully"
+docker compose -f docker-compose.prod.yml exec backend-db psql -U sitespector_prod -d sitespector_prod -c "\d+ competitors"
+# Powinieneś zobaczyć: ON DELETE CASCADE w audit_id constraint
+```
+
+**Related**: User feedback 2026-02-14
+
+---
+
 **Last Updated**: 2026-02-14  
-**Resolved Bugs**: 23 (incl. BUG-015 do BUG-023 z comprehensive system audit)  
+**Resolved Bugs**: 24 (incl. BUG-024 delete cascade + cache)  
 **Known Issues**: 3  
 **Watching**: 2

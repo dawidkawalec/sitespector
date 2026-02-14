@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { auditsAPI, CreateAuditData } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
@@ -44,6 +44,7 @@ import { toast } from 'sonner'
 
 export default function DashboardPage() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [showNewAuditDialog, setShowNewAuditDialog] = useState(false)
   const [isAuth, setIsAuth] = useState(false)
   const [deletingAuditId, setDeletingAuditId] = useState<string | null>(null)
@@ -81,8 +82,11 @@ export default function DashboardPage() {
       setDeletingAuditId(id)
       deleteToastIdRef.current = toast.loading('Usuwanie audytu...')
     },
-    onSuccess: () => {
+    onSuccess: (_, deletedId) => {
       toast.success('Audyt usunięty')
+      // Invalidate all audit-related queries to clear cache
+      queryClient.invalidateQueries({ queryKey: ['audits'] })
+      queryClient.invalidateQueries({ queryKey: ['audit', deletedId] })
       refetch()
     },
     onError: (err: any) => {

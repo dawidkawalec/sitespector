@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { auditsAPI, CreateAuditData } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { toast } from 'sonner'
 import {
   Alert,
   AlertDescription,
@@ -47,6 +48,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function AuditDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [isAuth, setIsAuth] = useState(false)
   const { currentWorkspace } = useWorkspace()
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -95,7 +97,13 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   const deleteMutation = useMutation({
     mutationFn: (id: string) => auditsAPI.delete(id),
     onSuccess: () => {
+      // Invalidate all audit-related queries to clear cache
+      queryClient.invalidateQueries({ queryKey: ['audits'] })
+      queryClient.invalidateQueries({ queryKey: ['audit', params.id] })
       router.push('/dashboard')
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Nie udało się usunąć audytu')
     },
   })
 

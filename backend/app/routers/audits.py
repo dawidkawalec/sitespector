@@ -465,6 +465,13 @@ async def delete_audit(
             detail="Audit not found"
         )
     
+    # Prevent deletion of audits that are currently processing
+    if audit.status in (AuditStatus.PENDING, AuditStatus.PROCESSING):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete audit that is currently processing. Please wait for completion or cancel it first."
+        )
+    
     # Check workspace membership with admin role required
     if audit.workspace_id:
         has_access = await verify_workspace_access(
@@ -485,8 +492,11 @@ async def delete_audit(
                 detail="Not authorized to delete this audit"
             )
     
+    # Delete audit - cascade will handle competitors and tasks via ON DELETE CASCADE
     await db.delete(audit)
     await db.commit()
+    
+    logger.info(f"Audit {audit_id} deleted successfully by user {current_user['id']}")
 
 
 @router.get("/{audit_id}/raw")
