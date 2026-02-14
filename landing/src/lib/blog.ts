@@ -5,6 +5,7 @@ import { remark } from 'remark';
 import html from 'remark-html';
 
 const postsDirectory = path.join(process.cwd(), 'content/blog');
+const DEFAULT_COVER_IMAGE_SRC = '/images/placeholder.svg';
 
 export interface PostData {
   slug: string;
@@ -43,13 +44,14 @@ export async function getSortedPostsData(): Promise<PostData[]> {
       const data = matterResult.data as Record<string, unknown>;
       const content = matterResult.content || '';
 
-      const coverImage =
-        data.cover_image && typeof data.cover_image === 'object'
-          ? {
-              src: safeString((data.cover_image as { src?: unknown }).src).trim(),
-              alt: safeString((data.cover_image as { alt?: unknown }).alt).trim() || undefined,
-            }
-          : undefined;
+      // Use one universal placeholder cover everywhere (real covers can be added later).
+      const coverImage = {
+        src: DEFAULT_COVER_IMAGE_SRC,
+        alt:
+          (data.cover_image && typeof data.cover_image === 'object'
+            ? safeString((data.cover_image as { alt?: unknown }).alt).trim()
+            : '') || safeString(data.title).trim() || 'SiteSpector',
+      };
 
       return {
         slug: safeString(data.slug).trim() || slugFromFile,
@@ -58,7 +60,7 @@ export async function getSortedPostsData(): Promise<PostData[]> {
         excerpt: safeString(data.excerpt),
         author: safeString(data.author).trim() || 'Zespół SiteSpector',
         category: safeString(data.category).trim() || undefined,
-        coverImage: coverImage?.src ? coverImage : undefined,
+        coverImage,
         readingTimeMinutes:
           typeof data.reading_time === 'number'
             ? Math.max(1, Math.round(data.reading_time))
@@ -80,13 +82,13 @@ export async function getPostData(slug: string): Promise<PostData> {
     .process(matterResult.content);
   const contentHtml = processedContent.toString();
 
-  const coverImage =
-    data.cover_image && typeof data.cover_image === 'object'
-      ? {
-          src: safeString((data.cover_image as { src?: unknown }).src).trim(),
-          alt: safeString((data.cover_image as { alt?: unknown }).alt).trim() || undefined,
-        }
-      : undefined;
+  const coverImage = {
+    src: DEFAULT_COVER_IMAGE_SRC,
+    alt:
+      (data.cover_image && typeof data.cover_image === 'object'
+        ? safeString((data.cover_image as { alt?: unknown }).alt).trim()
+        : '') || safeString(data.title).trim() || 'SiteSpector',
+  };
 
   return {
     slug: safeString(data.slug).trim() || slug,
@@ -96,7 +98,7 @@ export async function getPostData(slug: string): Promise<PostData> {
     excerpt: safeString(data.excerpt),
     author: safeString(data.author).trim() || 'Zespół SiteSpector',
     category: safeString(data.category).trim() || undefined,
-    coverImage: coverImage?.src ? coverImage : undefined,
+    coverImage,
     readingTimeMinutes:
       typeof data.reading_time === 'number'
         ? Math.max(1, Math.round(data.reading_time))

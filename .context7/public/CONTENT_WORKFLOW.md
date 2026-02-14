@@ -35,5 +35,6 @@ docker compose -f docker-compose.prod.yml restart nginx
 ## Common Pitfalls
 
 - If pages are recreated/removed, ensure Nginx routes and sitemap/robots handling remain correct.
+- Blog/case study okładki: jeśli nie mamy finalnych grafik, używamy jednego placeholdera `landing/public/images/placeholder.svg` (uniwersalny 1200×630).
 - Always keep `.context7/project/DEPLOYMENT.md` in sync with the actual deployment steps.
 

@@ -42,6 +42,30 @@ function buildHref(category: FilterCategory, page?: number) {
   return q ? `/blog?${q}` : '/blog';
 }
 
+function getPaginationItems(totalPages: number, currentPage: number): Array<number | 'ellipsis'> {
+  if (totalPages <= 1) return [1];
+  if (totalPages <= 9) return Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  const delta = 2;
+  const pages = new Set<number>();
+  pages.add(1);
+  pages.add(totalPages);
+
+  for (let p = currentPage - delta; p <= currentPage + delta; p += 1) {
+    if (p >= 1 && p <= totalPages) pages.add(p);
+  }
+
+  const sorted = Array.from(pages).sort((a, b) => a - b);
+  const items: Array<number | 'ellipsis'> = [];
+  let prev = 0;
+  for (const p of sorted) {
+    if (prev && p - prev > 1) items.push('ellipsis');
+    items.push(p);
+    prev = p;
+  }
+  return items;
+}
+
 export default async function BlogPage({
   searchParams,
 }: {
@@ -170,15 +194,24 @@ export default async function BlogPage({
                       Poprzednia
                     </Link>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 7).map(p => (
-                      <Link
-                        key={p}
-                        href={buildHref(selectedCategory, p)}
-                        className={`btn btn-sm ${p === pageSafe ? 'btn-primary' : 'btn-outline-primary'}`}
-                      >
-                        {p}
-                      </Link>
-                    ))}
+                    {getPaginationItems(totalPages, pageSafe).map((item, idx) => {
+                      if (item === 'ellipsis') {
+                        return (
+                          <span key={`e-${idx}`} className="px-2 text-muted">
+                            …
+                          </span>
+                        );
+                      }
+                      return (
+                        <Link
+                          key={item}
+                          href={buildHref(selectedCategory, item)}
+                          className={`btn btn-sm ${item === pageSafe ? 'btn-primary' : 'btn-outline-primary'}`}
+                        >
+                          {item}
+                        </Link>
+                      );
+                    })}
 
                     <Link
                       href={buildHref(selectedCategory, pageSafe + 1)}

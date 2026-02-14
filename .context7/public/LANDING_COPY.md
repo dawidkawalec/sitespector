@@ -108,3 +108,4 @@
 - **Primary CTA**: Rozpocznij darmowy audyt (link: `/login`)
 - **Secondary CTA**: Czytaj wpis (link: `/blog/[slug]`)
 - **Key proof**: Posty w markdown (`landing/content/blog/*.md`) + filtry po kategorii i paginacja (query params).
+- **Images**: Placeholder okładki: `/images/placeholder.svg` (do podmiany na docelowe grafiki).

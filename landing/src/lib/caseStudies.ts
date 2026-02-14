@@ -5,6 +5,7 @@ import { remark } from 'remark';
 import html from 'remark-html';
 
 const caseStudiesDirectory = path.join(process.cwd(), 'content/case-studies');
+const DEFAULT_COVER_IMAGE_SRC = '/images/placeholder.svg';
 
 export type KeyMetric = { label: string; before: string; after: string };
 export type CoverImage = { src: string; alt?: string };
@@ -77,17 +78,19 @@ export async function getSortedCaseStudiesData(): Promise<CaseStudyData[]> {
       const data = matterResult.data as Record<string, unknown>;
 
       const slug = safeString(data.slug).trim() || slugFromFile;
+      const title = safeString(data.title);
 
       return {
         slug,
-        title: safeString(data.title),
+        title,
         date: safeString(data.date),
         category: safeString(data.category),
         clientType: safeString(data.client_type).trim() || undefined,
         challengeSummary: safeString(data.challenge_summary).trim() || undefined,
         resultsSummary: safeString(data.results_summary).trim() || undefined,
         keyMetrics: safeKeyMetrics(data.key_metrics),
-        coverImage: safeCoverImage(data.cover_image),
+        // Use one universal placeholder cover everywhere (real covers can be added later).
+        coverImage: { src: DEFAULT_COVER_IMAGE_SRC, alt: safeCoverImage(data.cover_image)?.alt || title || 'SiteSpector' },
         testimonial: safeTestimonial(data.testimonial),
       };
     });
@@ -108,17 +111,18 @@ export async function getCaseStudyData(slug: string): Promise<CaseStudyData> {
   const contentHtml = processedContent.toString();
 
   const data = matterResult.data as Record<string, unknown>;
+  const title = safeString(data.title);
 
   return {
     slug: safeString(data.slug).trim() || slug,
-    title: safeString(data.title),
+    title,
     date: safeString(data.date),
     category: safeString(data.category),
     clientType: safeString(data.client_type).trim() || undefined,
     challengeSummary: safeString(data.challenge_summary).trim() || undefined,
     resultsSummary: safeString(data.results_summary).trim() || undefined,
     keyMetrics: safeKeyMetrics(data.key_metrics),
-    coverImage: safeCoverImage(data.cover_image),
+    coverImage: { src: DEFAULT_COVER_IMAGE_SRC, alt: safeCoverImage(data.cover_image)?.alt || title || 'SiteSpector' },
     testimonial: safeTestimonial(data.testimonial),
     contentHtml,
   };
