@@ -1,5 +1,36 @@
 # Architectural Decisions Log
 
+## Content Brief System for Landing Expansion (2026-02-14)
+- **Decision**: Adopted "creative brief" approach instead of CMS/JSON system. One markdown file per page in `landing/content/briefs/` serves as a complete creative document for an AI agent to build pages from.
+- **Rationale**: Gives AI agent full creative freedom to design and build pages. No restrictive schemas or runtime data dependencies. Briefs contain ready copy + design spec + image descriptions — agent reads and creates the actual React components.
+- **What was created**: 23 files total — 2 reference docs (`_REFERENCE.md`, `_AGENT_INSTRUCTIONS.md`), 18 page briefs, `_BLOG_IDEAS.md` (27 articles), `_CASE_STUDIES.md` (10 studies).
+- **Previous approach (discarded)**: JSON + Markdown CMS system with content.ts helper. Files deleted, only blog posts and case studies markdown kept.
+- **Outcome**: AI content agent can now work independently — reads brief, builds page, generates graphics.
+
+## Landing Brief Files — 10 Page Refresh Briefs (2026-02-14)
+
+- **o-nas.md**: Strona O nas — Hero, historia (frustracja z narzędziami → SiteSpector), misja (demokratyzacja SEO), 5 punktów różnic (Execution Plan, AI Overviews, PDF, zespoły, EU), technologia (SF, LH, Senuto, Gemini), partnerstwo Senuto, placeholder zespołu, CTA.
+- **kontakt.md**: Strona Kontakt — Hero, dane (Warszawa, kontakt@sitespector.pl, pn–pt 9–17 CET), formularz (imię, email, temat dropdown, wiadomość), CTA do darmowego audytu.
+- **porownanie.md**: Porównanie SiteSpector vs Screaming Frog vs Ahrefs vs SEMrush — tabela funkcji (Execution Plan, AI Overviews, Senuto, harmonogramy, 3-fazowy audyt), ceny ($29 vs 259 GBP vs $129 vs $139), sekcja „Dlaczego SiteSpector wygrywa”.
+- **docs.md**: Centrum pomocy — 10 sekcji (Jak zacząć, Panel audytu, Execution Plan, Raporty PDF, Zespoły, Harmonogramy, Subskrypcje, Integracje, AI Analiza, Bezpieczeństwo), linki do podstron, CTA jeśli brak odpowiedzi.
+- **changelog.md**: Changelog — wpisy per miesiąc z ikonami (feature/improvement/fix), luty 2026 (Senuto, AI Overviews, Execution Plan, 3-fazowy audyt, harmonogramy, analiza treści/UX/security, benchmarki).
+- **case-study.md**: Indeks case studies — 4–6 kart z kategoriami (Agencja, E-commerce, Freelancer, Weryfikacja), preview wyzwanie + metryka + CTA, link do pełnych studiów.
+- **regulamin.md**: Regulamin — 8 sekcji (Postanowienia ogólne, Definicje, Warunki/plany Pro $29 / Enterprise $99, Płatności Stripe, Ochrona danych, Odpowiedzialność, Własność intelektualna, Postanowienia końcowe).
+- **polityka-prywatnosci.md**: Polityka prywatności — 8 sekcji (Administrator, Zbierane dane, Cel, Przechowywanie Supabase/VPS EU, Udostępnianie Stripe/Gemini/Senuto, Okres, Prawa RODO, Cookies).
+- **polityka-cookies.md**: Polityka cookies — tabela (sb-*, _stripe_mid, next-auth.session), brak tracking cookies, instrukcje ustawień przeglądarki.
+- **blog.md**: Indeks bloga — karty z cover, tytuł, data, autor, excerpt, kategoria, czas czytania, filtr kategorii, paginacja, newsletter, CTA.
+
+---
+
+## Landing Brief Files — 4 New Creative Briefs (2026-02-14)
+
+- **dla-agencji-seo.md**: Target SEO agencies. Angle: "Jeden panel dla wszystkich klientów." 13 sekcji: hero, problem, porównanie kosztów, workspace per klient, PDF, harmonogramy, Execution Plan, AI Strategy, Quick Wins, benchmark, case study, cennik, CTA.
+- **dla-freelancerow.md**: Target freelancers. Angle: "Profesjonalne audyty bez drogich narzędzi." 9 sekcji: hero, wyzwania, plan Free, raporty, AI asystent, Execution Plan, ścieżka wzrostu, tabela Free vs Pro, CTA.
+- **integracje.md**: Target technical audience. Deep-dive: Screaming Frog, Lighthouse, Senuto, Gemini AI, Stripe, Supabase, REST API. Wszystkie opisy po polsku.
+- **dla-managerow.md**: Target CEO/menedżerów. Angle: "Monitoruj kondycję SEO bez wiedzy technicznej." 15 sekcji: Executive Summary, benchmark, harmonogramy, PDF, weryfikacja agencji, trendy, AI Overviews, Quick Wins, Execution Plan, security, workspace, koszt, CTA.
+
+---
+
 ## SEO & AI Crawler Files (2026-02-14)
 
 - **sitemap.xml** (landing/sitemap.ts): Pełna mapa stron – static, content, blog, case-study, docs, changelog, pricing, register, sitemap. Next.js generuje XML.

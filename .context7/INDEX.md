@@ -19,8 +19,14 @@ Welcome to the SiteSpector technical and product documentation. This directory i
 - **[LANDING_COPY.md](public/LANDING_COPY.md)** - Landing page sections, claims, and CTA copy.
 - **[PRICING_COPY.md](public/PRICING_COPY.md)** - Subscription plans, limits, and pricing FAQ.
 - **[FAQ_PUBLIC.md](public/FAQ_PUBLIC.md)** - General product FAQ for users.
-- **[CONTENT_ARCHITECTURE.md](public/CONTENT_ARCHITECTURE.md)** - Content file structure, helpers, and workflows.
-- **[CONTENT_UPDATE_PROCEDURE.md](public/CONTENT_UPDATE_PROCEDURE.md)** - Procedure for updating content after new features.
+- **[CONTENT_WORKFLOW.md](public/CONTENT_WORKFLOW.md)** - Current landing content workflow (brief-first).
+
+### 📝 Content Briefs (`landing/content/briefs/`)
+- **[_REFERENCE.md](../landing/content/briefs/_REFERENCE.md)** - Technical reference: design system, component patterns, platform features.
+- **[_AGENT_INSTRUCTIONS.md](../landing/content/briefs/_AGENT_INSTRUCTIONS.md)** - Instructions for AI agent building pages from briefs.
+- **[_BLOG_IDEAS.md](../landing/content/briefs/_BLOG_IDEAS.md)** - 27 blog post ideas with descriptions and priorities.
+- **[_CASE_STUDIES.md](../landing/content/briefs/_CASE_STUDIES.md)** - 10 case study briefs with metrics and priorities.
+- **18 page briefs** (home, funkcje, jak-to-dziala, sprawdz-agencje-seo, dla-ecommerce, dla-agencji-seo, dla-freelancerow, integracje, dla-managerow, o-nas, kontakt, porownanie, docs, changelog, case-study, regulamin, polityka-prywatnosci, polityka-cookies, blog).
 
 ### ⚙️ Backend (`backend/`)
 - **[API.md](backend/API.md)** - API endpoints and request/response schemas.
