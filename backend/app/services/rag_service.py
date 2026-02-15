@@ -538,9 +538,15 @@ async def retrieve_context(
 ) -> List[Dict[str, Any]]:
     """
     Retrieve top-k chunks filtered to the audit and allowed sections.
+    Returns empty list gracefully if Qdrant collection doesn't exist or embedding fails.
     """
     audit_id_str = str(audit_id)
-    qvec = await embed_query(query)
+
+    try:
+        qvec = await embed_query(query)
+    except Exception as e:
+        logger.warning("RAG: embedding query failed, returning empty context (audit_id=%s): %s", audit_id_str, e)
+        return []
 
     must_conditions: List[qmodels.FieldCondition] = [
         qmodels.FieldCondition(key="audit_id", match=qmodels.MatchValue(value=audit_id_str))
@@ -555,12 +561,17 @@ async def retrieve_context(
         )
 
     flt = qmodels.Filter(must=must_conditions)
-    scored = await qdrant_search(
-        collection_name=QDRANT_COLLECTION,
-        query_vector=qvec,
-        flt=flt,
-        limit=top_k,
-    )
+
+    try:
+        scored = await qdrant_search(
+            collection_name=QDRANT_COLLECTION,
+            query_vector=qvec,
+            flt=flt,
+            limit=top_k,
+        )
+    except Exception as e:
+        logger.warning("RAG: Qdrant search failed, returning empty context (audit_id=%s): %s", audit_id_str, e)
+        return []
 
     out: List[Dict[str, Any]] = []
     for sp in scored:

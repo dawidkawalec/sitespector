@@ -1407,7 +1407,29 @@ The `ai_client.py` (`call_claude`) already had proper multi-key retry, but the e
 
 ---
 
+## BUG-036: Embedding model mismatch between Gemini API keys
+
+**Date**: 2026-02-15  
+**Severity**: Critical  
+**Status**: RESOLVED  
+
+**Symptom**: Chat still fails with "API key expired" despite BUG-035 key fallback fix. Direct `call_claude` test works, but embedding fails.
+
+**Root Cause**: The fallback Gemini API key is on a different Google Cloud project which does NOT have `text-embedding-004` model available. It only has `gemini-embedding-001`. The embedding client tried both keys but always used the same model name, so key 1 failed (expired) and key 2 failed (model not found on that project).
+
+Additionally, `retrieve_context()` called `embed_query()` without any error handling, so any embedding failure crashed the entire chat pipeline even when the data wasn't in Qdrant yet.
+
+**Fix**:
+1. `embedding_client.py`: Try multiple embedding models per key (`text-embedding-004` then `gemini-embedding-001`). Nested loops: keys x models.
+2. `rag_service.py`: Wrap `embed_query()` and `qdrant_search()` in try/except — gracefully return empty context on failure instead of crashing the chat.
+
+**Note**: `text-embedding-004` produces 768-dim vectors, `gemini-embedding-001` produces 3072-dim. Qdrant collection dimension is set at creation time. When primary key is renewed, re-index audits to ensure consistency.
+
+**Files Changed**: `backend/app/services/embedding_client.py`, `backend/app/services/rag_service.py`
+
+---
+
 **Last Updated**: 2026-02-15  
-**Resolved Bugs**: 33 (incl. BUG-035 embedding key fallback)  
+**Resolved Bugs**: 34 (incl. BUG-036 embedding model mismatch)  
 **Known Issues**: 3  
 **Watching**: 2
