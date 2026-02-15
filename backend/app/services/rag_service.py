@@ -127,30 +127,30 @@ def _build_chunks_from_results(results: Dict[str, Any]) -> List[RagChunk]:
             )
         )
 
-    # AI contexts, quick wins, executive summary, roadmap, cross_tool
+    # ── AI contexts: smart semantic chunking per area ──────────────
     ai_contexts = results.get("ai_contexts")
     if isinstance(ai_contexts, dict):
-        for key, val in ai_contexts.items():
-            if not isinstance(val, (dict, list)):
-                continue
-            chunks.append(
-                RagChunk(
-                    section_type=f"ai_contexts_{key}",
-                    text=_to_json(val),
-                    meta={"source": f"results.ai_contexts.{key}"},
-                )
-            )
+        chunks.extend(_smart_chunk_ai_contexts(ai_contexts))
 
-    for top_level_key in ["quick_wins", "executive_summary", "roadmap", "cross_tool"]:
-        val = results.get(top_level_key)
-        if isinstance(val, (dict, list)):
-            chunks.append(
-                RagChunk(
-                    section_type=top_level_key,
-                    text=_to_json(val),
-                    meta={"source": f"results.{top_level_key}"},
-                )
-            )
+    # ── Executive summary ────────────────────────────────────────
+    exec_summary = results.get("executive_summary")
+    if isinstance(exec_summary, dict):
+        chunks.extend(_smart_chunk_executive_summary(exec_summary))
+
+    # ── Roadmap: each phase → separate chunks per item ───────────
+    roadmap = results.get("roadmap")
+    if isinstance(roadmap, dict):
+        chunks.extend(_smart_chunk_roadmap(roadmap))
+
+    # ── Cross-tool analysis ──────────────────────────────────────
+    cross_tool = results.get("cross_tool")
+    if isinstance(cross_tool, dict):
+        chunks.extend(_smart_chunk_cross_tool(cross_tool))
+
+    # ── Quick wins: each item as its own chunk ───────────────────
+    quick_wins = results.get("quick_wins")
+    if isinstance(quick_wins, list) and quick_wins:
+        chunks.extend(_smart_chunk_quick_wins(quick_wins))
 
     # Senuto (potentially huge)
     senuto = results.get("senuto")
@@ -222,6 +222,206 @@ def _build_chunks_from_results(results: Dict[str, Any]) -> List[RagChunk]:
             )
         )
 
+    return chunks
+
+
+# ────────────────────────────────────────────────────────────────────
+# Smart semantic chunking for AI-generated analyses
+# ────────────────────────────────────────────────────────────────────
+
+_AI_CONTEXT_LIST_FIELDS = ["key_findings", "recommendations", "quick_wins", "priority_issues"]
+
+
+def _smart_chunk_ai_contexts(ai_contexts: Dict[str, Any]) -> List[RagChunk]:
+    """
+    Chunk each AI context area (seo, performance, visibility, ...) into
+    individual findings/recommendations so the agent can retrieve the
+    exact item that matches a user question like "point 2 from SEO analysis".
+    """
+    chunks: List[RagChunk] = []
+    for area_key, area_val in ai_contexts.items():
+        if not isinstance(area_val, dict):
+            continue
+
+        for field in _AI_CONTEXT_LIST_FIELDS:
+            items = area_val.get(field)
+            if not isinstance(items, list) or not items:
+                continue
+            for idx, item in enumerate(items):
+                item_text = item if isinstance(item, str) else _to_json(item)
+                readable = (
+                    f"[Analiza AI — {area_key}] {field.replace('_', ' ').title()} "
+                    f"#{idx + 1}: {item_text}"
+                )
+                chunks.append(
+                    RagChunk(
+                        section_type=f"ai_contexts_{area_key}",
+                        text=readable,
+                        meta={
+                            "source": f"results.ai_contexts.{area_key}.{field}",
+                            "area": area_key,
+                            "field": field,
+                            "item_index": idx,
+                        },
+                    )
+                )
+
+        remaining = {
+            k: v for k, v in area_val.items()
+            if k not in _AI_CONTEXT_LIST_FIELDS and k != "_meta"
+        }
+        if remaining:
+            chunks.append(
+                RagChunk(
+                    section_type=f"ai_contexts_{area_key}",
+                    text=f"[Analiza AI — {area_key}] Dodatkowe dane: {_to_json(remaining)}",
+                    meta={"source": f"results.ai_contexts.{area_key}", "field": "extra"},
+                )
+            )
+    return chunks
+
+
+def _smart_chunk_executive_summary(summary: Dict[str, Any]) -> List[RagChunk]:
+    """Executive summary → one chunk for summary text, separate chunks for strengths/issues."""
+    chunks: List[RagChunk] = []
+
+    core_text = summary.get("summary", "")
+    health = summary.get("overall_health", "")
+    score = summary.get("health_score", "")
+    growth = summary.get("growth_potential", "")
+    impact = summary.get("estimated_impact", "")
+
+    if core_text or health:
+        readable = (
+            f"[Executive Summary] Ogolna ocena: {health} ({score}/100). "
+            f"{core_text} "
+            f"Potencjal wzrostu: {growth}. "
+            f"Szacowany wplyw: {impact}."
+        )
+        chunks.append(
+            RagChunk(
+                section_type="executive_summary",
+                text=readable,
+                meta={"source": "results.executive_summary", "field": "core"},
+            )
+        )
+
+    for field in ["strengths", "critical_issues"]:
+        items = summary.get(field)
+        if not isinstance(items, list):
+            continue
+        for idx, item in enumerate(items):
+            item_text = item if isinstance(item, str) else _to_json(item)
+            label = "Mocna strona" if field == "strengths" else "Krytyczny problem"
+            chunks.append(
+                RagChunk(
+                    section_type="executive_summary",
+                    text=f"[Executive Summary] {label} #{idx + 1}: {item_text}",
+                    meta={
+                        "source": f"results.executive_summary.{field}",
+                        "field": field,
+                        "item_index": idx,
+                    },
+                )
+            )
+    return chunks
+
+
+def _smart_chunk_roadmap(roadmap: Dict[str, Any]) -> List[RagChunk]:
+    """Roadmap → each action item as its own chunk with phase metadata."""
+    chunks: List[RagChunk] = []
+    phase_labels = {
+        "immediate_actions": "Natychmiastowe dzialania",
+        "short_term": "Krotkoterminowe (1-3 mies.)",
+        "medium_term": "Srednoterminowe (3-6 mies.)",
+        "long_term": "Dlugoterminowe (6-12 mies.)",
+    }
+    for phase_key, phase_label in phase_labels.items():
+        items = roadmap.get(phase_key)
+        if not isinstance(items, list):
+            continue
+        for idx, item in enumerate(items):
+            if isinstance(item, dict):
+                title = item.get("title", "")
+                desc = item.get("description", "")
+                impact = item.get("impact", "")
+                area = item.get("area", "")
+                readable = (
+                    f"[Roadmapa — {phase_label}] Punkt #{idx + 1}: {title}. "
+                    f"{desc} (Wplyw: {impact}, Obszar: {area})"
+                )
+            else:
+                readable = f"[Roadmapa — {phase_label}] Punkt #{idx + 1}: {item}"
+            chunks.append(
+                RagChunk(
+                    section_type="roadmap",
+                    text=readable,
+                    meta={
+                        "source": f"results.roadmap.{phase_key}",
+                        "phase": phase_key,
+                        "phase_label": phase_label,
+                        "item_index": idx,
+                    },
+                )
+            )
+    return chunks
+
+
+def _smart_chunk_cross_tool(cross_tool: Dict[str, Any]) -> List[RagChunk]:
+    """Cross-tool analysis → separate chunks for correlations, synergies, conflicts, recommendations."""
+    chunks: List[RagChunk] = []
+    field_labels = {
+        "correlations": "Korelacja",
+        "synergies": "Synergia",
+        "conflicts": "Konflikt",
+        "unified_recommendations": "Rekomendacja (cross-tool)",
+    }
+    for field, label in field_labels.items():
+        items = cross_tool.get(field)
+        if not isinstance(items, list):
+            continue
+        for idx, item in enumerate(items):
+            item_text = item if isinstance(item, str) else _to_json(item)
+            chunks.append(
+                RagChunk(
+                    section_type="cross_tool",
+                    text=f"[Analiza Cross-Tool] {label} #{idx + 1}: {item_text}",
+                    meta={
+                        "source": f"results.cross_tool.{field}",
+                        "field": field,
+                        "item_index": idx,
+                    },
+                )
+            )
+    return chunks
+
+
+def _smart_chunk_quick_wins(quick_wins: List[Any]) -> List[RagChunk]:
+    """Quick wins → each item as its own chunk."""
+    chunks: List[RagChunk] = []
+    for idx, item in enumerate(quick_wins):
+        if isinstance(item, dict):
+            title = item.get("title", "")
+            desc = item.get("description", "")
+            impact = item.get("impact", "")
+            effort = item.get("effort", "")
+            area = item.get("area", item.get("module", ""))
+            readable = (
+                f"[Quick Win #{idx + 1}] {title}. "
+                f"{desc} (Wplyw: {impact}, Naklad: {effort}, Obszar: {area})"
+            )
+        else:
+            readable = f"[Quick Win #{idx + 1}] {item}"
+        chunks.append(
+            RagChunk(
+                section_type="quick_wins",
+                text=readable,
+                meta={
+                    "source": "results.quick_wins",
+                    "item_index": idx,
+                },
+            )
+        )
     return chunks
 
 

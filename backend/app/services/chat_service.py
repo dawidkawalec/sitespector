@@ -437,7 +437,7 @@ async def stream_chat_response(
         audit_id=str(convo.audit_id),
         query=user_message,
         allowed_sections=allowed_sections,
-        top_k=8,
+        top_k=12,
     )
 
     system_prompt, prompt = _build_prompt(

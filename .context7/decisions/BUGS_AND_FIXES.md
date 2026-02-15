@@ -1365,7 +1365,27 @@ curl -H "X-Admin-Token: TOKEN" https://sitespector.app/api/logs/worker  # Should
 
 ---
 
+## BUG-034: /api/chat/agents returns 500 - ResponseValidationError
+
+**Date**: 2026-02-15  
+**Severity**: Critical  
+**Status**: RESOLVED  
+
+**Symptom**: Chat panel widget renders but shows "no agents available". Console shows `GET /api/chat/agents 500 (Internal Server Error)`. Users cannot start conversations.
+
+**Root Cause**: `chat_service.list_agents()` used SQLAlchemy `union_all()` to combine system agents with workspace-specific agents. However, `union_all` in async SQLAlchemy changes the result type — `res.scalars().all()` returned raw UUID scalars instead of full `AgentType` ORM objects. When Pydantic tried to serialize these UUIDs against `AgentTypeResponse` (which expects `id`, `name`, `slug`, etc.), it raised 30 validation errors (6 fields x 5 agents), resulting in `ResponseValidationError` → HTTP 500.
+
+**Fix**:
+1. Replaced `union_all()` with `or_()` condition combining `is_system=True` and `workspace_id=X` filters in a single `select(AgentType)` query.
+2. Verified all 5 system agents return correctly with full ORM attributes.
+
+**Files Changed**: `backend/app/services/chat_service.py`
+
+**Related**: ADR-033 (chat agent system)
+
+---
+
 **Last Updated**: 2026-02-15  
-**Resolved Bugs**: 31 (incl. BUG-033 system/status auth fix)  
+**Resolved Bugs**: 32 (incl. BUG-034 chat agents query fix)  
 **Known Issues**: 3  
 **Watching**: 2

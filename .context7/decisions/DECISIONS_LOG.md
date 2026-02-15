@@ -583,6 +583,26 @@ Backend: 100% complete | Frontend foundation: 100% complete | Module refactoring
 
 ---
 
+## ADR-034: Smart Semantic Chunking for AI Analysis in RAG
+**Date**: 2026-02-15
+**Status**: ✅ Done
+**Decision**:
+- Replace monolithic JSON blobs in Qdrant with granular, semantically meaningful chunks for all AI-generated analyses.
+- Each key finding, recommendation, quick win, roadmap item, cross-tool correlation is stored as an individual Qdrant point with rich metadata (`area`, `field`, `item_index`, `phase`).
+- Human-readable text format with prefixes like `[Roadmapa — Natychmiastowe dzialania] Punkt #2: ...` for better embedding quality.
+- Update agent `tools_config` to include `roadmap` and `cross_tool` sections where relevant.
+- Increase RAG `top_k` from 8 to 12 to accommodate finer-grained chunks.
+**Rationale**:
+- AI analyses (strategy, roadmap, executive summary) are very long. Stuffing them as raw text into prompts exceeds token limits.
+- Users ask questions like "Why point 2 in your roadmap?" — the agent needs to retrieve that specific item, not a 50KB JSON blob.
+- Semantic chunking dramatically improves retrieval precision and answer quality.
+**Outcome**:
+- `rag_service.py`: 5 new smart chunking functions (`_smart_chunk_ai_contexts`, `_smart_chunk_executive_summary`, `_smart_chunk_roadmap`, `_smart_chunk_cross_tool`, `_smart_chunk_quick_wins`).
+- Alembic migration `20260215_update_agent_tools` updates agent tools_config in DB.
+- No worker changes needed — existing post-Phase4/Phase5 RAG indexing triggers use the new chunking automatically.
+
+---
+
 **Last Updated**: 2026-02-15
-**Total Decisions**: 32 accepted
+**Total Decisions**: 33 accepted
 **Review**: Update when making significant architectural changes.

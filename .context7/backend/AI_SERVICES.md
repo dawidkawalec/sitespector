@@ -69,7 +69,7 @@ Behavior:
 
 SiteSpector now supports an **audit-scoped agent chat** powered by RAG:
 - Each chat conversation is attached to exactly one `audit_id` (no cross-audit leakage).
-- Knowledge base is built from that audit's stored results + execution plan tasks.
+- Knowledge base is built from that audit's stored results + AI analyses + execution plan tasks.
 
 ### Embeddings
 - Provider: Google Generative AI (`google-generativeai`)
@@ -81,11 +81,24 @@ SiteSpector now supports an **audit-scoped agent chat** powered by RAG:
 - Location: `backend/app/services/qdrant_client.py`
 - Collection: `audit_rag_chunks`
 - Filter: always by `audit_id` + agent `section_type` allowlist
+- `top_k`: 12 (increased from 8 after smart chunking)
+
+### Smart Semantic Chunking (ADR-034)
+Instead of storing AI analyses as monolithic JSON blobs, each item is stored as an individual chunk:
+- **ai_contexts_{area}**: Each `key_finding`, `recommendation`, `quick_win`, `priority_issue` is a separate point with `[Analiza AI — {area}]` prefix.
+- **executive_summary**: Core summary + each strength/critical issue as separate chunks.
+- **roadmap**: Each action item per phase (`immediate_actions`, `short_term`, `medium_term`, `long_term`) with `[Roadmapa — {phase}] Punkt #{n}` prefix.
+- **cross_tool**: Each correlation, synergy, conflict, recommendation as separate chunks.
+- **quick_wins**: Each quick win as its own chunk with title, description, impact, effort.
+- **tasks**: Batched from `audit_tasks` table (100 per batch).
+- Metadata includes: `area`, `field`, `item_index`, `phase` for precise retrieval.
 
 ### Indexing Hook
 - Location: `backend/worker.py`
-- Trigger: best-effort indexing after Phase 2 completion, and again after Phase 3 (to include tasks)
+- Trigger 1: best-effort indexing after Phase 4 (AI Analysis) — indexes raw data + AI analyses
+- Trigger 2: re-indexing after Phase 5 (Execution Plan) — adds task data
 - Failure behavior: indexing failure must never block audit completion
+- Idempotent: always deletes existing points for `audit_id` before re-inserting
 
 ---
 
