@@ -186,31 +186,46 @@ async def stream_message(
     conversation_id: UUID,
     body: ChatMessageCreateRequest,
     current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
 ):
     """
     Send a message and stream assistant response using SSE (POST + Authorization header).
+
+    IMPORTANT: We create a dedicated DB session inside the generator because
+    FastAPI closes Depends(get_db) sessions before the SSE stream finishes,
+    causing "connection is closed" errors.
 
     SSE format:
       data: {"token":"..."}\n\n
       data: [DONE]\n\n
     """
+    from app.database import AsyncSessionLocal
+
+    user_id = current_user["id"]
+    user_message = body.content
+    user_metadata = current_user.get("user_metadata")
+    convo_id = str(conversation_id)
 
     async def event_generator():
-        try:
-            async for chunk in chat_service.stream_chat_response(
-                db,
-                conversation_id=str(conversation_id),
-                user_id=current_user["id"],
-                user_message=body.content,
-                user_metadata=current_user.get("user_metadata"),
-            ):
-                yield f"data: {json.dumps({'token': chunk})}\n\n"
-            yield "data: [DONE]\n\n"
-        except Exception as e:
-            logger.error("Chat SSE stream failed (conversation_id=%s): %s", conversation_id, e)
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
-            yield "data: [DONE]\n\n"
+        async with AsyncSessionLocal() as db:
+            try:
+                async for chunk in chat_service.stream_chat_response(
+                    db,
+                    conversation_id=convo_id,
+                    user_id=user_id,
+                    user_message=user_message,
+                    user_metadata=user_metadata,
+                ):
+                    yield f"data: {json.dumps({'token': chunk})}\n\n"
+                await db.commit()
+                yield "data: [DONE]\n\n"
+            except Exception as e:
+                logger.error("Chat SSE stream failed (conversation_id=%s): %s", conversation_id, e)
+                try:
+                    await db.rollback()
+                except Exception:
+                    pass
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                yield "data: [DONE]\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

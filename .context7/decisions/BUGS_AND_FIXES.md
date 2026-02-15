@@ -1429,7 +1429,28 @@ Additionally, `retrieve_context()` called `embed_query()` without any error hand
 
 ---
 
+## BUG-037: Chat SSE stream hangs - DB session closed before generator finishes
+
+**Date**: 2026-02-15  
+**Severity**: Critical  
+**Status**: RESOLVED  
+
+**Symptom**: Chat message appears to hang indefinitely. User sees spinner, message never arrives. Backend log shows `cannot call Transaction.rollback(): the underlying connection is closed`.
+
+**Root Cause**: Classic FastAPI `StreamingResponse` + `Depends(get_db)` lifecycle bug. FastAPI closes the DB session (from dependency injection) as soon as the endpoint function returns the `StreamingResponse` object. But the async generator inside `StreamingResponse` continues to run AFTER the session is closed, causing all DB operations (save message, increment usage, flush) to fail with "connection closed".
+
+**Fix**:
+1. Removed `db: AsyncSession = Depends(get_db)` from the SSE endpoint.
+2. Created a dedicated `AsyncSessionLocal()` context inside `event_generator()`.
+3. Added explicit `await db.commit()` after stream completion and `await db.rollback()` on error.
+
+**Files Changed**: `backend/app/routers/chat.py`
+
+**Related**: BUG-035, BUG-036, ADR-033
+
+---
+
 **Last Updated**: 2026-02-15  
-**Resolved Bugs**: 34 (incl. BUG-036 embedding model mismatch)  
+**Resolved Bugs**: 35 (incl. BUG-037 SSE session lifecycle)  
 **Known Issues**: 3  
 **Watching**: 2
