@@ -83,17 +83,27 @@ export function ChatPanel() {
 
   const [selectedAgentSlug, setSelectedAgentSlug] = useState<string | null>(null)
 
-  useQuery({
+  const agentsQuery = useQuery({
     queryKey: ['chatAgents', workspaceId],
     queryFn: () => chatAPI.listAgents(workspaceId ?? undefined),
     enabled: isOpen,
     staleTime: 60_000,
-    onSuccess: (data) => {
-      setAgents(data)
-      if (!selectedAgentSlug && data.length > 0) setSelectedAgentSlug(data[0].slug)
-    },
-    onError: (e: any) => toast.error(e?.message || 'Failed to load agents'),
   })
+
+  useEffect(() => {
+    if (agentsQuery.data) {
+      setAgents(agentsQuery.data)
+      if (!selectedAgentSlug && agentsQuery.data.length > 0) {
+        setSelectedAgentSlug(agentsQuery.data[0].slug)
+      }
+    }
+  }, [agentsQuery.data, setAgents, selectedAgentSlug])
+
+  useEffect(() => {
+    if (agentsQuery.error) {
+      toast.error((agentsQuery.error as any)?.message || 'Failed to load agents')
+    }
+  }, [agentsQuery.error])
 
   const conversationsQuery = useQuery({
     queryKey: ['chatConversations', workspaceId, activeAuditId],
@@ -104,16 +114,26 @@ export function ChatPanel() {
       }),
     enabled: isOpen && Boolean(workspaceId) && Boolean(activeAuditId),
     staleTime: 10_000,
-    onSuccess: (data) => setConversations(data),
   })
 
-  useQuery({
+  useEffect(() => {
+    if (conversationsQuery.data) {
+      setConversations(conversationsQuery.data)
+    }
+  }, [conversationsQuery.data, setConversations])
+
+  const usageQuery = useQuery({
     queryKey: ['chatUsage', workspaceId],
     queryFn: () => chatAPI.getUsage(workspaceId as string),
     enabled: isOpen && Boolean(workspaceId),
     staleTime: 15_000,
-    onSuccess: (data: any) => setUsage(data),
   })
+
+  useEffect(() => {
+    if (usageQuery.data) {
+      setUsage(usageQuery.data as any)
+    }
+  }, [usageQuery.data, setUsage])
 
   // Load messages for active conversation when switching
   useEffect(() => {
