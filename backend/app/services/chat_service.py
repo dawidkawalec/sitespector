@@ -136,13 +136,19 @@ async def increment_usage(db: AsyncSession, *, user_id: str) -> None:
 
 
 async def list_agents(db: AsyncSession, *, workspace_id: Optional[str] = None) -> List[AgentType]:
-    q = select(AgentType).where(AgentType.is_system.is_(True))
+    from sqlalchemy import or_
+
+    conditions = [AgentType.is_system.is_(True)]
     if workspace_id:
-        q = q.union_all(
-            select(AgentType).where(AgentType.workspace_id == _as_uuid(workspace_id), AgentType.is_system.is_(False))
-        )
-    res = await db.execute(q.order_by(AgentType.is_system.desc(), AgentType.name.asc()))
-    return res.scalars().all()
+        conditions.append(AgentType.workspace_id == _as_uuid(workspace_id))
+
+    q = (
+        select(AgentType)
+        .where(or_(*conditions))
+        .order_by(AgentType.is_system.desc(), AgentType.name.asc())
+    )
+    res = await db.execute(q)
+    return list(res.scalars().all())
 
 
 async def get_agent_by_slug(db: AsyncSession, *, slug: str, workspace_id: Optional[str] = None) -> AgentType:
