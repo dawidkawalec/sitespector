@@ -114,17 +114,24 @@ async def call_claude(
                 system_instruction=system_prompt if system_prompt else None,
             )
 
+            # Use a fresh generation config for each call to avoid state issues
+            generation_config = genai.types.GenerationConfig(
+                max_output_tokens=max_tokens or 2048,
+                temperature=0.7,
+            )
+
             response = await asyncio.wait_for(
                 asyncio.to_thread(
                     model.generate_content,
                     prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        max_output_tokens=max_tokens or 2048,
-                        temperature=0.7,
-                    ),
+                    generation_config=generation_config,
                 ),
                 timeout=30.0,
             )
+
+            # Check if response has valid parts (expired key might return empty but no exception in to_thread)
+            if not response or not hasattr(response, "text"):
+                raise AIUnavailableError("invalid_response")
 
             text = response.text or ""
             preview = text[:180].replace("\n", " ")
@@ -155,7 +162,7 @@ async def call_claude(
             elif "exceeded your current quota" in msg or "ResourceExhausted" in msg or "429" in msg:
                 last_reason = "quota_exhausted"
                 quota_exhausted_count += 1
-            elif "PermissionDenied" in msg or "403" in msg:
+            elif "PermissionDenied" in msg or "403" in msg or "API key expired" in msg:
                 last_reason = "permission_denied"
             else:
                 last_reason = "unknown_error"
