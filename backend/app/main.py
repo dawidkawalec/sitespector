@@ -371,6 +371,32 @@ async def get_system_status():
             "error": str(e)
         }
     
+    # Check Qdrant (vector store for RAG)
+    try:
+        import httpx
+        qdrant_url = settings.QDRANT_URL or "http://qdrant:6333"
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(f"{qdrant_url}/collections")
+            if resp.status_code == 200:
+                data = resp.json()
+                collections = data.get("result", {}).get("collections", [])
+                status["services"]["qdrant"] = {
+                    "status": "online",
+                    "version": "v1.13.2",
+                    "collections": len(collections),
+                    "error": None
+                }
+            else:
+                status["services"]["qdrant"] = {
+                    "status": "error",
+                    "error": f"HTTP {resp.status_code}"
+                }
+    except Exception as e:
+        status["services"]["qdrant"] = {
+            "status": "offline",
+            "error": str(e)
+        }
+    
     return status
 
 

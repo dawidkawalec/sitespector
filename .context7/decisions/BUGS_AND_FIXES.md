@@ -1341,7 +1341,31 @@ curl -H "X-Admin-Token: TOKEN" https://sitespector.app/api/logs/worker  # Should
 
 ---
 
+---
+
+## BUG-033: /api/system/status returns 422 after security hardening
+
+**Date**: 2026-02-15  
+**Severity**: Medium  
+**Status**: RESOLVED  
+
+**Symptom**: Dashboard System Status panel shows all services as "failed". Console shows `GET /api/system/status 422 (Unprocessable Entity)`.
+
+**Root Cause**: Security hardening (BUG-032) added `X-Admin-Token` header requirement to `/api/system/status` via `verify_admin_token` dependency. The frontend `SystemStatus.tsx` component calls this endpoint via `apiRequest()` which sends a Supabase Bearer token, not an admin token. FastAPI returned 422 because the required `X-Admin-Token` header was missing.
+
+**Fix**:
+1. Created `verify_admin_or_user` dependency in `backend/app/main.py` that accepts EITHER `X-Admin-Token` header (for external monitoring) OR Supabase Bearer JWT (for dashboard).
+2. Changed `/api/system/status` to use `verify_admin_or_user` instead of `verify_admin_token`.
+3. Added Qdrant to the system status check (async HTTP call to `http://qdrant:6333/collections`).
+4. Updated frontend `SystemStatus.tsx` to render Qdrant tile (version + collection count).
+
+**Files Changed**: `backend/app/main.py`, `frontend/components/SystemStatus.tsx`
+
+**Related**: BUG-032 (security hardening introduced the regression)
+
+---
+
 **Last Updated**: 2026-02-15  
-**Resolved Bugs**: 30 (incl. BUG-032 security hardening)  
+**Resolved Bugs**: 31 (incl. BUG-033 system/status auth fix)  
 **Known Issues**: 3  
 **Watching**: 2

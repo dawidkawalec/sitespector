@@ -887,6 +887,46 @@ The `GET /api/audits/{id}` endpoint performs on-the-fly normalization for older 
 **ReDoc**: `https://sitespector.app/api/redoc`  
 **OpenAPI JSON**: `https://sitespector.app/api/openapi.json`
 
+> **Note**: Swagger/OpenAPI is **disabled in production** (returns 404).
+
+---
+
+### Monitoring Endpoints
+
+#### `GET /api/system/status`
+
+**Auth**: `X-Admin-Token` header OR Supabase Bearer JWT (dual auth).
+
+Returns health status of all critical services.
+
+**Response** (200):
+```json
+{
+  "timestamp": "2026-02-15T18:00:00.000000",
+  "version": "2.0.0",
+  "services": {
+    "screaming_frog": { "status": "online", "version": "Commercial/CLI" },
+    "lighthouse": { "status": "online", "version": "12.x.x" },
+    "worker": { "status": "online", "pid": "1" },
+    "database": { "status": "online", "message": "accepting connections" },
+    "senuto": { "status": "online", "version": "API v2" },
+    "qdrant": { "status": "online", "version": "v1.13.2", "collections": 0 }
+  }
+}
+```
+
+**Service statuses**: `online` | `offline` | `error`
+
+#### `GET /api/logs/worker`
+
+**Auth**: `X-Admin-Token` header only.  
+**Query**: `lines` (int, default 100, max 1000)
+
+#### `GET /api/logs/backend`
+
+**Auth**: `X-Admin-Token` header only.  
+**Query**: `lines` (int, default 100, max 1000)
+
 ---
 
 **Last Updated**: 2026-02-15  

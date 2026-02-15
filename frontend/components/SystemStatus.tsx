@@ -13,6 +13,10 @@ interface ServiceStatus {
   message?: string
 }
 
+interface QdrantServiceStatus extends ServiceStatus {
+  collections?: number
+}
+
 interface SystemStatus {
   timestamp: string
   version: string
@@ -22,6 +26,7 @@ interface SystemStatus {
     worker: ServiceStatus
     database: ServiceStatus
     senuto: ServiceStatus
+    qdrant: QdrantServiceStatus
   }
 }
 
@@ -96,7 +101,7 @@ export function SystemStatus() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
           {/* Screaming Frog */}
           <div className="space-y-1">
             <div className="flex items-center justify-between">
@@ -160,6 +165,25 @@ export function SystemStatus() {
               <p className="text-xs text-red-500">{status.services.senuto.error}</p>
             )}
           </div>
+
+          {/* Qdrant */}
+          {status.services.qdrant && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Qdrant</span>
+                {getStatusBadge(status.services.qdrant.status)}
+              </div>
+              {status.services.qdrant.version && (
+                <p className="text-xs text-muted-foreground">{status.services.qdrant.version}</p>
+              )}
+              {status.services.qdrant.collections !== undefined && (
+                <p className="text-xs text-muted-foreground">{status.services.qdrant.collections} collections</p>
+              )}
+              {status.services.qdrant.error && (
+                <p className="text-xs text-red-500">{status.services.qdrant.error}</p>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
