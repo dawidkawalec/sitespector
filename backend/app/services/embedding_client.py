@@ -25,28 +25,41 @@ async def embed_text(text: str, task_type: EmbeddingTaskType) -> List[float]:
     """
     Return embedding vector for provided text.
 
+    Tries all available Gemini API keys with fallback on failure.
     Note: google-generativeai is sync; run in a thread.
     """
     keys = _get_gemini_api_keys()
     if not keys:
         raise AIUnavailableError("missing_api_key")
 
-    # Embeddings are cheap; use the first available key.
-    genai.configure(api_key=keys[0])
+    last_error: Exception | None = None
 
-    def _embed() -> List[float]:
-        result = genai.embed_content(
-            model="models/text-embedding-004",
-            content=text,
-            task_type=task_type,
-        )
-        # Library returns dict-like structure with `embedding` key
-        vec = result.get("embedding") if isinstance(result, dict) else getattr(result, "embedding", None)
-        if vec is None:
-            raise RuntimeError("Missing embedding in response")
-        return list(vec)
+    for idx, key in enumerate(keys):
+        try:
+            genai.configure(api_key=key)
 
-    return await asyncio.to_thread(_embed)
+            def _embed() -> List[float]:
+                result = genai.embed_content(
+                    model="models/text-embedding-004",
+                    content=text,
+                    task_type=task_type,
+                )
+                vec = result.get("embedding") if isinstance(result, dict) else getattr(result, "embedding", None)
+                if vec is None:
+                    raise RuntimeError("Missing embedding in response")
+                return list(vec)
+
+            return await asyncio.to_thread(_embed)
+
+        except Exception as e:
+            last_error = e
+            logger.warning(
+                "Embedding failed (key_index=%s/%s, error=%s): %s",
+                idx + 1, len(keys), type(e).__name__, e,
+            )
+            continue
+
+    raise last_error or AIUnavailableError("all_embedding_keys_failed")
 
 
 async def embed_query(text: str) -> List[float]:

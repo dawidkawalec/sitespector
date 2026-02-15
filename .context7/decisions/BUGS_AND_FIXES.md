@@ -1385,7 +1385,29 @@ curl -H "X-Admin-Token: TOKEN" https://sitespector.app/api/logs/worker  # Should
 
 ---
 
+## BUG-035: Chat "API key expired" despite fallback key configured
+
+**Date**: 2026-02-15  
+**Severity**: Critical  
+**Status**: RESOLVED  
+
+**Symptom**: Chat agent responds with "API key expired" error on every message. Frontend shows error. Backend logs show `Chat SSE stream failed` with Google API error.
+
+**Root Cause**: `embedding_client.py` (used by RAG `retrieve_context`) hardcoded `genai.configure(api_key=keys[0])` — always used the **first** (expired) key without any fallback logic. When the chat tried to embed the user's question for Qdrant search, it failed immediately on the expired primary key and never tried the fallback.
+
+The `ai_client.py` (`call_claude`) already had proper multi-key retry, but the embedding client did not. Since `retrieve_context` is called **before** `call_claude` in the chat pipeline, the error was thrown from embeddings, not from the LLM call.
+
+**Fix**:
+1. Rewrote `embed_text()` in `embedding_client.py` to iterate over all available keys with try/catch fallback (same pattern as `call_claude`).
+2. Added logging for each key attempt to aid future debugging.
+
+**Files Changed**: `backend/app/services/embedding_client.py`
+
+**Related**: BUG-034, ADR-033
+
+---
+
 **Last Updated**: 2026-02-15  
-**Resolved Bugs**: 32 (incl. BUG-034 chat agents query fix)  
+**Resolved Bugs**: 33 (incl. BUG-035 embedding key fallback)  
 **Known Issues**: 3  
 **Watching**: 2
