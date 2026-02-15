@@ -1265,7 +1265,35 @@ curl -I https://sitespector.app/og?title=Test
 
 ---
 
-**Last Updated**: 2026-02-14  
-**Resolved Bugs**: 28 (incl. BUG-026 cross-module AIO contradiction)  
+### BUG-031: Public website header/footer inconsistent across routes (dual Next.js apps + anchor-based IA)
+
+**Reported**: 2026-02-15
+
+**Status**: ✅ FIXED
+
+**Severity**: MEDIUM (visible UX inconsistency on marketing/public pages)
+
+**Root cause**:
+- The public website is served by **two Next.js apps** behind Nginx:
+  - `landing` serves `/` and marketing/content routes
+  - `frontend` serves fallback public routes like `/sitemap`
+- Each app had its own header/footer implementations with different link structures (anchors like `/#price` vs real routes), so navigation and footer looked and behaved differently between pages.
+
+**Fix**:
+- Implemented route-based public IA (no scroll anchors) and aligned components across both apps:
+  - Landing: Vercel-style mega menu (`landing/src/component/layout/Topbar/page.tsx`) + SCSS (`landing/src/assets/scss/_mega-menu.scss`)
+  - Added canonical pricing page `/cennik` (`landing/src/app/cennik/page.tsx`) + Nginx route (`docker/nginx/nginx.conf`) + sitemap update (`landing/src/app/sitemap.ts`)
+  - Frontend: aligned `PublicNavbar` + `PublicFooter` to match landing navigation/links
+  - Removed remaining `/#...` anchor links from public sitemap/CTAs
+
+**Verification**:
+```bash
+npm --prefix landing run lint
+```
+
+---
+
+**Last Updated**: 2026-02-15  
+**Resolved Bugs**: 29 (incl. BUG-026 cross-module AIO contradiction)  
 **Known Issues**: 3  
 **Watching**: 2

@@ -54,6 +54,17 @@
 
 ---
 
+## Public Marketing Navigation Unification (2026-02-15)
+
+- **Decision**: Public/marketing navigation is route-based IA (no scroll-to-section anchors) and stays consistent across both Next.js apps.
+- **Why**: Nginx routes `/` and marketing pages to `landing`, but some public pages (e.g. `/sitemap`) are served by `frontend`, which created visible header/footer inconsistency.
+- **Implementation**:
+  - Landing mega menu: `landing/src/component/layout/Topbar/page.tsx` + styles `landing/src/assets/scss/_mega-menu.scss`.
+  - Canonical pricing page: `/cennik` (`landing/src/app/cennik/page.tsx`) + Nginx route `docker/nginx/nginx.conf` + sitemap `landing/src/app/sitemap.ts`.
+  - Frontend public shell aligned: `frontend/components/layout/PublicNavbar.tsx` and `frontend/components/layout/PublicFooter.tsx`.
+
+---
+
 ## ADR-008: 3-Phase Audit System with Interactive Tasks (2026-02-14)
 
 ### Context

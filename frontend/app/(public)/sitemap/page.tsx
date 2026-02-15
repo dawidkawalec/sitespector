@@ -12,14 +12,14 @@ const sitemapSections = [
       { label: 'Strona główna', href: '/' },
       { label: 'Zaloguj się / Załóż konto', href: '/login' },
       { label: 'Dashboard', href: '/dashboard' },
-      { label: 'Cennik', href: '/#price' },
+      { label: 'Cennik', href: '/cennik' },
     ],
   },
   {
     title: 'Produkt',
     links: [
-      { label: 'Funkcje', href: '/#about' },
-      { label: 'Cennik', href: '/#price' },
+      { label: 'Funkcje', href: '/funkcje' },
+      { label: 'Cennik', href: '/cennik' },
       { label: 'Blog', href: '/blog' },
       { label: 'Dokumentacja', href: '/docs' },
       { label: 'Changelog', href: '/changelog' },

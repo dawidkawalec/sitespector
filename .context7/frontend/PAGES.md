@@ -19,7 +19,7 @@ app/
 │   ├── page.tsx               # Homepage (/) – redirect to /dashboard when logged in
 │   ├── login/page.tsx         # Auth (/login) – tabs: Zaloguj | Zarejestruj (Supabase)
 │   ├── register/page.tsx      # Redirect to /login?mode=register
-│   └── sitemap/page.tsx       # Mapa strony (human-readable) – pełna struktura linków
+│   └── sitemap/page.tsx       # Mapa strony (human-readable) – pełna struktura linków (bez anchorów typu /#price)
 ├── (app)/                     # Authenticated app with UnifiedSidebar
 │   ├── layout.tsx             # Sidebar layout (workspace switcher)
 │   ├── dashboard/page.tsx     # Dashboard + workspace analytics
@@ -164,6 +164,12 @@ All pages use `'use client'` because:
 ---
 
 ## Navigation Patterns
+
+### Public navbar consistency
+
+- `frontend/components/layout/PublicNavbar.tsx` is kept **structurally consistent** with the marketing navigation (landing app):
+  - no scroll-to-section links (`/#price`, `/#about`, etc.)
+  - dropdown/mega-menu structure: Produkt, Dla kogo, Zasoby, Firma + direct `/cennik`
 
 ### Redirect after action
 

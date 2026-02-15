@@ -29,8 +29,7 @@ const STATIC_PAGES: StaticEntry[] = [
   { path: '/docs', changeFrequency: 'weekly', priority: 0.7 },
   { path: '/changelog', changeFrequency: 'weekly', priority: 0.6 },
 
-  // Public app pages (served by the frontend container), but still indexable.
-  { path: '/pricing', changeFrequency: 'weekly', priority: 0.75 },
+  { path: '/cennik', changeFrequency: 'weekly', priority: 0.85 },
   { path: '/sitemap', changeFrequency: 'monthly', priority: 0.3 },
 
   { path: '/o-nas', changeFrequency: 'monthly', priority: 0.5 },

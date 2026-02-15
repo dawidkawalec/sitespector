@@ -22,3 +22,8 @@ A: You will be notified and given the option to upgrade to a higher tier.
 
 **Q: Do you offer a trial?**
 A: Our Free plan is a "forever free" tier that allows you to test all core features.
+
+## Public Pricing Page
+
+- **Route**: `/cennik` (served by the `landing` app via Nginx)
+- **Purpose**: Single canonical public pricing page (no `/#price` anchor navigation).

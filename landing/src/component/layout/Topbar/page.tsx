@@ -1,65 +1,152 @@
 'use client';
-import useScrollEvent from '@/hooks/useScrollEvent';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import type { ElementType } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Collapse, Container } from 'react-bootstrap';
-import { RiSearchEyeFill, RiMenu5Line } from 'react-icons/ri';
+import {
+  RiAddCircleLine,
+  RiBankCardLine,
+  RiBookOpenLine,
+  RiEarthLine,
+  RiHourglassFill,
+  RiLineChartLine,
+  RiMagicLine,
+  RiMenu5Line,
+  RiQuoteText,
+  RiSearchEyeFill,
+  RiShieldCheckLine,
+  RiTeamLine,
+  RiTerminalBoxLine,
+} from 'react-icons/ri';
 
-type NavLinkItem = { label: string; href: string };
-type NavDropdown = { id: string; label: string; items: NavLinkItem[] };
+type NavLinkItem = {
+  label: string;
+  href: string;
+  description?: string;
+  icon?: ElementType<{ size?: number; className?: string }>;
+};
+
+type NavPanel = {
+  id: string;
+  label: string;
+  items: NavLinkItem[];
+};
 
 const Topbar = () => {
-  const [open, setOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<'home' | 'about' | 'price'>('home');
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const pathname = usePathname();
-  const { scrollY } = useScrollEvent();
-  const isAuthPage = pathname === '/login' || pathname === '/register';
-  const isMainPage = pathname === '/';
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [mobileAccordionOpen, setMobileAccordionOpen] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [canHover, setCanHover] = useState(false);
+  const hoverOpenTimer = useRef<number | null>(null);
+  const hoverCloseTimer = useRef<number | null>(null);
 
-  const isLightHeader = ['/home-3', '/home-5', '/home-6'].includes(pathname);
-
-  const dropdowns: NavDropdown[] = useMemo(
+  const panels: NavPanel[] = useMemo(
     () => [
       {
         id: 'produkt',
         label: 'Produkt',
         items: [
-          { label: 'Funkcje', href: '/funkcje' },
-          { label: 'Jak to działa', href: '/jak-to-dziala' },
-          { label: 'Integracje', href: '/integracje' },
-          { label: 'Porównanie', href: '/porownanie' },
-          { label: 'Cennik', href: '/#price' },
+          {
+            label: 'Funkcje',
+            href: '/funkcje',
+            description: 'Wszystkie kluczowe funkcje platformy.',
+            icon: RiTerminalBoxLine,
+          },
+          {
+            label: 'Jak to działa',
+            href: '/jak-to-dziala',
+            description: 'Proces audytu krok po kroku.',
+            icon: RiMagicLine,
+          },
+          {
+            label: 'Integracje',
+            href: '/integracje',
+            description: 'Połącz SiteSpector z narzędziami i danymi.',
+            icon: RiEarthLine,
+          },
+          {
+            label: 'Porównanie',
+            href: '/porownanie',
+            description: 'Zobacz różnice vs inne podejścia i narzędzia.',
+            icon: RiLineChartLine,
+          },
         ],
       },
       {
         id: 'dla-kogo',
         label: 'Dla kogo',
         items: [
-          { label: 'Dla e-commerce', href: '/dla-ecommerce' },
-          { label: 'Dla agencji SEO', href: '/dla-agencji-seo' },
-          { label: 'Dla freelancerów', href: '/dla-freelancerow' },
-          { label: 'Dla menedżerów', href: '/dla-managerow' },
-          { label: 'Sprawdź agencję SEO', href: '/sprawdz-agencje-seo' },
+          {
+            label: 'Dla e-commerce',
+            href: '/dla-ecommerce',
+            description: 'Audyt i priorytety dla sklepów online.',
+            icon: RiBankCardLine,
+          },
+          {
+            label: 'Dla agencji SEO',
+            href: '/dla-agencji-seo',
+            description: 'Raportowanie, white-label i workflow dla agencji.',
+            icon: RiTeamLine,
+          },
+          {
+            label: 'Dla freelancerów',
+            href: '/dla-freelancerow',
+            description: 'Szybkie audyty i gotowe wskazówki do wdrożenia.',
+            icon: RiHourglassFill,
+          },
+          {
+            label: 'Dla menedżerów',
+            href: '/dla-managerow',
+            description: 'Kontrola jakości, KPI i jasne priorytety.',
+            icon: RiLineChartLine,
+          },
+          {
+            label: 'Sprawdź agencję SEO',
+            href: '/sprawdz-agencje-seo',
+            description: 'Zweryfikuj jakość działań i raportów dostawcy.',
+            icon: RiShieldCheckLine,
+          },
         ],
       },
       {
         id: 'zasoby',
         label: 'Zasoby',
         items: [
-          { label: 'Blog', href: '/blog' },
-          { label: 'Case studies', href: '/case-study' },
-          { label: 'Centrum pomocy', href: '/docs' },
-          { label: 'Changelog', href: '/changelog' },
+          {
+            label: 'Blog',
+            href: '/blog',
+            description: 'SEO, wydajność, AI i praktyczne poradniki.',
+            icon: RiBookOpenLine,
+          },
+          {
+            label: 'Case studies',
+            href: '/case-study',
+            description: 'Historie wdrożeń i realne wyniki.',
+            icon: RiQuoteText,
+          },
+          {
+            label: 'Centrum pomocy',
+            href: '/docs',
+            description: 'Dokumentacja funkcji i instrukcje.',
+            icon: RiBookOpenLine,
+          },
+          {
+            label: 'Changelog',
+            href: '/changelog',
+            description: 'Lista zmian i nowości w produkcie.',
+            icon: RiAddCircleLine,
+          },
         ],
       },
       {
         id: 'firma',
         label: 'Firma',
         items: [
-          { label: 'O nas', href: '/o-nas' },
-          { label: 'Kontakt', href: '/kontakt' },
+          { label: 'O nas', href: '/o-nas', description: 'Kim jesteśmy i co budujemy.' },
+          { label: 'Kontakt', href: '/kontakt', description: 'Napisz do nas lub umów demo.' },
         ],
       },
     ],
@@ -72,36 +159,62 @@ const Topbar = () => {
     return pathname === base || pathname.startsWith(`${base}/`);
   };
 
+  const clearTimers = () => {
+    if (hoverOpenTimer.current) window.clearTimeout(hoverOpenTimer.current);
+    if (hoverCloseTimer.current) window.clearTimeout(hoverCloseTimer.current);
+    hoverOpenTimer.current = null;
+    hoverCloseTimer.current = null;
+  };
+
   const closeAll = () => {
-    setOpen(false);
-    setOpenDropdown(null);
+    clearTimers();
+    setMobileOpen(false);
+    setMobileAccordionOpen(null);
+    setActivePanel(null);
+  };
+
+  const scheduleOpenPanel = (id: string) => {
+    if (!canHover) return;
+    clearTimers();
+    hoverOpenTimer.current = window.setTimeout(() => setActivePanel(id), 120);
+  };
+
+  const scheduleClosePanel = () => {
+    if (!canHover) return;
+    clearTimers();
+    hoverCloseTimer.current = window.setTimeout(() => setActivePanel(null), 140);
   };
 
   useEffect(() => {
-    if (!isMainPage || isAuthPage) return;
-    for (const id of ['home', 'about', 'price'] as const) {
-      const el = document.getElementById(id);
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        if (rect.top <= window.innerHeight / 2 && rect.bottom >= 100) {
-          setActiveSection(id);
-          break;
-        }
-      }
-    }
-  }, [scrollY, isAuthPage, isMainPage]);
+    const onScroll = () => setIsScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
-    // Close dropdowns on route change
-    setOpenDropdown(null);
+    const mql = window.matchMedia?.('(hover: hover) and (pointer: fine)');
+    const update = () => setCanHover(Boolean(mql?.matches));
+    update();
+    if (!mql) return;
+    mql.addEventListener?.('change', update);
+    return () => mql.removeEventListener?.('change', update);
+  }, []);
+
+  useEffect(() => {
+    // Close menus on route change (also fixes stuck-open panels after navigation).
+    clearTimers();
+    setActivePanel(null);
+    setMobileAccordionOpen(null);
+    setMobileOpen(false);
   }, [pathname]);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
-      if (target.closest?.('.navbar-nav')) return;
-      setOpenDropdown(null);
+      if (target.closest?.('[data-mega-root]')) return;
+      setActivePanel(null);
     };
     document.addEventListener('click', onDocClick);
     return () => document.removeEventListener('click', onDocClick);
@@ -110,15 +223,16 @@ const Topbar = () => {
   return (
     <header>
       <nav
-        className={`navbar navbar-expand-lg fixed-top navbar-custom sticky sticky-light 
-        ${isLightHeader ? 'navbar-light' : 'nav-light'} 
-        ${scrollY > 100 ? 'nav-sticky' : ''}`}
+        className={`navbar navbar-expand-lg fixed-top navbar-custom sticky sticky-light nav-light ${isScrolled ? 'nav-sticky' : ''}`}
+        data-mega-root
+        onMouseLeave={() => scheduleClosePanel()}
       >
         <Container>
           <div className="navbar-brand logo">
             <Link
-              className={`navbar-caption fs-4 ${isLightHeader ? 'text-light' : 'text-primary'} ls-1 fw-bold`}
+              className="navbar-caption fs-4 text-primary ls-1 fw-bold"
               href="/"
+              onClick={() => closeAll()}
             >
               <RiSearchEyeFill size={28} className="text-orange fs-4 mb-2 me-1" /> SiteSpector
             </Link>
@@ -127,9 +241,9 @@ const Topbar = () => {
           <button
             className="navbar-toggler"
             type="button"
-            onClick={() => setOpen(!open)}
+            onClick={() => setMobileOpen(v => !v)}
             aria-controls="navbarCollapse"
-            aria-expanded={open}
+            aria-expanded={mobileOpen}
             aria-label="Toggle navigation"
           >
             <span className="fw-bold fs-4">
@@ -137,68 +251,82 @@ const Topbar = () => {
             </span>
           </button>
 
-          <Collapse in={open}>
+          <Collapse in={mobileOpen}>
             <div className="navbar-collapse" id="navbarCollapse">
-              <ul className="navbar-nav mx-auto" id="navbar-navlist">
+              <ul className="navbar-nav mx-auto mega-nav-desktop" id="navbar-navlist">
                 <li className="nav-item">
-                  <Link
-                    className={`nav-link ${isMainPage && activeSection === 'home' ? 'active' : ''}`}
-                    href={isMainPage ? '#home' : '/'}
-                    onClick={() => setOpen(false)}
-                  >
+                  <Link className={`nav-link ${pathname === '/' ? 'active' : ''}`} href="/" onClick={() => closeAll()}>
                     Start
                   </Link>
                 </li>
 
-                {isMainPage && (
-                  <>
-                    <li className="nav-item">
-                      <Link
-                        className={`nav-link ${activeSection === 'about' ? 'active' : ''}`}
-                        href="#about"
-                        onClick={() => setOpen(false)}
-                      >
-                        Funkcje
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link
-                        className={`nav-link ${activeSection === 'price' ? 'active' : ''}`}
-                        href="#price"
-                        onClick={() => setOpen(false)}
-                      >
-                        Cennik
-                      </Link>
-                    </li>
-                  </>
-                )}
-
-                {dropdowns.map(d => (
-                  <li className="nav-item dropdown" key={d.id}>
+                {panels.map(panel => (
+                  <li className="nav-item mega-nav-item" key={panel.id}>
                     <button
                       type="button"
-                      className={`nav-link dropdown-toggle ${d.items.some(i => isActivePath(i.href)) ? 'active' : ''}`}
-                      aria-expanded={openDropdown === d.id}
-                      onClick={() => setOpenDropdown(prev => (prev === d.id ? null : d.id))}
+                      className={`nav-link mega-nav-trigger ${panel.items.some(i => isActivePath(i.href)) ? 'active' : ''}`}
+                      aria-expanded={activePanel === panel.id}
+                      aria-controls={`mega-panel-${panel.id}`}
+                      onMouseEnter={() => scheduleOpenPanel(panel.id)}
+                      onFocus={() => setActivePanel(panel.id)}
+                      onClick={() => setActivePanel(prev => (prev === panel.id ? null : panel.id))}
                     >
-                      {d.label}
+                      {panel.label}
                     </button>
-                    <ul className={`dropdown-menu ${openDropdown === d.id ? 'show' : ''}`}>
-                      {d.items.map(item => (
-                        <li key={item.href}>
-                          <Link
-                            href={item.href}
-                            className={`dropdown-item ${isActivePath(item.href) ? 'active' : ''}`}
-                            onClick={() => closeAll()}
-                          >
-                            {item.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
                   </li>
                 ))}
+
+                <li className="nav-item">
+                  <Link className={`nav-link ${isActivePath('/cennik') ? 'active' : ''}`} href="/cennik" onClick={() => closeAll()}>
+                    Cennik
+                  </Link>
+                </li>
               </ul>
+
+              {/* Mobile accordion menu (visible under 992px). */}
+              <div className="mega-nav-mobile d-lg-none pt-2 pb-3">
+                <div className="d-flex flex-column gap-2">
+                  <Link className={`nav-link px-3 ${pathname === '/' ? 'active' : ''}`} href="/" onClick={() => closeAll()}>
+                    Start
+                  </Link>
+
+                  <Link className={`nav-link px-3 ${isActivePath('/cennik') ? 'active' : ''}`} href="/cennik" onClick={() => closeAll()}>
+                    Cennik
+                  </Link>
+
+                  {panels.map(panel => (
+                    <div key={panel.id} className="mega-accordion">
+                      <button
+                        type="button"
+                        className={`nav-link w-100 text-start px-3 mega-accordion-trigger ${
+                          mobileAccordionOpen === panel.id ? 'active' : ''
+                        }`}
+                        aria-expanded={mobileAccordionOpen === panel.id}
+                        onClick={() => setMobileAccordionOpen(prev => (prev === panel.id ? null : panel.id))}
+                      >
+                        {panel.label}
+                      </button>
+                      <Collapse in={mobileAccordionOpen === panel.id}>
+                        <div className="mega-accordion-panel px-3 pb-2">
+                          <div className="d-flex flex-column">
+                            {panel.items.map(item => (
+                              <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`mega-accordion-link py-2 ${isActivePath(item.href) ? 'active' : ''}`}
+                                onClick={() => closeAll()}
+                              >
+                                {item.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </Collapse>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <ul className="navbar-nav nav-btn">
                 <li className="nav-item">
                   <Link className="btn btn-orange text-light" href="/login" onClick={() => closeAll()}>
@@ -209,6 +337,45 @@ const Topbar = () => {
             </div>
           </Collapse>
         </Container>
+
+        {/* Mega panel (desktop) */}
+        <div
+          className={`mega-panel-wrap d-none d-lg-block ${activePanel ? 'is-open' : ''}`}
+          onMouseEnter={() => clearTimers()}
+          onMouseLeave={() => scheduleClosePanel()}
+        >
+          <div className="container">
+            {panels.map(panel => (
+              <div
+                key={panel.id}
+                id={`mega-panel-${panel.id}`}
+                className={`mega-panel ${activePanel === panel.id ? 'is-active' : ''}`}
+                role="region"
+                aria-hidden={activePanel !== panel.id}
+              >
+                <div className={`mega-grid ${panel.id === 'firma' ? 'mega-grid--compact' : ''}`}>
+                  {panel.items.map(item => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`mega-link ${isActivePath(item.href) ? 'is-active' : ''}`}
+                        onClick={() => closeAll()}
+                      >
+                        <div className="mega-link-icon">{Icon ? <Icon size={20} /> : null}</div>
+                        <div className="mega-link-content">
+                          <div className="mega-link-title">{item.label}</div>
+                          {item.description ? <div className="mega-link-desc">{item.description}</div> : null}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </nav>
     </header>
   );

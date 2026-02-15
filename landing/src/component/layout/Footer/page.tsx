@@ -22,7 +22,7 @@ const footerData: FooterColumn[] = [
       { label: 'Jak to działa', link: '/jak-to-dziala' },
       { label: 'Integracje', link: '/integracje' },
       { label: 'Porównanie', link: '/porownanie' },
-      { label: 'Cennik', link: '/#price' },
+      { label: 'Cennik', link: '/cennik' },
     ],
   },
   {

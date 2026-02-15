@@ -187,6 +187,7 @@ location /blog { proxy_pass http://landing; }
 location /docs { proxy_pass http://landing; }
 location /case-study { proxy_pass http://landing; }
 location /porownanie { proxy_pass http://landing; }
+location /cennik { proxy_pass http://landing; }
 location /changelog { proxy_pass http://landing; }
 
 # SEO & AI crawlers

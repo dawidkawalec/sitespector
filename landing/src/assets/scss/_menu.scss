@@ -3,25 +3,27 @@
 */
 .navbar {
   &.nav-sticky {
-    background-color: $primary;
-    box-shadow: 10px -10px 20px 0px;
+    // Modern sticky header (light + blur), matches mega menu panel.
+    background-color: rgba($gray-100, 0.92);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
+    border-bottom: 1px solid rgba(11, 54, 61, 0.10);
     backdrop-filter: blur(10px);
     .logo {
       a {
-        color: $light !important ;
+        color: $primary !important;
       }
     }
     .navbar-nav {
       .nav-item {
         .nav-link {
-          color: $light !important;
+          color: $primary !important;
           &:hover,
           &:active,
           &.active {
-            color: $dark;
+            color: $orange !important;
           }
           @media (max-width: 991px) {
-            color: $light !important ;
+            color: $dark !important;
           }
         }
       }
@@ -32,10 +34,10 @@
     //     }
     // }
     .navbar-toggler {
-      color: $light;
+      color: $primary;
     }
     &.nav-bg {
-      background-color: $primary;
+      background-color: rgba($gray-100, 0.92);
     }
   }
 

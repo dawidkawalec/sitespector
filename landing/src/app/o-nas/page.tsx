@@ -294,7 +294,7 @@ export default function ONasPage() {
                   <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
                     Rozpocznij Darmowy Audyt
                   </Link>
-                  <Link href="/#price" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">
+                  <Link href="/cennik" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">
                     Zobacz cennik
                   </Link>
                 </div>

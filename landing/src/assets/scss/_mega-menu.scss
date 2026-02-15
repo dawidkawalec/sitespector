@@ -1,0 +1,174 @@
+/*
+// Mega menu (Vercel-style)
+*/
+
+.navbar {
+  &[data-mega-root] {
+    // Ensure the mega panel positions relative to the navbar.
+    position: fixed;
+
+    .mega-nav-trigger {
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+
+      // Tiny chevron, matches modern SaaS navs.
+      &::after {
+        display: inline-block;
+        margin-left: 8px;
+        width: 6px;
+        height: 6px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(45deg) translateY(-1px);
+        opacity: 0.7;
+        content: '';
+      }
+    }
+
+    .mega-panel-wrap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      z-index: 1040; // slightly above bootstrap dropdowns
+      padding: 14px 0 0;
+      opacity: 0;
+      transform: translateY(-6px);
+      pointer-events: none;
+      transition:
+        opacity 180ms ease,
+        transform 180ms ease;
+
+      &.is-open {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+    }
+
+    .mega-panel {
+      display: none;
+
+      &.is-active {
+        display: block;
+      }
+    }
+
+    .mega-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid rgba(11, 54, 61, 0.12);
+      border-radius: 14px;
+      background: rgba(255, 249, 245, 0.92);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.12);
+
+      &.mega-grid--compact {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: 760px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    .mega-link {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: $primary;
+      border: 1px solid transparent;
+      transition:
+        background-color 160ms ease,
+        transform 160ms ease,
+        border-color 160ms ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(11, 54, 61, 0.10);
+        transform: translateY(-1px);
+      }
+
+      &.is-active {
+        border-color: rgba(255, 137, 69, 0.45);
+        background: rgba(255, 255, 255, 0.9);
+      }
+    }
+
+    .mega-link-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 137, 69, 0.12);
+      color: $orange;
+      flex: 0 0 auto;
+      margin-top: 1px;
+    }
+
+    .mega-link-title {
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      line-height: 1.1;
+    }
+
+    .mega-link-desc {
+      margin-top: 4px;
+      font-size: 13px;
+      line-height: 1.25;
+      color: rgba(11, 54, 61, 0.72);
+    }
+
+    // Mobile accordion helpers (inside bootstrap collapse)
+    .mega-accordion {
+      border: 1px solid rgba(11, 54, 61, 0.10);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.75);
+    }
+
+    .mega-accordion-trigger {
+      padding-top: 12px;
+      padding-bottom: 12px;
+
+      &::after {
+        float: right;
+        margin-top: 6px;
+        width: 7px;
+        height: 7px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(45deg);
+        opacity: 0.7;
+        content: '';
+      }
+    }
+
+    .mega-accordion-panel {
+      border-top: 1px solid rgba(11, 54, 61, 0.08);
+    }
+
+    .mega-accordion-link {
+      text-decoration: none;
+      color: rgba(11, 54, 61, 0.85);
+      border-radius: 8px;
+      transition: background-color 140ms ease, color 140ms ease;
+
+      &:hover {
+        color: $primary;
+        background: rgba(255, 137, 69, 0.10);
+      }
+
+      &.active {
+        color: $orange;
+      }
+    }
+  }
+}
+

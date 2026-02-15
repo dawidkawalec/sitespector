@@ -228,7 +228,7 @@ export default function PorownanieClient() {
                 <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
                   Rozpocznij darmowy audyt
                 </Link>
-                <Link href="/#price" className="btn btn-outline-primary px-5 py-3 fw-bold">
+                <Link href="/cennik" className="btn btn-outline-primary px-5 py-3 fw-bold">
                   Zobacz cennik
                 </Link>
               </div>
