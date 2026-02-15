@@ -748,6 +748,59 @@ interface Competitor {
 
 ---
 
+## Chat Endpoints (Agent Chat + RAG)
+
+All chat endpoints use **Supabase JWT** (`Authorization: Bearer <token>`) and enforce **workspace membership** for the audit's workspace.
+
+### Agents
+
+- `GET /api/chat/agents`
+  - Optional query: `workspace_id` (future custom agents)
+  - Returns predefined agents (MVP): `seo-expert`, `linking-expert`, `seo-copywriter`, `performance-expert`, `aio-strategist`
+
+### Conversations
+
+- `POST /api/chat/conversations`
+  - Body: `{ audit_id, workspace_id, agent_slug }`
+  - Creates a new conversation thread for a given audit + agent
+
+- `GET /api/chat/conversations?workspace_id=...&audit_id=...&agent_slug=...`
+  - Lists conversations for the current user (includes shared conversations)
+
+- `GET /api/chat/conversations/{conversation_id}`
+  - Returns `{ conversation, agent, messages }`
+
+- `PATCH /api/chat/conversations/{conversation_id}`
+  - Body: `{ title?, is_shared? }`
+
+- `DELETE /api/chat/conversations/{conversation_id}`
+
+### Messaging (SSE)
+
+- `POST /api/chat/conversations/{conversation_id}/messages/stream`
+  - Body: `{ content }`
+  - Response: `text/event-stream` (SSE). Emits:
+    - `data: {"token":"..."}` chunks
+    - `data: [DONE]` sentinel
+  - Notes:
+    - Uses POST (not EventSource) because it requires auth header + request body.
+    - RAG retrieval is filtered by `audit_id` and the agent's allowed sections.
+
+### Sharing
+
+- `POST /api/chat/conversations/{conversation_id}/share`
+  - Body: `{ shared_with_user_id, permission }` (`read|write`)
+
+- `DELETE /api/chat/conversations/{conversation_id}/share/{shared_with_user_id}`
+
+### Usage / Rate Limiting
+
+- `GET /api/chat/usage?workspace_id=...`
+  - Returns `{ month, messages_sent, limit, subscription_tier }`
+  - Limits (monthly): Free=100, Pro=500, Enterprise=unlimited
+
+---
+
 ## Rate Limiting
 
 **Current state**: Not implemented
@@ -836,6 +889,6 @@ The `GET /api/audits/{id}` endpoint performs on-the-fly normalization for older 
 
 ---
 
-**Last Updated**: 2026-02-12  
+**Last Updated**: 2026-02-15  
 **API Version**: v1  
 **Base URL**: https://sitespector.app/api

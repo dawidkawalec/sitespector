@@ -8,14 +8,26 @@
  * Plan: Actionable link tasks
  */
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Link as LinkIcon, AlertCircle, CheckCircle2, XCircle, Search, Filter, ExternalLink, ArrowRight, Link2Off, Info } from 'lucide-react'
+import {
+  Loader2,
+  Link as LinkIcon,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  Search,
+  Filter,
+  ExternalLink,
+  ArrowRight,
+  Link2Off,
+  Info,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   Table,
@@ -43,6 +55,15 @@ import { LinkAttributesPieChart } from '@/components/AuditCharts'
 import { formatNumber } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { InfoTooltip } from '@/components/ui/info-tooltip'
+
+export default function LinksPage({ params }: { params: { id: string } }) {
+  // Next.js requires useSearchParams() usage to be wrapped in a Suspense boundary.
+  return (
+    <Suspense fallback={<div className="container mx-auto py-8 px-4" />}>
+      <LinksPageInner params={params} />
+    </Suspense>
+  )
+}
 
 function InternalLinksTab({ linksData, allPages }: { linksData: any; allPages: any[] }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -271,7 +292,9 @@ function IncomingLinksTab({ senuto, audit }: { senuto: any; audit: Audit }) {
                 const anchors = domainKey ? bl.anchors[domainKey] : [];
                 return (anchors || []).slice(0, 6).map((a: any, i: number) => (
                   <div key={i} className="flex items-center justify-between text-xs p-2 rounded border bg-accent/5">
-                    <span className="truncate font-medium italic">"{a.anchor || 'Brak tekstu'}"</span>
+                    <span className="truncate font-medium italic">
+                      &quot;{a.anchor || 'Brak tekstu'}&quot;
+                    </span>
                     <Badge variant="secondary">{a.count}</Badge>
                   </div>
                 ));
@@ -347,7 +370,7 @@ function RawDataTab({ audit }: { audit: Audit }) {
   )
 }
 
-export default function LinksPage({ params }: { params: { id: string } }) {
+function LinksPageInner({ params }: { params: { id: string } }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isAuth, setIsAuth] = useState(false)

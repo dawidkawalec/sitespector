@@ -2,7 +2,7 @@
 
 ## Overview
 
-SiteSpector runs as **9 Docker containers** orchestrated by Docker Compose on the VPS.
+SiteSpector runs as **10 Docker containers** orchestrated by Docker Compose on the VPS.
 
 - **Config file**: `docker-compose.prod.yml`
 - **Project dir on VPS**: `/opt/sitespector`
@@ -72,6 +72,13 @@ This is defense-in-depth in addition to host-level UFW.
 - Controlled via `docker exec` from worker
 
 ### 9) `dozzle` (Docker logs viewer)
+### 10) `qdrant` (Vector DB for RAG)
+
+- Internal only (no host port binding)
+- Stores audit-scoped embeddings for agent chat
+- Used by backend/worker via internal DNS: `http://qdrant:6333`
+- Persistent volume: `qdrant_data`
+
 
 - Runs but is **NOT exposed publicly** via nginx
 - Intended access: SSH tunnel to container port `8080` (internal)
@@ -103,7 +110,7 @@ docker logs sitespector-backend --tail 100
 
 ---
 **Last Updated**: 2026-02-15  
-**Services**: 9 containers  
+**Services**: 10 containers  
 **Orchestration**: Docker Compose  
 **Networks**: `sitespector-internal` (internal=true) + `sitespector-external`
 

@@ -158,7 +158,7 @@ export default function AcceptInvitePage({ params }: { params: { token: string }
               <CardTitle>Invitation Accepted!</CardTitle>
             </div>
             <CardDescription>
-              You've successfully joined {invite?.workspace_name}
+              You&apos;ve successfully joined {invite?.workspace_name}
             </CardDescription>
           </CardHeader>
           <CardContent>

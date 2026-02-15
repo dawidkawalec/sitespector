@@ -19,6 +19,17 @@ services:
     networks:
       - sitespector-network
 
+  # Vector DB (RAG) - Qdrant
+  qdrant:
+    image: qdrant/qdrant:v1.13.2
+    container_name: sitespector-qdrant
+    volumes:
+      - qdrant_data:/qdrant/storage
+    # Security: do not expose ports publicly; backend connects via Docker network
+    networks:
+      - sitespector-network
+    restart: unless-stopped
+
   # Backend API (FastAPI)
   backend:
     build:
@@ -33,6 +44,7 @@ services:
       - ENVIRONMENT=development
       - DEBUG=true
       - CORS_ORIGINS=["http://localhost:3000","http://localhost:3001"]
+      - QDRANT_URL=http://qdrant:6333
     env_file:
       - .env
     volumes:
@@ -57,6 +69,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
       - ENVIRONMENT=development
       - DEBUG=true
+      - QDRANT_URL=http://qdrant:6333
     env_file:
       - .env
     volumes:
@@ -141,6 +154,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  qdrant_data:
     driver: local
 
 networks:

@@ -13,7 +13,7 @@ from slowapi.errors import RateLimitExceeded
 import logging
 from app.config import settings
 from app.database import init_db, close_db
-from app.routers import auth, audits, billing, schedules, public, tasks
+from app.routers import auth, audits, billing, schedules, public, tasks, chat
 from app.schemas import HealthCheck, ErrorResponse
 
 # Configure logging
@@ -347,6 +347,7 @@ app.include_router(tasks.router, prefix="/api")
 app.include_router(billing.router, prefix="/api")
 app.include_router(schedules.router, prefix="/api")
 app.include_router(public.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
 
 
 # ============================================

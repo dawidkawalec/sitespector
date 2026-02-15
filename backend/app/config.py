@@ -43,6 +43,11 @@ class Settings(BaseSettings):
         default="",
         description="Optional comma-separated list of Gemini API keys (in addition to GEMINI_API_KEY)",
     )
+
+    # Qdrant (RAG vector store)
+    QDRANT_HOST: str = Field(default="qdrant", description="Qdrant host (docker service name)")
+    QDRANT_PORT: int = Field(default=6333, description="Qdrant port")
+    QDRANT_URL: str = Field(default="", description="Optional full Qdrant URL (overrides host/port)")
     
     # Frontend URL (for redirects, Stripe)
     FRONTEND_URL: str = Field(default="https://sitespector.app", description="Frontend URL")

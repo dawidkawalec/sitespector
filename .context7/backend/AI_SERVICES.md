@@ -65,6 +65,30 @@ Behavior:
 
 ---
 
+## Agent Chat + RAG (Feb 2026)
+
+SiteSpector now supports an **audit-scoped agent chat** powered by RAG:
+- Each chat conversation is attached to exactly one `audit_id` (no cross-audit leakage).
+- Knowledge base is built from that audit's stored results + execution plan tasks.
+
+### Embeddings
+- Provider: Google Generative AI (`google-generativeai`)
+- Model: `models/text-embedding-004`
+- Location: `backend/app/services/embedding_client.py`
+
+### Vector Store
+- Store: Qdrant
+- Location: `backend/app/services/qdrant_client.py`
+- Collection: `audit_rag_chunks`
+- Filter: always by `audit_id` + agent `section_type` allowlist
+
+### Indexing Hook
+- Location: `backend/worker.py`
+- Trigger: best-effort indexing after Phase 2 completion, and again after Phase 3 (to include tasks)
+- Failure behavior: indexing failure must never block audit completion
+
+---
+
 ## PDF Generator
 
 **Location**: `backend/app/services/pdf_generator.py` + `backend/templates/report.html`
@@ -563,7 +587,7 @@ logger.debug(f"AI output: {ai_response}")
 
 ---
 
-**Last Updated**: 2025-02-03  
+**Last Updated**: 2026-02-15  
 **AI Provider**: Google Gemini  
 **Model**: gemini-3-flash  
 **Status**: Rule-based (AI integration ready but disabled)

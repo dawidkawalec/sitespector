@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -29,6 +29,15 @@ const GitHubIcon = () => (
 )
 
 export default function LoginPage() {
+  // Next.js requires useSearchParams() to be wrapped in a Suspense boundary for prerendering.
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <LoginPageInner />
+    </Suspense>
+  )
+}
+
+function LoginPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const modeRegister = searchParams.get('mode') === 'register'

@@ -133,7 +133,7 @@ export default function DashboardPage() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>No Workspace</CardTitle>
-            <CardDescription>You don't have access to any workspaces yet.</CardDescription>
+            <CardDescription>You don&apos;t have access to any workspaces yet.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {workspaceError && <Alert variant="destructive"><AlertDescription>Error: {workspaceError}</AlertDescription></Alert>}

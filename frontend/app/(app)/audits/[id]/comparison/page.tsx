@@ -85,6 +85,20 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
   })
 
   const [comparisonId, setComparisonId] = useState<string | null>(null)
+  const audits = history || []
+
+  // Set default comparison audit (the one before current)
+  useEffect(() => {
+    if (!currentAudit) return
+    if (audits.length > 1 && !comparisonId) {
+      const idx = audits.findIndex((a) => a.id === currentAudit.id)
+      if (idx !== -1 && audits[idx + 1]) {
+        setComparisonId(audits[idx + 1].id)
+      } else if (idx !== 0) {
+        setComparisonId(audits[0].id)
+      }
+    }
+  }, [audits, currentAudit, comparisonId])
 
   if (!isAuth || isLoadingCurrent || isLoadingHistory) {
     return (
@@ -112,20 +126,6 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
       </div>
     )
   }
-
-  const audits = history || []
-  
-  // Set default comparison audit (the one before current)
-  useEffect(() => {
-    if (audits.length > 1 && !comparisonId) {
-      const idx = audits.findIndex(a => a.id === currentAudit.id)
-      if (idx !== -1 && audits[idx + 1]) {
-        setComparisonId(audits[idx + 1].id)
-      } else if (idx !== 0) {
-        setComparisonId(audits[0].id)
-      }
-    }
-  }, [audits, currentAudit.id, comparisonId])
 
   const comparisonAudit = audits.find(a => a.id === comparisonId) || (audits.length > 1 ? audits[1] : null)
   const previousAudit = comparisonAudit // for backward compatibility in existing code

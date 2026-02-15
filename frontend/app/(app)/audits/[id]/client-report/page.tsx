@@ -337,7 +337,7 @@ export default function ClientReportPage({ params }: { params: { id: string } })
             {showQuickWins && (
               <section className="mb-12">
                 <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <CheckCircle2 className="h-6 w-6 text-primary" /> Rekomendacje "Quick Wins"
+                  <CheckCircle2 className="h-6 w-6 text-primary" /> Rekomendacje &quot;Quick Wins&quot;
                 </h3>
                 <div className="space-y-4">
                   {audit.results?.quick_wins && audit.results.quick_wins.length > 0 ? (

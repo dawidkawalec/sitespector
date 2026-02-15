@@ -565,6 +565,24 @@ Backend: 100% complete | Frontend foundation: 100% complete | Module refactoring
 
 ---
 
+## ADR-033: Audit-Scoped Agent Chat (RAG + Qdrant)
+**Date**: 2026-02-15
+**Status**: ✅ Done
+**Decision**:
+- Add agent chat in the dashboard as a persistent side panel (Cursor-like).
+- Conversations are strictly scoped to a single `audit_id` (no cross-audit context leakage).
+- Use RAG with Qdrant as the vector store, with hard filtering by `audit_id` and agent section allowlist.
+- Use Gemini for both chat (Flash) and embeddings (`text-embedding-004`) to keep a single provider.
+- Streaming responses via SSE (POST endpoint + auth header), not WebSocket.
+**Rationale**:
+- Audit reports can be very large (e.g. e-commerce with tens of thousands of products/keywords). Full prompt injection is not scalable.
+- Workspace/team security requirements demand strict access checks per audit/workspace.
+**Outcome**:
+- Backend: new `/api/chat/*` endpoints, chat tables in VPS Postgres, indexing hook in `backend/worker.py`.
+- Frontend: chat panel lives in `frontend/app/(app)/layout.tsx` and keeps state across navigation.
+
+---
+
 **Last Updated**: 2026-02-15
-**Total Decisions**: 31 accepted
+**Total Decisions**: 32 accepted
 **Review**: Update when making significant architectural changes.

@@ -204,7 +204,7 @@ export default function AIDeepContentPage({ params }: { params: { id: string } }
           </p>
           <ul className="list-disc pl-5 space-y-2">
             <li><strong>Konsolidacja duplikatów:</strong> Strony o identycznych tytułach powinny zostać połączone lub otrzymać unikalne tagi title.</li>
-            <li><strong>Rozbudowa "Thin Content":</strong> Strony z liczbą słów poniżej 200 są negatywnie oceniane przez Google. Dodaj min. 300-500 słów wartościowej treści na każdą z nich.</li>
+            <li><strong>Rozbudowa &quot;Thin Content&quot;:</strong> Strony z liczbą słów poniżej 200 są negatywnie oceniane przez Google. Dodaj min. 300-500 słów wartościowej treści na każdą z nich.</li>
             <li><strong>Optymalizacja pod intencję:</strong> Sprawdź, czy strony z niską liczbą słów nie są stronami technicznymi, które powinny mieć tag <code>noindex</code>.</li>
           </ul>
         </CardContent>

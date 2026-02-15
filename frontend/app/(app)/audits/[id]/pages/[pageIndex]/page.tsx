@@ -220,7 +220,7 @@ export default function PageDetailsPage({ params }: { params: { id: string, page
               ) : (
                 <div className="space-y-6 animate-in fade-in duration-500">
                   <div className="p-4 bg-accent/30 rounded-lg border border-border/50">
-                    <p className="text-sm italic leading-relaxed">"{aiAnalysis.summary}"</p>
+                    <p className="text-sm italic leading-relaxed">&quot;{aiAnalysis.summary}&quot;</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

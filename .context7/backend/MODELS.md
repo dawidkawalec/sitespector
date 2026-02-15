@@ -20,6 +20,11 @@ SiteSpector uses **PostgreSQL 15** with **SQLAlchemy 2.0** (async) ORM.
 1. **users** - User accounts
 2. **audits** - Website audit records
 3. **competitors** - Competitor URLs linked to audits
+4. **agent_types** - Predefined/custom chat agents
+5. **chat_conversations** - Audit-scoped conversation threads
+6. **chat_messages** - Messages in a conversation
+7. **chat_shares** - Sharing conversations within a workspace
+8. **chat_usage** - Monthly message counters (rate limiting)
 
 ---
 
@@ -464,7 +469,40 @@ cat backup.sql | docker exec -i sitespector-postgres psql -U sitespector_user si
 
 ---
 
-**Last Updated**: 2025-02-03  
+## Chat Models (Agent Chat + RAG)
+
+**Location**: `backend/app/models.py`
+
+Notes:
+- Chat ownership uses **Supabase user UUID** (stored as `UUID` but **no FK** to the legacy `users` table).
+- Conversations are strictly scoped by `workspace_id` + `audit_id`.
+
+### AgentType
+- Table: `agent_types`
+- Fields: `slug` (unique), `system_prompt`, `tools_config` (JSONB)
+
+### ChatConversation
+- Table: `chat_conversations`
+- FK: `audit_id -> audits.id`
+- FK: `agent_type_id -> agent_types.id`
+
+### ChatMessage
+- Table: `chat_messages`
+- FK: `conversation_id -> chat_conversations.id` (CASCADE)
+- Enum: `chatmessagerole` (`user|assistant|system`)
+
+### ChatShare
+- Table: `chat_shares`
+- Unique: `(conversation_id, shared_with_user_id)`
+- Enum: `chatsharepermission` (`read|write`)
+
+### ChatUsage
+- Table: `chat_usage`
+- Unique: `(user_id, month)` where `month` is `YYYY-MM`
+
+---
+
+**Last Updated**: 2026-02-15  
 **Database**: PostgreSQL 15  
 **ORM**: SQLAlchemy 2.0 (async)  
 **Driver**: asyncpg

@@ -16,7 +16,7 @@ import {
   ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle, 
   FileJson, CheckCircle, Search, Gauge, Sparkles, ImageIcon, 
   Link as LinkIcon, Users, Clock, ShieldCheck, Zap, ChevronDown, ChevronRight, ExternalLink,
-  Terminal, Activity, Check, CheckCheck, Timer, Globe2, TrendingUp
+  Terminal, Activity, Check, CheckCheck, Timer, Globe2, TrendingUp, AlertTriangle
 } from 'lucide-react'
 import Link from 'next/link'
 import { PageStatusChart } from '@/components/AuditCharts'
@@ -726,7 +726,9 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                       <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
                     </div>
                   ) : ai?.summary ? (
-                    <p className="text-sm leading-relaxed italic text-muted-foreground">"{ai.summary}"</p>
+                    <p className="text-sm leading-relaxed italic text-muted-foreground">
+                      &quot;{ai.summary}&quot;
+                    </p>
                   ) : (
                     <p className="text-sm text-muted-foreground italic">Brak podsumowania AI.</p>
                   )}

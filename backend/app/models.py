@@ -15,6 +15,7 @@ from sqlalchemy import (
     ForeignKey,
     Text,
     Enum as SQLEnum,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
@@ -323,3 +324,165 @@ class AuditTask(Base):
 
     def __repr__(self) -> str:
         return f"<AuditTask(id={self.id}, module={self.module}, title={self.title[:50]}, status={self.status})>"
+
+
+# ============================================
+# Chat / Agent Models (RAG Chat)
+# ============================================
+
+class ChatMessageRole(str, enum.Enum):
+    """Chat message roles."""
+    USER = "user"
+    ASSISTANT = "assistant"
+    SYSTEM = "system"
+
+
+class ChatSharePermission(str, enum.Enum):
+    """Sharing permission for a conversation."""
+    READ = "read"
+    WRITE = "write"
+
+
+class AgentType(Base):
+    """Predefined/custom agent definition (Cursor-like)."""
+
+    __tablename__ = "agent_types"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Display
+    name = Column(String(120), nullable=False)
+    slug = Column(String(120), nullable=False, unique=True, index=True)
+    description = Column(Text, nullable=True)
+    icon = Column(String(120), nullable=True)  # Lucide icon name (frontend)
+
+    # Behavior
+    system_prompt = Column(Text, nullable=False)
+    tools_config = Column(JSONB, nullable=False, default=list)  # allowed RAG section types
+
+    # Scope
+    is_system = Column(Boolean, default=True, nullable=False, index=True)
+    workspace_id = Column(UUID(as_uuid=True), nullable=True, index=True)  # null for system agents
+    created_by = Column(UUID(as_uuid=True), nullable=True, index=True)  # Supabase user id (no FK)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    conversations = relationship("ChatConversation", back_populates="agent_type")
+
+    def __repr__(self) -> str:
+        return f"<AgentType(id={self.id}, slug={self.slug})>"
+
+
+class ChatConversation(Base):
+    """A single conversation thread within an audit, for a given agent."""
+
+    __tablename__ = "chat_conversations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Scope / ownership
+    workspace_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    audit_id = Column(UUID(as_uuid=True), ForeignKey("audits.id"), nullable=False, index=True)
+
+    # Creator and agent config
+    created_by = Column(UUID(as_uuid=True), nullable=False, index=True)  # Supabase user id (no FK)
+    agent_type_id = Column(UUID(as_uuid=True), ForeignKey("agent_types.id"), nullable=False, index=True)
+
+    # Metadata
+    title = Column(String(300), nullable=True)
+    is_shared = Column(Boolean, default=False, nullable=False, index=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    agent_type = relationship("AgentType", back_populates="conversations")
+    audit = relationship("Audit")  # no backref needed right now
+    messages = relationship("ChatMessage", back_populates="conversation", cascade="all, delete-orphan")
+    shares = relationship("ChatShare", back_populates="conversation", cascade="all, delete-orphan")
+
+    def __repr__(self) -> str:
+        return f"<ChatConversation(id={self.id}, audit_id={self.audit_id}, agent_type_id={self.agent_type_id})>"
+
+
+class ChatMessage(Base):
+    """Message inside a conversation."""
+
+    __tablename__ = "chat_messages"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("chat_conversations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    role = Column(
+        SQLEnum(ChatMessageRole, name="chatmessagerole", values_callable=_enum_values),
+        nullable=False,
+        index=True,
+    )
+    content = Column(Text, nullable=False)
+    tokens_used = Column(Integer, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+
+    conversation = relationship("ChatConversation", back_populates="messages")
+
+    def __repr__(self) -> str:
+        return f"<ChatMessage(id={self.id}, role={self.role})>"
+
+
+class ChatShare(Base):
+    """Share a conversation with another user in the workspace."""
+
+    __tablename__ = "chat_shares"
+    __table_args__ = (
+        UniqueConstraint("conversation_id", "shared_with_user_id", name="uq_chat_share_conversation_user"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("chat_conversations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    shared_with_user_id = Column(UUID(as_uuid=True), nullable=False, index=True)  # Supabase user id
+    shared_by_user_id = Column(UUID(as_uuid=True), nullable=False, index=True)  # Supabase user id
+
+    permission = Column(
+        SQLEnum(ChatSharePermission, name="chatsharepermission", values_callable=_enum_values),
+        default=ChatSharePermission.READ,
+        nullable=False,
+        index=True,
+    )
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+
+    conversation = relationship("ChatConversation", back_populates="shares")
+
+    def __repr__(self) -> str:
+        return f"<ChatShare(id={self.id}, conversation_id={self.conversation_id})>"
+
+
+class ChatUsage(Base):
+    """Monthly message counters for rate limiting (per user)."""
+
+    __tablename__ = "chat_usage"
+    __table_args__ = (
+        UniqueConstraint("user_id", "month", name="uq_chat_usage_user_month"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), nullable=False, index=True)  # Supabase user id
+    month = Column(String(7), nullable=False, index=True)  # YYYY-MM
+    messages_sent = Column(Integer, default=0, nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    def __repr__(self) -> str:
+        return f"<ChatUsage(user_id={self.user_id}, month={self.month}, messages_sent={self.messages_sent})>"

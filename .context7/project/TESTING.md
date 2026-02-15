@@ -8,6 +8,7 @@
 
 #### Frontend (standalone mode)
 - [x] `npm run build` passes in `frontend/`.
+- [x] `npm run lint` passes in `frontend/` (warnings allowed).
 - [x] `node .next/standalone/server.js` starts correctly.
 - [x] Core routes return HTTP 200:
   - `/`
@@ -25,6 +26,11 @@
   - `backend/app/services/ai_analysis.py`
   - `backend/app/services/data_exporter.py`
 - [i] Full local API boot requires valid Supabase env (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`).
+
+#### Chat / RAG smoke (code-level)
+- [x] Frontend build includes chat panel (no runtime test required locally).
+- [x] Backend modules compile: `backend/app/services/chat_service.py`, `backend/app/services/rag_service.py`.
+- [i] Full end-to-end requires Qdrant running on VPS + migrations applied.
 
 ### Post-Deployment Verification
 After every deployment to VPS, perform the following checks:
@@ -49,6 +55,13 @@ After every deployment to VPS, perform the following checks:
   - [ ] Visibility tabs: Pozycje / Wzrosty-Spadki / Pozyskane-Utracone / Cechy fraz / Strony / Kanibalizacja.
   - [ ] AI Overviews page renders KPI, charts and tables.
 - [ ] PDF report download works.
+
+#### 5. Agent Chat (RAG)
+- [ ] Open any `/audits/{id}` page and open chat panel.
+- [ ] Create a new conversation, send a message, see streamed response.
+- [ ] Switch to another audit and verify the conversation list is audit-scoped.
+- [ ] Verify usage badge shows `messages_sent/limit`.
+- [ ] Verify sharing works (owner shares conversation; second user can view it).
 
 #### 4. Billing & Subscriptions
 - [ ] Current plan displays correctly in Settings.

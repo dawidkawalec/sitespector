@@ -1,0 +1,101 @@
+"""
+Qdrant client wrapper used by the RAG subsystem.
+
+We keep it synchronous internally (qdrant-client is sync) and provide async
+helpers via asyncio.to_thread to avoid blocking the event loop.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+from typing import Any, Dict, List, Optional
+
+from qdrant_client import QdrantClient
+from qdrant_client.http import models as qmodels
+
+from app.config import settings
+
+logger = logging.getLogger(__name__)
+
+
+_client: Optional[QdrantClient] = None
+
+
+def get_qdrant_client() -> QdrantClient:
+    global _client
+    if _client is not None:
+        return _client
+
+    if (settings.QDRANT_URL or "").strip():
+        _client = QdrantClient(url=settings.QDRANT_URL.strip())
+    else:
+        _client = QdrantClient(host=settings.QDRANT_HOST, port=int(settings.QDRANT_PORT))
+    return _client
+
+
+async def ensure_collection(
+    collection_name: str,
+    vector_size: int,
+    distance: qmodels.Distance = qmodels.Distance.COSINE,
+) -> None:
+    client = get_qdrant_client()
+
+    def _ensure() -> None:
+        existing = client.get_collections().collections
+        if any(c.name == collection_name for c in existing):
+            return
+        client.create_collection(
+            collection_name=collection_name,
+            vectors_config=qmodels.VectorParams(size=vector_size, distance=distance),
+        )
+
+    await asyncio.to_thread(_ensure)
+
+
+async def delete_points_by_filter(collection_name: str, flt: qmodels.Filter) -> None:
+    client = get_qdrant_client()
+
+    def _delete() -> None:
+        client.delete(
+            collection_name=collection_name,
+            points_selector=qmodels.FilterSelector(filter=flt),
+            wait=True,
+        )
+
+    await asyncio.to_thread(_delete)
+
+
+async def upsert_points(
+    collection_name: str,
+    points: List[qmodels.PointStruct],
+) -> None:
+    client = get_qdrant_client()
+
+    def _upsert() -> None:
+        if not points:
+            return
+        client.upsert(collection_name=collection_name, points=points, wait=True)
+
+    await asyncio.to_thread(_upsert)
+
+
+async def search(
+    collection_name: str,
+    query_vector: List[float],
+    flt: Optional[qmodels.Filter] = None,
+    limit: int = 8,
+) -> List[qmodels.ScoredPoint]:
+    client = get_qdrant_client()
+
+    def _search() -> List[qmodels.ScoredPoint]:
+        return client.search(
+            collection_name=collection_name,
+            query_vector=query_vector,
+            query_filter=flt,
+            limit=limit,
+            with_payload=True,
+        )
+
+    return await asyncio.to_thread(_search)
+

@@ -9,6 +9,8 @@
 
 import { UnifiedSidebar } from '@/components/layout/UnifiedSidebar'
 import { MobileSidebar } from '@/components/layout/MobileSidebar'
+import { ChatPanel } from '@/components/chat/ChatPanel'
+import { ChatToggleButton } from '@/components/chat/ChatToggleButton'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -31,6 +33,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+
+      <ChatPanel />
+      <ChatToggleButton />
     </div>
   )
 }

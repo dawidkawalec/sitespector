@@ -11,6 +11,7 @@ graph TD
     Frontend --> SupabaseAuth[Supabase Auth]
     Backend --> SupabaseDB[(Supabase DB - Users/Teams)]
     Backend --> VPS_DB[(VPS PostgreSQL - Audits)]
+    Backend --> Qdrant[(Qdrant - RAG Vectors)]
     Backend --> Worker[Python Worker]
     Worker --> ScreamingFrog[Screaming Frog Container]
     Worker --> Lighthouse[Lighthouse Container]
@@ -27,8 +28,9 @@ graph TD
 3. **backend**: FastAPI REST API.
 4. **worker**: Background processor for audits.
 5. **postgres**: Local audit database.
-6. **screaming-frog**: Headless SEO crawler.
-7. **lighthouse**: Performance auditing engine.
+6. **qdrant**: Vector store for audit-scoped RAG chat.
+7. **screaming-frog**: Headless SEO crawler.
+8. **lighthouse**: Performance auditing engine.
 
 ---
-**Last Updated**: 2026-02-11
+**Last Updated**: 2026-02-15

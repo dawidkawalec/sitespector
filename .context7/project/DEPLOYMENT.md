@@ -123,6 +123,13 @@ docker compose -f docker-compose.prod.yml down
 docker compose -f docker-compose.prod.yml up -d
 ```
 
+### Step 5a: Chat / RAG (Qdrant) Notes
+
+- Qdrant is deployed as part of `docker-compose.prod.yml` (service: `qdrant`).
+- No ports are exposed publicly; backend/worker access it via the internal Docker network as `http://qdrant:6333`.
+- Required env vars on VPS `.env`:
+  - `QDRANT_URL=http://qdrant:6333` (or `QDRANT_HOST=qdrant` + `QDRANT_PORT=6333`)
+
 ### Step 6: Monitor Logs
 
 ```bash
@@ -220,6 +227,21 @@ docker exec sitespector-backend alembic revision --autogenerate -m "add new colu
 7. Apply migration:
 ```bash
 docker exec sitespector-backend alembic upgrade head
+```
+
+### Chat Tables Migration (Feb 2026)
+
+When deploying agent chat, apply migrations after pulling code:
+
+```bash
+docker exec sitespector-backend alembic upgrade head
+```
+
+If Python deps changed (e.g. added `qdrant-client`), rebuild `backend` and `worker` before running migrations:
+
+```bash
+docker compose -f docker-compose.prod.yml build --no-cache backend worker
+docker compose -f docker-compose.prod.yml up -d backend worker
 ```
 8. Restart backend: `docker compose -f docker-compose.prod.yml restart backend worker`
 

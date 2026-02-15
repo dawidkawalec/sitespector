@@ -10,7 +10,7 @@
  * - Invoice history
  */
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,15 @@ interface Invoice {
 }
 
 export default function BillingPage() {
+  // Next.js requires useSearchParams() to be wrapped in a Suspense boundary for prerendering.
+  return (
+    <Suspense fallback={<div className="container mx-auto py-8 px-4" />}>
+      <BillingPageInner />
+    </Suspense>
+  )
+}
+
+function BillingPageInner() {
   const { currentWorkspace } = useWorkspace()
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [invoices, setInvoices] = useState<Invoice[]>([])
@@ -211,7 +220,7 @@ export default function BillingPage() {
             </div>
             {isNearLimit && (
               <p className="text-sm text-orange-600 mt-2">
-                You're approaching your audit limit. Consider upgrading.
+                You&apos;re approaching your audit limit. Consider upgrading.
               </p>
             )}
           </div>
@@ -299,13 +308,13 @@ export default function BillingPage() {
           <div>
             <h4 className="font-medium mb-1">How do audit limits work?</h4>
             <p className="text-sm text-muted-foreground">
-              Audit limits reset on the 1st of each month. Unused audits don't roll over.
+              Audit limits reset on the 1st of each month. Unused audits don&apos;t roll over.
             </p>
           </div>
           <div>
             <h4 className="font-medium mb-1">Can I cancel anytime?</h4>
             <p className="text-sm text-muted-foreground">
-              Yes, you can cancel your subscription at any time. You'll keep access until the end of your billing period.
+              Yes, you can cancel your subscription at any time. You&apos;ll keep access until the end of your billing period.
             </p>
           </div>
           <div>

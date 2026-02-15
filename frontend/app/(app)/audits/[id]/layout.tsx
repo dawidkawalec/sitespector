@@ -1,13 +1,13 @@
 /**
  * Audit Detail Layout
- * 
- * Nested layout for /audits/[id]/* pages.
- * Now uses the unified sidebar from parent layout.
- * This layout only adds mobile header support.
+ *
+ * Syncs current audit_id to the chat store so the chat panel stays report-scoped.
  */
 
-import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
+'use client'
+
+import { useEffect } from 'react'
+import { useChatStore } from '@/lib/chat-store'
 
 export default function AuditLayout({ 
   children,
@@ -16,6 +16,13 @@ export default function AuditLayout({
   children: React.ReactNode
   params: { id: string }
 }) {
+  const setActiveAudit = useChatStore((s) => s.setActiveAudit)
+
+  useEffect(() => {
+    setActiveAudit(params.id)
+    return () => setActiveAudit(null)
+  }, [params.id, setActiveAudit])
+
   return (
     <>
       {children}

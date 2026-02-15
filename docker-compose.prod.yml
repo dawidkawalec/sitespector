@@ -18,6 +18,16 @@ services:
       - sitespector-internal
     restart: unless-stopped
 
+  # Vector DB (RAG) - Qdrant (internal-only)
+  qdrant:
+    image: qdrant/qdrant:v1.13.2
+    container_name: sitespector-qdrant
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - sitespector-internal
+    restart: unless-stopped
+
   # Backend API (FastAPI)
   backend:
     build:
@@ -28,6 +38,7 @@ services:
     environment:
       - ENVIRONMENT=production
       - DEBUG=false
+      - QDRANT_URL=http://qdrant:6333
     env_file:
       - .env
     volumes:
@@ -56,6 +67,7 @@ services:
     environment:
       - ENVIRONMENT=production
       - DEBUG=false
+      - QDRANT_URL=http://qdrant:6333
     env_file:
       - .env
     volumes:
@@ -191,6 +203,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  qdrant_data:
     driver: local
 
 networks:

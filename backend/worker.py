@@ -14,6 +14,7 @@ from app.models import Audit, AuditStatus, Competitor, CompetitorStatus, AuditSc
 from app.config import settings
 from app.services import screaming_frog, lighthouse, ai_analysis, senuto
 from app.services import ai_execution_plan
+from app.services.rag_service import index_audit_for_rag
 
 # Configure logging
 logging.basicConfig(
@@ -460,6 +461,17 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 json.dumps(_summarize_result_shapes(results), ensure_ascii=True),
             )
 
+            # RAG indexing is best-effort and must not block audit completion.
+            async def _rag_index_bg(aid: str) -> None:
+                try:
+                    async with AsyncSessionLocal() as rag_db:
+                        await index_audit_for_rag(rag_db, aid)
+                        await rag_db.commit()
+                except Exception as e:
+                    logger.warning("RAG indexing failed (audit_id=%s): %s", aid, e)
+
+            asyncio.create_task(_rag_index_bg(audit_id))
+
         except Exception as e:
             logger.error(f"AI Analysis failed for audit {audit_id}: {e}")
             audit.ai_status = "failed"
@@ -643,6 +655,21 @@ async def run_execution_plan(audit_id: str, tech_data: Dict[str, Any]) -> None:
             )
             
             await db.commit()
+
+            # Re-index for RAG to include execution plan tasks (best-effort).
+            async def _rag_index_bg(aid: str) -> None:
+                try:
+                    async with AsyncSessionLocal() as rag_db:
+                        await index_audit_for_rag(rag_db, aid)
+                        await rag_db.commit()
+                except Exception as e:
+                    logger.warning(
+                        "RAG indexing failed after execution plan (audit_id=%s): %s",
+                        aid,
+                        e,
+                    )
+
+            asyncio.create_task(_rag_index_bg(audit_id))
             
             logger.info(f"✅ Phase 3 completed for audit {audit_id}: {len(task_objects)} tasks")
             
