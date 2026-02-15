@@ -1329,7 +1329,10 @@ npm --prefix landing run lint
 ```bash
 # After deploy to new VPS:
 curl -I https://sitespector.app/logs       # Should: 404
-curl -I https://sitespector.app/docs       # Should: 404
+# Note: https://sitespector.app/docs is a LANDING route (public content) and may be 200.
+# Swagger/OpenAPI must be disabled on the API layer:
+curl -I https://sitespector.app/api/docs         # Should: 404
+curl -I https://sitespector.app/api/openapi.json # Should: 404
 curl https://sitespector.app/api/logs/worker  # Should: 403 or 422
 curl -H "X-Admin-Token: TOKEN" https://sitespector.app/api/logs/worker  # Should: 200
 ```

@@ -644,40 +644,53 @@ docker compose -f docker-compose.prod.yml build --no-cache frontend
 
 ---
 
-## Security Considerations
+## Security Configuration (Hardened 2026-02-15)
 
 ### SSH Access
 
-**Best practice** (not implemented):
-- Use SSH keys instead of password
-- Disable root login
-- Use non-standard SSH port
+**Status**: ✅ HARDENED
+- SSH key-only authentication (password disabled)
+- Root login disabled (`PermitRootLogin no`)
+- Only `deploy` user allowed (`AllowUsers deploy`)
+- MaxAuthTries: 3, LoginGraceTime: 30s
+- SSH key: `~/.ssh/hetzner_sitespector_2026`
 
-### Firewall
+### Firewall (UFW)
 
-**Current**: No firewall configured (Hetzner firewall used)
-
-**Recommended** (not implemented):
-```bash
-ufw allow 22/tcp   # SSH
-ufw allow 80/tcp   # HTTP
-ufw allow 443/tcp  # HTTPS
-ufw enable
+**Status**: ✅ HARDENED - Anti-DDoS configuration
+```
+Default: deny incoming, deny outgoing, deny routed
+Inbound:  22/tcp (SSH), 80/tcp (HTTP), 443/tcp (HTTPS)
+Outbound: 80/tcp, 443/tcp (HTTP/HTTPS), 53/udp+tcp (DNS only)
+ALL OTHER OUTBOUND UDP BLOCKED (prevents UDP flood DDoS)
 ```
 
-### Docker Socket Access
+### fail2ban
 
-**Worker needs Docker socket** for docker exec:
-```yaml
-# docker-compose.prod.yml
-worker:
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-```
+**Status**: ✅ ACTIVE
+- SSH jail: maxretry=5, bantime=1h
 
-**Security risk**: Worker has full Docker access
+### Docker Security
 
-**Mitigation**: Worker code trusted (we wrote it)
+- Docker socket mounts: **read-only (`:ro`)** on worker, backend, dozzle
+- Docker NOT exposed on TCP (no port 2375)
+- Network segmentation: `internal` (no internet) + `external` (internet)
+- Dozzle pinned to `v8.8.1`, NOT publicly accessible (SSH tunnel only)
+- Only nginx exposes ports to host (80, 443)
+
+### API Security
+
+- Swagger/OpenAPI/ReDoc **disabled** in production
+- `/api/logs/*` and `/api/system/status` require `X-Admin-Token` header
+- Rate limiting: 10r/s on /api/, 3r/s on /login and /register
+- Security headers: X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy
+
+### Monitoring
+
+- Security check script runs every 5 minutes (`/opt/sitespector/security-check.sh`)
+- Monitors: suspicious processes, executable files in /tmp, unauthorized SSH keys, Docker TCP exposure, unexpected ports
+- Alerts logged to `/var/log/sitespector-security.log`
+- Certbot auto-renewal via systemd timer + cron backup
 
 ---
 
@@ -716,6 +729,6 @@ docker exec sitespector-backend printenv | grep -E "DATABASE|JWT|GEMINI"
 
 ---
 
-**Last Updated**: 2026-02-09  
+**Last Updated**: 2026-02-15  
 **Deployment target**: Hetzner VPS (46.225.134.48), domain sitespector.app  
-**Status**: Production-ready, Let's Encrypt SSL, manual deployment workflow
+**Status**: Production-ready, Let's Encrypt SSL, fully hardened (SSH key-only, UFW anti-DDoS, fail2ban, Docker read-only sockets, network segmentation, API auth, rate limiting, security monitoring)

@@ -1,6 +1,6 @@
 # SiteSpector - Operations & Admin Runbooks
 
-Last updated: 2026-02-13
+Last updated: 2026-02-15
 
 ## Production Topology (Current)
 
@@ -86,8 +86,9 @@ sudo journalctl -u ssh --no-pager | tail
 Baseline rules:
 - Inbound allowed: `22/tcp`, `80/tcp`, `443/tcp`
 - Default inbound: deny
-- Outbound default: allow
-- Defense-in-depth: **block outbound UDP/9021** (historical abuse port)
+- Default outbound: **deny**
+- Outbound allowed: `80/tcp`, `443/tcp`, `53/udp`, `53/tcp` (DNS only)
+- Defense-in-depth: **block all outbound UDP except DNS** (prevents UDP flood DDoS)
 
 Check:
 ```bash
@@ -109,6 +110,21 @@ Check:
 ```bash
 sudo fail2ban-client status sshd
 ```
+
+### SSL Auto-Renewal (Let's Encrypt)
+
+Certbot is installed on the host and renewal is handled by:
+
+- systemd timer (primary): `certbot.timer`
+- cron backup: `/etc/cron.d/certbot-renew` (stops nginx container, runs renew, starts nginx)
+
+### Security Monitoring (Host)
+
+A lightweight security check runs every 5 minutes:
+
+- Script: `/opt/sitespector/security-check.sh`
+- Cron: `/etc/cron.d/security-check`
+- Log: `/var/log/sitespector-security.log` (rotated via `/etc/logrotate.d/sitespector-security`)
 
 ## 🚀 Admin Tasks
 

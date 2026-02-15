@@ -92,11 +92,11 @@ server {
 ```nginx
 server {
     listen 443 ssl;
-    server_name _;
+    server_name sitespector.app www.sitespector.app;
 
-    # SSL certificates
-    ssl_certificate /etc/nginx/ssl/selfsigned.crt;
-    ssl_certificate_key /etc/nginx/ssl/selfsigned.key;
+    # SSL certificates (Let's Encrypt; host mounts full /etc/letsencrypt)
+    ssl_certificate /etc/letsencrypt/live/sitespector.app/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/sitespector.app/privkey.pem;
 
     # SSL settings
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -108,7 +108,7 @@ server {
 }
 ```
 
-**SSL**: Self-signed certificate (development grade)
+**SSL**: Let's Encrypt (production)
 
 **TLS versions**: 1.2, 1.3 only (secure)
 
@@ -198,6 +198,10 @@ location /llms.txt { proxy_pass http://frontend; add_header Content-Type text/ma
 ```
 
 **Notes**:
+- `/docs` is a **landing** route (public content). It is **not** FastAPI Swagger.
+- FastAPI Swagger/OpenAPI/ReDoc are disabled in production; verify with:
+  - `curl -I https://sitespector.app/api/docs` -> 404
+  - `curl -I https://sitespector.app/api/openapi.json` -> 404
 - `landing` implements `sitemap.xml` and `robots.txt` via Next.js App Router metadata routes:
   - `landing/src/app/sitemap.ts`
   - `landing/src/app/robots.ts`
@@ -241,8 +245,21 @@ certbot certonly --standalone -d sitespector.app -d www.sitespector.app
 **Nginx Volume**:
 ```yaml
 volumes:
-  - /etc/letsencrypt/live/sitespector.app:/etc/nginx/ssl:ro
+  - /etc/letsencrypt:/etc/letsencrypt:ro
 ```
+
+---
+## Security Hardening (Edge)
+
+Production nginx applies:
+
+- **Security headers**: `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`
+- **Reduced fingerprinting**: `server_tokens off` (do not expose nginx version)
+- **Rate limiting**:
+  - `/api/` -> 10 r/s (burst 20)
+  - `/login` + `/register` -> 3 r/s (burst 5)
+
+Monitoring endpoints are protected at the **application layer** (FastAPI `X-Admin-Token`).
 
 ---
 
@@ -360,7 +377,7 @@ docker exec sitespector-nginx nginx -s reload
 
 ---
 
-**Last Updated**: 2026-02-14  
-**Version**: Nginx 1.25 (Alpine)  
-**SSL**: Let's Encrypt (sitespector.app)  
-**Status**: Production-ready
+**Last Updated**: 2026-02-15  
+**Version**: Nginx (container reports `nginx/1.29.5`)  
+**SSL**: Let's Encrypt (`sitespector.app`, `www.sitespector.app`)  
+**Status**: Production-ready (hardened: headers + rate limiting)

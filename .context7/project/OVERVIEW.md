@@ -28,7 +28,7 @@ Professional SaaS platform for automated website auditing that combines:
 - **Workspace Management**: Personal and team workspaces with role-based access.
 - **Subscription & Billing**: Stripe integration with usage tracking.
 - **Audit Pipeline**: Screaming Frog + Lighthouse + Gemini AI.
-- **Infrastructure**: 7 Docker containers on Hetzner VPS with Let's Encrypt SSL.
+- **Infrastructure**: 9 Docker containers on Hetzner VPS with Let's Encrypt SSL (hardened: SSH key-only, UFW deny outgoing, fail2ban, segmented Docker networks).
 - **Frontend**: Next.js 14 App Router with Unified Context-Aware Sidebar.
 
 ## Architecture Overview
@@ -39,6 +39,6 @@ SiteSpector uses a **Dual Database Strategy**:
 See **[.context7/project/ARCHITECTURE.md](ARCHITECTURE.md)** for details.
 
 ---
-**Last Updated**: 2026-02-11
+**Last Updated**: 2026-02-15
 **Status**: Production SaaS Platform
 **Maintainer**: Dawid

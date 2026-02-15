@@ -541,6 +541,30 @@ Backend: 100% complete | Frontend foundation: 100% complete | Module refactoring
 
 ---
 
+## ADR-032: New VPS Deployment with Full Hardening
+**Date**: 2026-02-15
+**Status**: ✅ Done
+**Decision**:
+- Provision new Hetzner VPS (same IP: 46.225.134.48) with clean Ubuntu 24.04.
+- Bootstrap with hardened config from `SECURITY_HARDENING_PLAN.md` Phase 1.
+- User `deploy` with SSH key-only auth, root disabled.
+- UFW: deny all outbound by default, allow only TCP 80/443 + DNS (blocks all outbound UDP = anti-DDoS).
+- fail2ban: SSH jail, maxretry=5, bantime=1h.
+- Docker installed via official script, `deploy` in docker group.
+- All containers built from repo `release` branch with `--no-cache`.
+- Production .env with 64-char random credentials (DB password, ADMIN_API_TOKEN, JWT_SECRET).
+- Let's Encrypt SSL (auto-renewal via systemd timer + cron backup).
+- Security monitoring script every 5 minutes (processes, /tmp executables, SSH keys, Docker TCP, open ports).
+**Rationale**:
+- Previous VPS was compromised twice. New server with hardened baseline eliminates all known attack vectors.
+- Outbound UDP block is the most critical defense against Mirai-style DDoS botnets.
+**Outcome**:
+- 9/9 containers running healthy.
+- Full security audit passed: SSH hardened, UFW active, fail2ban active, Docker secure, API endpoints protected, SSL valid, no suspicious processes.
+- Security monitoring cron active.
+
+---
+
 **Last Updated**: 2026-02-15
-**Total Decisions**: 30 accepted
+**Total Decisions**: 31 accepted
 **Review**: Update when making significant architectural changes.

@@ -1,275 +1,111 @@
-# SiteSpector - Docker Configuration
+# SiteSpector - Docker Configuration (Production)
 
 ## Overview
 
-SiteSpector runs as 7 Docker containers orchestrated by Docker Compose.
+SiteSpector runs as **9 Docker containers** orchestrated by Docker Compose on the VPS.
 
-**Config file**: `docker-compose.prod.yml` (production)
+- **Config file**: `docker-compose.prod.yml`
+- **Project dir on VPS**: `/opt/sitespector`
+- **Branch**: `release`
+- **External ports exposed on host**: **only** `80` and `443` via `sitespector-nginx`
 
-**Network**: Bridge network (`sitespector-network`)
+## Networks (Hardening)
 
----
+Production uses 2 networks:
 
-## Services
+- `sitespector-internal` (**internal: true**) - for services that should not need internet egress
+- `sitespector-external` - for services that need internet (e.g. crawlers / Lighthouse)
 
-### 1. nginx (Reverse Proxy)
+This is defense-in-depth in addition to host-level UFW.
 
-```yaml
-nginx:
-  build:
-    context: ./docker/nginx
-    dockerfile: Dockerfile
-  container_name: sitespector-nginx
-  ports:
-    - "80:80"
-    - "443:443"
-  volumes:
-    - ./ssl:/etc/nginx/ssl:ro
-  depends_on:
-    - frontend
-    - backend
-  networks:
-    - sitespector-network
-  restart: unless-stopped
+## Services (Production)
+
+### 1) `nginx` (Reverse Proxy)
+
+- Exposes **host ports** `80` and `443`
+- Mounts Let’s Encrypt certs from host:
+  - `/etc/letsencrypt:/etc/letsencrypt:ro`
+- Routes:
+  - `/api/*` -> `backend:8000`
+  - `/health` -> `backend:8000/health`
+  - `/` -> `frontend:3000`
+  - selected marketing/auth routes -> `landing:3001`
+
+### 2) `frontend` (Next.js app)
+
+- Internal only (no host port binding)
+- Requires rebuild on code changes (standalone build)
+
+### 3) `landing` (Next.js landing/content/auth)
+
+- Internal only (no host port binding)
+- Serves marketing pages, `/login`, `/register`, and the public docs route `/docs` (landing docs, **not** FastAPI Swagger)
+
+### 4) `backend` (FastAPI)
+
+- Internal only (no host port binding)
+- Healthcheck: `/health`
+- **Swagger/OpenAPI disabled in production** (see `ENVIRONMENT=production`)
+- Uses `.env` for database + secrets
+
+### 5) `worker` (Background processor)
+
+- Internal only (no host port binding)
+- Executes audits by `docker exec` into other containers
+- `docker.sock` mount is **read-only**:
+  - `/var/run/docker.sock:/var/run/docker.sock:ro`
+
+### 6) `postgres`
+
+- Internal only
+- Persistent volume: `postgres_data`
+- Credentials are provided via `.env` variables (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`)
+
+### 7) `screaming-frog`
+
+- Needs external network access (downloads, crawling)
+- Controlled via `docker exec` from worker
+
+### 8) `lighthouse`
+
+- Needs external network access (fetching pages)
+- Controlled via `docker exec` from worker
+
+### 9) `dozzle` (Docker logs viewer)
+
+- Runs but is **NOT exposed publicly** via nginx
+- Intended access: SSH tunnel to container port `8080` (internal)
+- Docker socket mount is **read-only** (`:ro`)
+
+## Docker Socket Safety
+
+Docker socket mounts must be `:ro` (read-only) in production.
+If stronger isolation is required, use a Docker socket proxy (see `SECURITY_HARDENING_PLAN.md` Phase 2).
+
+## Common Commands (VPS)
+
+```bash
+cd /opt/sitespector
+
+# Start / restart
+docker compose -f docker-compose.prod.yml up -d
+
+# Full restart
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml up -d
+
+# Status
+docker ps
+
+# Logs
+docker logs sitespector-backend --tail 100
 ```
 
-**Purpose**: SSL termination, reverse proxy, static file serving
-
-**Routing**:
-- `/` → frontend:3000
-- `/api/*` → backend:8000
-
 ---
-
-### 2. frontend (Next.js)
-
-```yaml
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_API_URL=https://sitespector.app
-    container_name: sitespector-frontend
-    command: node server.js
-    environment:
-      - NEXT_PUBLIC_API_URL=https://sitespector.app
-    - HOSTNAME=0.0.0.0
-  depends_on:
-    - backend
-  networks:
-    - sitespector-network
-  restart: unless-stopped
-```
-
-**Build mode**: Standalone (optimized for Docker)
-
-**Port**: 3000 (internal only)
-
-**Rebuild required**: Yes (on code changes)
-
----
-
-### 3. backend (FastAPI)
-
-```yaml
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: sitespector-backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
-      - ENVIRONMENT=production
-      - DEBUG=false
-      # Prefer setting CORS in `/opt/sitespector/.env` (not hardcoded in compose).
-      # Example:
-      # CORS_ORIGINS=["https://sitespector.app","https://www.sitespector.app"]
-    env_file:
-      - .env
-  volumes:
-    - ./tmp/audits:/tmp/audits
-  depends_on:
-    postgres:
-      condition: service_healthy
-  networks:
-    - sitespector-network
-  restart: unless-stopped
-  healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-    interval: 30s
-    timeout: 10s
-    retries: 3
-```
-
-**Port**: 8000 (internal only)
-
-**Health check**: `/health` endpoint
-
----
-
-### 4. worker (Background Processor)
-
-```yaml
-worker:
-  build:
-    context: ./backend
-    dockerfile: Dockerfile
-  container_name: sitespector-worker
-  command: python worker.py
-  environment:
-    - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
-    - ENVIRONMENT=production
-    - DEBUG=false
-  env_file:
-    - .env
-  volumes:
-    - ./tmp/audits:/tmp/audits
-    - /var/run/docker.sock:/var/run/docker.sock
-  dns:
-    - 8.8.8.8
-    - 1.1.1.1
-  healthcheck:
-    test: ["CMD-SHELL", "pgrep -f worker.py || exit 1"]
-    interval: 30s
-    timeout: 10s
-    retries: 3
-  depends_on:
-    postgres:
-      condition: service_healthy
-    backend:
-      condition: service_started
-  networks:
-    - sitespector-network
-  restart: unless-stopped
-```
-
-**Docker socket**: Mounted to exec into other containers
-
-**No ports**: Internal communication only
-
----
-
-### 5. postgres (Database)
-
-```yaml
-postgres:
-  image: postgres:16-alpine
-  container_name: sitespector-postgres
-  environment:
-    POSTGRES_USER: sitespector_user
-    POSTGRES_PASSWORD: sitespector_password
-    POSTGRES_DB: sitespector_db
-  volumes:
-    - postgres_data:/var/lib/postgresql/data
-  healthcheck:
-    test: ["CMD-SHELL", "pg_isready -U sitespector_user -d sitespector_db"]
-    interval: 10s
-    timeout: 5s
-    retries: 5
-  networks:
-    - sitespector-network
-  restart: unless-stopped
-```
-
-**Volume**: `postgres_data` (persistent)
-
-**Port**: 5432 (internal only)
-
----
-
-### 6. landing (SiteSpector Landing Page)
-
-```yaml
-  landing:
-    build:
-      context: ./landing
-      dockerfile: Dockerfile
-    container_name: sitespector-landing
-    # ...
-```
-
-**Purpose**: Marketing website, blog, documentation, and authentication pages.
-
----
-
-### 7. screaming-frog (SEO Crawler)
-
-```yaml
-screaming-frog:
-  platform: linux/amd64
-  build:
-    context: ./docker/screaming-frog
-    dockerfile: Dockerfile
-  container_name: sitespector-screaming-frog
-  entrypoint: ["tail", "-f", "/dev/null"]
-  env_file:
-    - .env
-  dns:
-    - 8.8.8.8
-    - 1.1.1.1
-  volumes:
-    - ./tmp/crawls:/tmp/crawls
-  networks:
-    - sitespector-network
-  restart: unless-stopped
-```
-
-**Entrypoint**: `tail -f /dev/null` (keep alive)
-
-**Execution**: Docker exec from worker
-
----
-
-### 7. lighthouse (Performance Auditor)
-
-```yaml
-lighthouse:
-  build:
-    context: ./docker/lighthouse
-    dockerfile: Dockerfile
-  container_name: sitespector-lighthouse
-  entrypoint: ["tail", "-f", "/dev/null"]
-  dns:
-    - 8.8.8.8
-    - 1.1.1.1
-  volumes:
-    - ./tmp/lighthouse:/tmp/lighthouse
-  networks:
-    - sitespector-network
-  restart: unless-stopped
-```
-
-**Entrypoint**: `tail -f /dev/null` (keep alive)
-
-**Execution**: Docker exec from worker
-
----
-
-## Volumes
-
-```yaml
-volumes:
-  postgres_data:
-    driver: local
-```
-
-**Location**: `/var/lib/docker/volumes/sitespector_postgres_data`
-
----
-
-## Network
-
-```yaml
-networks:
-  sitespector-network:
-    driver: bridge
-```
-
-**Internal DNS**: Containers resolve by name (e.g., `backend:8000`, `postgres:5432`)
-
----
+**Last Updated**: 2026-02-15  
+**Services**: 9 containers  
+**Orchestration**: Docker Compose  
+**Networks**: `sitespector-internal` (internal=true) + `sitespector-external`
 
 ## Dockerfiles
 
@@ -437,7 +273,7 @@ docker exec sitespector-backend alembic upgrade head
 
 ---
 
-**Last Updated**: 2025-02-03  
-**Services**: 7 containers  
+**Last Updated**: 2026-02-15  
+**Services**: 9 containers  
 **Orchestration**: Docker Compose  
-**Network**: Bridge (sitespector-network)
+**Networks**: `sitespector-internal` (internal=true) + `sitespector-external`
