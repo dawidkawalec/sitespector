@@ -51,6 +51,7 @@ interface ChatState {
 
   isStreaming: boolean
   streamingConversationId: string | null
+  streamingPhase: 'searching' | 'generating' | 'streaming' | null
 
   usage: { month: string; messages_sent: number; limit: number | null; subscription_tier?: string | null } | null
 
@@ -71,6 +72,7 @@ interface ChatState {
   appendAssistantDelta: (conversationId: string, delta: string) => void
 
   setStreaming: (conversationId: string | null) => void
+  setStreamingPhase: (phase: ChatState['streamingPhase']) => void
   setUsage: (usage: ChatState['usage']) => void
 
   resetForAuditSwitch: (auditId: string) => void
@@ -92,6 +94,7 @@ export const useChatStore = create<ChatState>()(
 
       isStreaming: false,
       streamingConversationId: null,
+      streamingPhase: null,
 
       usage: null,
 
@@ -156,7 +159,10 @@ export const useChatStore = create<ChatState>()(
         set({
           isStreaming: Boolean(conversationId),
           streamingConversationId: conversationId,
+          streamingPhase: conversationId ? 'searching' : null,
         }),
+
+      setStreamingPhase: (phase) => set({ streamingPhase: phase }),
 
       setUsage: (usage) => set({ usage }),
 
@@ -170,6 +176,7 @@ export const useChatStore = create<ChatState>()(
           usage: null,
           isStreaming: false,
           streamingConversationId: null,
+          streamingPhase: null,
         })
       },
     }),

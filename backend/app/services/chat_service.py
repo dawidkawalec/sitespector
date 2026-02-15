@@ -433,6 +433,9 @@ async def stream_chat_response(
     agent = convo.agent_type
     allowed_sections = list(agent.tools_config or [])
 
+    # Phase: searching context
+    yield "__STATUS__:searching"
+
     rag_chunks = await retrieve_context(
         audit_id=str(convo.audit_id),
         query=user_message,
@@ -447,6 +450,9 @@ async def stream_chat_response(
         user_message=user_message,
     )
 
+    # Phase: generating response
+    yield "__STATUS__:generating"
+
     # For MVP reliability, call Gemini non-streaming and then stream to client in chunks.
     try:
         full = await call_claude(prompt=prompt, system_prompt=system_prompt, max_tokens=2048)
@@ -457,6 +463,9 @@ async def stream_chat_response(
             "AI jest chwilowo niedostepne. Sprobuj ponownie za chwile.\n\n"
             "Jesli problem sie powtarza, sprawdz konfiguracje Gemini na serwerze."
         )
+
+    # Phase: streaming response
+    yield "__STATUS__:streaming"
 
     # Save assistant message
     assistant_msg = ChatMessage(

@@ -22,8 +22,8 @@ EmbeddingTaskType = Literal["retrieval_query", "retrieval_document"]
 
 
 EMBEDDING_MODELS = [
-    "models/text-embedding-004",
     "models/gemini-embedding-001",
+    "models/text-embedding-004",
 ]
 
 

@@ -20,6 +20,7 @@ type StreamHandlers = {
   onToken: (token: string) => void
   onDone: () => void
   onError: (err: Error) => void
+  onStatus?: (status: string) => void
 }
 
 export async function streamChatMessage(
@@ -70,9 +71,13 @@ export async function streamChatMessage(
             return
           }
           try {
-            const parsed = JSON.parse(data) as { token?: string; error?: string }
+            const parsed = JSON.parse(data) as { token?: string; error?: string; status?: string }
             if (parsed.error) {
               handlers.onError(new Error(parsed.error))
+              continue
+            }
+            if (parsed.status && handlers.onStatus) {
+              handlers.onStatus(parsed.status)
               continue
             }
             if (parsed.token) handlers.onToken(parsed.token)

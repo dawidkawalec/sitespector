@@ -215,7 +215,11 @@ async def stream_message(
                     user_message=user_message,
                     user_metadata=user_metadata,
                 ):
-                    yield f"data: {json.dumps({'token': chunk})}\n\n"
+                    if chunk.startswith("__STATUS__:"):
+                        status = chunk.split(":", 1)[1]
+                        yield f"data: {json.dumps({'status': status})}\n\n"
+                    else:
+                        yield f"data: {json.dumps({'token': chunk})}\n\n"
                 await db.commit()
                 yield "data: [DONE]\n\n"
             except Exception as e:

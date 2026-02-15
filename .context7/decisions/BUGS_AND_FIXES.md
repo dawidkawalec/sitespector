@@ -1450,7 +1450,26 @@ Additionally, `retrieve_context()` called `embed_query()` without any error hand
 
 ---
 
+## BUG-038: RAG indexing fails in worker - embedding model not available for API key
+
+**Date**: 2026-02-15  
+**Severity**: High  
+**Status**: RESOLVED  
+
+**Symptom**: After audit completes, worker logs show `RAG indexing failed: 404 models/text-embedding-004 is not found`. Qdrant collection `audit_rag_chunks` never created. Chat agent responds "brak danych w raporcie".
+
+**Root Cause**: Worker ran `index_audit_for_rag` while primary Gemini key was still expired. Fallback key doesn't support `text-embedding-004`. The `EMBEDDING_MODELS` list had `text-embedding-004` first, so it tried that model before `gemini-embedding-001` (which works).
+
+**Fix**:
+1. Swapped API keys on VPS: working key is now primary.
+2. Reordered `EMBEDDING_MODELS` list: `gemini-embedding-001` first (universally available).
+3. Manually re-indexed audit `cd8558ec` - 240 chunks successfully stored in Qdrant.
+
+**Files Changed**: `backend/app/services/embedding_client.py`
+
+---
+
 **Last Updated**: 2026-02-15  
-**Resolved Bugs**: 35 (incl. BUG-037 SSE session lifecycle)  
+**Resolved Bugs**: 36 (incl. BUG-038 RAG indexing model order)  
 **Known Issues**: 3  
 **Watching**: 2

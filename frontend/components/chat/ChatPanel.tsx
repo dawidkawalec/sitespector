@@ -45,7 +45,9 @@ export function ChatPanel() {
 
   const isStreaming = useChatStore((s) => s.isStreaming)
   const streamingConversationId = useChatStore((s) => s.streamingConversationId)
+  const streamingPhase = useChatStore((s) => s.streamingPhase)
   const setStreaming = useChatStore((s) => s.setStreaming)
+  const setStreamingPhase = useChatStore((s) => s.setStreamingPhase)
 
   const usage = useChatStore((s) => s.usage)
   const setUsage = useChatStore((s) => s.setUsage)
@@ -207,6 +209,7 @@ export function ChatPanel() {
 
     await streamChatMessage(convoId, text, {
       onToken: (t) => appendAssistantDelta(convoId as string, t),
+      onStatus: (status) => setStreamingPhase(status as any),
       onDone: async () => {
         setStreaming(null)
         // Refresh messages from DB to replace local IDs.
