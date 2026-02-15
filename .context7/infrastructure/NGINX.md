@@ -183,6 +183,7 @@ location /polityka-prywatnosci { proxy_pass http://landing; }
 location /polityka-cookies { proxy_pass http://landing; }
 location /kontakt { proxy_pass http://landing; }
 location /o-nas { proxy_pass http://landing; }
+location /sitemap { proxy_pass http://landing; }
 location /blog { proxy_pass http://landing; }
 location /docs { proxy_pass http://landing; }
 location /case-study { proxy_pass http://landing; }

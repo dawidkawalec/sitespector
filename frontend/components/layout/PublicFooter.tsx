@@ -42,7 +42,7 @@ const footerColumns = [
       { label: 'Regulamin', link: '/regulamin' },
       { label: 'Polityka prywatności', link: '/polityka-prywatnosci' },
       { label: 'Polityka cookies', link: '/polityka-cookies' },
-      { label: 'Sitemap', link: '/sitemap.xml' },
+      { label: 'Sitemap', link: '/sitemap' },
     ],
   },
 ]
