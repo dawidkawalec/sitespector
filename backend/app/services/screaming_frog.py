@@ -73,109 +73,148 @@ async def _detect_sitemaps(base_url: str) -> Dict[str, Any]:
     }
 
 
-async def crawl_url(url: str) -> Dict[str, Any]:
+async def _clean_crawl_output() -> None:
+    """Clean /tmp/crawls/ in the SF container before a new crawl."""
+    clean_cmd = [
+        "docker", "exec", "sitespector-screaming-frog",
+        "bash", "-c", "rm -f /tmp/crawls/*.csv 2>/dev/null; echo CLEANED"
+    ]
+    proc = await asyncio.create_subprocess_exec(
+        *clean_cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    await asyncio.wait_for(proc.communicate(), timeout=10)
+
+
+async def _run_single_crawl(url: str) -> Dict[str, Any]:
+    """Execute a single Screaming Frog crawl attempt. Returns parsed tab data."""
+    from app.config import settings
+
+    # Clean stale CSV files before crawl
+    await _clean_crawl_output()
+
+    cmd = [
+        "docker", "exec", "sitespector-screaming-frog",
+        "/usr/local/bin/crawl.sh",
+        url,
+    ]
+
+    # Register license if configured
+    if settings.SCREAMING_FROG_USER and settings.SCREAMING_FROG_KEY:
+        logger.info("Using Screaming Frog license: %s", settings.SCREAMING_FROG_USER)
+        license_cmd = [
+            "docker", "exec", "sitespector-screaming-frog",
+            "ScreamingFrogSEOSpider",
+            "--license",
+            settings.SCREAMING_FROG_USER,
+            settings.SCREAMING_FROG_KEY,
+        ]
+        proc_lic = await asyncio.create_subprocess_exec(
+            *license_cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        await proc_lic.communicate()
+
+    logger.info("Executing crawl command for %s", url)
+
+    process = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    try:
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
+    except asyncio.TimeoutError:
+        process.kill()
+        raise Exception(f"Screaming Frog crawl timed out after 300s for {url}")
+
+    stderr_text = stderr.decode().strip()
+    if stderr_text:
+        logger.info("SF stderr: %s", stderr_text[:500])
+
+    if process.returncode != 0:
+        raise Exception(
+            f"Screaming Frog exit code {process.returncode}: {stderr_text[:500]}"
+        )
+
+    output = stdout.decode().strip()
+    if not output:
+        raise Exception("Screaming Frog returned empty output")
+
+    try:
+        crawl_data_tabs = json.loads(output)
+    except json.JSONDecodeError as e:
+        logger.error("Failed to parse SF JSON: %s | output: %s", e, output[:500])
+        raise Exception("Screaming Frog returned invalid JSON")
+
+    if not crawl_data_tabs.get("internal_all"):
+        tab_keys = list(crawl_data_tabs.keys())
+        raise Exception(
+            f"Screaming Frog returned empty internal_all data (tabs present: {tab_keys})"
+        )
+
+    return crawl_data_tabs
+
+
+async def crawl_url(url: str, max_retries: int = 2) -> Dict[str, Any]:
     """
-    Run Screaming Frog crawl using Docker container via docker exec.
-    
-    NO FALLBACKS - If Screaming Frog fails, the entire audit fails.
-    
+    Run Screaming Frog crawl with automatic retry.
+
+    Cleans /tmp/crawls/ before each attempt to prevent stale data issues.
+
     Args:
         url: Website URL to crawl
-        
+        max_retries: Total attempts (default 2 = 1 original + 1 retry)
+
     Returns:
         Dictionary with comprehensive crawl results
-        
+
     Raises:
-        Exception: If Screaming Frog crawl fails for any reason
+        Exception: If all attempts fail
     """
-    logger.info(f"🕷️  Running Screaming Frog crawl: {url}")
-    
-    try:
-        # Try Screaming Frog
-        cmd = [
-            "docker", "exec", "sitespector-screaming-frog",
-            "/usr/local/bin/crawl.sh",
-            url
-        ]
-        
-        # Add license if configured
-        from app.config import settings
-        if settings.SCREAMING_FROG_USER and settings.SCREAMING_FROG_KEY:
-             logger.info("🔑 Using Screaming Frog License")
-             
-             license_cmd = [
-                "docker", "exec", "sitespector-screaming-frog",
-                "ScreamingFrogSEOSpider",
-                "--license",
-                settings.SCREAMING_FROG_USER,
-                settings.SCREAMING_FROG_KEY
-             ]
-             
-             # Run license registration
-             proc_lic = await asyncio.create_subprocess_exec(
-                *license_cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-             )
-             await proc_lic.communicate()
-        
-        logger.debug(f"Executing: {' '.join(cmd)}")
-        
-        process = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        
+    logger.info("Starting Screaming Frog crawl: %s (max_retries=%d)", url, max_retries)
+
+    last_error = None
+    for attempt in range(1, max_retries + 1):
         try:
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
-        except asyncio.TimeoutError:
-            process.kill()
-            logger.error(f"❌ Screaming Frog crawl TIMEOUT for {url}")
-            raise Exception(f"Screaming Frog crawl timed out after 300s for {url}")
-        
-        if process.returncode != 0:
-            error = stderr.decode()
-            logger.error(f"❌ Screaming Frog crawl FAILED: {error}")
-            raise Exception(f"Screaming Frog crawl failed with exit code {process.returncode}: {error[:500]}")
-            
-        # Parse SF output (JSON format from merge_csvs.py)
-        output = stdout.decode().strip()
-        
-        if not output:
-            logger.error("❌ Screaming Frog returned empty output")
-            raise Exception("Screaming Frog returned empty output")
+            logger.info("Crawl attempt %d/%d for %s", attempt, max_retries, url)
+            crawl_data_tabs = await _run_single_crawl(url)
 
-        try:
-            crawl_data_tabs = json.loads(output)
-        except json.JSONDecodeError as e:
-            logger.error(f"❌ Failed to parse Screaming Frog JSON: {e}")
-            logger.error(f"Output preview: {output[:500]}")
-            raise Exception("Screaming Frog returned invalid JSON")
+            crawl_data = _transform_sf_data(crawl_data_tabs, url)
 
-        if not crawl_data_tabs.get("internal_all"):
-            logger.error("❌ Screaming Frog returned empty internal_all data")
-            raise Exception("Screaming Frog returned empty internal_all data")
+            # Sitemap detection
+            try:
+                sitemap_info = await _detect_sitemaps(url)
+                crawl_data["has_sitemap"] = bool(sitemap_info.get("has_sitemap"))
+                if sitemap_info.get("sitemap_url"):
+                    crawl_data["sitemap_url"] = sitemap_info["sitemap_url"]
+                if sitemap_info.get("sitemaps") is not None:
+                    crawl_data["sitemaps"] = sitemap_info["sitemaps"]
+            except Exception as e:
+                logger.warning("Sitemap detection failed for %s: %s", url, e)
 
-        crawl_data = _transform_sf_data(crawl_data_tabs, url)
+            logger.info(
+                "Crawl succeeded for %s on attempt %d (%d pages)",
+                url, attempt, len(crawl_data.get("all_pages", [])),
+            )
+            return crawl_data
 
-        # Correct sitemap detection (SF output doesn't reliably include it for all setups).
-        try:
-            sitemap_info = await _detect_sitemaps(url)
-            crawl_data["has_sitemap"] = bool(sitemap_info.get("has_sitemap"))
-            if sitemap_info.get("sitemap_url"):
-                crawl_data["sitemap_url"] = sitemap_info.get("sitemap_url")
-            if sitemap_info.get("sitemaps") is not None:
-                crawl_data["sitemaps"] = sitemap_info.get("sitemaps")
         except Exception as e:
-            logger.warning("Sitemap detection failed for %s: %s", url, e)
+            last_error = e
+            logger.warning(
+                "Crawl attempt %d/%d failed for %s: %s",
+                attempt, max_retries, url, e,
+            )
+            if attempt < max_retries:
+                wait = 10 * attempt
+                logger.info("Retrying in %ds...", wait)
+                await asyncio.sleep(wait)
 
-        return crawl_data
-            
-    except Exception as e:
-        # Re-raise any exception - NO FALLBACKS
-        logger.error(f"❌ Screaming Frog crawl error: {e}", exc_info=True)
-        raise
+    logger.error("All %d crawl attempts failed for %s: %s", max_retries, url, last_error)
+    raise last_error  # type: ignore[misc]
 
 
 def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
