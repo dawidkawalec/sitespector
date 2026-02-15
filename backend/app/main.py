@@ -10,11 +10,13 @@ from fastapi.exceptions import RequestValidationError
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from typing import Optional
 import logging
 from app.config import settings
 from app.database import init_db, close_db
 from app.routers import auth, audits, billing, schedules, public, tasks, chat
 from app.schemas import HealthCheck, ErrorResponse
+from app.auth_supabase import get_current_user
 
 # Configure logging
 logging.basicConfig(
@@ -48,6 +50,38 @@ async def verify_admin_token(x_admin_token: str = Header(..., alias="X-Admin-Tok
     if x_admin_token != settings.ADMIN_API_TOKEN:
         raise HTTPException(status_code=403, detail="Forbidden")
     return True
+
+
+async def verify_admin_or_user(
+    request: Request,
+    x_admin_token: Optional[str] = Header(None, alias="X-Admin-Token"),
+):
+    """
+    Accept either X-Admin-Token header OR a valid Supabase Bearer token.
+    Used for endpoints consumed by both external monitoring and the dashboard.
+    """
+    # Try admin token first
+    if x_admin_token:
+        if not settings.ADMIN_API_TOKEN:
+            raise HTTPException(status_code=503, detail="Admin API token not configured")
+        if x_admin_token == settings.ADMIN_API_TOKEN:
+            return True
+        raise HTTPException(status_code=403, detail="Invalid admin token")
+
+    # Fall back to Supabase Bearer token
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        from fastapi.security import HTTPAuthorizationCredentials
+        creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=auth_header[7:])
+        from app.auth_supabase import get_current_user as _get_user
+        # This will raise 401 if token is invalid
+        user = await _get_user(creds)
+        return user
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Provide X-Admin-Token header or Bearer token",
+    )
 
 # Rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -241,7 +275,7 @@ async def get_backend_logs(lines: int = 100):
         )
 
 
-@app.get("/api/system/status", tags=["Monitoring"], dependencies=[Depends(verify_admin_token)])
+@app.get("/api/system/status", tags=["Monitoring"], dependencies=[Depends(verify_admin_or_user)])
 async def get_system_status():
     """
     Check health of all critical services: Screaming Frog, Lighthouse, Worker, Database, Senuto.
