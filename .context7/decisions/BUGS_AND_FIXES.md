@@ -1293,7 +1293,52 @@ npm --prefix landing run lint
 
 ---
 
+### BUG-032: Recurring VPS compromise (Mirai botnet) via exposed monitoring endpoints + Docker socket
+
+**Reported**: 2026-02-15
+
+**Status**: ✅ FIXED
+
+**Severity**: CRITICAL
+
+**Description**:
+- Hetzner abuse report: outbound UDP DDoS from VPS IP (46.225.134.48) -- Mirai botnet variant (`x86_64.kok`).
+- VPS was compromised again within 24h of a clean rebuild on new IP.
+- Full repository scan confirmed: NO malware in the codebase.
+
+**Root cause** (6 vulnerabilities):
+1. `/api/logs/worker`, `/api/logs/backend`, `/api/system/status` -- publicly accessible WITHOUT authentication (exposed credentials, architecture).
+2. `/logs` (Dozzle) -- publicly accessible Docker log viewer WITHOUT authentication (exposed real-time container logs).
+3. `/docs`, `/redoc`, `/openapi.json` -- Swagger/OpenAPI publicly accessible on production (full API map for attackers).
+4. Docker socket mounted R/W on worker container -- container escape to host possible.
+5. `amir20/dozzle:latest` -- unpinned image, supply chain risk.
+6. All containers had unrestricted outbound internet access -- no network segmentation.
+
+**Fix**:
+1. Removed `/logs` proxy from `docker/nginx/nginx.conf` (Dozzle only accessible via SSH tunnel).
+2. Added `verify_admin_token` dependency (X-Admin-Token header) to all monitoring endpoints in `backend/app/main.py`.
+3. Disabled Swagger/OpenAPI/ReDoc on production (`docs_url=None` when `ENVIRONMENT=production`).
+4. Changed Docker socket to `:ro` on worker in `docker-compose.prod.yml`.
+5. Pinned Dozzle to `v8.8.1`.
+6. Split Docker network: `sitespector-internal` (no internet) + `sitespector-external` (internet).
+7. Moved hardcoded DB credentials to `${...}` env vars.
+8. Added security headers + rate limiting in nginx.
+9. Added `ADMIN_API_TOKEN` to config and `.env.example`.
+
+**Verification**:
+```bash
+# After deploy to new VPS:
+curl -I https://sitespector.app/logs       # Should: 404
+curl -I https://sitespector.app/docs       # Should: 404
+curl https://sitespector.app/api/logs/worker  # Should: 403 or 422
+curl -H "X-Admin-Token: TOKEN" https://sitespector.app/api/logs/worker  # Should: 200
+```
+
+**Related**: `SECURITY_HARDENING_PLAN.md`, `docker/nginx/nginx.conf`, `backend/app/main.py`, `backend/app/config.py`, `docker-compose.prod.yml`, `.env.example`
+
+---
+
 **Last Updated**: 2026-02-15  
-**Resolved Bugs**: 29 (incl. BUG-026 cross-module AIO contradiction)  
+**Resolved Bugs**: 30 (incl. BUG-032 security hardening)  
 **Known Issues**: 3  
 **Watching**: 2

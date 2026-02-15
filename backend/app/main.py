@@ -3,7 +3,7 @@ Main FastAPI application for SiteSpector.
 """
 
 from datetime import datetime
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Depends, Header, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -23,15 +23,31 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# --- Security: disable Swagger/OpenAPI in production ---
+_is_production = settings.ENVIRONMENT == "production"
+_docs_url = None if _is_production else "/docs"
+_redoc_url = None if _is_production else "/redoc"
+_openapi_url = None if _is_production else "/openapi.json"
+
 # Create FastAPI app
 app = FastAPI(
     title="SiteSpector API",
     description="AI-powered website audit tool API",
     version="0.1.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json",
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
+    openapi_url=_openapi_url,
 )
+
+
+# --- Security: admin token verification for monitoring endpoints ---
+async def verify_admin_token(x_admin_token: str = Header(..., alias="X-Admin-Token")):
+    """Verify admin API token for protected monitoring endpoints."""
+    if not settings.ADMIN_API_TOKEN:
+        raise HTTPException(status_code=503, detail="Admin API token not configured")
+    if x_admin_token != settings.ADMIN_API_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return True
 
 # Rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -155,7 +171,7 @@ async def health_check() -> dict:
     }
 
 
-@app.get("/api/logs/worker", tags=["Monitoring"])
+@app.get("/api/logs/worker", tags=["Monitoring"], dependencies=[Depends(verify_admin_token)])
 async def get_worker_logs(lines: int = 100):
     """
     Get recent worker logs for monitoring.
@@ -190,7 +206,7 @@ async def get_worker_logs(lines: int = 100):
         )
 
 
-@app.get("/api/logs/backend", tags=["Monitoring"])
+@app.get("/api/logs/backend", tags=["Monitoring"], dependencies=[Depends(verify_admin_token)])
 async def get_backend_logs(lines: int = 100):
     """
     Get recent backend logs for monitoring.
@@ -225,7 +241,7 @@ async def get_backend_logs(lines: int = 100):
         )
 
 
-@app.get("/api/system/status", tags=["Monitoring"])
+@app.get("/api/system/status", tags=["Monitoring"], dependencies=[Depends(verify_admin_token)])
 async def get_system_status():
     """
     Check health of all critical services: Screaming Frog, Lighthouse, Worker, Database, Senuto.

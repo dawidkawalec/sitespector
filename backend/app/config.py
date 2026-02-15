@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     CLAUDE_MAX_TOKENS: int = Field(default=8000, description="Max tokens for Claude responses")
     CLAUDE_TEMPERATURE: float = Field(default=0.3, description="Claude temperature")
 
+    # Security
+    ADMIN_API_TOKEN: str = Field(default="", description="Admin API token for monitoring endpoints (generate with: openssl rand -hex 32)")
+
     # Application
     ENVIRONMENT: str = Field(default="development", description="Environment (development/production)")
     

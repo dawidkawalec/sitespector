@@ -515,6 +515,32 @@ Backend: 100% complete | Frontend foundation: 100% complete | Module refactoring
 
 ---
 
-**Last Updated**: 2026-02-14
-**Total Decisions**: 29 accepted
+## ADR-031: Security Hardening (Post-Compromise)
+**Date**: 2026-02-15
+**Status**: ✅ Done
+**Decision**:
+- Remove all publicly accessible monitoring/logging endpoints from nginx.
+- Require `ADMIN_API_TOKEN` (header-based auth) for `/api/logs/*` and `/api/system/status`.
+- Disable Swagger/OpenAPI/ReDoc in production.
+- Docker socket mounts must be `:ro` (read-only).
+- Pin all third-party Docker images to specific versions (no `:latest`).
+- Split Docker networking into `internal` (no internet) + `external` (internet).
+- Move all credentials from `docker-compose.prod.yml` to `.env` variables.
+- Add security headers and rate limiting in nginx.
+**Rationale**:
+- VPS was compromised twice by Mirai botnet variant despite clean rebuilds.
+- Root cause: 6 infrastructure vulnerabilities allowed attackers to read credentials from public endpoints, map the API via Swagger, and escape containers via R/W Docker socket.
+- Full repository audit confirmed no malware in code -- attack vector was purely infrastructure config.
+**Outcome**:
+- `docker/nginx/nginx.conf`: removed Dozzle proxy, added security headers + rate limiting.
+- `backend/app/main.py`: conditional Swagger, admin token auth on monitoring.
+- `backend/app/config.py`: added `ADMIN_API_TOKEN` setting.
+- `docker-compose.prod.yml`: `:ro` socket, pinned Dozzle, dual networks, env var credentials.
+- `.env.example`: added `ADMIN_API_TOKEN`, `POSTGRES_USER/PASSWORD/DB`.
+- `SECURITY_HARDENING_PLAN.md`: full remediation plan including VPS bootstrap steps.
+
+---
+
+**Last Updated**: 2026-02-15
+**Total Decisions**: 30 accepted
 **Review**: Update when making significant architectural changes.

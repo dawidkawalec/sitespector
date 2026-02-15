@@ -4,18 +4,18 @@ services:
     image: postgres:16-alpine
     container_name: sitespector-postgres
     environment:
-      POSTGRES_USER: sitespector_user
-      POSTGRES_PASSWORD: sitespector_password
-      POSTGRES_DB: sitespector_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sitespector_user -d sitespector_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - sitespector-network
+      - sitespector-internal
     restart: unless-stopped
 
   # Backend API (FastAPI)
@@ -26,10 +26,8 @@ services:
     container_name: sitespector-backend
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     environment:
-      - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
       - ENVIRONMENT=production
       - DEBUG=false
-      # Prefer setting CORS via `.env` on the VPS.
     env_file:
       - .env
     volumes:
@@ -39,7 +37,8 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - sitespector-network
+      - sitespector-internal
+      - sitespector-external
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -55,14 +54,13 @@ services:
     container_name: sitespector-worker
     command: python worker.py
     environment:
-      - DATABASE_URL=postgresql+asyncpg://sitespector_user:sitespector_password@postgres:5432/sitespector_db
       - ENVIRONMENT=production
       - DEBUG=false
     env_file:
       - .env
     volumes:
       - ./tmp/audits:/tmp/audits
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -77,7 +75,8 @@ services:
       backend:
         condition: service_started
     networks:
-      - sitespector-network
+      - sitespector-internal
+      - sitespector-external
     restart: unless-stopped
 
   # Screaming Frog Crawler
@@ -96,7 +95,7 @@ services:
     volumes:
       - ./tmp/crawls:/tmp/crawls
     networks:
-      - sitespector-network
+      - sitespector-external
     restart: unless-stopped
 
   # Lighthouse Auditor
@@ -112,7 +111,7 @@ services:
     volumes:
       - ./tmp/lighthouse:/tmp/lighthouse
     networks:
-      - sitespector-network
+      - sitespector-external
     restart: unless-stopped
 
   # Landing Page (Next.js) – LP + login/register (ta sama nawigacja 1:1)
@@ -130,7 +129,7 @@ services:
       - HOSTNAME=0.0.0.0
       - PORT=3001
     networks:
-      - sitespector-network
+      - sitespector-internal
     restart: unless-stopped
 
   # Frontend (Next.js)
@@ -152,12 +151,12 @@ services:
     depends_on:
       - backend
     networks:
-      - sitespector-network
+      - sitespector-internal
     restart: unless-stopped
 
-  # Dozzle - Docker Logs Viewer
+  # Dozzle - Docker Logs Viewer (accessible ONLY via SSH tunnel, NOT exposed via nginx)
   dozzle:
-    image: amir20/dozzle:latest
+    image: amir20/dozzle:v8.8.1
     container_name: sitespector-dozzle
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -167,7 +166,7 @@ services:
       - DOZZLE_FILTER=name=sitespector-*
       - DOZZLE_NO_ANALYTICS=true
     networks:
-      - sitespector-network
+      - sitespector-internal
     restart: unless-stopped
 
   # Nginx Reverse Proxy
@@ -185,9 +184,9 @@ services:
       - landing
       - frontend
       - backend
-      - dozzle
     networks:
-      - sitespector-network
+      - sitespector-internal
+      - sitespector-external
     restart: unless-stopped
 
 volumes:
@@ -195,5 +194,8 @@ volumes:
     driver: local
 
 networks:
-  sitespector-network:
+  sitespector-internal:
+    driver: bridge
+    internal: true
+  sitespector-external:
     driver: bridge
