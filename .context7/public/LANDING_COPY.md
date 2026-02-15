@@ -1,5 +1,9 @@
 # SiteSpector - Landing Page Copy
 
+## Topbar CTA (Auth-aware)
+- **Guest**: "Zaloguj się" (link: `/login`) + "Załóż konto" (link: `/register`)
+- **Authenticated**: "Przejdź do panelu" (link: `${NEXT_PUBLIC_APP_URL}/dashboard`)
+
 ## Hero Section
 - **Headline**: Zdominuj wyniki wyszukiwania z SiteSpector
 - **Subheadline**: Audyt SEO, wydajności i widoczności w jednym narzędziu. Screaming Frog + Lighthouse + Senuto + AI (Gemini). Otrzymujesz gotowy plan wykonania z kodem — nie tylko "co poprawić", ale "jak to zrobić".

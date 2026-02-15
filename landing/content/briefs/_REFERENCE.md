@@ -197,7 +197,8 @@ Hover button: translateY(-3px)
 ### Topbar (sticky)
 - Logo: `RiSearchEyeFill` + "SiteSpector"
 - Linki: Start, Funkcje, Cennik, Blog, Dokumentacja, Kontakt
-- CTA: "Zaloguj się / Załóż konto" → `/login`
+- CTA (gdy niezalogowany): "Zaloguj się" → `/login` oraz "Załóż konto" → `/register`
+- CTA (gdy zalogowany): "Przejdź do panelu" → `${NEXT_PUBLIC_APP_URL}/dashboard`
 - Scroll: `.nav-sticky` po 100px
 
 ### Footer

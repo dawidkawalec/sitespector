@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import type { ElementType } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Collapse, Container } from 'react-bootstrap';
+import { getAppUrl, supabase } from '@/lib/supabase';
 import {
   RiAddCircleLine,
   RiBankCardLine,
@@ -40,6 +41,7 @@ const Topbar = () => {
   const [mobileAccordionOpen, setMobileAccordionOpen] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [canHover, setCanHover] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = still checking
   const hoverOpenTimer = useRef<number | null>(null);
   const hoverCloseTimer = useRef<number | null>(null);
 
@@ -220,6 +222,42 @@ const Topbar = () => {
     return () => document.removeEventListener('click', onDocClick);
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const checkSession = async () => {
+      if (!supabase) {
+        if (mounted) setIsAuthenticated(false);
+        return;
+      }
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (mounted) setIsAuthenticated(!!data.session);
+      } catch {
+        if (mounted) setIsAuthenticated(false);
+      }
+    };
+
+    checkSession();
+
+    if (!supabase) {
+      return () => {
+        mounted = false;
+      };
+    }
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
+
+  const appDashboardHref = `${getAppUrl().replace(/\/$/, '')}/dashboard`;
+
   return (
     <header>
       <nav
@@ -328,11 +366,27 @@ const Topbar = () => {
               </div>
 
               <ul className="navbar-nav nav-btn">
-                <li className="nav-item">
-                  <Link className="btn btn-orange text-light" href="/login" onClick={() => closeAll()}>
-                    Zaloguj się / Załóż konto
-                  </Link>
-                </li>
+                {isAuthenticated === null ? (
+                  <li className="nav-item" aria-hidden="true">
+                    {/* Keep layout stable while session is checked */}
+                    <span className="btn btn-orange text-light invisible">Przejdź do panelu</span>
+                  </li>
+                ) : isAuthenticated ? (
+                  <li className="nav-item">
+                    <Link className="btn btn-orange text-light" href={appDashboardHref} onClick={() => closeAll()}>
+                      Przejdź do panelu
+                    </Link>
+                  </li>
+                ) : (
+                  <li className="nav-item d-flex align-items-center gap-2">
+                    <Link className="btn btn-outline-orange" href="/login" onClick={() => closeAll()}>
+                      Zaloguj się
+                    </Link>
+                    <Link className="btn btn-orange text-light" href="/register" onClick={() => closeAll()}>
+                      Załóż konto
+                    </Link>
+                  </li>
+                )}
               </ul>
             </div>
           </Collapse>

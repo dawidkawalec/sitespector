@@ -65,6 +65,18 @@
 
 ---
 
+## Landing Topbar: Split Login/Signup + Auth-aware Dashboard CTA (2026-02-15)
+
+- **Decision**: Replace the single combined CTA ("Zaloguj się / Załóż konto") with separate "Zaloguj się" + "Załóż konto", and when a Supabase session is present show "Przejdź do panelu" instead.
+- **Rationale**: Clearer user intent (login vs signup) and better UX for returning users (direct link to dashboard instead of repeating auth CTAs).
+- **Implementation**:
+  - Landing topbar checks Supabase session client-side and listens for auth state changes: `landing/src/component/layout/Topbar/page.tsx`.
+  - Dashboard link is derived from `NEXT_PUBLIC_APP_URL` (`getAppUrl()`) and points to `/dashboard` on the main app.
+- **Notes**:
+  - Detection is best-effort and relies on the browser session (Supabase persisted session); if not available, the UI falls back to guest CTAs.
+
+---
+
 ## ADR-008: 3-Phase Audit System with Interactive Tasks (2026-02-14)
 
 ### Context
