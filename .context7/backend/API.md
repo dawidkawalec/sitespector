@@ -863,14 +863,6 @@ Trigger contextual AI analysis for specific area(s).
 - **Notes**: If `area` not specified, regenerates all areas + cross_tool + roadmap + executive_summary.
 - **Behavior**: For full regeneration (`area` not provided) endpoint recalculates `results.ai_contexts`, `results.cross_tool`, `results.roadmap`, `results.executive_summary`, and unified `results.quick_wins`.
 
-### `POST /api/audits/{audit_id}/reindex-rag`
-Manually trigger RAG re-indexing for the audit-scoped Agent Chat (Qdrant).
-- **Auth**: Required (workspace membership enforced)
-- **Response**: `{ "status": "indexed" }`
-- **Notes**:
-  - Use when chat keeps responding "brak danych" due to missing Qdrant chunks (e.g. transient embedding/quota issues in worker).
-  - Safe to call multiple times; it deletes existing points for `audit_id` and re-inserts.
-
 ### `GET /api/audits/{audit_id}/quick-wins`
 - Returns unified quick wins from all AI modules when available.
 - Source of truth priority:

@@ -41,7 +41,7 @@ from app.models import (
     ChatUsage,
 )
 from app.services.ai_client import call_claude, stream_gemini
-from app.services.rag_service import index_audit_for_rag, retrieve_context
+from app.services.rag_service import retrieve_context
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -887,61 +887,6 @@ async def stream_chat_response(
         allowed_sections=allowed_sections,
         top_k=12,
     )
-
-    # Self-healing: if nothing was retrieved, try to index this audit on-demand once.
-    # This covers cases where the worker couldn't index due to transient embedding/qudrant issues.
-    rag_index_error: str | None = None
-    if not rag_chunks:
-        try:
-            yield "__STATUS__:indexing"
-            await index_audit_for_rag(db, str(convo.audit_id))
-            await db.commit()
-            rag_chunks = await retrieve_context(
-                audit_id=str(convo.audit_id),
-                query=user_message,
-                allowed_sections=allowed_sections,
-                top_k=12,
-            )
-        except Exception as e:
-            rag_index_error = str(e)
-            logger.warning(
-                "On-demand RAG reindex failed (conversation_id=%s, audit_id=%s): %s",
-                convo.id,
-                convo.audit_id,
-                e,
-            )
-
-    # If we still have no context, don't waste an LLM call that will just say "brak danych".
-    if not rag_chunks:
-        msg = (
-            "Nie mam jeszcze zindeksowanych danych dla tego audytu, wiec nie moge odpowiedziec na podstawie raportu.\n\n"
-            "Sprobuj ponownie za chwile. Jesli problem sie powtarza, uzyj przycisku odswiezenia indeksu (RAG) "
-            "lub uruchom endpoint reindex na backendzie."
-        )
-        if rag_index_error:
-            # Keep this short; it's mainly for support/debug.
-            msg += f"\n\nSzczegoly techniczne (RAG): {rag_index_error}"
-        yield msg
-        full_text = msg.strip()
-
-        assistant_msg = ChatMessage(
-            conversation_id=convo.id,
-            role=ChatMessageRole.ASSISTANT,
-            content=full_text,
-            tokens_used=None,
-        )
-        db.add(assistant_msg)
-        await increment_usage(db, user_id=user_id)
-        await db.flush()
-
-        suggestions = await _generate_followup_suggestions(
-            user_message=user_message,
-            assistant_message=full_text,
-            agent_name=getattr(agent, "name", "Agent"),
-        )
-        if suggestions:
-            yield "__SUGGESTIONS__:" + json.dumps(suggestions)
-        return
 
     system_prompt, prompt = _build_prompt(
         agent=agent,

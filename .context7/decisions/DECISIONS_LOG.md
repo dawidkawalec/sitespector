@@ -677,26 +677,6 @@ Additionally, simplify `AuditPageLayout` by removing its right-side AI panel (wh
 
 ---
 
-## ADR-038: RAG Batch Embeddings + Qdrant Vector Size Guard (2026-02-16)
-
-### Context
-Agent Chat is powered by audit-scoped RAG in Qdrant. Indexing a single audit can produce hundreds of chunks, and embedding them one-by-one can hit API quota/rate limits. Additionally, Qdrant collections have a fixed vector size, which can mismatch when switching embedding models.
-
-### Decision
-- Use the Gemini API `batchEmbedContents` endpoint for indexing to reduce request count.
-- Validate Qdrant collection vector size; if it mismatches the current embedding model, recreate the collection and rely on per-audit reindex/self-healing to repopulate it.
-- Track successful indexing with `audits.rag_indexed_at`.
-
-### Rationale
-- Makes indexing more resilient under quota pressure.
-- Prevents silent failures caused by vector size mismatch.
-- Enables support/debug workflows without waiting for worker retries.
-
-### Related Files
-`backend/app/services/embedding_client.py`, `backend/app/services/rag_service.py`, `backend/app/services/qdrant_client.py`, `backend/app/routers/audits.py`, `backend/app/models.py`
-
----
-
 **Last Updated**: 2026-02-16
-**Total Decisions**: 37 accepted
+**Total Decisions**: 36 accepted
 **Review**: Update when making significant architectural changes.

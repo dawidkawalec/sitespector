@@ -169,7 +169,6 @@ class Audit(Base):
     )
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
-    rag_indexed_at = Column(DateTime(timezone=True), nullable=True, index=True)
 
     # Relationships
     user = relationship("User", back_populates="audits")

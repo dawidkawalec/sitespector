@@ -42,42 +42,9 @@ async def ensure_collection(
     client = get_qdrant_client()
 
     def _ensure() -> None:
-        """
-        Ensure Qdrant collection exists and matches expected vector size.
-
-        Important: Qdrant collections have a fixed vector dimensionality. If the
-        embedding model changes (e.g. 768 -> 3072), upserts/searches will fail.
-        We treat a size mismatch as a hard incompatibility and recreate the
-        collection so the system can self-heal via re-indexing.
-        """
-        try:
-            col = client.get_collection(collection_name)
-            vectors = col.config.params.vectors  # can be VectorParams or dict-like
-
-            current_size: int | None = None
-            if hasattr(vectors, "size"):
-                current_size = int(getattr(vectors, "size"))
-            elif isinstance(vectors, dict) and "size" in vectors:
-                current_size = int(vectors["size"])
-
-            if current_size is not None and current_size != int(vector_size):
-                logger.warning(
-                    "Qdrant collection vector size mismatch (collection=%s, current=%s, expected=%s) - recreating",
-                    collection_name,
-                    current_size,
-                    vector_size,
-                )
-                client.delete_collection(collection_name=collection_name)
-                client.create_collection(
-                    collection_name=collection_name,
-                    vectors_config=qmodels.VectorParams(size=vector_size, distance=distance),
-                )
+        existing = client.get_collections().collections
+        if any(c.name == collection_name for c in existing):
             return
-        except Exception:
-            # Either collection doesn't exist yet or Qdrant is temporarily unavailable.
-            # We'll fall through and attempt to create; if it already exists, Qdrant will error.
-            pass
-
         client.create_collection(
             collection_name=collection_name,
             vectors_config=qmodels.VectorParams(size=vector_size, distance=distance),
