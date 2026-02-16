@@ -111,7 +111,7 @@ class Settings(BaseSettings):
     LIGHTHOUSE_CONTAINER: str = Field(
         default="lighthouse", description="Lighthouse container name"
     )
-    LIGHTHOUSE_TIMEOUT: int = Field(default=90, description="Lighthouse timeout in seconds")
+    LIGHTHOUSE_TIMEOUT: int = Field(default=180, description="Lighthouse timeout in seconds")
 
     # Senuto SEO Platform
     SENUTO_EMAIL: str = Field(default="", description="Senuto account email for API auth")

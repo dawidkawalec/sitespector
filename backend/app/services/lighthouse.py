@@ -209,13 +209,12 @@ async def audit_both(url: str) -> Dict[str, Dict[str, Any]]:
     Raises:
         Exception: If either desktop or mobile audit fails
     """
-    # Run parallel
-    desktop_task = audit_url(url, "desktop")
-    mobile_task = audit_url(url, "mobile")
-    
-    results = await asyncio.gather(desktop_task, mobile_task)
-    
+    # Run sequentially to avoid overloading small VPS (2 cores / 4GB).
+    # Two parallel Chrome instances easily saturate CPU and cause timeouts.
+    desktop = await audit_url(url, "desktop")
+    mobile = await audit_url(url, "mobile")
+
     return {
-        "desktop": results[0],
-        "mobile": results[1],
+        "desktop": desktop,
+        "mobile": mobile,
     }
