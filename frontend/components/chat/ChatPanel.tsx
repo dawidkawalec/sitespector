@@ -2,13 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Download, Loader2, Plus, X } from 'lucide-react'
+import { ChevronDown, Loader2, Plus, Settings2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import { useChatStore } from '@/lib/chat-store'
 import { chatAPI } from '@/lib/chat-api'
@@ -19,6 +24,8 @@ import { ChatConversationList } from './ChatConversationList'
 import { ChatInput } from './ChatInput'
 import { ChatMessages } from './ChatMessages'
 import { ChatUsageBadge } from './ChatUsageBadge'
+
+type ExportFormat = 'md' | 'txt' | 'csv'
 
 export function ChatPanel() {
   const { currentWorkspace } = useWorkspace()
@@ -96,6 +103,7 @@ export function ChatPanel() {
   const [draftVerbosity, setDraftVerbosity] = useState<'concise' | 'balanced' | 'detailed'>('balanced')
   const [draftTone, setDraftTone] = useState<'technical' | 'professional' | 'simple'>('professional')
   const [conversationFilter, setConversationFilter] = useState('')
+  const [showExportMenu, setShowExportMenu] = useState(false)
 
   useEffect(() => {
     if (!activeConversationId) return
@@ -176,15 +184,40 @@ export function ChatPanel() {
 
   const canChat = Boolean(activeAuditId && workspaceId)
 
+  // Search conversations by title AND message content (client-side)
   const filteredConversations = useMemo(() => {
     const q = conversationFilter.trim().toLowerCase()
     if (!q) return conversations
-    return conversations.filter((c) => (c.title ?? 'Nowa rozmowa').toLowerCase().includes(q))
-  }, [conversations, conversationFilter])
+    return conversations.filter((c) => {
+      const titleMatch = (c.title ?? 'Nowa rozmowa').toLowerCase().includes(q)
+      if (titleMatch) return true
+      const msgs = messagesByConversationId[c.id] ?? []
+      return msgs.some((m) => m.content.toLowerCase().includes(q))
+    })
+  }, [conversations, conversationFilter, messagesByConversationId])
 
-  const exportConversation = () => {
-    if (!activeConversationId) return
+  // --- Export with format selection ---
+  const buildExportContent = (fmt: ExportFormat): { content: string; mime: string; ext: string } => {
     const title = conversations.find((c) => c.id === activeConversationId)?.title ?? 'Nowa rozmowa'
+
+    if (fmt === 'csv') {
+      const header = 'Role,Content,Timestamp'
+      const rows = messages.map((m) => {
+        const escaped = m.content.replace(/"/g, '""').replace(/\n/g, '\\n')
+        return `"${m.role}","${escaped}","${m.created_at}"`
+      })
+      return { content: [header, ...rows].join('\n'), mime: 'text/csv;charset=utf-8', ext: 'csv' }
+    }
+
+    if (fmt === 'txt') {
+      const lines = messages.map((m) => {
+        const who = m.role === 'user' ? 'User' : m.role === 'assistant' ? 'Assistant' : 'System'
+        return `[${who}]\n${m.content}\n`
+      })
+      return { content: `${title}\n${'='.repeat(title.length)}\n\n${lines.join('\n')}`, mime: 'text/plain;charset=utf-8', ext: 'txt' }
+    }
+
+    // MD (default)
     const md = [
       `# ${title}`,
       '',
@@ -199,12 +232,18 @@ export function ChatPanel() {
         return `## ${who}\n\n${m.content}${att}\n`
       }),
     ].join('\n')
+    return { content: md, mime: 'text/markdown;charset=utf-8', ext: 'md' }
+  }
 
-    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' })
+  const exportConversation = (fmt: ExportFormat) => {
+    if (!activeConversationId) return
+    setShowExportMenu(false)
+    const { content, mime, ext } = buildExportContent(fmt)
+    const blob = new Blob([content], { type: mime })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `chat-${activeConversationId}.md`
+    a.download = `chat-${activeConversationId}.${ext}`
     document.body.appendChild(a)
     a.click()
     a.remove()
@@ -242,7 +281,6 @@ export function ChatPanel() {
       agent_slug: agentSlug,
     })
     let finalConvo = convo
-    // Apply style defaults if user picked them before creating the conversation.
     if (draftVerbosity !== 'balanced' || draftTone !== 'professional') {
       try {
         finalConvo = await chatAPI.updateConversation(convo.id, {
@@ -250,7 +288,7 @@ export function ChatPanel() {
           tone: draftTone,
         })
       } catch {
-        // Not fatal; conversation still exists.
+        // Not fatal
       }
     }
     setConversations([finalConvo, ...conversations])
@@ -271,10 +309,8 @@ export function ChatPanel() {
     }
     if (!convoId) return
 
-    // Clear previous suggestions once the user continues the conversation.
     setSuggestions(convoId, [])
 
-    // Best-effort: ensure style settings are saved before the LLM prompt is built.
     const existing = conversations.find((c) => c.id === convoId)
     if (
       existing &&
@@ -288,7 +324,7 @@ export function ChatPanel() {
         })
         upsertConversation(updated)
       } catch {
-        // Not fatal; fallback to server defaults.
+        // Not fatal
       }
     }
 
@@ -296,7 +332,6 @@ export function ChatPanel() {
     const localUserId = `local-user-${Date.now()}`
     const localAssistantId = `local-assistant-${Date.now()}`
 
-    // Upload attachments before sending the message so we can reference attachment IDs.
     let attachmentIds: string[] = []
     let attachmentMetas: Array<{ id: string; filename: string; mime_type: string; size_bytes: number; created_at: string }> =
       []
@@ -336,13 +371,12 @@ export function ChatPanel() {
         setSuggestions(convoId as string, Array.isArray(next) ? next.filter(Boolean).slice(0, 3) : []),
       onDone: async () => {
         setStreaming(null)
-        // Refresh messages from DB to replace local IDs.
         try {
           const data = await chatAPI.getConversation(convoId as string)
           upsertConversation({ ...data.conversation, agent: data.agent })
           setMessages(convoId as string, data.messages)
           void conversationsQuery.refetch()
-        } catch (e: any) {
+        } catch {
           // Not fatal
         }
         if (workspaceId) {
@@ -390,15 +424,96 @@ export function ChatPanel() {
             {usage ? <ChatUsageBadge messagesSent={usage.messages_sent} limit={usage.limit ?? null} /> : null}
           </div>
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => exportConversation()}
-              aria-label="Export conversation"
-              disabled={!activeConversationId}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
+            {/* Export menu */}
+            <Popover open={showExportMenu} onOpenChange={setShowExportMenu}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Export conversation"
+                  disabled={!activeConversationId || messages.length === 0}
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-40 p-1">
+                <button
+                  className="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-muted"
+                  onClick={() => exportConversation('md')}
+                >
+                  Eksport .md
+                </button>
+                <button
+                  className="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-muted"
+                  onClick={() => exportConversation('txt')}
+                >
+                  Eksport .txt
+                </button>
+                <button
+                  className="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-muted"
+                  onClick={() => exportConversation('csv')}
+                >
+                  Eksport .csv
+                </button>
+              </PopoverContent>
+            </Popover>
+
+            {/* Settings popover (verbosity + tone) */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Chat settings" disabled={!canChat}>
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-56 space-y-3 p-3">
+                <div className="text-xs font-medium text-muted-foreground uppercase">Styl odpowiedzi</div>
+                <Select
+                  value={draftVerbosity}
+                  onValueChange={(v) => {
+                    const next = v as 'concise' | 'balanced' | 'detailed'
+                    setDraftVerbosity(next)
+                    if (!activeConversationId) return
+                    void chatAPI
+                      .updateConversation(activeConversationId, { verbosity: next })
+                      .then((c) => upsertConversation(c))
+                      .catch(() => toast.error('Nie udalo sie zapisac ustawien'))
+                  }}
+                  disabled={isStreaming}
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Gadatliwosc" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="concise">Krotko</SelectItem>
+                    <SelectItem value="balanced">Normalnie</SelectItem>
+                    <SelectItem value="detailed">Szczegolowo</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={draftTone}
+                  onValueChange={(v) => {
+                    const next = v as 'technical' | 'professional' | 'simple'
+                    setDraftTone(next)
+                    if (!activeConversationId) return
+                    void chatAPI
+                      .updateConversation(activeConversationId, { tone: next })
+                      .then((c) => upsertConversation(c))
+                      .catch(() => toast.error('Nie udalo sie zapisac tonu'))
+                  }}
+                  disabled={isStreaming}
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Ton" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="technical">Techniczny</SelectItem>
+                    <SelectItem value="professional">Profesjonalny</SelectItem>
+                    <SelectItem value="simple">Prosty</SelectItem>
+                  </SelectContent>
+                </Select>
+              </PopoverContent>
+            </Popover>
+
             <Button variant="ghost" size="icon" onClick={() => setPanelOpen(false)} aria-label="Close chat">
               <X className="h-4 w-4" />
             </Button>
@@ -422,52 +537,6 @@ export function ChatPanel() {
             onChange={(e) => setConversationFilter(e.target.value)}
             disabled={!canChat}
           />
-          <div className="grid grid-cols-2 gap-2">
-            <Select
-              value={draftVerbosity}
-              onValueChange={(v) => {
-                const next = v as 'concise' | 'balanced' | 'detailed'
-                setDraftVerbosity(next)
-                if (!activeConversationId) return
-                void chatAPI
-                  .updateConversation(activeConversationId, { verbosity: next })
-                  .then((c) => upsertConversation(c))
-                  .catch(() => toast.error('Nie udalo sie zapisac ustawien odpowiedzi'))
-              }}
-              disabled={!canChat || isStreaming}
-            >
-              <SelectTrigger className="h-8">
-                <SelectValue placeholder="Gadatliwosc" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="concise">Krotko</SelectItem>
-                <SelectItem value="balanced">Normalnie</SelectItem>
-                <SelectItem value="detailed">Szczegolowo</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={draftTone}
-              onValueChange={(v) => {
-                const next = v as 'technical' | 'professional' | 'simple'
-                setDraftTone(next)
-                if (!activeConversationId) return
-                void chatAPI
-                  .updateConversation(activeConversationId, { tone: next })
-                  .then((c) => upsertConversation(c))
-                  .catch(() => toast.error('Nie udalo sie zapisac tonu komunikacji'))
-              }}
-              disabled={!canChat || isStreaming}
-            >
-              <SelectTrigger className="h-8">
-                <SelectValue placeholder="Ton" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="technical">Techniczny</SelectItem>
-                <SelectItem value="professional">Profesjonalny</SelectItem>
-                <SelectItem value="simple">Prosty</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div className="flex items-center gap-2">
             <Button
               size="sm"
@@ -517,4 +586,3 @@ export function ChatPanel() {
     </div>
   )
 }
-

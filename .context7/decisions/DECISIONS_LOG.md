@@ -628,6 +628,28 @@ Backend: 100% complete | Frontend foundation: 100% complete | Module refactoring
 
 ---
 
+### ADR-036: Chat UX Polish (Export, Search, Settings, Uploads, Voice)
+**Date**: 2026-02-16
+**Status**: Accepted
+**Context**: Chat panel needed several UX refinements: export only had MD, search only checked titles, verbosity/tone selectors cluttered UI, file upload was limited to images/CSV/PDF, no speech input.
+**Decision**:
+- Export: popover menu with format selection (MD, TXT, CSV).
+- Search: filter conversations by title AND message content (client-side).
+- Settings: verbosity + tone selectors hidden behind a gear icon popover.
+- Uploads: backend accepts xlsx, xls, json, md, txt, html, xml, svg in addition to images/csv/pdf.
+- Voice: Web Speech API (`SpeechRecognition`) microphone button in chat input; only shown when browser supports it; default language `pl-PL`.
+**Rationale**:
+- Users need multiple export formats for different workflows (reports vs data analysis).
+- Searching only by title misses conversations where the title hasn't been renamed.
+- Verbosity/tone are "set and forget" controls — they don't need permanent screen space.
+- Users upload various file types (spreadsheets, JSONs, markdowns) alongside images.
+- Speech-to-text is standard UX in modern chat interfaces; we already use Google APIs.
+**Outcome**:
+- Backend: `ALLOWED_ATTACHMENT_MIME_TYPES` expanded to 15+ types.
+- Frontend: `ChatPanel.tsx` refactored (export popover, settings popover, deep search), `ChatInput.tsx` gains voice button + wider accept list.
+
+---
+
 **Last Updated**: 2026-02-16
-**Total Decisions**: 34 accepted
+**Total Decisions**: 35 accepted
 **Review**: Update when making significant architectural changes.

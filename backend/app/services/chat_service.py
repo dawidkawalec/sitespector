@@ -57,12 +57,25 @@ ALLOWED_VERBOSITY = {"concise", "balanced", "detailed"}
 ALLOWED_TONE = {"technical", "professional", "simple"}
 
 ALLOWED_ATTACHMENT_MIME_TYPES = {
+    # Images
     "image/png",
     "image/jpeg",
     "image/webp",
     "image/gif",
-    "text/csv",
+    "image/svg+xml",
+    # Documents
     "application/pdf",
+    # Spreadsheets
+    "text/csv",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    # Data/code
+    "application/json",
+    "text/plain",
+    "text/markdown",
+    "text/html",
+    "text/xml",
+    "application/xml",
 }
 
 def _extract_json_array(text: str) -> Optional[List[str]]:

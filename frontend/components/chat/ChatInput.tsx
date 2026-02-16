@@ -1,10 +1,19 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import TextareaAutosize from 'react-textarea-autosize'
-import { Paperclip, Send, X } from 'lucide-react'
+import { Mic, MicOff, Paperclip, Send, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+
+const FILE_ACCEPT =
+  'image/*,.csv,.xlsx,.xls,.json,.md,.txt,.html,.xml,.svg,application/pdf,text/csv,application/json,text/plain,text/markdown,text/html,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+// Check for SpeechRecognition support (Chrome, Edge, Safari)
+function getSpeechRecognitionCtor(): (new () => SpeechRecognition) | null {
+  if (typeof window === 'undefined') return null
+  return (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition ?? null
+}
 
 export function ChatInput({
   disabled,
@@ -20,6 +29,47 @@ export function ChatInput({
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
+  // Voice input
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const hasSpeech = useMemo(() => !!getSpeechRecognitionCtor(), [])
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort()
+    }
+  }, [])
+
+  const toggleVoice = () => {
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+      return
+    }
+
+    const Ctor = getSpeechRecognitionCtor()
+    if (!Ctor) return
+
+    const rec = new Ctor()
+    rec.lang = 'pl-PL'
+    rec.interimResults = false
+    rec.continuous = false
+    rec.maxAlternatives = 1
+
+    rec.onresult = (e) => {
+      const transcript = e.results[0]?.[0]?.transcript ?? ''
+      if (transcript) {
+        setValue((prev) => (prev ? `${prev} ${transcript}` : transcript))
+      }
+    }
+    rec.onerror = () => setIsListening(false)
+    rec.onend = () => setIsListening(false)
+
+    recognitionRef.current = rec
+    rec.start()
+    setIsListening(true)
+  }
+
   const canSend = !disabled && !isSending && (value.trim().length > 0 || files.length > 0)
 
   const filesLabel = useMemo(() => {
@@ -33,11 +83,10 @@ export function ChatInput({
     setFiles((prev) => {
       const next = [...prev]
       for (const f of incoming) {
-        // Avoid exact duplicates.
         const exists = next.some((p) => p.name === f.name && p.size === f.size && p.type === f.type)
         if (!exists) next.push(f)
       }
-      return next.slice(0, 6) // keep UI simple for now
+      return next.slice(0, 6)
     })
   }
 
@@ -101,11 +150,10 @@ export function ChatInput({
           type="file"
           className="hidden"
           multiple
-          accept="image/*,.csv,application/pdf,text/csv"
+          accept={FILE_ACCEPT}
           onChange={(e) => {
             const incoming = Array.from(e.target.files || [])
             addFiles(incoming)
-            // allow selecting same file again
             e.currentTarget.value = ''
           }}
         />
@@ -118,6 +166,17 @@ export function ChatInput({
         >
           <Paperclip className="h-4 w-4" />
         </Button>
+        {hasSpeech ? (
+          <Button
+            size="icon"
+            variant={isListening ? 'destructive' : 'secondary'}
+            onClick={toggleVoice}
+            disabled={disabled || isSending}
+            aria-label={isListening ? 'Stop dictation' : 'Start dictation'}
+          >
+            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
+        ) : null}
         <Button size="icon" onClick={() => void submit()} disabled={!canSend} aria-label="Send message">
           <Send className="h-4 w-4" />
         </Button>
@@ -139,7 +198,7 @@ export function ChatInput({
         </div>
       ) : null}
       <div className="mt-2 text-xs text-muted-foreground">
-        Enter wysyla, Shift+Enter nowa linia
+        Enter wysyla, Shift+Enter nowa linia{hasSpeech ? ' | Mikrofon: dyktowanie' : ''}
       </div>
     </div>
   )
