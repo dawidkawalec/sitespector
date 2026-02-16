@@ -28,9 +28,9 @@ def get_qdrant_client() -> QdrantClient:
         return _client
 
     if (settings.QDRANT_URL or "").strip():
-        _client = QdrantClient(url=settings.QDRANT_URL.strip())
+        _client = QdrantClient(url=settings.QDRANT_URL.strip(), timeout=120)
     else:
-        _client = QdrantClient(host=settings.QDRANT_HOST, port=int(settings.QDRANT_PORT))
+        _client = QdrantClient(host=settings.QDRANT_HOST, port=int(settings.QDRANT_PORT), timeout=120)
     return _client
 
 
@@ -106,15 +106,21 @@ async def delete_points_by_filter(collection_name: str, flt: qmodels.Filter) -> 
 async def upsert_points(
     collection_name: str,
     points: List[qmodels.PointStruct],
+    batch_size: int = 50,
 ) -> None:
+    """Upsert points in batches to avoid timeouts on large payloads."""
     client = get_qdrant_client()
 
-    def _upsert() -> None:
-        if not points:
-            return
-        client.upsert(collection_name=collection_name, points=points, wait=True)
+    if not points:
+        return
 
-    await asyncio.to_thread(_upsert)
+    for i in range(0, len(points), batch_size):
+        batch = points[i : i + batch_size]
+
+        def _upsert(b: List[qmodels.PointStruct] = batch) -> None:
+            client.upsert(collection_name=collection_name, points=b, wait=True)
+
+        await asyncio.to_thread(_upsert)
 
 
 async def search(
