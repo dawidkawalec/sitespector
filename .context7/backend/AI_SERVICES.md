@@ -75,6 +75,7 @@ SiteSpector now supports an **audit-scoped agent chat** powered by RAG:
 - Provider: Google Generative AI (`google-generativeai`)
 - Models (fallback order): `models/gemini-embedding-001`, then `models/text-embedding-004`
 - Location: `backend/app/services/embedding_client.py`
+- Indexing uses batch embedding (`batchEmbedContents`) to reduce request count and avoid 429 rate limits during large audits.
 
 ### Vector Store
 - Store: Qdrant
@@ -82,6 +83,7 @@ SiteSpector now supports an **audit-scoped agent chat** powered by RAG:
 - Collection: `audit_rag_chunks`
 - Filter: always by `audit_id` + agent `section_type` allowlist
 - `top_k`: 12 (increased from 8 after smart chunking)
+- Collection vector size is validated; if it mismatches the current embedding model dimensions, the collection is recreated and audits can self-heal via re-indexing.
 
 ### Smart Semantic Chunking (ADR-034)
 Instead of storing AI analyses as monolithic JSON blobs, each item is stored as an individual chunk:
@@ -99,6 +101,7 @@ Instead of storing AI analyses as monolithic JSON blobs, each item is stored as 
 - Trigger 2: re-indexing after Phase 5 (Execution Plan) — adds task data
 - Failure behavior: indexing failure must never block audit completion
 - Idempotent: always deletes existing points for `audit_id` before re-inserting
+- Audit tracking: `audits.rag_indexed_at` is set on successful indexing to help debugging "brak danych" cases.
 
 ### Chat Attachments + Multimodal (Feb 2026)
 - Upload endpoint: `POST /api/chat/attachments/upload` (multipart/form-data)

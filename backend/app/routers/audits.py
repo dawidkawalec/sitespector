@@ -43,6 +43,7 @@ from app.services.ai_analysis import (
     aggregate_quick_wins_from_results,
 )
 from app.services.screaming_frog import _detect_sitemaps
+from app.services.rag_service import index_audit_for_rag
 
 logger = logging.getLogger(__name__)
 
@@ -342,6 +343,37 @@ async def get_audit(
     _normalize_senuto_for_response(results)
     await _normalize_crawl_for_response(results, audit.url, audit.status)
     return payload
+
+
+@router.post("/{audit_id}/reindex-rag")
+async def reindex_audit_rag(
+    audit_id: UUID,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Manually trigger audit-scoped RAG re-indexing (Qdrant).
+
+    This is intended for self-healing and support/debug workflows when the worker
+    failed to index due to transient embedding/Qdrant issues.
+    """
+    result = await db.execute(select(Audit).where(Audit.id == audit_id))
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audit not found")
+
+    # Same access check logic as get_audit().
+    if audit.workspace_id:
+        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
+        if not has_access:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this audit")
+    else:
+        if audit.user_id != current_user["id"]:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this audit")
+
+    await index_audit_for_rag(db, str(audit_id))
+    await db.commit()
+    return {"status": "indexed"}
 
 
 @router.get("/{audit_id}/status", response_model=AuditStatusResponse)

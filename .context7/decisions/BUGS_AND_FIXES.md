@@ -1469,7 +1469,45 @@ Additionally, `retrieve_context()` called `embed_query()` without any error hand
 
 ---
 
-**Last Updated**: 2026-02-15  
-**Resolved Bugs**: 36 (incl. BUG-038 RAG indexing model order)  
+## BUG-039: Agent Chat shows "brak danych" after new audit (RAG indexing fails on quota/key issues)
+
+**Date**: 2026-02-16  
+**Severity**: Critical  
+**Status**: RESOLVED  
+
+**Symptom**:
+- After creating a new audit, audit pages show data correctly, but Agent Chat keeps responding that there is no data ("brak danych w raporcie").
+- Qdrant collection exists but `points/count` for the audit_id returns 0.
+
+**Root Cause**:
+- RAG indexing is triggered best-effort in `worker.py` (fire-and-forget) and failures do not block audit completion.
+- Indexing embedded each chunk sequentially (hundreds of API calls), making it easy to hit Gemini embedding quota (429).
+- Fallback key was expired, so after quota errors the system could not recover; indexing aborted and the audit had no chunks in Qdrant.
+- Additional risk: Qdrant collection vector size can mismatch when switching embedding models (collection size is fixed).
+
+**Fix**:
+1. Added batch embeddings (`batchEmbedContents`) to drastically reduce request count during indexing.
+2. Added Qdrant collection vector size validation; on mismatch the collection is recreated (enables self-healing via re-index).
+3. Added manual reindex endpoint: `POST /api/audits/{audit_id}/reindex-rag`.
+4. Added chat self-healing: if RAG retrieval returns empty, chat attempts on-demand reindex once and retries; if still empty, returns a clear message.
+5. Added tracking field `audits.rag_indexed_at` set on successful indexing.
+6. Frontend: added "Odswiez indeks (RAG)" button in ChatPanel and added streaming phase label `indexing`.
+
+**Files Changed**:
+- `backend/app/services/embedding_client.py`
+- `backend/app/services/rag_service.py`
+- `backend/app/services/qdrant_client.py`
+- `backend/app/services/chat_service.py`
+- `backend/app/routers/audits.py`
+- `backend/app/models.py` + alembic migration
+- `frontend/components/chat/ChatPanel.tsx`
+- `frontend/components/chat/ChatMessages.tsx`
+- `frontend/lib/chat-api.ts`
+- `frontend/lib/chat-store.ts`
+
+---
+
+**Last Updated**: 2026-02-16  
+**Resolved Bugs**: 37 (incl. BUG-039 Agent Chat RAG self-healing)  
 **Known Issues**: 3  
 **Watching**: 2

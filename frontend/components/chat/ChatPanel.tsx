@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, Loader2, Plus, Settings2, X } from 'lucide-react'
+import { ChevronDown, Loader2, Plus, RefreshCw, Settings2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -104,6 +104,7 @@ export function ChatPanel() {
   const [draftTone, setDraftTone] = useState<'technical' | 'professional' | 'simple'>('professional')
   const [conversationFilter, setConversationFilter] = useState('')
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [isReindexing, setIsReindexing] = useState(false)
 
   useEffect(() => {
     if (!activeConversationId) return
@@ -183,6 +184,22 @@ export function ChatPanel() {
   }, [activeConversationId, setMessages, upsertConversation])
 
   const canChat = Boolean(activeAuditId && workspaceId)
+
+  const reindexRag = async () => {
+    if (!canChat || !activeAuditId) {
+      toast.error('Otworz raport audytu, aby odswiezyc indeks')
+      return
+    }
+    setIsReindexing(true)
+    try {
+      await chatAPI.reindexAuditRag(activeAuditId)
+      toast.success('Indeks raportu odswiezony')
+    } catch (e: any) {
+      toast.error(e?.message || 'Nie udalo sie odswiezyc indeksu')
+    } finally {
+      setIsReindexing(false)
+    }
+  }
 
   // Search conversations by title AND message content (client-side)
   const filteredConversations = useMemo(() => {
@@ -366,7 +383,11 @@ export function ChatPanel() {
 
     await streamChatMessage(convoId, text, attachmentIds, {
       onToken: (t) => appendAssistantDelta(convoId as string, t),
-      onStatus: (status) => setStreamingPhase(status as any),
+      onStatus: (status) => {
+        if (status === 'searching' || status === 'indexing' || status === 'generating' || status === 'streaming') {
+          setStreamingPhase(status)
+        }
+      },
       onSuggestions: (next) =>
         setSuggestions(convoId as string, Array.isArray(next) ? next.filter(Boolean).slice(0, 3) : []),
       onDone: async () => {
@@ -457,6 +478,16 @@ export function ChatPanel() {
                 </button>
               </PopoverContent>
             </Popover>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Odswiez indeks raportu (RAG)"
+              disabled={!canChat || isStreaming || isReindexing}
+              onClick={() => void reindexRag()}
+            >
+              {isReindexing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            </Button>
 
             {/* Settings popover (verbosity + tone) */}
             <Popover>
