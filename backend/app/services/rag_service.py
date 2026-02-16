@@ -482,11 +482,11 @@ async def index_audit_for_rag(db: AsyncSession, audit_id: str) -> None:
 
     texts = [c.text for c in chunks]
 
-    # Batch embedding in small groups (20) with a throttle pause to stay under TPM limits.
-    # Tier 1 allows ~1M tokens/min for gemini-embedding-001; each chunk ~200-800 tokens.
-    # 20 chunks * ~500 tok avg = ~10K tokens per batch, well within budget with pauses.
-    BATCH_SIZE = 20
-    BATCH_PAUSE_SECONDS = 2.0
+    # Batch embedding in small groups with a throttle pause to stay under TPM limits.
+    # Tier 1 allows ~1M TPM for gemini-embedding-001; 10 chunks * ~500 tok avg = ~5K per batch.
+    # With 3s pause we stay well under budget even with large audits.
+    BATCH_SIZE = 10
+    BATCH_PAUSE_SECONDS = 3.0
 
     vectors: List[List[float]] = []
     try:

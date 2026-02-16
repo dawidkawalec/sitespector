@@ -175,6 +175,11 @@ export const chatAPI = {
       method: 'POST',
     }),
 
+  getRagStatus: (auditId: string) =>
+    apiRequest<{ status: 'ready' | 'pending' | 'not_applicable'; indexed_at: string | null; audit_status: string | null }>(
+      `/api/audits/${auditId}/rag-status`
+    ),
+
   getUsage: (workspaceId: string) => apiRequest(`/api/chat/usage?workspace_id=${workspaceId}`),
 }
 

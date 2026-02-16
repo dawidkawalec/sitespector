@@ -376,6 +376,49 @@ async def reindex_audit_rag(
     return {"status": "indexed"}
 
 
+@router.get("/{audit_id}/rag-status")
+async def get_audit_rag_status(
+    audit_id: UUID,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Return RAG indexing status for this audit.
+
+    Returns:
+        status: "ready" | "pending" | "not_applicable"
+        indexed_at: ISO timestamp or null
+    """
+    result = await db.execute(select(Audit).where(Audit.id == audit_id))
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audit not found")
+
+    if audit.workspace_id:
+        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
+        if not has_access:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    else:
+        if audit.user_id != current_user["id"]:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+
+    indexed_at = getattr(audit, "rag_indexed_at", None)
+    audit_status_val = getattr(audit.status, "value", str(audit.status)) if audit.status else None
+
+    if indexed_at:
+        rag_status = "ready"
+    elif audit_status_val in ("completed", "done"):
+        rag_status = "pending"
+    else:
+        rag_status = "not_applicable"
+
+    return {
+        "status": rag_status,
+        "indexed_at": indexed_at.isoformat() if indexed_at else None,
+        "audit_status": audit_status_val,
+    }
+
+
 @router.get("/{audit_id}/status", response_model=AuditStatusResponse)
 async def get_audit_status(
     audit_id: UUID,

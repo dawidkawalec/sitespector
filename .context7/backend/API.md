@@ -882,6 +882,19 @@ Manually trigger audit-scoped RAG re-indexing for the agent chat (Qdrant).
   - Safe to call multiple times; it deletes existing points for `audit_id` and re-inserts.
   - Use when chat keeps responding with missing/empty context due to transient embedding/quota issues.
 
+### `GET /api/audits/{audit_id}/rag-status`
+Check whether RAG index is ready for a given audit.
+- **Auth**: Required (same access rules)
+- **Response**:
+  ```json
+  { "status": "ready|pending|not_applicable", "indexed_at": "ISO or null", "audit_status": "completed|..." }
+  ```
+- **Statuses**:
+  - `ready` — `rag_indexed_at` is set; chat has full context.
+  - `pending` — audit completed but RAG not yet indexed (show banner in UI).
+  - `not_applicable` — audit still running.
+- **Frontend**: ChatPanel polls this every 5s while status != "ready" and shows an amber banner.
+
 ---
 
 ## Senuto Data Contract (in `GET /api/audits/{id}`)

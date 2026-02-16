@@ -1486,10 +1486,14 @@ Additionally, `retrieve_context()` called `embed_query()` without any error hand
 **Fix**:
 1. Embeddings: use `models/gemini-embedding-001` only (embedding models endpoint), and index chunks using `batchEmbedContents` (REST) to reduce request count.
 2. Quota resilience: add throttling + exponential backoff on 429 errors and rotate keys (`GEMINI_API_KEY`, `GEMINI_API_KEY_FALLBACK`).
-3. Observability: add `audits.rag_indexed_at` (nullable) set on successful indexing.
-4. Recovery:
+3. Batch tuning: batch size reduced to **10 chunks** with **3-second pauses** between batches to stay within Tier 1 TPM limits (1M tokens/min). Sequential fallback has 0.1s delay.
+4. Observability: add `audits.rag_indexed_at` (nullable) set on successful indexing.
+5. Recovery:
    - Backend endpoint: `POST /api/audits/{audit_id}/reindex-rag`
    - Chat self-healing: when retrieval returns empty, attempt a one-time on-demand reindex and retry retrieval; otherwise return a clear UX message.
+6. UX:
+   - Backend endpoint: `GET /api/audits/{audit_id}/rag-status` returns `ready|pending|not_applicable`.
+   - Frontend ChatPanel polls this endpoint and shows an amber banner when RAG is still pending, with a "Zaindeksuj teraz" button for manual trigger.
    - Frontend: add an explicit reindex button and an `indexing` streaming phase label.
 
 **Files Changed**:

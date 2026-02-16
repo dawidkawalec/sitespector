@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, Loader2, Plus, RefreshCw, Settings2, X } from 'lucide-react'
+import { AlertTriangle, ChevronDown, Database, Loader2, Plus, RefreshCw, Settings2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -166,6 +166,21 @@ export function ChatPanel() {
     }
   }, [usageQuery.data, setUsage])
 
+  const ragStatusQuery = useQuery({
+    queryKey: ['ragStatus', activeAuditId],
+    queryFn: () => chatAPI.getRagStatus(activeAuditId as string),
+    enabled: isOpen && Boolean(activeAuditId),
+    staleTime: 10_000,
+    refetchInterval: (query) => {
+      const data = query.state.data
+      if (data && data.status !== 'ready') return 5_000
+      return false
+    },
+  })
+
+  const ragStatus = ragStatusQuery.data?.status ?? null
+  const ragReady = ragStatus === 'ready'
+
   // Load messages for active conversation when switching
   useEffect(() => {
     if (!activeConversationId) return
@@ -303,6 +318,7 @@ export function ChatPanel() {
     try {
       await chatAPI.reindexAuditRag(activeAuditId)
       toast.success('RAG: reindeksacja zakonczona')
+      void ragStatusQuery.refetch()
     } catch (e) {
       toast.error(`RAG: nie udalo sie zrobic reindeksacji (${String(e)})`)
     } finally {
@@ -580,6 +596,43 @@ export function ChatPanel() {
           ) : null}
           <Separator />
         </div>
+
+        {/* RAG status banner */}
+        {canChat && ragStatus && !ragReady ? (
+          <div className="mx-3 mb-2 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-200">
+            {ragStatus === 'pending' ? (
+              <>
+                <Database className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                <div>
+                  <p className="font-medium text-amber-300">Dane RAG nie sa jeszcze gotowe</p>
+                  <p className="mt-0.5 text-amber-200/80">
+                    Indeks wektorowy dla tego audytu nie zostal jeszcze zbudowany.
+                    Mozesz rozmawiac ogolnie, ale odpowiedzi o konkretnych danych z raportu moga byc niepelne.
+                  </p>
+                  <button
+                    type="button"
+                    className="mt-1.5 inline-flex items-center gap-1 text-amber-300 hover:text-amber-100 font-medium"
+                    onClick={() => void reindexRag()}
+                    disabled={isReindexing}
+                  >
+                    {isReindexing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                    {isReindexing ? 'Indeksowanie...' : 'Zaindeksuj teraz'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                <div>
+                  <p className="font-medium text-amber-300">Audyt w trakcie przetwarzania</p>
+                  <p className="mt-0.5 text-amber-200/80">
+                    Raport nie jest jeszcze ukonczony. Chat bedzie w pelni dostepny po zakonczeniu audytu.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
 
         {/* Messages */}
         <ChatMessages messages={messages} />

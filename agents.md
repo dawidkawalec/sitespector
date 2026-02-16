@@ -17,6 +17,7 @@ Welcome to the SiteSpector repository. This file provides a quick entry point fo
 - **Project Overview**: See **[.context7/project/OVERVIEW.md](.context7/project/OVERVIEW.md)**.
 - **Architecture**: See **[.context7/project/ARCHITECTURE.md](.context7/project/ARCHITECTURE.md)**.
 - **Deployment**: See **[.context7/project/DEPLOYMENT.md](.context7/project/DEPLOYMENT.md)**.
+- **VPS IP**: `46.225.134.48`
 
 ---
-**Last Updated**: 2026-02-11
+**Last Updated**: 2026-02-16
