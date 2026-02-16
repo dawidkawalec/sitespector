@@ -73,7 +73,7 @@ SiteSpector now supports an **audit-scoped agent chat** powered by RAG:
 
 ### Embeddings
 - Provider: Google Generative AI (`google-generativeai`)
-- Model: `models/text-embedding-004`
+- Models (fallback order): `models/gemini-embedding-001`, then `models/text-embedding-004`
 - Location: `backend/app/services/embedding_client.py`
 
 ### Vector Store
@@ -99,6 +99,18 @@ Instead of storing AI analyses as monolithic JSON blobs, each item is stored as 
 - Trigger 2: re-indexing after Phase 5 (Execution Plan) — adds task data
 - Failure behavior: indexing failure must never block audit completion
 - Idempotent: always deletes existing points for `audit_id` before re-inserting
+
+### Chat Attachments + Multimodal (Feb 2026)
+- Upload endpoint: `POST /api/chat/attachments/upload` (multipart/form-data)
+- Storage: persisted on VPS volume mounted to `settings.CHAT_ATTACHMENTS_PATH`
+- Chat message stream body supports `attachment_ids`
+- Gemini calls can include:
+  - images as `genai.protos.Blob(mime_type, data)`
+  - PDFs/CSVs as uploaded files via `genai.upload_file(path, mime_type=...)`
+
+### True Streaming (Feb 2026)
+- Backend uses `GenerativeModel.generate_content(..., stream=True)` and forwards deltas via SSE
+- Fallback: if streaming fails, backend falls back to non-streaming call and chunks the full text
 
 ---
 

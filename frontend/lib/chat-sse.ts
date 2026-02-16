@@ -21,11 +21,13 @@ type StreamHandlers = {
   onDone: () => void
   onError: (err: Error) => void
   onStatus?: (status: string) => void
+  onSuggestions?: (suggestions: string[]) => void
 }
 
 export async function streamChatMessage(
   conversationId: string,
   content: string,
+  attachmentIds: string[] | undefined,
   handlers: StreamHandlers
 ): Promise<void> {
   const token = await getSupabaseToken()
@@ -38,7 +40,7 @@ export async function streamChatMessage(
       'Content-Type': 'application/json',
       Accept: 'text/event-stream',
     },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, attachment_ids: attachmentIds ?? [] }),
   })
 
   if (!res.ok || !res.body) {
@@ -71,13 +73,22 @@ export async function streamChatMessage(
             return
           }
           try {
-            const parsed = JSON.parse(data) as { token?: string; error?: string; status?: string }
+            const parsed = JSON.parse(data) as {
+              token?: string
+              error?: string
+              status?: string
+              suggestions?: string[]
+            }
             if (parsed.error) {
               handlers.onError(new Error(parsed.error))
               continue
             }
             if (parsed.status && handlers.onStatus) {
               handlers.onStatus(parsed.status)
+              continue
+            }
+            if (parsed.suggestions && handlers.onSuggestions) {
+              handlers.onSuggestions(parsed.suggestions)
               continue
             }
             if (parsed.token) handlers.onToken(parsed.token)

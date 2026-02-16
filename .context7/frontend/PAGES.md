@@ -44,7 +44,7 @@ app/
 │   │   ├── debug/
 │   │   └── layout.tsx
 │   ├── pricing/page.tsx
-│   ├── settings/              # Profile, Team, Billing, Appearance, Notifications, Schedules
+│   ├── settings/              # Profile, Team, Billing, Appearance, Notifications, Schedules, Agents
 │   └── invite/[token]/page.tsx
 └── auth/callback/page.tsx     # OAuth callback (Supabase)
 ```

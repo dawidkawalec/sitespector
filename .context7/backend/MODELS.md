@@ -479,17 +479,29 @@ Notes:
 
 ### AgentType
 - Table: `agent_types`
-- Fields: `slug` (unique), `system_prompt`, `tools_config` (JSONB)
+- Fields: `slug` (unique), `system_prompt`, `tools_config` (JSONB), `sort_order` (int)
 
 ### ChatConversation
 - Table: `chat_conversations`
 - FK: `audit_id -> audits.id`
 - FK: `agent_type_id -> agent_types.id`
+- Fields: `verbosity` (`concise|balanced|detailed`), `tone` (`technical|professional|simple`)
 
 ### ChatMessage
 - Table: `chat_messages`
 - FK: `conversation_id -> chat_conversations.id` (CASCADE)
 - Enum: `chatmessagerole` (`user|assistant|system`)
+
+### ChatAttachment
+- Table: `chat_attachments`
+- FK: `conversation_id -> chat_conversations.id` (CASCADE)
+- FK: `message_id -> chat_messages.id` (SET NULL)
+- Notes: stored on VPS volume under `settings.CHAT_ATTACHMENTS_PATH`
+
+### ChatMessageFeedback
+- Table: `chat_message_feedback`
+- Unique: `(message_id, user_id)`
+- Field: `rating` (`+1|-1`)
 
 ### ChatShare
 - Table: `chat_shares`

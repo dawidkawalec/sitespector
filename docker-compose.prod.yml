@@ -43,6 +43,7 @@ services:
       - .env
     volumes:
       - ./tmp/audits:/tmp/audits
+      - chat_attachments_data:/data/chat-attachments
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       postgres:
@@ -206,6 +207,8 @@ volumes:
   postgres_data:
     driver: local
   qdrant_data:
+    driver: local
+  chat_attachments_data:
     driver: local
 
 networks:

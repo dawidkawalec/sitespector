@@ -603,6 +603,31 @@ Backend: 100% complete | Frontend foundation: 100% complete | Module refactoring
 
 ---
 
-**Last Updated**: 2026-02-15
-**Total Decisions**: 33 accepted
+## ADR-035: Chat Agent Customization + Attachments + True Streaming
+**Date**: 2026-02-16
+**Status**: ✅ Done
+**Decision**:
+- Add ordering and customization controls for chat agents:
+  - `agent_types.sort_order` for deterministic default ordering of system agents
+  - workspace-scoped custom agents (`is_system=false`, `workspace_id` set)
+- Add per-conversation response style controls:
+  - `chat_conversations.verbosity` (`concise|balanced|detailed`)
+  - `chat_conversations.tone` (`technical|professional|simple`)
+- Add file attachments in chat:
+  - persisted on VPS volume (`settings.CHAT_ATTACHMENTS_PATH`)
+  - `chat_attachments` table + upload/download endpoints
+- Upgrade SSE to true streaming from Gemini (`generate_content(..., stream=True)`) with fallback to non-streaming.
+**Rationale**:
+- Default agent order must match product UX (SEO first), not alphabetical sorting.
+- Teams need custom roles without changing system agents.
+- Users often need to share screenshots/CSV/PDFs while discussing audit fixes.
+- Fake streaming (chunking full text) hides model latency; true streaming improves perceived performance.
+**Outcome**:
+- Backend: new agent CRUD endpoints, attachment endpoints, conversation style fields, Gemini streaming generator.
+- Frontend: settings page for agents, style selectors in chat panel, attachment upload/paste/drop UI, copy/export/search shortcuts.
+
+---
+
+**Last Updated**: 2026-02-16
+**Total Decisions**: 34 accepted
 **Review**: Update when making significant architectural changes.

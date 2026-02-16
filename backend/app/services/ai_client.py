@@ -6,7 +6,8 @@ import logging
 import asyncio
 import os
 import time
-from typing import Dict, Any, Optional, List
+import threading
+from typing import Any, AsyncGenerator, Dict, Optional, List
 import google.generativeai as genai
 from app.config import settings
 
@@ -59,7 +60,8 @@ def _get_gemini_api_keys() -> List[str]:
 async def call_claude(
     prompt: str,
     system_prompt: str = "",
-    max_tokens: int = None
+    max_tokens: int = None,
+    attachments: Optional[List[Dict[str, Any]]] = None,
 ) -> str:
     """
     Call Gemini API with retry logic (Kept function name for compatibility).
@@ -120,13 +122,32 @@ async def call_claude(
                 temperature=0.7,
             )
 
+            contents: Any = prompt
+            if attachments:
+                parts: List[Any] = [prompt]
+                for att in attachments:
+                    kind = (att.get("kind") or "").strip().lower()
+                    mime = (att.get("mime_type") or "").strip().lower()
+                    if kind == "image" and att.get("data") is not None:
+                        parts.append(genai.protos.Blob(mime_type=mime, data=att["data"]))
+                    elif kind == "file" and att.get("path"):
+                        # Uses Gemini Files API; helpful for PDFs and larger files.
+                        uploaded = await asyncio.to_thread(
+                            genai.upload_file,
+                            att["path"],
+                            mime_type=mime or None,
+                            display_name=att.get("filename") or None,
+                        )
+                        parts.append(uploaded)
+                contents = parts
+
             response = await asyncio.wait_for(
                 asyncio.to_thread(
                     model.generate_content,
-                    prompt,
+                    contents,
                     generation_config=generation_config,
                 ),
-                timeout=30.0,
+                timeout=60.0,
             )
 
             # Check if response has valid parts (expired key might return empty but no exception in to_thread)
@@ -186,6 +207,100 @@ async def call_claude(
 
     logger.warning("AI unavailable after trying all Gemini keys (reason=%s, keys_tried=%s)", last_reason, len(api_keys))
     raise AIUnavailableError(last_reason)
+
+
+async def stream_gemini(
+    *,
+    prompt: str,
+    system_prompt: str = "",
+    max_tokens: int | None = None,
+    attachments: Optional[List[Dict[str, Any]]] = None,
+) -> AsyncGenerator[str, None]:
+    """Stream Gemini output chunks as they are generated.
+
+    The google-generativeai SDK is synchronous, so we run the streaming iterator in a thread and
+    forward deltas into an asyncio queue.
+    """
+    api_keys = _get_gemini_api_keys()
+    if not api_keys:
+        raise AIUnavailableError("missing_api_key")
+
+    model_name = "gemini-3-flash-preview"
+    last_error: Exception | None = None
+
+    for idx, key in enumerate(api_keys):
+        q: asyncio.Queue[Any] = asyncio.Queue()
+        genai.configure(api_key=key)
+
+        try:
+            model = genai.GenerativeModel(
+                model_name=model_name,
+                system_instruction=system_prompt if system_prompt else None,
+            )
+
+            generation_config = genai.types.GenerationConfig(
+                max_output_tokens=max_tokens or 2048,
+                temperature=0.7,
+            )
+
+            contents: Any = prompt
+            if attachments:
+                parts: List[Any] = [prompt]
+                for att in attachments:
+                    kind = (att.get("kind") or "").strip().lower()
+                    mime = (att.get("mime_type") or "").strip().lower()
+                    if kind == "image" and att.get("data") is not None:
+                        parts.append(genai.protos.Blob(mime_type=mime, data=att["data"]))
+                    elif kind == "file" and att.get("path"):
+                        uploaded = genai.upload_file(
+                            att["path"],
+                            mime_type=mime or None,
+                            display_name=att.get("filename") or None,
+                        )
+                        parts.append(uploaded)
+                contents = parts
+
+            loop = asyncio.get_running_loop()
+
+            def _run_stream() -> None:
+                try:
+                    resp = model.generate_content(
+                        contents,
+                        generation_config=generation_config,
+                        stream=True,
+                    )
+                    for chunk in resp:
+                        text = getattr(chunk, "text", None) or ""
+                        if text:
+                            loop.call_soon_threadsafe(q.put_nowait, text)
+                    loop.call_soon_threadsafe(q.put_nowait, None)
+                except Exception as e:
+                    loop.call_soon_threadsafe(q.put_nowait, e)
+
+            t = threading.Thread(target=_run_stream, daemon=True)
+            t.start()
+
+            while True:
+                item = await q.get()
+                if item is None:
+                    return
+                if isinstance(item, Exception):
+                    raise item
+                yield str(item)
+
+        except Exception as e:
+            last_error = e
+            logger.error(
+                "Gemini stream error (model=%s, key_index=%s/%s, error_type=%s): %s",
+                model_name,
+                idx + 1,
+                len(api_keys),
+                type(e).__name__,
+                e,
+            )
+            continue
+
+    raise last_error or AIUnavailableError("stream_failed")
 
 
 def _generate_mock_response(reason: str = "unknown") -> str:

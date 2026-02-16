@@ -11,6 +11,8 @@ export interface ChatAgent {
   slug: string
   description?: string | null
   icon?: string | null
+  sort_order?: number
+  system_prompt?: string | null
   tools_config?: string[]
   is_system: boolean
 }
@@ -23,6 +25,8 @@ export interface ChatConversation {
   agent_type_id: string
   title?: string | null
   is_shared: boolean
+  verbosity?: 'concise' | 'balanced' | 'detailed'
+  tone?: 'technical' | 'professional' | 'simple'
   created_at: string
   updated_at: string
   agent?: ChatAgent
@@ -35,6 +39,13 @@ export interface ChatMessage {
   content: string
   created_at: string
   tokens_used?: number | null
+  attachments?: Array<{
+    id: string
+    filename: string
+    mime_type: string
+    size_bytes: number
+    created_at: string
+  }>
 }
 
 interface ChatState {
@@ -48,6 +59,7 @@ interface ChatState {
   agents: ChatAgent[]
   conversations: ChatConversation[]
   messagesByConversationId: Record<string, ChatMessage[]>
+  suggestionsByConversationId: Record<string, string[]>
 
   isStreaming: boolean
   streamingConversationId: string | null
@@ -70,6 +82,7 @@ interface ChatState {
   setMessages: (conversationId: string, messages: ChatMessage[]) => void
   appendMessage: (conversationId: string, msg: ChatMessage) => void
   appendAssistantDelta: (conversationId: string, delta: string) => void
+  setSuggestions: (conversationId: string, suggestions: string[]) => void
 
   setStreaming: (conversationId: string | null) => void
   setStreamingPhase: (phase: ChatState['streamingPhase']) => void
@@ -91,6 +104,7 @@ export const useChatStore = create<ChatState>()(
       agents: [],
       conversations: [],
       messagesByConversationId: {},
+      suggestionsByConversationId: {},
 
       isStreaming: false,
       streamingConversationId: null,
@@ -155,6 +169,11 @@ export const useChatStore = create<ChatState>()(
           }
         }),
 
+      setSuggestions: (conversationId, suggestions) =>
+        set((s) => ({
+          suggestionsByConversationId: { ...s.suggestionsByConversationId, [conversationId]: suggestions },
+        })),
+
       setStreaming: (conversationId) =>
         set({
           isStreaming: Boolean(conversationId),
@@ -173,6 +192,7 @@ export const useChatStore = create<ChatState>()(
           activeConversationId: null,
           conversations: [],
           messagesByConversationId: {},
+          suggestionsByConversationId: {},
           usage: null,
           isStreaming: false,
           streamingConversationId: null,

@@ -355,6 +355,7 @@ class AgentType(Base):
     slug = Column(String(120), nullable=False, unique=True, index=True)
     description = Column(Text, nullable=True)
     icon = Column(String(120), nullable=True)  # Lucide icon name (frontend)
+    sort_order = Column(Integer, default=0, nullable=False, index=True)
 
     # Behavior
     system_prompt = Column(Text, nullable=False)
@@ -393,6 +394,8 @@ class ChatConversation(Base):
     # Metadata
     title = Column(String(300), nullable=True)
     is_shared = Column(Boolean, default=False, nullable=False, index=True)
+    verbosity = Column(String(20), nullable=False, default="balanced")
+    tone = Column(String(20), nullable=False, default="professional")
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
@@ -431,10 +434,72 @@ class ChatMessage(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
     conversation = relationship("ChatConversation", back_populates="messages")
+    attachments = relationship("ChatAttachment", back_populates="message")
 
     def __repr__(self) -> str:
         return f"<ChatMessage(id={self.id}, role={self.role})>"
 
+
+class ChatAttachment(Base):
+    """Uploaded file attached to a chat message (stored on the VPS volume)."""
+
+    __tablename__ = "chat_attachments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    conversation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("chat_conversations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    message_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("chat_messages.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    workspace_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    uploaded_by = Column(UUID(as_uuid=True), nullable=False, index=True)
+
+    filename = Column(Text, nullable=False)
+    mime_type = Column(String(200), nullable=False)
+    size_bytes = Column(Integer, nullable=False)
+    storage_path = Column(Text, nullable=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+
+    conversation = relationship("ChatConversation")
+    message = relationship("ChatMessage", back_populates="attachments")
+
+    def __repr__(self) -> str:
+        return f"<ChatAttachment(id={self.id}, mime_type={self.mime_type})>"
+
+
+class ChatMessageFeedback(Base):
+    """Thumbs up/down for assistant messages."""
+
+    __tablename__ = "chat_message_feedback"
+    __table_args__ = (
+        UniqueConstraint("message_id", "user_id", name="uq_chat_feedback_message_user"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    message_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("chat_messages.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    rating = Column(Integer, nullable=False)  # +1 or -1
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+
+    message = relationship("ChatMessage")
+
+    def __repr__(self) -> str:
+        return f"<ChatMessageFeedback(message_id={self.message_id}, rating={self.rating})>"
 
 class ChatShare(Base):
     """Share a conversation with another user in the workspace."""

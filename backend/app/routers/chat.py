@@ -10,14 +10,17 @@ import json
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth_supabase import get_current_user
+from app.auth_supabase import get_current_user, verify_workspace_access
 from app.database import get_db
 from app.schemas_chat import (
     AgentTypeResponse,
+    AgentTypeCreateRequest,
+    AgentTypeUpdateRequest,
+    AgentOrderUpdateRequest,
     ChatConversationCreateRequest,
     ChatConversationResponse,
     ChatConversationUpdateRequest,
@@ -27,6 +30,8 @@ from app.schemas_chat import (
     ChatShareCreateRequest,
     ChatShareResponse,
     ChatUsageResponse,
+    ChatAttachmentResponse,
+    ChatMessageFeedbackRequest,
 )
 from app.services import chat_service
 
@@ -44,6 +49,142 @@ async def list_agents(
     # Workspace filtering is optional; system agents are always returned.
     agents = await chat_service.list_agents(db, workspace_id=workspace_id)
     return agents
+
+
+@router.post("/agents", response_model=AgentTypeResponse, status_code=status.HTTP_201_CREATED)
+async def create_agent(
+    body: AgentTypeCreateRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    has_access = await verify_workspace_access(current_user["id"], str(body.workspace_id))
+    if not has_access:
+        # Keep message generic (do not leak workspace existence)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+
+    agent = await chat_service.create_custom_agent(
+        db,
+        workspace_id=str(body.workspace_id),
+        user_id=current_user["id"],
+        name=body.name,
+        description=body.description,
+        icon=body.icon,
+        system_prompt=body.system_prompt,
+        tools_config=body.tools_config,
+        sort_order=body.sort_order,
+    )
+    return agent
+
+
+@router.put("/agents/{agent_id}", response_model=AgentTypeResponse)
+async def update_agent(
+    agent_id: UUID,
+    body: AgentTypeUpdateRequest,
+    workspace_id: str = Query(...),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    has_access = await verify_workspace_access(current_user["id"], str(workspace_id))
+    if not has_access:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+
+    agent = await chat_service.update_custom_agent(
+        db,
+        agent_id=str(agent_id),
+        workspace_id=str(workspace_id),
+        user_id=current_user["id"],
+        name=body.name,
+        description=body.description,
+        icon=body.icon,
+        system_prompt=body.system_prompt,
+        tools_config=body.tools_config,
+        sort_order=body.sort_order,
+    )
+    return agent
+
+
+@router.delete("/agents/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_agent(
+    agent_id: UUID,
+    workspace_id: str = Query(...),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    has_access = await verify_workspace_access(current_user["id"], str(workspace_id))
+    if not has_access:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    await chat_service.delete_custom_agent(
+        db, agent_id=str(agent_id), workspace_id=str(workspace_id), user_id=current_user["id"]
+    )
+    return None
+
+
+@router.patch("/agents/order", status_code=status.HTTP_204_NO_CONTENT)
+async def update_agents_order(
+    body: AgentOrderUpdateRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    has_access = await verify_workspace_access(current_user["id"], str(body.workspace_id))
+    if not has_access:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+
+    items: list[dict] = []
+    for it in body.items:
+        if hasattr(it, "model_dump"):
+            items.append(it.model_dump())
+        else:
+            items.append(it.dict())
+    await chat_service.update_custom_agent_order(
+        db,
+        workspace_id=str(body.workspace_id),
+        user_id=current_user["id"],
+        items=items,
+    )
+    return None
+
+
+@router.post("/attachments/upload", response_model=ChatAttachmentResponse, status_code=status.HTTP_201_CREATED)
+async def upload_chat_attachment(
+    conversation_id: UUID = Form(...),
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    attachment = await chat_service.create_attachment(
+        db,
+        conversation_id=str(conversation_id),
+        user_id=current_user["id"],
+        upload=file,
+    )
+    return attachment
+
+
+@router.get("/attachments/{attachment_id}")
+async def download_chat_attachment(
+    attachment_id: UUID,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await chat_service.get_attachment_file_response(
+        db, attachment_id=str(attachment_id), user_id=current_user["id"]
+    )
+
+
+@router.post("/messages/{message_id}/feedback", status_code=status.HTTP_204_NO_CONTENT)
+async def leave_message_feedback(
+    message_id: UUID,
+    body: ChatMessageFeedbackRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await chat_service.set_message_feedback(
+        db,
+        message_id=str(message_id),
+        user_id=current_user["id"],
+        rating=body.rating,
+    )
+    return None
 
 
 @router.post(
@@ -116,6 +257,8 @@ async def update_conversation(
         user_id=current_user["id"],
         title=body.title,
         is_shared=body.is_shared,
+        verbosity=body.verbosity,
+        tone=body.tone,
     )
     return convo
 
@@ -214,10 +357,19 @@ async def stream_message(
                     user_id=user_id,
                     user_message=user_message,
                     user_metadata=user_metadata,
+                    attachment_ids=body.attachment_ids,
                 ):
                     if chunk.startswith("__STATUS__:"):
                         status = chunk.split(":", 1)[1]
                         yield f"data: {json.dumps({'status': status})}\n\n"
+                    elif chunk.startswith("__SUGGESTIONS__:"):
+                        payload = chunk.split(":", 1)[1]
+                        try:
+                            suggestions = json.loads(payload)
+                            yield f"data: {json.dumps({'suggestions': suggestions})}\n\n"
+                        except Exception:
+                            # Ignore invalid suggestions payloads
+                            pass
                     else:
                         yield f"data: {json.dumps({'token': chunk})}\n\n"
                 await db.commit()

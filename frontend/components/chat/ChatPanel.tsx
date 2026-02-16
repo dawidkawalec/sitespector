@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { X, Plus, Loader2 } from 'lucide-react'
+import { Download, Loader2, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import { useChatStore } from '@/lib/chat-store'
@@ -42,6 +44,8 @@ export function ChatPanel() {
   const setMessages = useChatStore((s) => s.setMessages)
   const appendMessage = useChatStore((s) => s.appendMessage)
   const appendAssistantDelta = useChatStore((s) => s.appendAssistantDelta)
+  const suggestionsByConversationId = useChatStore((s) => s.suggestionsByConversationId)
+  const setSuggestions = useChatStore((s) => s.setSuggestions)
 
   const isStreaming = useChatStore((s) => s.isStreaming)
   const streamingConversationId = useChatStore((s) => s.streamingConversationId)
@@ -83,7 +87,23 @@ export function ChatPanel() {
     return messagesByConversationId[activeConversationId] ?? []
   }, [activeConversationId, messagesByConversationId])
 
+  const suggestions = useMemo(() => {
+    if (!activeConversationId) return []
+    return suggestionsByConversationId[activeConversationId] ?? []
+  }, [activeConversationId, suggestionsByConversationId])
+
   const [selectedAgentSlug, setSelectedAgentSlug] = useState<string | null>(null)
+  const [draftVerbosity, setDraftVerbosity] = useState<'concise' | 'balanced' | 'detailed'>('balanced')
+  const [draftTone, setDraftTone] = useState<'technical' | 'professional' | 'simple'>('professional')
+  const [conversationFilter, setConversationFilter] = useState('')
+
+  useEffect(() => {
+    if (!activeConversationId) return
+    const convo = conversations.find((c) => c.id === activeConversationId)
+    if (!convo) return
+    setDraftVerbosity(convo.verbosity ?? 'balanced')
+    setDraftTone(convo.tone ?? 'professional')
+  }, [activeConversationId, conversations])
 
   const agentsQuery = useQuery({
     queryKey: ['chatAgents', workspaceId],
@@ -156,6 +176,59 @@ export function ChatPanel() {
 
   const canChat = Boolean(activeAuditId && workspaceId)
 
+  const filteredConversations = useMemo(() => {
+    const q = conversationFilter.trim().toLowerCase()
+    if (!q) return conversations
+    return conversations.filter((c) => (c.title ?? 'Nowa rozmowa').toLowerCase().includes(q))
+  }, [conversations, conversationFilter])
+
+  const exportConversation = () => {
+    if (!activeConversationId) return
+    const title = conversations.find((c) => c.id === activeConversationId)?.title ?? 'Nowa rozmowa'
+    const md = [
+      `# ${title}`,
+      '',
+      ...messages.map((m) => {
+        const who = m.role === 'user' ? 'User' : m.role === 'assistant' ? 'Assistant' : 'System'
+        const att =
+          (m.attachments ?? []).length > 0
+            ? `\n\nAttachments:\n${(m.attachments ?? [])
+                .map((a) => `- ${a.filename} (${a.mime_type}, ${a.size_bytes} bytes)`)
+                .join('\n')}`
+            : ''
+        return `## ${who}\n\n${m.content}${att}\n`
+      }),
+    ].join('\n')
+
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `chat-${activeConversationId}.md`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  // Keyboard shortcuts (only when panel is open)
+  useEffect(() => {
+    if (!isOpen) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      const tag = target?.tagName?.toLowerCase()
+      const isTyping =
+        tag === 'input' || tag === 'textarea' || Boolean(target?.getAttribute?.('contenteditable'))
+      if (isTyping) return
+
+      if (e.key === 'Escape') {
+        setPanelOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isOpen, setPanelOpen])
+
   const createNewConversation = async () => {
     if (!canChat) return
     const agentSlug = selectedAgentSlug ?? agents[0]?.slug
@@ -168,12 +241,24 @@ export function ChatPanel() {
       workspace_id: workspaceId as string,
       agent_slug: agentSlug,
     })
-    setConversations([convo, ...conversations])
-    setActiveConversation(convo.id)
-    return convo
+    let finalConvo = convo
+    // Apply style defaults if user picked them before creating the conversation.
+    if (draftVerbosity !== 'balanced' || draftTone !== 'professional') {
+      try {
+        finalConvo = await chatAPI.updateConversation(convo.id, {
+          verbosity: draftVerbosity,
+          tone: draftTone,
+        })
+      } catch {
+        // Not fatal; conversation still exists.
+      }
+    }
+    setConversations([finalConvo, ...conversations])
+    setActiveConversation(finalConvo.id)
+    return finalConvo
   }
 
-  const sendMessage = async (text: string) => {
+  const sendMessage = async ({ text, files }: { text: string; files: File[] }) => {
     if (!canChat) {
       toast.error('Open an audit report first')
       return
@@ -186,15 +271,52 @@ export function ChatPanel() {
     }
     if (!convoId) return
 
+    // Clear previous suggestions once the user continues the conversation.
+    setSuggestions(convoId, [])
+
+    // Best-effort: ensure style settings are saved before the LLM prompt is built.
+    const existing = conversations.find((c) => c.id === convoId)
+    if (
+      existing &&
+      ((existing.verbosity ?? 'balanced') !== draftVerbosity ||
+        (existing.tone ?? 'professional') !== draftTone)
+    ) {
+      try {
+        const updated = await chatAPI.updateConversation(convoId, {
+          verbosity: draftVerbosity,
+          tone: draftTone,
+        })
+        upsertConversation(updated)
+      } catch {
+        // Not fatal; fallback to server defaults.
+      }
+    }
+
     const now = new Date().toISOString()
     const localUserId = `local-user-${Date.now()}`
     const localAssistantId = `local-assistant-${Date.now()}`
+
+    // Upload attachments before sending the message so we can reference attachment IDs.
+    let attachmentIds: string[] = []
+    let attachmentMetas: Array<{ id: string; filename: string; mime_type: string; size_bytes: number; created_at: string }> =
+      []
+    if (files && files.length > 0) {
+      try {
+        const uploaded = await Promise.all(files.map((f) => chatAPI.uploadAttachment(convoId as string, f)))
+        attachmentIds = uploaded.map((u) => u.id)
+        attachmentMetas = uploaded
+      } catch (e: any) {
+        toast.error(e?.message || 'Nie udalo sie przeslac zalacznikow')
+        return
+      }
+    }
 
     appendMessage(convoId, {
       id: localUserId,
       conversation_id: convoId,
       role: 'user',
       content: text,
+      attachments: attachmentMetas,
       created_at: now,
     })
     appendMessage(convoId, {
@@ -207,9 +329,11 @@ export function ChatPanel() {
 
     setStreaming(convoId)
 
-    await streamChatMessage(convoId, text, {
+    await streamChatMessage(convoId, text, attachmentIds, {
       onToken: (t) => appendAssistantDelta(convoId as string, t),
       onStatus: (status) => setStreamingPhase(status as any),
+      onSuggestions: (next) =>
+        setSuggestions(convoId as string, Array.isArray(next) ? next.filter(Boolean).slice(0, 3) : []),
       onDone: async () => {
         setStreaming(null)
         // Refresh messages from DB to replace local IDs.
@@ -266,6 +390,15 @@ export function ChatPanel() {
             {usage ? <ChatUsageBadge messagesSent={usage.messages_sent} limit={usage.limit ?? null} /> : null}
           </div>
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => exportConversation()}
+              aria-label="Export conversation"
+              disabled={!activeConversationId}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => setPanelOpen(false)} aria-label="Close chat">
               <X className="h-4 w-4" />
             </Button>
@@ -276,11 +409,64 @@ export function ChatPanel() {
           <div className="grid grid-cols-2 gap-2">
             <AgentSelector agents={agents} value={selectedAgentSlug} onChange={setSelectedAgentSlug} />
             <ChatConversationList
-              conversations={conversations}
+              conversations={filteredConversations}
               value={activeConversationId}
               onChange={(id) => setActiveConversation(id)}
               disabled={!canChat}
             />
+          </div>
+          <Input
+            className="h-8"
+            placeholder="Szukaj rozmowy..."
+            value={conversationFilter}
+            onChange={(e) => setConversationFilter(e.target.value)}
+            disabled={!canChat}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <Select
+              value={draftVerbosity}
+              onValueChange={(v) => {
+                const next = v as 'concise' | 'balanced' | 'detailed'
+                setDraftVerbosity(next)
+                if (!activeConversationId) return
+                void chatAPI
+                  .updateConversation(activeConversationId, { verbosity: next })
+                  .then((c) => upsertConversation(c))
+                  .catch(() => toast.error('Nie udalo sie zapisac ustawien odpowiedzi'))
+              }}
+              disabled={!canChat || isStreaming}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="Gadatliwosc" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="concise">Krotko</SelectItem>
+                <SelectItem value="balanced">Normalnie</SelectItem>
+                <SelectItem value="detailed">Szczegolowo</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={draftTone}
+              onValueChange={(v) => {
+                const next = v as 'technical' | 'professional' | 'simple'
+                setDraftTone(next)
+                if (!activeConversationId) return
+                void chatAPI
+                  .updateConversation(activeConversationId, { tone: next })
+                  .then((c) => upsertConversation(c))
+                  .catch(() => toast.error('Nie udalo sie zapisac tonu komunikacji'))
+              }}
+              disabled={!canChat || isStreaming}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="Ton" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="technical">Techniczny</SelectItem>
+                <SelectItem value="professional">Profesjonalny</SelectItem>
+                <SelectItem value="simple">Prosty</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -304,6 +490,22 @@ export function ChatPanel() {
 
         {/* Messages */}
         <ChatMessages messages={messages} />
+
+        {/* Follow-up suggestions */}
+        {suggestions.length > 0 && !isStreaming ? (
+          <div className="px-3 pb-2 flex flex-wrap gap-2">
+            {suggestions.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className="text-xs rounded-full border border-border bg-background px-3 py-1 hover:bg-muted"
+                onClick={() => void sendMessage({ text: s, files: [] })}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         {/* Input */}
         <ChatInput

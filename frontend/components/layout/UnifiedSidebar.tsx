@@ -74,6 +74,7 @@ import { NavItem } from './NavItem'
 import { NavSection } from './NavSection'
 import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
+import { useChatStore } from '@/lib/chat-store'
 import { useQuery } from '@tanstack/react-query'
 import { auditsAPI, systemAPI } from '@/lib/api'
 import {
@@ -137,6 +138,7 @@ const settingsItems = [
   { href: '/settings/schedules', icon: Calendar, label: 'Automatyzacja' },
   { href: '/settings/appearance', icon: Palette, label: 'Wygląd' },
   { href: '/settings/notifications', icon: Bell, label: 'Powiadomienia' },
+  { href: '/settings/agents', icon: Sparkles, label: 'Agenci czatu' },
 ]
 
 // Audit tools section items (deprecated/internal)
@@ -208,6 +210,24 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
   const { currentWorkspace } = useWorkspace()
+  const toggleChatPanel = useChatStore((s) => s.togglePanel)
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      const tag = target?.tagName?.toLowerCase()
+      const isTyping =
+        tag === 'input' || tag === 'textarea' || Boolean(target?.getAttribute?.('contenteditable'))
+      if (isTyping) return
+
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault()
+        toggleChatPanel()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [toggleChatPanel])
 
   // Fetch audits for the select
   const { data: auditsData } = useQuery({

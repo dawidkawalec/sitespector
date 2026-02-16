@@ -125,6 +125,11 @@ class Settings(BaseSettings):
     PDF_STORAGE_PATH: str = Field(default="/tmp/audits", description="PDF storage path")
     PDF_CACHE_ENABLED: bool = Field(default=True, description="Enable PDF caching")
     PDF_MAX_SIZE_MB: int = Field(default=10, description="Maximum PDF size in MB")
+    CHAT_ATTACHMENTS_PATH: str = Field(
+        default="/data/chat-attachments",
+        description="Path inside container for persisted chat attachments",
+    )
+    CHAT_ATTACHMENT_MAX_SIZE_MB: int = Field(default=10, description="Maximum chat attachment size in MB")
 
     # Logging
     LOG_LEVEL: str = Field(default="INFO", description="Logging level")

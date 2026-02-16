@@ -755,8 +755,23 @@ All chat endpoints use **Supabase JWT** (`Authorization: Bearer <token>`) and en
 ### Agents
 
 - `GET /api/chat/agents`
-  - Optional query: `workspace_id` (future custom agents)
-  - Returns predefined agents (MVP): `seo-expert`, `linking-expert`, `seo-copywriter`, `performance-expert`, `aio-strategist`
+  - Optional query: `workspace_id` (includes workspace-scoped custom agents)
+  - Returns predefined agents + custom agents. Ordering:
+    - system agents first
+    - then by `sort_order` (fallback: `name`)
+
+- `POST /api/chat/agents`
+  - Body: `{ workspace_id, name, description?, icon?, system_prompt, tools_config, sort_order? }`
+  - Creates a workspace-scoped custom agent (`is_system=false`)
+
+- `PUT /api/chat/agents/{agent_id}?workspace_id=...`
+  - Updates a custom agent (system agents cannot be edited/deleted)
+
+- `DELETE /api/chat/agents/{agent_id}?workspace_id=...`
+
+- `PATCH /api/chat/agents/order`
+  - Body: `{ workspace_id, items: [{ id, sort_order }] }`
+  - Updates ordering for custom agents in this workspace
 
 ### Conversations
 
@@ -771,20 +786,38 @@ All chat endpoints use **Supabase JWT** (`Authorization: Bearer <token>`) and en
   - Returns `{ conversation, agent, messages }`
 
 - `PATCH /api/chat/conversations/{conversation_id}`
-  - Body: `{ title?, is_shared? }`
+  - Body: `{ title?, is_shared?, verbosity?, tone? }`
+  - `verbosity`: `concise|balanced|detailed`
+  - `tone`: `technical|professional|simple`
 
 - `DELETE /api/chat/conversations/{conversation_id}`
 
 ### Messaging (SSE)
 
 - `POST /api/chat/conversations/{conversation_id}/messages/stream`
-  - Body: `{ content }`
+  - Body: `{ content, attachment_ids? }`
   - Response: `text/event-stream` (SSE). Emits:
-    - `data: {"token":"..."}` chunks
+    - `data: {"status":"searching|generating|streaming"}` (UX phases)
+    - `data: {"token":"..."}` chunks (true streaming when available)
+    - `data: {"suggestions":["...","...","..."]}` (follow-up message suggestions)
     - `data: [DONE]` sentinel
   - Notes:
     - Uses POST (not EventSource) because it requires auth header + request body.
     - RAG retrieval is filtered by `audit_id` and the agent's allowed sections.
+
+### Attachments
+
+- `POST /api/chat/attachments/upload` (multipart/form-data)
+  - Fields: `conversation_id`, `file`
+  - Returns attachment metadata `{ id, filename, mime_type, size_bytes, created_at }`
+
+- `GET /api/chat/attachments/{attachment_id}`
+  - Returns the raw file (auth required)
+
+### Feedback
+
+- `POST /api/chat/messages/{message_id}/feedback`
+  - Body: `{ rating }` where rating is `+1` or `-1`
 
 ### Sharing
 
