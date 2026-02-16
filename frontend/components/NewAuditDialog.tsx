@@ -42,7 +42,10 @@ const SENUTO_COUNTRIES = [
 interface NewAuditDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess: () => void
+  onSuccess?: () => void
+  /** When opening from a project context, pre-fill URL and assign audit to project */
+  projectId?: string
+  projectUrl?: string
 }
 
 interface Subscription {
@@ -51,7 +54,7 @@ interface Subscription {
   plan: string
 }
 
-export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialogProps) {
+export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, projectUrl }: NewAuditDialogProps) {
   const router = useRouter()
   const [error, setError] = useState<string>('')
   const [loading, setLoading] = useState(false)
@@ -69,8 +72,18 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
-  } = useForm<{ url: string }>()
+  } = useForm<{ url: string }>({
+    defaultValues: { url: projectUrl ?? '' },
+  })
+
+  // Pre-fill URL when opened with project context
+  useEffect(() => {
+    if (open && projectUrl) {
+      setValue('url', projectUrl)
+    }
+  }, [open, projectUrl, setValue])
 
   const addCompetitor = () => {
     if (competitors.length < 3) {
@@ -133,12 +146,12 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
         crawler_user_agent: crawlerUserAgent.trim() || undefined,
       }
 
-      const newAudit = await auditsAPI.create(currentWorkspace.id, auditData)
+      const newAudit = await auditsAPI.create(currentWorkspace.id, auditData, projectId)
       reset()
       setCompetitors([''])
       onOpenChange(false)
       router.push(`/audits/${newAudit.id}`)
-      onSuccess()
+      onSuccess?.()
     } catch (err: any) {
       setError(err.message || 'Failed to create audit')
     } finally {

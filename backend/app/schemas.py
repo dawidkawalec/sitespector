@@ -39,6 +39,7 @@ class AuditScheduleBase(BaseModel):
 class AuditScheduleCreate(AuditScheduleBase):
     """Schema for creating audit schedule."""
     workspace_id: UUID
+    project_id: Optional[UUID] = None
 
 
 class AuditScheduleUpdate(BaseModel):
@@ -54,11 +55,93 @@ class AuditScheduleResponse(AuditScheduleBase):
     id: UUID
     user_id: UUID
     workspace_id: UUID
+    project_id: Optional[UUID] = None
     is_active: bool
     last_run_at: Optional[datetime] = None
     next_run_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================
+# Project Schemas
+# ============================================
+
+class ProjectCreate(BaseModel):
+    """Schema for creating project."""
+    name: str = Field(..., min_length=1, max_length=255)
+    url: str = Field(..., max_length=2048)
+    description: Optional[str] = Field(None, max_length=2000)
+
+    @validator("url")
+    def validate_url(cls, v: str) -> str:
+        if not v.startswith(("http://", "https://")):
+            v = f"https://{v}"
+        return v
+
+
+class ProjectUpdate(BaseModel):
+    """Schema for updating project."""
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    url: Optional[str] = Field(None, max_length=2048)
+    description: Optional[str] = Field(None, max_length=2000)
+
+    @validator("url")
+    def validate_url(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        if not v.startswith(("http://", "https://")):
+            v = f"https://{v}"
+        return v
+
+
+class ProjectStats(BaseModel):
+    """Optional stats for project response."""
+    audits_count: int = 0
+    latest_audit_score: Optional[float] = None
+    latest_audit_at: Optional[datetime] = None
+    schedule_active: bool = False
+
+
+class ProjectResponse(BaseModel):
+    """Schema for project response."""
+    id: UUID
+    workspace_id: UUID
+    name: str
+    url: str
+    description: Optional[str] = None
+    created_by: Optional[UUID] = None
+    created_at: datetime
+    updated_at: datetime
+    stats: Optional[ProjectStats] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ProjectMemberCreate(BaseModel):
+    """Schema for adding project member."""
+    user_id: UUID
+    role: str = Field(..., pattern="^(manager|member|viewer)$")
+
+
+class ProjectMemberUpdate(BaseModel):
+    """Schema for updating project member role."""
+    role: str = Field(..., pattern="^(manager|member|viewer)$")
+
+
+class ProjectMemberResponse(BaseModel):
+    """Schema for project member response."""
+    id: UUID
+    project_id: UUID
+    user_id: UUID
+    role: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    created_at: datetime
 
     class Config:
         from_attributes = True
@@ -172,6 +255,7 @@ class AuditBase(BaseModel):
 
 class AuditCreate(AuditBase):
     """Schema for creating audit."""
+    project_id: Optional[UUID] = None
     competitors: List[str] = Field(
         default=[],
         max_items=3,
@@ -212,6 +296,7 @@ class AuditResponse(AuditBase):
     id: UUID
     user_id: Optional[UUID] = None
     workspace_id: Optional[UUID] = None
+    project_id: Optional[UUID] = None
     status: AuditStatus
     ai_status: Optional[str] = None
     execution_plan_status: Optional[str] = None

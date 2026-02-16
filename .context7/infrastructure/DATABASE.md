@@ -2,7 +2,9 @@
 
 ## Overview
 
-SiteSpector uses **PostgreSQL 15** with async operations via **asyncpg** driver.
+SiteSpector uses **dual database**: **VPS PostgreSQL** (this file) for audits/schedules and **Supabase PostgreSQL** for users, workspaces, **projects**, project_members, subscriptions. Projects (one per website within a workspace) live in Supabase; `audits.project_id` and `audit_schedules.project_id` on VPS reference them by UUID (no FK). See `supabase/schema.sql` for `projects` and `project_members` tables and RLS.
+
+VPS uses **PostgreSQL 15** with async operations via **asyncpg** driver.
 
 **Container**: `sitespector-postgres`  
 **Image**: `postgres:16-alpine`  

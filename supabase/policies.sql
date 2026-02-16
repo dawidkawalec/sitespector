@@ -8,6 +8,8 @@ ALTER TABLE public.workspace_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.project_members ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================================
 -- PROFILES POLICIES
@@ -208,6 +210,136 @@ USING (
 
 -- Service role can insert invoices (from Stripe webhooks)
 -- No user-level INSERT policy needed
+
+-- ============================================================================
+-- PROJECTS POLICIES
+-- ============================================================================
+
+-- Workspace members can view projects in their workspace (or projects they are assigned to as member)
+CREATE POLICY "Members can view workspace projects"
+ON public.projects
+FOR SELECT
+USING (
+  workspace_id IN (
+    SELECT workspace_id FROM public.workspace_members 
+    WHERE user_id = auth.uid()
+  )
+  OR id IN (
+    SELECT project_id FROM public.project_members 
+    WHERE user_id = auth.uid()
+  )
+);
+
+-- Workspace admins and owners can create projects
+CREATE POLICY "Admins can create projects"
+ON public.projects
+FOR INSERT
+WITH CHECK (
+  workspace_id IN (
+    SELECT workspace_id FROM public.workspace_members 
+    WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+  )
+  AND (created_by = auth.uid() OR created_by IS NULL)
+);
+
+-- Workspace admins/owners OR project managers can update projects
+CREATE POLICY "Admins or managers can update projects"
+ON public.projects
+FOR UPDATE
+USING (
+  workspace_id IN (
+    SELECT workspace_id FROM public.workspace_members 
+    WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+  )
+  OR id IN (
+    SELECT project_id FROM public.project_members 
+    WHERE user_id = auth.uid() AND role = 'manager'
+  )
+);
+
+-- Only workspace admins and owners can delete projects
+CREATE POLICY "Admins can delete projects"
+ON public.projects
+FOR DELETE
+USING (
+  workspace_id IN (
+    SELECT workspace_id FROM public.workspace_members 
+    WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+  )
+);
+
+-- ============================================================================
+-- PROJECT MEMBERS POLICIES
+-- ============================================================================
+
+-- Visible to workspace members (for the workspace that owns the project)
+CREATE POLICY "Workspace members can view project members"
+ON public.project_members
+FOR SELECT
+USING (
+  project_id IN (
+    SELECT id FROM public.projects 
+    WHERE workspace_id IN (
+      SELECT workspace_id FROM public.workspace_members 
+      WHERE user_id = auth.uid()
+    )
+  )
+  OR project_id IN (SELECT project_id FROM public.project_members WHERE user_id = auth.uid())
+);
+
+-- Workspace admins/owners OR project managers can add project members
+CREATE POLICY "Admins or managers can add project members"
+ON public.project_members
+FOR INSERT
+WITH CHECK (
+  project_id IN (
+    SELECT id FROM public.projects 
+    WHERE workspace_id IN (
+      SELECT workspace_id FROM public.workspace_members 
+      WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+    )
+  )
+  OR project_id IN (
+    SELECT project_id FROM public.project_members 
+    WHERE user_id = auth.uid() AND role = 'manager'
+  )
+);
+
+-- Workspace admins/owners OR project managers can update project member roles
+CREATE POLICY "Admins or managers can update project members"
+ON public.project_members
+FOR UPDATE
+USING (
+  project_id IN (
+    SELECT id FROM public.projects 
+    WHERE workspace_id IN (
+      SELECT workspace_id FROM public.workspace_members 
+      WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+    )
+  )
+  OR project_id IN (
+    SELECT project_id FROM public.project_members 
+    WHERE user_id = auth.uid() AND role = 'manager'
+  )
+);
+
+-- Workspace admins/owners OR project managers can remove project members
+CREATE POLICY "Admins or managers can remove project members"
+ON public.project_members
+FOR DELETE
+USING (
+  project_id IN (
+    SELECT id FROM public.projects 
+    WHERE workspace_id IN (
+      SELECT workspace_id FROM public.workspace_members 
+      WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+    )
+  )
+  OR project_id IN (
+    SELECT project_id FROM public.project_members 
+    WHERE user_id = auth.uid() AND role = 'manager'
+  )
+);
 
 -- ============================================================================
 -- ADDITIONAL HELPER POLICIES

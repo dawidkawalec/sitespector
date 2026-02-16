@@ -197,13 +197,15 @@ Create a new website audit.
 ```json
 {
   "url": "https://example.com",
-  "competitors": [
-    "https://competitor1.com",
-    "https://competitor2.com",
-    "https://competitor3.com"
-  ]
+  "competitors": ["https://competitor1.com", "https://competitor2.com"],
+  "senuto_country_id": 200,
+  "senuto_fetch_mode": "subdomain",
+  "run_ai_pipeline": true,
+  "run_execution_plan": true,
+  "crawler_user_agent": "SiteSpector/1.0 example.com-authorized"
 }
 ```
+- **crawler_user_agent** (optional): Custom User-Agent for Screaming Frog crawl; use when site owner whitelists it in Cloudflare/WAF to avoid 403.
 
 **Validation**:
 - URL: Auto-prepends `https://` if missing
@@ -471,7 +473,7 @@ Get lightweight audit status for polling (no full results).
 
 #### `DELETE /api/audits/{audit_id}`
 
-Delete an audit (cascades to competitors).
+Delete an audit. Cascades to competitors, tasks, chat conversations (DB). RAG vectors for this audit are removed from Qdrant (best-effort; deletion proceeds even if Qdrant cleanup fails).
 
 **Headers**: `Authorization: Bearer <token>`
 
@@ -745,6 +747,24 @@ interface Competitor {
 - `409 Conflict` - Resource already exists (e.g., email taken)
 - `422 Unprocessable Entity` - Validation error
 - `500 Internal Server Error` - Server error
+
+---
+
+## Projects Endpoints
+
+Projects live in Supabase; access is enforced via `verify_project_access` (workspace owner/admin see all; workspace members see only projects they are in).
+
+- `POST /api/projects?workspace_id=...` — Create project (workspace admin/owner). Body: `{ name, url, description? }`.
+- `GET /api/projects?workspace_id=...` — List projects (filtered by access).
+- `GET /api/projects/{project_id}` — Get project with stats (audits_count, latest_audit_score, schedule_active).
+- `PATCH /api/projects/{project_id}` — Update project (workspace admin/owner or project manager).
+- `DELETE /api/projects/{project_id}` — Delete project, unlink audits/schedules (workspace admin/owner only).
+- `GET /api/projects/{project_id}/members` — List project members (with email/full_name when available).
+- `POST /api/projects/{project_id}/members` — Add member. Body: `{ user_id, role }` (`manager`|`member`|`viewer`). User must be workspace member.
+- `PATCH /api/projects/{project_id}/members/{member_id}` — Update role.
+- `DELETE /api/projects/{project_id}/members/{member_id}` — Remove member.
+
+Audits and schedules support optional `project_id`: `POST/GET /api/audits`, `GET /api/audits/history`, `POST/GET /api/schedules` accept `project_id` query/body to scope to a project.
 
 ---
 

@@ -93,11 +93,8 @@ import {
 
 // Main navigation items (always visible)
 const mainNavItems = [
-  { 
-    name: 'Dashboard', 
-    href: '/dashboard', 
-    icon: RiDashboardFill
-  },
+  { name: 'Dashboard', href: '/dashboard', icon: RiDashboardFill },
+  { name: 'Projekty', href: '/projects', icon: BarChart3 },
 ]
 
 // DANE AUDYTU section
@@ -238,13 +235,21 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
 
   const audits = auditsData?.items || []
 
+  // Project path (ID from URL is enough for nav links)
+  const projectMatch = pathname.match(/\/projects\/([^\/]+)/)
+  const currentProjectId = projectMatch?.[1]
+
   // Extract audit ID from current pathname
   const auditMatch = pathname.match(/\/audits\/([^\/]+)/)
   const currentAuditId = auditMatch?.[1]
-  
+  const auditProjectId = currentAuditId
+    ? audits.find((a) => a.id === currentAuditId)?.project_id
+    : null
+
   // Determine which sections should be expanded based on pathname
   const isInSettings = pathname.startsWith('/settings')
   const isInAudit = pathname.startsWith('/audits')
+  const isInProject = pathname.startsWith('/projects') && currentProjectId
   
   const [settingsOpen, setSettingsOpen] = React.useState(isInSettings)
 
@@ -352,6 +357,81 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
           })}
         </div>
 
+        {/* Project sub-navigation when inside a project */}
+        {isInProject && currentProjectId && (
+          <div className="space-y-1">
+            <div className="px-3 flex items-center gap-2 py-1">
+              <div className="h-px flex-1 bg-white/10" />
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
+                Projekt
+              </p>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
+            <div className="px-1 space-y-0.5">
+              <Link href={`/projects/${currentProjectId}`} onClick={onAction}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    'w-full justify-start text-white/70 hover:bg-white/10 hover:text-white',
+                    pathname === `/projects/${currentProjectId}` && 'bg-accent/10 text-accent'
+                  )}
+                >
+                  <BarChart3 className="mr-3 h-4 w-4" />
+                  Przegląd
+                </Button>
+              </Link>
+              <Link href={`/projects/${currentProjectId}/audits`} onClick={onAction}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    'w-full justify-start text-white/70 hover:bg-white/10 hover:text-white',
+                    pathname === `/projects/${currentProjectId}/audits` && 'bg-accent/10 text-accent'
+                  )}
+                >
+                  <FileText className="mr-3 h-4 w-4" />
+                  Audyty
+                </Button>
+              </Link>
+              <Link href={`/projects/${currentProjectId}/compare`} onClick={onAction}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    'w-full justify-start text-white/70 hover:bg-white/10 hover:text-white',
+                    pathname === `/projects/${currentProjectId}/compare` && 'bg-accent/10 text-accent'
+                  )}
+                >
+                  <ArrowLeftRight className="mr-3 h-4 w-4" />
+                  Porównanie
+                </Button>
+              </Link>
+              <Link href={`/projects/${currentProjectId}/schedule`} onClick={onAction}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    'w-full justify-start text-white/70 hover:bg-white/10 hover:text-white',
+                    pathname === `/projects/${currentProjectId}/schedule` && 'bg-accent/10 text-accent'
+                  )}
+                >
+                  <Calendar className="mr-3 h-4 w-4" />
+                  Harmonogram
+                </Button>
+              </Link>
+              <Link href={`/projects/${currentProjectId}/team`} onClick={onAction}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    'w-full justify-start text-white/70 hover:bg-white/10 hover:text-white',
+                    pathname === `/projects/${currentProjectId}/team` && 'bg-accent/10 text-accent'
+                  )}
+                >
+                  <Users className="mr-3 h-4 w-4" />
+                  Zespół
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Audit Navigation - Always show */}
         <div className="space-y-4">
           <div className="px-3">
@@ -423,14 +503,25 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
           </div>
 
           {currentAuditId && (
-            <div className="px-1">
-              <Link href="/dashboard" onClick={onAction}>
-                <Button 
-                  variant="ghost" 
+            <div className="px-1 space-y-0.5">
+              {auditProjectId && (
+                <Link href={`/projects/${auditProjectId}`} onClick={onAction}>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-xs text-white/50 hover:text-white hover:bg-white/5 transition-colors group"
+                  >
+                    <ArrowLeft className="mr-2 h-3 w-3 transition-transform group-hover:-translate-x-1" />
+                    Wróć do projektu
+                  </Button>
+                </Link>
+              )}
+              <Link href={auditProjectId ? `/projects/${auditProjectId}/audits` : '/dashboard'} onClick={onAction}>
+                <Button
+                  variant="ghost"
                   className="w-full justify-start text-xs text-white/50 hover:text-white hover:bg-white/5 transition-colors group"
                 >
                   <ArrowLeft className="mr-2 h-3 w-3 transition-transform group-hover:-translate-x-1" />
-                  Wróć do listy audytów
+                  {auditProjectId ? 'Lista audytów projektu' : 'Wróć do listy audytów'}
                 </Button>
               </Link>
             </div>

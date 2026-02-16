@@ -31,7 +31,7 @@ from app.schemas import (
     AltTextRequest,
     AltTextResponse,
 )
-from app.auth_supabase import get_current_user, verify_workspace_access
+from app.auth_supabase import get_current_user, verify_workspace_access, verify_project_access
 from app.lib.supabase import supabase, get_workspace_subscription, increment_audit_usage, check_audit_limit
 from app.services.pdf_generator import generate_pdf
 from app.services.data_exporter import export_raw_data
@@ -109,6 +109,7 @@ async def _normalize_crawl_for_response(results: Any, audit_url: str, audit_stat
 async def create_audit(
     audit_data: AuditCreate,
     workspace_id: str = Query(..., description="Workspace ID to create audit in"),
+    project_id: Optional[str] = Query(None, description="Optional project ID to assign audit to"),
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Audit:
@@ -118,6 +119,7 @@ async def create_audit(
     - **url**: Website URL to audit (required)
     - **competitors**: List of up to 3 competitor URLs (optional)
     - **workspace_id**: Workspace to create audit in (required query param)
+    - **project_id**: Optional project to assign audit to (must have project access)
     
     The audit will be processed asynchronously by the worker.
     
@@ -136,7 +138,24 @@ async def create_audit(
             detail="Not a member of this workspace"
         )
     
-    # 2. Check subscription limits
+    # 2. If project_id provided, verify project access
+    audit_project_id = None
+    if project_id:
+        from app.lib.supabase import get_project
+        project = await get_project(project_id)
+        if not project or str(project.get("workspace_id")) != workspace_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Project not found or does not belong to this workspace"
+            )
+        if not await verify_project_access(current_user["id"], project_id, workspace_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to add audits to this project"
+            )
+        audit_project_id = project_id
+    
+    # 3. Check subscription limits
     can_create = await check_audit_limit(workspace_id)
     if not can_create:
         subscription = await get_workspace_subscription(workspace_id)
@@ -145,9 +164,10 @@ async def create_audit(
             detail=f"Audit limit reached ({subscription['audit_limit']} audits/month). Upgrade to Pro for more audits."
         )
     
-    # 3. Create audit
+    # 4. Create audit
     new_audit = Audit(
         workspace_id=workspace_id,
+        project_id=audit_project_id,
         user_id=None,  # Legacy field, not used for workspace-based audits
         url=audit_data.url,
         status=AuditStatus.PENDING,
@@ -191,6 +211,7 @@ async def create_audit(
 @router.get("", response_model=AuditListResponse)
 async def list_audits(
     workspace_id: str = Query(..., description="Workspace ID to list audits from"),
+    project_id: Optional[str] = Query(None, description="Optional project ID to filter by"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     status: Optional[AuditStatus] = Query(None, description="Filter by status"),
@@ -201,6 +222,7 @@ async def list_audits(
     List all audits for a workspace with pagination.
     
     - **workspace_id**: Workspace ID (required query param)
+    - **project_id**: Optional project ID to filter audits
     - **page**: Page number (default: 1)
     - **page_size**: Items per page (default: 20, max: 100)
     - **status**: Filter by audit status (optional)
@@ -219,8 +241,25 @@ async def list_audits(
             detail="Not a member of this workspace"
         )
     
+    # If project_id provided, verify project access
+    if project_id:
+        from app.lib.supabase import get_project
+        project = await get_project(project_id)
+        if not project or str(project.get("workspace_id")) != workspace_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Project not found or does not belong to this workspace"
+            )
+        if not await verify_project_access(current_user["id"], project_id, workspace_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to list audits for this project"
+            )
+    
     # Build query
     query = select(Audit).where(Audit.workspace_id == workspace_id)
+    if project_id:
+        query = query.where(Audit.project_id == UUID(project_id))
     
     if status:
         query = query.where(Audit.status == status)
@@ -255,11 +294,12 @@ async def list_audits(
 async def get_audit_history(
     url: str = Query(..., description="Website URL to get history for"),
     workspace_id: str = Query(..., description="Workspace ID"),
+    project_id: Optional[str] = Query(None, description="Optional project ID to filter by"),
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[Audit]:
     """
-    Get audit history for a specific URL in a workspace.
+    Get audit history for a specific URL in a workspace (optionally scoped to project).
     
     Returns:
         List of audits for the same URL, ordered by date desc
@@ -271,16 +311,23 @@ async def get_audit_history(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not a member of this workspace"
         )
+    if project_id and not await verify_project_access(current_user["id"], project_id, workspace_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this project"
+        )
     
-    # Query audits for the same URL in the same workspace
-    result = await db.execute(
+    query = (
         select(Audit)
         .options(selectinload(Audit.competitors))
         .where(Audit.workspace_id == workspace_id)
         .where(Audit.url == url)
         .where(Audit.status == AuditStatus.COMPLETED)
-        .order_by(desc(Audit.created_at))
     )
+    if project_id:
+        query = query.where(Audit.project_id == UUID(project_id))
+    query = query.order_by(desc(Audit.created_at))
+    result = await db.execute(query)
     audits = result.scalars().all()
     
     return audits
@@ -317,12 +364,21 @@ async def get_audit(
     
     # Check workspace membership
     if audit.workspace_id:
-        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
+        has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
         if not has_access:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to access this audit"
             )
+        # If audit belongs to a project, also verify project access
+        if audit.project_id:
+            if not await verify_project_access(
+                current_user["id"], str(audit.project_id), str(audit.workspace_id)
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Not authorized to access this audit"
+                )
     else:
         # Legacy audit (user_id based) - check user ownership
         if audit.user_id != current_user["id"]:

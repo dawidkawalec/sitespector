@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { auditsAPI, CreateAuditData } from '@/lib/api'
+import { auditsAPI, projectsAPI, CreateAuditData } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import { Button } from '@/components/ui/button'
@@ -40,6 +40,7 @@ import {
 } from 'recharts'
 import { motion, AnimatePresence } from 'framer-motion'
 import { RiDashboardFill, RiAddFill, RiHistoryFill, RiSearchEyeFill, RiShieldFlashFill, RiSparklingFill } from 'react-icons/ri'
+import { FolderOpen } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function DashboardPage() {
@@ -74,6 +75,12 @@ export default function DashboardPage() {
     queryFn: () => auditsAPI.list(currentWorkspace!.id),
     enabled: isAuth && !!currentWorkspace,
     refetchInterval: 10000,
+  })
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects', currentWorkspace?.id],
+    queryFn: () => projectsAPI.list(currentWorkspace!.id),
+    enabled: isAuth && !!currentWorkspace,
   })
 
   const deleteMutation = useMutation({
@@ -199,6 +206,59 @@ export default function DashboardPage() {
           </Button>
         </div>
       </motion.div>
+
+      {/* Projects overview */}
+      {projects.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold flex items-center gap-2 text-primary">
+            <FolderOpen className="h-6 w-6 text-accent" /> Projekty
+          </h2>
+          <div className="grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-3 gap-4">
+            {projects.slice(0, 6).map((project) => (
+              <Card key={project.id} className="border-none shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                <Link href={`/projects/${project.id}`}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base truncate">{project.name}</CardTitle>
+                    <CardDescription className="truncate">{project.url}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{project.stats?.audits_count ?? 0} audytów</span>
+                      {project.stats?.latest_audit_score != null && (
+                        <span className={cn('font-semibold', getScoreColor(project.stats.latest_audit_score))}>
+                          {formatScore(project.stats.latest_audit_score)}
+                        </span>
+                      )}
+                    </div>
+                    {project.stats?.schedule_active && (
+                      <p className="text-xs text-muted-foreground mt-1">Harmonogram aktywny</p>
+                    )}
+                  </CardContent>
+                </Link>
+                <CardContent className="pt-0">
+                  <Button variant="outline" size="sm" asChild className="w-full">
+                    <Link href={`/projects/${project.id}`}>Otwórz projekt</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          {projects.length > 6 && (
+            <Button variant="ghost" asChild>
+              <Link href="/projects">Zobacz wszystkie projekty ({projects.length})</Link>
+            </Button>
+          )}
+        </div>
+      )}
+      {projects.length === 0 && (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <FolderOpen className="h-4 w-4" />
+          <span>Grupuj audyty w projektach (jedna strona = jeden projekt).</span>
+          <Button variant="link" size="sm" asChild className="p-0 h-auto">
+            <Link href="/projects">Utwórz projekt</Link>
+          </Button>
+        </div>
+      )}
 
       {/* Analytics Grid */}
       <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">

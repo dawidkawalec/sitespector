@@ -1,5 +1,18 @@
 # Architectural Decisions Log
 
+## Projects within Workspaces (2026-02-17)
+
+- **Decision**: Introduce a **Project** entity between Workspace and Audit. One project = one website (e.g. matkaaptekarka.pl). Audits, schedules, and team assignments are scoped to projects. Projects and project_members live in **Supabase**; `project_id` added to VPS `audits` and `audit_schedules` (nullable, no FK).
+- **Rationale**: Users need to group audits by site, set schedules per site, compare audits within a site, and assign different teams per project (e.g. agency with 5 projects, different client access per project). Two-tier permissions: workspace owner/admin see all projects; workspace members see only projects they are assigned to (project_members). Project roles: manager, member, viewer (viewer for agency clients).
+- **Implementation**: Supabase tables `projects` (workspace_id, name, url, description, created_by), `project_members` (project_id, user_id, role). Backend: `verify_project_access()`, projects router (CRUD + members), audits/schedules optional `project_id`. Frontend: ProjectContext, `/projects`, `/projects/[projectId]/*` (dashboard, audits, compare, schedule, team), sidebar project nav, dashboard project cards, NewAuditDialog project context. Migration script: `scripts/migrate_projects.py` groups existing audits by domain and creates projects.
+- **Outcome**: Clear hierarchy (Workspace → Project → Audit), per-project team and schedule, backward compatibility (project_id nullable, `/audits/[id]` unchanged).
+
+## Crawl: Custom User-Agent, 403 Detection, Qdrant Cleanup on Delete (2026-02-17)
+- **Decision**: (1) Allow per-audit custom User-Agent for crawler; (2) Detect homepage 4xx/5xx and skip AI/Quick Wins to avoid misleading recommendations; (3) Delete RAG vectors from Qdrant when an audit is deleted.
+- **Rationale**: Some sites (e.g. Cloudflare) block default crawler; whitelisting a custom UA unblocks. When crawl returns 403, crawl data is empty and AI would suggest false “add meta title” etc.; skipping AI when `crawl_blocked` avoids that. Orphaned Qdrant vectors were never removed on audit delete.
+- **Implementation**: `crawler_user_agent` (Audit + AuditCreate + NewAuditDialog Advanced); passed to Screaming Frog via `crawl.sh` $2 and sitemap detection. `_transform_sf_data` sets `crawl_blocked` / `crawl_blocked_status`; worker sets `audit.crawl_blocked` and skips AI/execution plan when blocked. Frontend: banner in audit layout, notices on SEO/Quick Wins. `delete_audit` calls `delete_points_by_filter` for `audit_rag_chunks` before DB delete.
+- **Outcome**: Users can agree custom UA with site owner; blocked crawls no longer produce garbage Quick Wins; audit deletion cleans Qdrant.
+
 ## Content Brief System for Landing Expansion (2026-02-14)
 - **Decision**: Adopted "creative brief" approach instead of CMS/JSON system. One markdown file per page in `landing/content/briefs/` serves as a complete creative document for an AI agent to build pages from.
 - **Rationale**: Gives AI agent full creative freedom to design and build pages. No restrictive schemas or runtime data dependencies. Briefs contain ready copy + design spec + image descriptions — agent reads and creates the actual React components.

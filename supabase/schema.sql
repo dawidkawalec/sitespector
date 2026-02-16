@@ -73,6 +73,28 @@ CREATE TABLE IF NOT EXISTS public.invoices (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Projects (one per website within a workspace)
+CREATE TABLE IF NOT EXISTS public.projects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  url TEXT NOT NULL,
+  description TEXT,
+  created_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Project members (team per project: manager, member, viewer)
+CREATE TABLE IF NOT EXISTS public.project_members (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('manager', 'member', 'viewer')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(project_id, user_id)
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON public.workspace_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_workspace_members_workspace ON public.workspace_members(workspace_id);
@@ -81,6 +103,10 @@ CREATE INDEX IF NOT EXISTS idx_invites_token ON public.invites(token);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_workspace ON public.subscriptions(workspace_id);
 CREATE INDEX IF NOT EXISTS idx_workspaces_owner ON public.workspaces(owner_id);
 CREATE INDEX IF NOT EXISTS idx_workspaces_slug ON public.workspaces(slug);
+CREATE INDEX IF NOT EXISTS idx_projects_workspace ON public.projects(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_projects_url ON public.projects(url);
+CREATE INDEX IF NOT EXISTS idx_project_members_project ON public.project_members(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_members_user ON public.project_members(user_id);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
@@ -99,6 +125,9 @@ CREATE TRIGGER update_workspaces_updated_at BEFORE UPDATE ON public.workspaces
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON public.subscriptions
+FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON public.projects
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Function to automatically create personal workspace on user signup
@@ -145,3 +174,5 @@ COMMENT ON TABLE public.workspace_members IS 'Junction table for workspace membe
 COMMENT ON TABLE public.invites IS 'Pending workspace invitations';
 COMMENT ON TABLE public.subscriptions IS 'Stripe subscription data per workspace';
 COMMENT ON TABLE public.invoices IS 'Stripe invoice history';
+COMMENT ON TABLE public.projects IS 'Projects (one website per workspace)';
+COMMENT ON TABLE public.project_members IS 'Project-level team membership (manager, member, viewer)';

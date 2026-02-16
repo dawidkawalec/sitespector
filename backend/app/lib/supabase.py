@@ -118,3 +118,73 @@ async def check_audit_limit(workspace_id: str) -> bool:
         return False
     
     return subscription["audits_used_this_month"] < subscription["audit_limit"]
+
+
+# --- Project helpers ---
+
+
+async def get_project(project_id: str) -> dict | None:
+    """
+    Fetch project record by ID.
+    
+    Args:
+        project_id: Project UUID
+    
+    Returns:
+        Project dict or None if not found
+    """
+    response = supabase.table("projects").select("*").eq("id", project_id).execute()
+    if not response.data:
+        return None
+    return response.data[0]
+
+
+async def get_project_members(project_id: str) -> list[dict]:
+    """
+    List project members.
+    
+    Args:
+        project_id: Project UUID
+    
+    Returns:
+        List of project_members rows
+    """
+    response = supabase.table("project_members").select("*").eq(
+        "project_id", project_id
+    ).execute()
+    return response.data or []
+
+
+async def verify_project_membership(
+    user_id: str,
+    project_id: str,
+    required_role: str | None = None,
+) -> dict | None:
+    """
+    Check if user is a project member with optional role requirement.
+    
+    Args:
+        user_id: Supabase user UUID
+        project_id: Project UUID
+        required_role: Optional role requirement ('manager', 'member', 'viewer')
+    
+    Returns:
+        Membership dict with role, or None if not a member / role insufficient
+    """
+    response = supabase.table("project_members").select("*").eq(
+        "project_id", project_id
+    ).eq("user_id", user_id).execute()
+    
+    if not response.data:
+        return None
+    
+    membership = response.data[0]
+    
+    if required_role:
+        role_hierarchy = {"manager": 3, "member": 2, "viewer": 1}
+        user_role_level = role_hierarchy.get(membership["role"], 0)
+        required_role_level = role_hierarchy.get(required_role, 0)
+        if user_role_level < required_role_level:
+            return None
+    
+    return membership

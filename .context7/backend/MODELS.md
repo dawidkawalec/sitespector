@@ -86,8 +86,10 @@ class Audit(Base):
     # Primary key
     id: UUID  # UUID v4
     
-    # Foreign key
-    user_id: UUID  # References users.id, indexed
+    # Foreign keys
+    user_id: UUID  # References users.id, indexed (legacy)
+    workspace_id: UUID | None  # Multi-tenancy
+    project_id: UUID | None  # Project (website) within workspace
     
     # Audit data
     url: str  # Max 2048 chars
@@ -122,7 +124,7 @@ class Audit(Base):
 ```
 
 **Indexes**:
-- `user_id`
+- `user_id`, `workspace_id`, `project_id`
 - `status`
 - `created_at`
 
@@ -248,9 +250,13 @@ class CompetitorStatus(str, enum.Enum):
 
 ```
 User (1) ─────→ (N) Audit
+Workspace (Supabase) ──→ (N) Project (Supabase)
+Project (Supabase) ──→ (N) Audit [project_id on VPS]
                      ↓
                      └─→ (N) Competitor
 ```
+
+**Projects** live in **Supabase** (`projects`, `project_members`). VPS tables `audits` and `audit_schedules` have optional `project_id` (UUID, no FK) linking to Supabase project. Access is enforced in app layer via `verify_project_access`.
 
 **Cascade rules**:
 - Delete User → Delete all Audits → Delete all Competitors

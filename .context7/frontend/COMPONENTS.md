@@ -688,8 +688,9 @@ import { ThemeProvider } from 'next-themes'
 
 **Features**:
 - **Logo + Strona główna**: Logotyp linkuje do /dashboard; przycisk (strzałka wstecz) obok logotypu kieruje na stronę główną (/) z tooltipem „Strona główna”.
-- **Main Navigation**: Dashboard and core links.
-- **Audit Context**: Automatically shows audit-specific sections (Overview, Reports, Advanced, Tools) when on an audit route.
+- **Main Navigation**: Dashboard, Projekty (/projects).
+- **Project Context**: When pathname is `/projects/[projectId]/*`, shows project sub-nav: Przegląd, Audyty, Porównanie, Harmonogram, Zespół.
+- **Audit Context**: When on `/audits/[id]`, shows audit selector and audit-specific sections (Dane audytu, Strategia AI, Raporty). "Wróć do projektu" / "Lista audytów projektu" when audit has `project_id`.
 - **Collapsible Sections**: Uses `NavSection` with smooth CSS grid animations for expanding/collapsing.
 - **Visual Indicators**: Active state with a vertical primary-color indicator and subtle background highlights.
 - **Mobile Support**: Integration with `MobileSidebar` using an `onAction` callback to close the drawer on navigation.

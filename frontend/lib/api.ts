@@ -164,6 +164,8 @@ export interface User {
 
 export interface Audit {
   id: string
+  workspace_id?: string | null
+  project_id?: string | null
   url: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
   ai_status?: 'processing' | 'completed' | 'failed' | 'skipped' | null
@@ -210,6 +212,53 @@ export interface AuditListResponse {
   page_size: number
 }
 
+// Project types
+export interface ProjectStats {
+  audits_count: number
+  latest_audit_score?: number | null
+  latest_audit_at?: string | null
+  schedule_active: boolean
+}
+
+export interface Project {
+  id: string
+  workspace_id: string
+  name: string
+  url: string
+  description?: string | null
+  created_by?: string | null
+  created_at: string
+  updated_at: string
+  stats?: ProjectStats
+}
+
+export interface CreateProjectData {
+  name: string
+  url: string
+  description?: string | null
+}
+
+export interface UpdateProjectData {
+  name?: string
+  url?: string
+  description?: string | null
+}
+
+export interface ProjectMember {
+  id: string
+  project_id: string
+  user_id: string
+  role: 'manager' | 'member' | 'viewer'
+  email?: string | null
+  full_name?: string | null
+  created_at: string
+}
+
+export interface AddProjectMemberData {
+  user_id: string
+  role: 'manager' | 'member' | 'viewer'
+}
+
 // Auth API (Supabase Auth - most operations done via supabase client)
 export const authAPI = {
   // Legacy endpoints (deprecated, kept for migration period)
@@ -228,19 +277,70 @@ export const authAPI = {
   me: () => apiRequest<User>('/api/auth/me'),
 }
 
+// Projects API
+export const projectsAPI = {
+  list: (workspaceId: string) =>
+    apiRequest<Project[]>(`/api/projects?workspace_id=${workspaceId}`),
+
+  get: (projectId: string) =>
+    apiRequest<Project>(`/api/projects/${projectId}`),
+
+  create: (workspaceId: string, data: CreateProjectData) =>
+    apiRequest<Project>(`/api/projects?workspace_id=${workspaceId}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  update: (projectId: string, data: UpdateProjectData) =>
+    apiRequest<Project>(`/api/projects/${projectId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  delete: (projectId: string) =>
+    apiRequest<void>(`/api/projects/${projectId}`, {
+      method: 'DELETE',
+    }),
+
+  listMembers: (projectId: string) =>
+    apiRequest<ProjectMember[]>(`/api/projects/${projectId}/members`),
+
+  addMember: (projectId: string, data: AddProjectMemberData) =>
+    apiRequest<ProjectMember>(`/api/projects/${projectId}/members`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateMember: (projectId: string, memberId: string, data: { role: 'manager' | 'member' | 'viewer' }) =>
+    apiRequest<ProjectMember>(`/api/projects/${projectId}/members/${memberId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  removeMember: (projectId: string, memberId: string) =>
+    apiRequest<void>(`/api/projects/${projectId}/members/${memberId}`, {
+      method: 'DELETE',
+    }),
+}
+
 // Audits API (Workspace-based)
 export const auditsAPI = {
-  list: (workspaceId: string) => 
-    apiRequest<AuditListResponse>(`/api/audits?workspace_id=${workspaceId}`),
+  list: (workspaceId: string, projectId?: string) =>
+    apiRequest<AuditListResponse>(
+      `/api/audits?workspace_id=${workspaceId}${projectId ? `&project_id=${projectId}` : ''}`
+    ),
 
   get: (id: string) => 
     apiRequest<Audit>(`/api/audits/${id}`),
 
-  create: (workspaceId: string, data: CreateAuditData) =>
-    apiRequest<Audit>(`/api/audits?workspace_id=${workspaceId}`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+  create: (workspaceId: string, data: CreateAuditData, projectId?: string) =>
+    apiRequest<Audit>(
+      `/api/audits?workspace_id=${workspaceId}${projectId ? `&project_id=${projectId}` : ''}`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    ),
 
   delete: (id: string) =>
     apiRequest<void>(`/api/audits/${id}`, {
@@ -285,8 +385,10 @@ export const auditsAPI = {
     return response.blob()
   },
 
-  getHistory: (workspaceId: string, url: string) =>
-    apiRequest<Audit[]>(`/api/audits/history?workspace_id=${workspaceId}&url=${encodeURIComponent(url)}`),
+  getHistory: (workspaceId: string, url: string, projectId?: string) =>
+    apiRequest<Audit[]>(
+      `/api/audits/history?workspace_id=${workspaceId}&url=${encodeURIComponent(url)}${projectId ? `&project_id=${projectId}` : ''}`
+    ),
   
   getFixSuggestion: (auditId: string, issueType: string, urls: string[]) =>
     apiRequest<any>(`/api/audits/${auditId}/fix-suggestion`, {
@@ -361,9 +463,11 @@ export const auditsAPI = {
     }),
 
   // Schedules
-  listSchedules: (workspaceId: string) =>
-    apiRequest<any[]>(`/api/schedules?workspace_id=${workspaceId}`),
-  createSchedule: (data: any) =>
+  listSchedules: (workspaceId: string, projectId?: string) =>
+    apiRequest<any[]>(
+      `/api/schedules?workspace_id=${workspaceId}${projectId ? `&project_id=${projectId}` : ''}`
+    ),
+  createSchedule: (data: { workspace_id: string; project_id?: string; url: string; frequency: string; include_competitors?: boolean; competitors_urls?: string[] }) =>
     apiRequest<any>('/api/schedules', { method: 'POST', body: JSON.stringify(data) }),
   updateSchedule: (id: string, data: any) =>
     apiRequest<any>(`/api/schedules/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),

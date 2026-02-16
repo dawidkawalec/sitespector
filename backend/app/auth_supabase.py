@@ -6,7 +6,12 @@ This module replaces the legacy JWT authentication (auth.py) with Supabase Auth.
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from app.lib.supabase import supabase
+from app.lib.supabase import (
+    supabase,
+    get_project,
+    verify_workspace_membership,
+    verify_project_membership,
+)
 from typing import Optional
 import logging
 
@@ -118,6 +123,56 @@ async def verify_workspace_access(
     
     except Exception as e:
         logger.error(f"Error verifying workspace access: {str(e)}")
+        return False
+
+
+async def verify_project_access(
+    user_id: str,
+    project_id: str,
+    workspace_id: str,
+    required_role: Optional[str] = None,
+) -> bool:
+    """
+    Verify user has access to project with optional project-level role requirement.
+
+    - Workspace owner/admin: implicit access to all projects (bypass project_members).
+    - Workspace member: must be in project_members for this project.
+    - If required_role is set, enforce project role hierarchy: manager(3) > member(2) > viewer(1).
+
+    Args:
+        user_id: Supabase user UUID
+        project_id: Project UUID
+        workspace_id: Workspace UUID (must match project's workspace)
+        required_role: Optional project role requirement ('manager', 'member', 'viewer')
+
+    Returns:
+        True if user has access, False otherwise
+    """
+    try:
+        project = await get_project(project_id)
+        if not project or str(project.get("workspace_id")) != str(workspace_id):
+            return False
+
+        ws_membership = await verify_workspace_membership(user_id, workspace_id)
+        if not ws_membership:
+            return False
+
+        ws_role = ws_membership.get("role")
+        if ws_role in ("owner", "admin"):
+            # Implicit access; still check required_role if we need project-level role.
+            # Owner/admin are treated as having effective "manager" for project role checks.
+            if required_role:
+                role_hierarchy = {"manager": 3, "member": 2, "viewer": 1}
+                required_level = role_hierarchy.get(required_role, 0)
+                return required_level <= 3  # owner/admin can do anything
+            return True
+
+        # Workspace member: must be in project_members
+        pm = await verify_project_membership(user_id, project_id, required_role)
+        return pm is not None
+
+    except Exception as e:
+        logger.error(f"Error verifying project access: {str(e)}")
         return False
 
 

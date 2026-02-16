@@ -22,8 +22,17 @@ app/
 │   └── sitemap/page.tsx       # Mapa strony (human-readable) – pełna struktura linków (bez anchorów typu /#price)
 ├── (app)/                     # Authenticated app with UnifiedSidebar
 │   ├── layout.tsx             # Sidebar layout (workspace switcher)
-│   ├── dashboard/page.tsx     # Dashboard + workspace analytics
-│   ├── audits/[id]/           # Audit detail + subpages
+│   ├── dashboard/page.tsx    # Dashboard + workspace analytics + project cards
+│   ├── projects/
+│   │   ├── page.tsx           # Project list (create project)
+│   │   └── [projectId]/
+│   │       ├── layout.tsx     # Project context
+│   │       ├── page.tsx       # Project dashboard (latest audit, stats)
+│   │       ├── audits/page.tsx    # Audit list for project
+│   │       ├── compare/page.tsx   # Compare audits within project
+│   │       ├── schedule/page.tsx  # Project schedules
+│   │       └── team/page.tsx      # Project members (manager/member/viewer)
+│   ├── audits/[id]/           # Audit detail + subpages (URL unchanged for backward compat)
 │   │   ├── page.tsx           # Overview (enriched with Senuto stats)
 │   │   ├── seo/page.tsx       # SEO Analysis (Overview + RAW)
 │   │   ├── performance/page.tsx # Performance Analysis (Overview + RAW)
@@ -98,7 +107,13 @@ Each major section contains a **Surowe dane (RAW)** tab providing access to the 
 
 **Route**: `/dashboard`
 
-**Purpose**: Workspace-scoped audit list and analytics. Uses `useWorkspace()` for current workspace.
+**Purpose**: Workspace overview: project cards (name, URL, latest score, audit count, schedule), analytics grid, and recent audits list. Uses `useWorkspace()` and `projectsAPI.list` for project cards.
+
+## Project Pages (`app/(app)/projects/`)
+
+**Routes**: `/projects`, `/projects/[projectId]`, `/projects/[projectId]/audits`, `/compare`, `/schedule`, `/team`
+
+**Purpose**: Projects = one website per workspace. List projects, open project dashboard (stats, latest audit, schedule, team), list/compare audits, manage schedule and project members. Audit detail stays at `/audits/[id]` for backward compatibility; sidebar shows "Wróć do projektu" when audit has `project_id`.
 
 **UX Notes**:
 - Destructive actions (delete audit) show explicit user feedback:
