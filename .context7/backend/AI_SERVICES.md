@@ -73,8 +73,10 @@ SiteSpector now supports an **audit-scoped agent chat** powered by RAG:
 
 ### Embeddings
 - Provider: Google Generative AI (`google-generativeai`)
-- Models (fallback order): `models/gemini-embedding-001`, then `models/text-embedding-004`
+- Models: `models/gemini-embedding-001` (only)
 - Location: `backend/app/services/embedding_client.py`
+- Indexing uses `batchEmbedContents` (REST) for chunk batches to reduce request count and avoid 429 rate limits on large audits.
+- Embed calls use throttling + exponential backoff on quota errors (429 / ResourceExhausted) and rotate API keys.
 
 ### Vector Store
 - Store: Qdrant
@@ -99,6 +101,10 @@ Instead of storing AI analyses as monolithic JSON blobs, each item is stored as 
 - Trigger 2: re-indexing after Phase 5 (Execution Plan) — adds task data
 - Failure behavior: indexing failure must never block audit completion
 - Idempotent: always deletes existing points for `audit_id` before re-inserting
+- Manual recovery: `POST /api/audits/{audit_id}/reindex-rag` (see `backend/API.md`)
+
+### RAG Status / Observability
+- `audits.rag_indexed_at` is set on successful indexing (best-effort) to help diagnose "brak danych" cases.
 
 ### Chat Attachments + Multimodal (Feb 2026)
 - Upload endpoint: `POST /api/chat/attachments/upload` (multipart/form-data)

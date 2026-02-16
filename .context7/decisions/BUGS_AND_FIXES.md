@@ -1469,7 +1469,38 @@ Additionally, `retrieve_context()` called `embed_query()` without any error hand
 
 ---
 
-**Last Updated**: 2026-02-15  
-**Resolved Bugs**: 36 (incl. BUG-038 RAG indexing model order)  
+## BUG-039: Agent Chat shows missing context after new audit (RAG indexing blocked by 429 quota)
+
+**Date**: 2026-02-16  
+**Severity**: High  
+**Status**: RESOLVED (code-side mitigation; external quota may still block indexing)  
+
+**Symptom**:
+- After a new audit completes, the audit-scoped chat often responds with missing/empty context ("brak danych") even though the audit results exist in Postgres.
+- Worker logs show repeated embedding failures (`429 ResourceExhausted` / quota exhausted). No points are written to Qdrant for the audit.
+
+**Root Cause**:
+- Embedding generation for RAG indexing can require hundreds of vectors per audit. Without batching and throttling, this can exceed per-project rate limits even on paid tiers.
+- When indexing fails, there was no user-facing recovery flow (manual reindex) and no self-heal behavior in chat.
+
+**Fix**:
+1. Embeddings: use `models/gemini-embedding-001` only (embedding models endpoint), and index chunks using `batchEmbedContents` (REST) to reduce request count.
+2. Quota resilience: add throttling + exponential backoff on 429 errors and rotate keys (`GEMINI_API_KEY`, `GEMINI_API_KEY_FALLBACK`).
+3. Observability: add `audits.rag_indexed_at` (nullable) set on successful indexing.
+4. Recovery:
+   - Backend endpoint: `POST /api/audits/{audit_id}/reindex-rag`
+   - Chat self-healing: when retrieval returns empty, attempt a one-time on-demand reindex and retry retrieval; otherwise return a clear UX message.
+   - Frontend: add an explicit reindex button and an `indexing` streaming phase label.
+
+**Files Changed**:
+- `backend/app/services/embedding_client.py`, `backend/app/services/rag_service.py`, `backend/app/services/qdrant_client.py`
+- `backend/app/services/chat_service.py`, `backend/app/routers/audits.py`, `backend/app/models.py`
+- `backend/alembic/versions/20260216_add_rag_indexed_at.py`
+- `frontend/components/chat/ChatPanel.tsx`, `frontend/components/chat/ChatMessages.tsx`, `frontend/lib/chat-api.ts`, `frontend/lib/chat-store.ts`
+
+---
+
+**Last Updated**: 2026-02-16  
+**Resolved Bugs**: 37 (incl. BUG-039 RAG quota resilience)  
 **Known Issues**: 3  
 **Watching**: 2

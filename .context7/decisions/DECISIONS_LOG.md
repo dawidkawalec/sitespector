@@ -677,6 +677,34 @@ Additionally, simplify `AuditPageLayout` by removing its right-side AI panel (wh
 
 ---
 
+## ADR-038: RAG Index Resilience (Batch Embeddings + Qdrant Dimension Guard + Recovery) (2026-02-16)
+
+### Context
+Audit-scoped chat relies on a Qdrant vector index built from audit results. Indexing runs best-effort in the worker and must not block audit completion. In practice, embeddings can fail due to quota (429) or model deprecations, leaving Qdrant empty and the chat unable to answer.
+
+### Decision
+- Use `models/gemini-embedding-001` only for embeddings.
+- Prefer embedding batches via `batchEmbedContents` (REST) to reduce request count during indexing.
+- Add embedding throttling + exponential backoff on 429 errors and rotate API keys.
+- Guard against Qdrant vector dimension mismatches by validating collection config and recreating the collection when needed.
+- Add a manual recovery endpoint `POST /api/audits/{audit_id}/reindex-rag` plus a UI button.
+- Track indexing success via `audits.rag_indexed_at` (nullable).
+
+### Rationale
+- Batching reduces pressure on per-minute request limits for large audits.
+- Backoff and throttling prevent stampeding the provider when quota is temporarily exhausted.
+- Dimension guard prevents silent failures when embedding dimensionality changes across models.
+- Manual reindex + self-heal improves supportability and user experience.
+
+### Outcome
+- Chat shows an explicit `indexing` phase and can attempt a one-time self-heal when context is empty.
+- Support/user can force reindex without SSH access.
+
+### Related Files
+`backend/app/services/embedding_client.py`, `backend/app/services/rag_service.py`, `backend/app/services/qdrant_client.py`, `backend/app/services/chat_service.py`, `backend/app/routers/audits.py`, `backend/app/models.py`, `frontend/components/chat/ChatPanel.tsx`
+
+---
+
 **Last Updated**: 2026-02-16
-**Total Decisions**: 36 accepted
+**Total Decisions**: 37 accepted
 **Review**: Update when making significant architectural changes.

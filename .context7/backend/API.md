@@ -872,6 +872,18 @@ Trigger contextual AI analysis for specific area(s).
 
 ---
 
+## RAG / Chat Recovery
+
+### `POST /api/audits/{audit_id}/reindex-rag`
+Manually trigger audit-scoped RAG re-indexing for the agent chat (Qdrant).
+- **Auth**: Required (workspace membership enforced; same access rules as `GET /api/audits/{audit_id}`)
+- **Response**: `{ "status": "indexed" }`
+- **Notes**:
+  - Safe to call multiple times; it deletes existing points for `audit_id` and re-inserts.
+  - Use when chat keeps responding with missing/empty context due to transient embedding/quota issues.
+
+---
+
 ## Senuto Data Contract (in `GET /api/audits/{id}`)
 
 `audit.results.senuto` now contains expanded payload:
