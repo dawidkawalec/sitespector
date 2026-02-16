@@ -42,9 +42,46 @@ async def ensure_collection(
     client = get_qdrant_client()
 
     def _ensure() -> None:
-        existing = client.get_collections().collections
-        if any(c.name == collection_name for c in existing):
+        """
+        Ensure Qdrant collection exists and matches expected vector size.
+
+        Qdrant collection vector size is immutable. If an older collection was created with a
+        different embedding model dimension, indexing/search will fail. In that case we recreate.
+        """
+        try:
+            col = client.get_collection(collection_name)
+            vectors = col.config.params.vectors
+
+            current_size: int | None = None
+            if hasattr(vectors, "size"):
+                current_size = int(getattr(vectors, "size"))
+            elif isinstance(vectors, dict):
+                # Named vectors. Use the first one as the "default" size.
+                for _, v in vectors.items():
+                    if hasattr(v, "size"):
+                        current_size = int(getattr(v, "size"))
+                        break
+                    if isinstance(v, dict) and "size" in v:
+                        current_size = int(v["size"])
+                        break
+
+            if current_size is not None and current_size != int(vector_size):
+                logger.warning(
+                    "Qdrant collection vector size mismatch (collection=%s, current=%s, expected=%s) - recreating",
+                    collection_name,
+                    current_size,
+                    vector_size,
+                )
+                client.delete_collection(collection_name=collection_name)
+                client.create_collection(
+                    collection_name=collection_name,
+                    vectors_config=qmodels.VectorParams(size=vector_size, distance=distance),
+                )
             return
+        except Exception:
+            # Fall back to create below (either missing collection or unknown response shape).
+            pass
+
         client.create_collection(
             collection_name=collection_name,
             vectors_config=qmodels.VectorParams(size=vector_size, distance=distance),

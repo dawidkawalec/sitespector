@@ -15,6 +15,7 @@ import json
 import logging
 import uuid
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional
 
 from sqlalchemy import select
@@ -23,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from qdrant_client.http import models as qmodels
 
 from app.models import Audit, AuditTask
-from app.services.embedding_client import embed_document, embed_query
+from app.services.embedding_client import embed_document, embed_query, embed_texts_batch
 from app.services.qdrant_client import (
     delete_points_by_filter,
     ensure_collection,
@@ -478,9 +479,23 @@ async def index_audit_for_rag(db: AsyncSession, audit_id: str) -> None:
         logger.info("RAG: no chunks to index (audit_id=%s)", audit_id)
         return
 
-    # Embed first chunk to determine vector size (model returns fixed size)
-    first_vec = await embed_document(chunks[0].text)
-    vector_size = len(first_vec)
+    texts = [c.text for c in chunks]
+
+    # Prefer batch embedding to reduce request count and avoid 429s.
+    vectors: List[List[float]] = []
+    try:
+        for batch in _batched(texts, 100):
+            vectors.extend(await embed_texts_batch(batch, task_type="retrieval_document"))
+    except Exception as e:
+        logger.warning("RAG: batch embedding failed, falling back to sequential (audit_id=%s): %s", audit_id, e)
+        vectors = []
+        for c in chunks:
+            vectors.append(await embed_document(c.text))
+
+    if not vectors or len(vectors) != len(chunks):
+        raise RuntimeError(f"rag_embedding_failed:{audit_id}")
+
+    vector_size = len(vectors[0])
     await ensure_collection(QDRANT_COLLECTION, vector_size=vector_size)
 
     audit_id_str = str(audit.id)
@@ -493,24 +508,7 @@ async def index_audit_for_rag(db: AsyncSession, audit_id: str) -> None:
 
     points: List[qmodels.PointStruct] = []
 
-    # Upsert first point
-    points.append(
-        qmodels.PointStruct(
-            id=str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{audit_id_str}:{chunks[0].section_type}:0")),
-            vector=first_vec,
-            payload={
-                "audit_id": audit_id_str,
-                "section_type": chunks[0].section_type,
-                "chunk_index": 0,
-                "text": chunks[0].text,
-                "meta": chunks[0].meta,
-            },
-        )
-    )
-
-    # Remaining points
-    for i, ch in enumerate(chunks[1:], start=1):
-        vec = await embed_document(ch.text)
+    for i, (ch, vec) in enumerate(zip(chunks, vectors)):
         points.append(
             qmodels.PointStruct(
                 id=str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{audit_id_str}:{ch.section_type}:{i}")),
@@ -526,6 +524,12 @@ async def index_audit_for_rag(db: AsyncSession, audit_id: str) -> None:
         )
 
     await upsert_points(QDRANT_COLLECTION, points)
+
+    # Optional: track RAG indexing time for debugging and support.
+    if hasattr(audit, "rag_indexed_at"):
+        setattr(audit, "rag_indexed_at", datetime.now(timezone.utc))
+        await db.flush()
+
     logger.info("RAG: indexed audit chunks (audit_id=%s, chunks=%s)", audit_id_str, len(points))
 
 

@@ -63,7 +63,7 @@ interface ChatState {
 
   isStreaming: boolean
   streamingConversationId: string | null
-  streamingPhase: 'searching' | 'generating' | 'streaming' | null
+  streamingPhase: 'searching' | 'indexing' | 'generating' | 'streaming' | null
 
   usage: { month: string; messages_sent: number; limit: number | null; subscription_tier?: string | null } | null
 

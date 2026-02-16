@@ -41,7 +41,7 @@ from app.models import (
     ChatUsage,
 )
 from app.services.ai_client import call_claude, stream_gemini
-from app.services.rag_service import retrieve_context
+from app.services.rag_service import index_audit_for_rag, retrieve_context
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -887,6 +887,50 @@ async def stream_chat_response(
         allowed_sections=allowed_sections,
         top_k=12,
     )
+
+    # Self-healing: if context is empty, try on-demand reindex once and retry retrieval.
+    if not rag_chunks:
+        yield "__STATUS__:indexing"
+        rag_index_error: str | None = None
+        try:
+            await index_audit_for_rag(db, str(convo.audit_id))
+            await db.flush()
+        except Exception as e:
+            rag_index_error = str(e)
+            logger.warning("RAG self-heal indexing failed (audit_id=%s): %s", convo.audit_id, e)
+
+        if rag_index_error is None:
+            rag_chunks = await retrieve_context(
+                audit_id=str(convo.audit_id),
+                query=user_message,
+                allowed_sections=allowed_sections,
+                top_k=12,
+            )
+
+        if not rag_chunks:
+            # Do not call the LLM with empty context; return a clear UX message instead.
+            yield "__STATUS__:generating"
+            yield "__STATUS__:streaming"
+            msg = (
+                "Nie widze jeszcze danych z tego audytu w czacie.\n"
+                "Prawdopodobnie raport nie zostal jeszcze zindeksowany (RAG) albo indeksowanie sie nie powiodlo.\n\n"
+                "Sprobuj ponownie za chwile lub uzyj przycisku reindeksacji RAG."
+            )
+            if rag_index_error:
+                msg = msg + f"\n\nSzczegoly techniczne (RAG): {rag_index_error}"
+
+            # Persist assistant message and finish the stream.
+            assistant_msg = ChatMessage(
+                conversation_id=convo.id,
+                role=ChatMessageRole.ASSISTANT,
+                content=msg,
+                tokens_used=None,
+            )
+            db.add(assistant_msg)
+            await increment_usage(db, user_id=user_id)
+            await db.flush()
+            yield msg
+            return
 
     system_prompt, prompt = _build_prompt(
         agent=agent,

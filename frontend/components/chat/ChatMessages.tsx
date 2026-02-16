@@ -12,6 +12,7 @@ import { chatAPI } from '@/lib/chat-api'
 
 const PHASE_LABELS: Record<string, { label: string; icon: typeof Search }> = {
   searching: { label: 'Szukam w raporcie...', icon: Search },
+  indexing: { label: 'Indeksuje raport (RAG)...', icon: Search },
   generating: { label: 'Generuję odpowiedź...', icon: Sparkles },
   streaming: { label: 'Piszę odpowiedź...', icon: MessageSquare },
 }

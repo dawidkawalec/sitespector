@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, Loader2, Plus, Settings2, X } from 'lucide-react'
+import { ChevronDown, Loader2, Plus, RefreshCw, Settings2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -104,6 +104,7 @@ export function ChatPanel() {
   const [draftTone, setDraftTone] = useState<'technical' | 'professional' | 'simple'>('professional')
   const [conversationFilter, setConversationFilter] = useState('')
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [isReindexing, setIsReindexing] = useState(false)
 
   useEffect(() => {
     if (!activeConversationId) return
@@ -294,6 +295,19 @@ export function ChatPanel() {
     setConversations([finalConvo, ...conversations])
     setActiveConversation(finalConvo.id)
     return finalConvo
+  }
+
+  const reindexRag = async () => {
+    if (!activeAuditId) return
+    setIsReindexing(true)
+    try {
+      await chatAPI.reindexAuditRag(activeAuditId)
+      toast.success('RAG: reindeksacja zakonczona')
+    } catch (e) {
+      toast.error(`RAG: nie udalo sie zrobic reindeksacji (${String(e)})`)
+    } finally {
+      setIsReindexing(false)
+    }
   }
 
   const sendMessage = async ({ text, files }: { text: string; files: File[] }) => {
@@ -513,6 +527,16 @@ export function ChatPanel() {
                 </Select>
               </PopoverContent>
             </Popover>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Reindex RAG for audit"
+              disabled={!canChat || isStreaming || isReindexing}
+              onClick={() => void reindexRag()}
+            >
+              {isReindexing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            </Button>
 
             <Button variant="ghost" size="icon" onClick={() => setPanelOpen(false)} aria-label="Close chat">
               <X className="h-4 w-4" />

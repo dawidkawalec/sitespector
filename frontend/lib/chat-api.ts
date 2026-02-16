@@ -170,6 +170,11 @@ export const chatAPI = {
   revokeShare: (conversationId: string, sharedWithUserId: string) =>
     apiRequest<void>(`/api/chat/conversations/${conversationId}/share/${sharedWithUserId}`, { method: 'DELETE' }),
 
+  reindexAuditRag: (auditId: string) =>
+    apiRequest<{ status: string }>(`/api/audits/${auditId}/reindex-rag`, {
+      method: 'POST',
+    }),
+
   getUsage: (workspaceId: string) => apiRequest(`/api/chat/usage?workspace_id=${workspaceId}`),
 }
 
