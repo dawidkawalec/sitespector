@@ -11,6 +11,7 @@ Vector store:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import uuid
@@ -481,16 +482,25 @@ async def index_audit_for_rag(db: AsyncSession, audit_id: str) -> None:
 
     texts = [c.text for c in chunks]
 
-    # Prefer batch embedding to reduce request count and avoid 429s.
+    # Batch embedding in small groups (20) with a throttle pause to stay under TPM limits.
+    # Tier 1 allows ~1M tokens/min for gemini-embedding-001; each chunk ~200-800 tokens.
+    # 20 chunks * ~500 tok avg = ~10K tokens per batch, well within budget with pauses.
+    BATCH_SIZE = 20
+    BATCH_PAUSE_SECONDS = 2.0
+
     vectors: List[List[float]] = []
     try:
-        for batch in _batched(texts, 100):
+        batches = list(_batched(texts, BATCH_SIZE))
+        for bi, batch in enumerate(batches):
             vectors.extend(await embed_texts_batch(batch, task_type="retrieval_document"))
+            if bi < len(batches) - 1:
+                await asyncio.sleep(BATCH_PAUSE_SECONDS)
     except Exception as e:
         logger.warning("RAG: batch embedding failed, falling back to sequential (audit_id=%s): %s", audit_id, e)
         vectors = []
         for c in chunks:
             vectors.append(await embed_document(c.text))
+            await asyncio.sleep(0.1)
 
     if not vectors or len(vectors) != len(chunks):
         raise RuntimeError(f"rag_embedding_failed:{audit_id}")
