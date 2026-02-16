@@ -20,7 +20,7 @@
 
 **Provider**: Hetzner Cloud  
 **IP**: 46.225.134.48 (current)  
-**Specs**: 2 vCPU, 8GB RAM, 40GB SSD  
+**Specs**: 8 vCPU (AMD), 16GB RAM, 40GB SSD (CPX42)  
 **OS**: Ubuntu 24.04 LTS  
 **Location**: `/opt/sitespector`
 

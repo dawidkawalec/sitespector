@@ -705,6 +705,22 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 
 ---
 
+## ADR-039: VPS Upgrade to CPX42 (8 cores / 16GB) + Parallel Lighthouse Restored (2026-02-16)
+
+**Context**: The previous 2-core / 4GB VPS could not handle two parallel Chrome (Lighthouse) instances plus the rest of the stack. Audits timed out with load average >30.
+
+**Decision**: Upgrade VPS to Hetzner CPX42 (8 AMD cores, 16GB RAM). Restore parallel Lighthouse execution for both desktop and mobile audits. Keep timeout at 180s for safety.
+
+**Consequences**:
+- Lighthouse audits are fast again (~90s total instead of ~180s sequential).
+- 8 cores handle Screaming Frog + 2x Lighthouse + all services comfortably.
+- 14GB free RAM means no memory pressure.
+
+### Related Files
+`backend/app/services/lighthouse.py`, `backend/app/config.py`
+
+---
+
 **Last Updated**: 2026-02-16
-**Total Decisions**: 37 accepted
+**Total Decisions**: 38 accepted
 **Review**: Update when making significant architectural changes.
