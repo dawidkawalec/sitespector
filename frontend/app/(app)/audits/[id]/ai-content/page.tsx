@@ -83,7 +83,7 @@ export default function AIDeepContentPage({ params }: { params: { id: string } }
       </div>
       
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 @md:grid-cols-2 gap-6">
         <Card className={contentDeep.thin_content_count > 0 ? "border-yellow-200 bg-yellow-50/30" : ""}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">

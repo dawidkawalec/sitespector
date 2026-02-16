@@ -56,7 +56,7 @@ function DeviceTab({ lhData, device, audit }: { lhData: any; device: string; aud
   return (
     <div className="space-y-6">
       {/* Scores */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 @md:grid-cols-2 @lg:grid-cols-4">
         <Card className="border-t-4 border-t-primary">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -126,8 +126,8 @@ function DeviceTab({ lhData, device, audit }: { lhData: any; device: string; aud
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
+        <Card className="@lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
@@ -136,7 +136,7 @@ function DeviceTab({ lhData, device, audit }: { lhData: any; device: string; aud
             <CardDescription>Kluczowe wskaźniki szybkości ładowania strony</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 @md:grid-cols-2 gap-6">
               {metrics.map((metric, i) => (
                 <div key={i} className="space-y-2">
                   <div className="flex justify-between items-center">
@@ -258,7 +258,7 @@ function DeviceTab({ lhData, device, audit }: { lhData: any; device: string; aud
         <TabsContent value="passed" className="pt-4">
           <Card>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 @md:grid-cols-2 gap-2">
                 {passed.map((p: any, idx: number) => (
                   <div key={idx} className="flex items-center gap-2 p-2 rounded border bg-accent/10 text-[11px]">
                     <CheckCircle2 className="h-3 w-3 text-green-600 flex-shrink-0" />

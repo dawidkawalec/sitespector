@@ -243,7 +243,7 @@ export default function AiStrategyPage({ params }: { params: { id: string } }) {
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col @md:flex-row justify-between items-start @md:items-center gap-4">
         <div className="flex items-center gap-3">
           <BrainCircuit className="h-8 w-8 text-accent" />
           <div>
@@ -319,7 +319,7 @@ export default function AiStrategyPage({ params }: { params: { id: string } }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 @md:grid-cols-2 gap-4">
               {execSummary.strengths && execSummary.strengths.length > 0 && (
                 <div className="p-3 rounded-lg bg-green-50/50 dark:bg-green-950/10 border border-green-100 dark:border-green-900/20">
                   <h4 className="text-xs font-bold text-green-700 dark:text-green-400 mb-2 flex items-center gap-1.5">
@@ -370,7 +370,7 @@ export default function AiStrategyPage({ params }: { params: { id: string } }) {
             <CardDescription>Plan wdrożenia uporządkowany według priorytetu i horyzontu czasowego</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 @md:grid-cols-2 @xl:grid-cols-4 gap-6">
               <RoadmapColumn
                 title="Natychmiast"
                 icon={<AlertTriangle className="h-4 w-4 text-red-500" />}
@@ -425,7 +425,7 @@ export default function AiStrategyPage({ params }: { params: { id: string } }) {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 @md:grid-cols-2 gap-4">
               {crossTool.synergies && crossTool.synergies.length > 0 && (
                 <div className="p-3 rounded-lg bg-green-50/50 dark:bg-green-950/10 border border-green-100 dark:border-green-900/20">
                   <h4 className="text-xs font-bold text-green-700 dark:text-green-400 mb-2">Synergię</h4>
@@ -509,7 +509,7 @@ export default function AiStrategyPage({ params }: { params: { id: string } }) {
             <CardDescription>Szybkie wygrane z największym wpływem przy najmniejszym nakładzie pracy</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 @md:grid-cols-2 gap-3">
               {quickWins.map((win: any, i: number) => (
                 <div key={i} className="p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow">
                   <div className="flex items-start justify-between gap-2">

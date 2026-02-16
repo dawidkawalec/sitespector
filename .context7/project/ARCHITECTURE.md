@@ -33,4 +33,15 @@ graph TD
 8. **lighthouse**: Performance auditing engine.
 
 ---
-**Last Updated**: 2026-02-15
+## Frontend Layout Notes (App UX)
+
+The authenticated app has a persistent right-side ChatPanel (desktop) which reduces the available width of the main content area.
+
+**Important UI decision**:
+- The scrollable content area (`frontend/app/(app)/layout.tsx` → `<main>`) is marked as a CSS container (`@container`)
+- App pages use Tailwind container-query utilities (`@md:`, `@lg:`, `@xl:`) so the layout adapts to the *content container width*, not just the viewport width
+
+This avoids "squished" grids/cards when the chat is open by default.
+
+---
+**Last Updated**: 2026-02-16

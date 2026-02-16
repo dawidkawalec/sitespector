@@ -96,7 +96,7 @@ function InternalLinksTab({ linksData, allPages }: { linksData: any; allPages: a
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Problemy z Linkami</CardTitle>
@@ -159,10 +159,10 @@ function InternalLinksTab({ linksData, allPages }: { linksData: any; allPages: a
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col @md:flex-row @md:items-center justify-between gap-4">
             <CardTitle>Szczegóły Linkowania per Strona</CardTitle>
             <div className="flex items-center gap-2">
-              <div className="relative w-full md:w-64">
+              <div className="relative w-full @md:w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Szukaj URL..."
@@ -246,7 +246,7 @@ function IncomingLinksTab({ senuto, audit }: { senuto: any; audit: Audit }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-4 gap-4">
         {[
           { label: 'Wszystkie Linki', value: formatNumber(stats.backlinks_count), id: 'backlinks_count' },
           { label: 'Domeny Ref.', value: formatNumber(stats.domains_count), id: 'ref_domains' },
@@ -265,7 +265,7 @@ function IncomingLinksTab({ senuto, audit }: { senuto: any; audit: Audit }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader><CardTitle className="text-sm">Atrybuty Linków</CardTitle></CardHeader>
           <CardContent><LinkAttributesPieChart attributes={attrs} /></CardContent>
@@ -306,9 +306,9 @@ function IncomingLinksTab({ senuto, audit }: { senuto: any; audit: Audit }) {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col @md:flex-row @md:items-center justify-between gap-4">
             <CardTitle>Lista Linków Przychodzących</CardTitle>
-            <div className="relative w-full md:w-64">
+            <div className="relative w-full @md:w-64">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Szukaj w linkach..."

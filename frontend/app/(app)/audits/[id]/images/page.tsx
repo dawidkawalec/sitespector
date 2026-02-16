@@ -41,7 +41,7 @@ function OverviewTab({ imagesData, allImages, params, generatingAlt, aiAlts, han
   return (
     <div className="space-y-8">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Wszystkie Obrazy</CardTitle>
@@ -83,8 +83,8 @@ function OverviewTab({ imagesData, allImages, params, generatingAlt, aiAlts, han
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
+        <Card className="@lg:col-span-2">
           <CardHeader>
             <CardTitle>Rekomendacje dla Obrazów</CardTitle>
             <CardDescription>Jak poprawić SEO i szybkość ładowania poprzez obrazy</CardDescription>

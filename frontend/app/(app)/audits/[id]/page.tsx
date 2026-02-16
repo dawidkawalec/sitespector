@@ -228,7 +228,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+      <div className="flex flex-col @md:flex-row @md:items-start justify-between gap-6">
         <div className="space-y-2">
           <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors">
             <ArrowLeft className="h-3 w-3" /> Powrót do listy
@@ -304,9 +304,9 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
       )}
 
       {audit.status === 'processing' || audit.status === 'pending' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 @lg:grid-cols-3 gap-8">
           {/* Progress Dashboard */}
-          <Card className="lg:col-span-2 border-primary/20 shadow-lg">
+          <Card className="@lg:col-span-2 border-primary/20 shadow-lg">
             <CardHeader className="bg-primary/5 border-b pb-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -326,7 +326,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
               <Progress value={progressPercent} className="h-2 mt-4" />
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 @md:grid-cols-2 gap-4">
                 {steps.map((step) => {
                   const status = getStepStatus(step.id)
                   return (
@@ -448,7 +448,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
           )}
 
           {/* Main Scores Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 @lg:grid-cols-4 gap-4">
             {[
               { label: 'Wynik Ogólny', score: audit.overall_score, icon: ShieldCheck, tooltipId: 'overall_score', loading: audit.ai_status === 'processing' },
               { label: 'SEO', score: audit.seo_score, icon: Search, tooltipId: 'seo_score', loading: false },
@@ -478,10 +478,10 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
             {/* Quick Stats & Navigation */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="@lg:col-span-2 space-y-6">
+              <div className="grid grid-cols-2 @md:grid-cols-4 gap-4">
                 <Link href={`/audits/${params.id}/seo`} className="block">
                   <Card className="hover:bg-accent/50 transition-colors h-full">
                     <CardContent className="pt-6 text-center">
@@ -520,7 +520,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
               {/* Senuto Quick Stats */}
               {senuto?.visibility && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 @md:grid-cols-4 gap-4">
                   <Link href={`/audits/${params.id}/visibility`} className="block">
                     <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
                       <CardContent className="pt-6 text-center">
@@ -562,7 +562,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
               )}
 
               {senuto?.visibility?.statistics?.statistics && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 @md:grid-cols-4 gap-4">
                   <Link href={`/audits/${params.id}/visibility`} className="block">
                     <Card className="hover:bg-accent/50 transition-colors h-full border-primary/10">
                       <CardContent className="pt-6 text-center">

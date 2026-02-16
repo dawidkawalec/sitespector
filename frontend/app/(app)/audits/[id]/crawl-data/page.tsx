@@ -188,7 +188,7 @@ export default function CrawlDataPage({ params }: { params: { id: string } }) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 @md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <p className="text-[10px] font-bold uppercase text-muted-foreground">Stron</p>

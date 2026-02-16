@@ -650,6 +650,33 @@ Backend: 100% complete | Frontend foundation: 100% complete | Module refactoring
 
 ---
 
+## ADR-037: Container-Query RWD for App Shell with Persistent ChatPanel (2026-02-16)
+
+### Context
+The authenticated app uses a persistent ChatPanel on desktop. When the panel is open, the available content width shrinks, but viewport-based Tailwind breakpoints (`md:`, `lg:`, `xl:`) still evaluate against the full window width. This caused grids and split layouts to "squish" and break across many views.
+
+### Decision
+Adopt **CSS Container Queries** for app layout responsiveness:
+- Mark the scrollable content area in `frontend/app/(app)/layout.tsx` as a container (`@container`)
+- Use Tailwind container query prefixes in app pages/components (`@md:`, `@lg:`, `@xl:`) instead of viewport breakpoints where appropriate
+- Enable `@tailwindcss/container-queries` plugin and define container breakpoints in `frontend/tailwind.config.ts`
+
+Additionally, simplify `AuditPageLayout` by removing its right-side AI panel (which compounded width pressure when combined with ChatPanel). AI insights are integrated inline as a collapsible section.
+
+### Rationale
+- Container queries reflect the real available width of the content area when chat is open/resized.
+- This fixes RWD behavior without relying on ad-hoc special cases per page.
+- Removing a second persistent side panel (AI) prevents extreme horizontal crowding.
+
+### Outcome
+- App pages adapt correctly when ChatPanel is open by default.
+- Reduced layout regressions across the audits suite and settings views.
+
+### Related Files
+`frontend/app/(app)/layout.tsx`, `frontend/components/AuditPageLayout.tsx`, `frontend/tailwind.config.ts`, `frontend/lib/chat-store.ts`
+
+---
+
 **Last Updated**: 2026-02-16
-**Total Decisions**: 35 accepted
+**Total Decisions**: 36 accepted
 **Review**: Update when making significant architectural changes.

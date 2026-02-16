@@ -92,7 +92,7 @@ export default function SchedulesPage() {
         <h1 className="text-3xl font-bold">Automatyczne Audyty</h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 @lg:grid-cols-3 gap-8">
         {/* Create Form */}
         <Card className="h-fit">
           <CardHeader>
@@ -141,7 +141,7 @@ export default function SchedulesPage() {
         </Card>
 
         {/* Schedules List */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="@lg:col-span-2 space-y-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Clock className="h-5 w-5" /> Aktywne Harmonogramy
           </h2>

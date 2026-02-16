@@ -72,8 +72,8 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
         <h1 className="text-3xl font-bold">Architektura Techniczna</h1>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 @lg:grid-cols-3 gap-8">
+        <div className="@lg:col-span-2 space-y-6">
           {/* Detected Technologies */}
           <Card>
             <CardHeader>
@@ -81,7 +81,7 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
               <CardDescription>Systemy CMS, frameworki i biblioteki używane na stronie</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 @md:grid-cols-2 gap-4">
                 {techStack.technologies?.length > 0 ? (
                   techStack.technologies.map((tech: any, i: number) => (
                     <div key={i} className="flex items-center gap-4 p-4 rounded-lg border bg-accent/10">

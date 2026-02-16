@@ -145,8 +145,8 @@ export default function SecurityPage({ params }: { params: { id: string } }) {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 @lg:grid-cols-3 gap-8">
+            <div className="@lg:col-span-2 space-y-6">
                 {/* Main Security Status */}
                 <Card className={security.security_score >= 90 ? "border-green-200 bg-green-50/10" : "border-yellow-200 bg-yellow-50/10"}>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">

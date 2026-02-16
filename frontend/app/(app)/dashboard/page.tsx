@@ -184,7 +184,7 @@ export default function DashboardPage() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+        className="flex flex-col @md:flex-row @md:items-center justify-between gap-4"
       >
         <div>
           <h1 className="text-4xl font-black tracking-tight text-primary">Panel Analityczny</h1>
@@ -201,9 +201,9 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Analytics Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
         {/* Main Trend Chart */}
-        <Card className="lg:col-span-2 overflow-hidden border-none shadow-xl bg-gradient-to-br from-white to-[#fff9f5] dark:from-slate-900 dark:to-slate-950">
+        <Card className="@lg:col-span-2 overflow-hidden border-none shadow-xl bg-gradient-to-br from-white to-[#fff9f5] dark:from-slate-900 dark:to-slate-950">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-primary">
               <TrendingUp className="h-5 w-5 text-accent" /> Trendy Workspace
@@ -333,7 +333,7 @@ export default function DashboardPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-3 gap-4">
           <AnimatePresence mode="popLayout">
             {auditsData?.items?.map((audit, index) => (
               <motion.div

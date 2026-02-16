@@ -232,7 +232,7 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
           </Card>
 
           {/* Delta Comparison Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 @lg:grid-cols-4 gap-4">
             {[
               { label: 'Ogólny', current: currentAudit.overall_score, prev: previousAudit?.overall_score },
               { label: 'SEO', current: currentAudit.seo_score, prev: previousAudit?.seo_score },
@@ -264,7 +264,7 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
             </TabsList>
             
             <TabsContent value="scores" className="space-y-6 pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 @md:grid-cols-2 gap-6">
                 {/* Current Audit Scores */}
                 <Card className="border-primary/20">
                   <CardHeader className="pb-2">
@@ -376,7 +376,7 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
             </TabsContent>
 
             <TabsContent value="issues" className="space-y-6 pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 @md:grid-cols-2 gap-6">
                 {/* Fixed Issues */}
                 <Card className="border-green-200 bg-green-50/30">
                   <CardHeader className="pb-2">

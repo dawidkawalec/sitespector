@@ -528,11 +528,23 @@ import { ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle, FileJson }
 
 ## Styling Patterns
 
+### Container Queries (App RWD with persistent ChatPanel)
+
+The authenticated app (`frontend/app/(app)/*`) uses a **persistent ChatPanel** that reduces available width of the content area. Viewport-based breakpoints (`md:`, `lg:`, `xl:`) can look "too wide" when the chat is open, causing layouts to squish.
+
+**Decision**: Prefer **container-query breakpoints** inside the app shell:
+- Mark the scrollable content area as a container (`@container`) in `frontend/app/(app)/layout.tsx`
+- Use `@md:`, `@lg:`, `@xl:` (instead of `md:`, `lg:`, `xl:`) in pages/components that should adapt to the *content container width*
+
+**Tailwind config**:
+- Plugin: `@tailwindcss/container-queries` enabled in `frontend/tailwind.config.ts`
+- Custom container breakpoints are mapped to the familiar sizes (`sm`, `md`, `lg`, `xl`, `2xl`)
+
 ### Responsive Grid
 
 ```tsx
-<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-  {/* 1 column mobile, 2 tablet, 4 desktop */}
+<div className="grid gap-4 @md:grid-cols-2 @lg:grid-cols-4">
+  {/* 1 column by default, then adapts to container width */}
 </div>
 ```
 
@@ -556,6 +568,14 @@ import { ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle, FileJson }
 <div className="container mx-auto py-8 px-4">
   {/* Centered container with padding */}
 </div>
+```
+
+If you want children to use `@md:` / `@lg:` etc, ensure the parent is a container:
+
+```tsx
+<main className="flex-1 overflow-y-auto relative @container">
+  {children}
+</main>
 ```
 
 ### Text Colors
@@ -787,7 +807,7 @@ import { AuditMobileSidebar } from '@/components/audit/AuditMobileSidebar'
 
 ---
 
-**Last Updated**: 2025-02-04  
+**Last Updated**: 2026-02-16  
 **Component library**: shadcn/ui  
 **Icon library**: Lucide React  
 **Styling**: Tailwind CSS 3.x  

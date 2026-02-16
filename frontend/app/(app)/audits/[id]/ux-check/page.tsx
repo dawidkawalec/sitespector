@@ -145,8 +145,8 @@ export default function UXCheckPage({ params }: { params: { id: string } }) {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 @lg:grid-cols-3 gap-8">
+            <div className="@lg:col-span-2 space-y-6">
                 {/* Main UX Score */}
                 <Card className="border-t-4 border-t-primary">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -159,7 +159,7 @@ export default function UXCheckPage({ params }: { params: { id: string } }) {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="grid grid-cols-1 @md:grid-cols-2 gap-4 mt-4">
                       <div className="p-4 rounded-lg border bg-accent/10 flex items-center gap-4">
                         <div className="p-2 rounded bg-primary/10 text-primary">
                           <Smartphone className="h-5 w-5" />

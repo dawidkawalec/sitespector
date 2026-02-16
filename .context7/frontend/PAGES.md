@@ -247,6 +247,21 @@ if (isError) {
 
 ---
 
-**Last Updated**: 2026-02-14  
+---
+
+## Authenticated App Shell (`app/(app)/layout.tsx`)
+
+**Purpose**: Persistent shell for all authenticated pages.
+
+**Key UI blocks**:
+- `UnifiedSidebar` on the left
+- Scrollable content `<main>` in the middle
+- Persistent `ChatPanel` on the right (desktop)
+
+**Responsive rule (important)**:
+- The content `<main>` is marked as a container (`@container`) so child pages can use container-query utilities (`@md:`, `@lg:`, `@xl:`) that react to the *available content width* when chat is open.
+- Inside app pages, prefer `@md:` / `@lg:` over viewport `md:` / `lg:` when the layout should adapt to the content area.
+
+**Last Updated**: 2026-02-16  
 **Framework**: Next.js 14 (App Router)  
 **Status**: Tool-agnostic IA implemented with RAW data explorers.

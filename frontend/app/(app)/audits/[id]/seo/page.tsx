@@ -71,7 +71,7 @@ function OverviewTab({ crawl, allPages, params, renderFixSuggestion, exportToCSV
   return (
     <div className="space-y-8">
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center justify-between">
@@ -130,8 +130,8 @@ function OverviewTab({ crawl, allPages, params, renderFixSuggestion, exportToCSV
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
+        <Card className="@lg:col-span-2">
           <CardHeader>
             <CardTitle>Problemy Techniczne</CardTitle>
             <CardDescription>Krytyczne błędy i ostrzeżenia SEO</CardDescription>
@@ -187,10 +187,10 @@ function OverviewTab({ crawl, allPages, params, renderFixSuggestion, exportToCSV
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col @md:flex-row @md:items-center justify-between gap-4">
             <CardTitle>Wszystkie Strony</CardTitle>
             <div className="flex items-center gap-2">
-              <div className="relative w-full md:w-64">
+              <div className="relative w-full @md:w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Szukaj URL..."

@@ -227,7 +227,7 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
 
       {mode === 'data' && (
         <div className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Cytowania w AIO</CardDescription>
@@ -277,7 +277,7 @@ export default function AiOverviewsPage({ params }: { params: { id: string } }) 
           </Card>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><Target className="h-5 w-5 text-primary" /> Pozycje wejścia do AIO</CardTitle>

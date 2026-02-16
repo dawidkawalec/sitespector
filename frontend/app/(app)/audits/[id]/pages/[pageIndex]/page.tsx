@@ -86,7 +86,7 @@ export default function PageDetailsPage({ params }: { params: { id: string, page
         >
           <ArrowLeft className="h-3 w-3" /> Powrót do listy stron
         </Link>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col @md:flex-row @md:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold break-all flex items-center gap-2">
               <Globe2 className="h-6 w-6 text-primary shrink-0" />
@@ -112,9 +112,9 @@ export default function PageDetailsPage({ params }: { params: { id: string, page
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
         {/* Left Column - Meta & Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="@lg:col-span-2 space-y-6">
           {/* Meta Tags */}
           <Card>
             <CardHeader>
@@ -154,7 +154,7 @@ export default function PageDetailsPage({ params }: { params: { id: string, page
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="grid grid-cols-1 @md:grid-cols-2 gap-4 pt-2">
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1">
                     Nagłówek H1

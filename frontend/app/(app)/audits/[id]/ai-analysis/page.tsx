@@ -84,15 +84,15 @@ export default function AIAnalysisPage({ params }: { params: { id: string } }) {
       </div>
       
       {/* Content Metrics & Info */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
+        <div className="@lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Metryki Treści</CardTitle>
               <CardDescription>Automatyczna ocena jakości i czytelności</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 @md:grid-cols-3">
                 <div className="bg-card p-4 rounded-lg border flex flex-col items-center text-center relative">
                   <div className="flex items-center gap-1 mb-1">
                     <div className="text-xs text-muted-foreground uppercase tracking-wider">Quality Score</div>
@@ -161,7 +161,7 @@ export default function AIAnalysisPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
         {/* Local SEO Panel */}
         <Card>
           <CardHeader>
@@ -259,7 +259,7 @@ export default function AIAnalysisPage({ params }: { params: { id: string } }) {
           <CardDescription>Jak wypadasz na tle {compAnalysis?.competitors_analyzed || 0} konkurentów</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 @md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <p className="text-xs font-bold uppercase text-green-600 flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" /> Twoje Mocne Strony

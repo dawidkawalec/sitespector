@@ -104,7 +104,7 @@ export default function ClientReportPage({ params }: { params: { id: string } })
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col @md:flex-row @md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <FileText className="h-8 w-8 text-primary" />
           <div>
@@ -122,7 +122,7 @@ export default function ClientReportPage({ params }: { params: { id: string } })
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 @lg:grid-cols-3 gap-8">
         {/* Settings Panel */}
         <div className="space-y-6">
           <Card>

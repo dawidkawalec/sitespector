@@ -94,7 +94,7 @@ interface ChatState {
 export const useChatStore = create<ChatState>()(
   persist(
     (set, get) => ({
-      isPanelOpen: false,
+      isPanelOpen: true,
       panelWidth: 420,
 
       activeAuditId: null,
