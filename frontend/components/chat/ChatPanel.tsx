@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, ChevronDown, Database, Loader2, Plus, RefreshCw, Settings2, X } from 'lucide-react'
+import { ChevronDown, Database, Loader2, Plus, RefreshCw, Settings2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -599,37 +599,32 @@ export function ChatPanel() {
 
         {/* RAG status banner */}
         {canChat && ragStatus && !ragReady ? (
-          <div className="mx-3 mb-2 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-200">
+          <div className="mx-3 mb-2 rounded-md border border-border bg-muted/50 px-3 py-2.5">
             {ragStatus === 'pending' ? (
-              <>
-                <Database className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-                <div>
-                  <p className="font-medium text-amber-300">Dane RAG nie sa jeszcze gotowe</p>
-                  <p className="mt-0.5 text-amber-200/80">
-                    Indeks wektorowy dla tego audytu nie zostal jeszcze zbudowany.
-                    Mozesz rozmawiac ogolnie, ale odpowiedzi o konkretnych danych z raportu moga byc niepelne.
-                  </p>
-                  <button
-                    type="button"
-                    className="mt-1.5 inline-flex items-center gap-1 text-amber-300 hover:text-amber-100 font-medium"
-                    onClick={() => void reindexRag()}
-                    disabled={isReindexing}
-                  >
-                    {isReindexing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                    {isReindexing ? 'Indeksowanie...' : 'Zaindeksuj teraz'}
-                  </button>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Database className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground truncate">
+                    Indeks danych nie jest jeszcze gotowy
+                  </span>
                 </div>
-              </>
+                <button
+                  type="button"
+                  className="shrink-0 inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                  onClick={() => void reindexRag()}
+                  disabled={isReindexing}
+                >
+                  {isReindexing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                  {isReindexing ? 'Indeksowanie...' : 'Zaindeksuj'}
+                </button>
+              </div>
             ) : (
-              <>
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-                <div>
-                  <p className="font-medium text-amber-300">Audyt w trakcie przetwarzania</p>
-                  <p className="mt-0.5 text-amber-200/80">
-                    Raport nie jest jeszcze ukonczony. Chat bedzie w pelni dostepny po zakonczeniu audytu.
-                  </p>
-                </div>
-              </>
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  Audyt w trakcie — chat dostepny po zakonczeniu
+                </span>
+              </div>
             )}
           </div>
         ) : null}

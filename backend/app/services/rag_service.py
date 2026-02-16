@@ -38,9 +38,21 @@ logger = logging.getLogger(__name__)
 
 QDRANT_COLLECTION = "audit_rag_chunks"
 
+# Max characters per chunk text sent for embedding.
+# ~8000 chars ≈ 2000 tokens. Keeps total TPM well under Tier 1 limit (1M/min)
+# even for audits with 200+ chunks.
+MAX_CHUNK_CHARS = 8000
+
 
 def _to_json(obj: Any) -> str:
     return json.dumps(obj, ensure_ascii=True, separators=(",", ":"), sort_keys=True, default=str)
+
+
+def _truncate(text: str, max_chars: int = MAX_CHUNK_CHARS) -> str:
+    """Truncate text to max_chars to keep embedding token count bounded."""
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars] + "...[truncated]"
 
 
 def _batched(items: List[Any], batch_size: int) -> Iterable[List[Any]]:
@@ -480,11 +492,15 @@ async def index_audit_for_rag(db: AsyncSession, audit_id: str) -> None:
         logger.info("RAG: no chunks to index (audit_id=%s)", audit_id)
         return
 
-    texts = [c.text for c in chunks]
+    # Truncate oversized chunks before embedding to keep total TPM bounded.
+    # Raw JSON chunks (crawl, lighthouse, senuto) can be 50-100K chars each.
+    texts = [_truncate(c.text) for c in chunks]
+    total_chars = sum(len(t) for t in texts)
+    logger.info("RAG: preparing %d chunks (%d total chars) for audit_id=%s", len(texts), total_chars, audit_id)
 
-    # Batch embedding in small groups with a throttle pause to stay under TPM limits.
-    # Tier 1 allows ~1M TPM for gemini-embedding-001; 10 chunks * ~500 tok avg = ~5K per batch.
-    # With 3s pause we stay well under budget even with large audits.
+    # Batch embedding: 10 chunks per batch, 3s pause between batches.
+    # With truncation, each chunk ≤ 8000 chars ≈ 2000 tokens → 10 * 2000 = 20K tokens/batch.
+    # At 3s pause: ~400K tokens/min, well under 1M TPM limit.
     BATCH_SIZE = 10
     BATCH_PAUSE_SECONDS = 3.0
 
