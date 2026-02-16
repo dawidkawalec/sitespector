@@ -123,6 +123,11 @@ export default function QuickWinsPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="space-y-6 p-6">
+      {audit?.crawl_blocked && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+          Dane z crawlu są niepełne (strona zablokowała crawlera). Quick Wins i plan wykonania zostały pominięte.
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

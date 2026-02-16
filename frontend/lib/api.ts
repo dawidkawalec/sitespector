@@ -189,6 +189,8 @@ export interface Audit {
   competitors?: any[]
   senuto_country_id?: number | null
   senuto_fetch_mode?: string | null
+  crawler_user_agent?: string | null
+  crawl_blocked?: boolean
 }
 
 export interface CreateAuditData {
@@ -198,6 +200,7 @@ export interface CreateAuditData {
   senuto_fetch_mode?: string
   run_ai_pipeline?: boolean
   run_execution_plan?: boolean
+  crawler_user_agent?: string | null
 }
 
 export interface AuditListResponse {

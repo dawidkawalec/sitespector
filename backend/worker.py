@@ -85,7 +85,10 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
             await db.commit()
             
             step_start = datetime.utcnow()
-            crawl_data = await screaming_frog.crawl_url(audit.url)
+            crawl_data = await screaming_frog.crawl_url(
+                audit.url,
+                user_agent=getattr(audit, "crawler_user_agent", None) or None,
+            )
             duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
             
             audit.processing_step = "crawl:done"
@@ -163,6 +166,9 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
             desktop_data = lighthouse_data.get("desktop", {})
             seo_score = calculate_seo_score(crawl_data, desktop_data)
             performance_score = desktop_data.get("performance_score", 0)
+
+            # Persist crawl_blocked so frontend and Phase 2/3 can skip AI when site blocked crawler
+            audit.crawl_blocked = crawl_data.get("crawl_blocked", False)
             
             # Save partial results
             audit.seo_score = seo_score
@@ -195,6 +201,22 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
         if not audit:
             return
 
+        crawl_data = tech_data.get("crawl", {})
+        if crawl_data.get("crawl_blocked"):
+            audit.ai_status = "skipped_blocked"
+            await add_audit_log(
+                audit,
+                "ai_analysis",
+                "skipped",
+                "Crawl blocked by target site (HTTP 403/4xx). AI analysis skipped to avoid misleading recommendations.",
+            )
+            audit.status = AuditStatus.COMPLETED
+            audit.completed_at = datetime.utcnow()
+            audit.processing_step = "completed"
+            await db.commit()
+            logger.warning("AI analysis skipped for audit %s: crawl blocked (403/4xx)", audit_id)
+            return
+
         audit.ai_status = "processing"
         await db.commit()
         logger.info(
@@ -205,7 +227,6 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
         )
 
         try:
-            crawl_data = tech_data["crawl"]
             lighthouse_data = tech_data["lighthouse"]
             
             # 1. AI Content Analysis
@@ -495,6 +516,19 @@ async def run_execution_plan(audit_id: str, tech_data: Dict[str, Any]) -> None:
             raise Exception(f"Audit {audit_id} not found")
         
         try:
+            crawl_data = tech_data.get("crawl", {})
+            if crawl_data.get("crawl_blocked"):
+                audit.execution_plan_status = "skipped"
+                await add_audit_log(
+                    audit,
+                    "execution_plan",
+                    "skipped",
+                    "Crawl blocked by target site. Execution plan skipped to avoid misleading tasks.",
+                )
+                await db.commit()
+                logger.warning("Execution plan skipped for audit %s: crawl blocked", audit_id)
+                return
+
             audit.execution_plan_status = "processing"
             audit.processing_step = "execution_plan:start"
             await add_audit_log(audit, "execution_plan", "running", "Starting execution plan generation...")
@@ -503,7 +537,6 @@ async def run_execution_plan(audit_id: str, tech_data: Dict[str, Any]) -> None:
             step_start = datetime.utcnow()
             
             # Get Phase 1 and Phase 2 results
-            crawl_data = tech_data.get("crawl", {})
             lighthouse_data = tech_data.get("lighthouse", {})
             senuto_data = tech_data.get("senuto", {})
             

@@ -163,6 +163,10 @@ class Audit(Base):
     # Execution plan status (None, "processing", "completed", "failed")
     execution_plan_status = Column(String(20), nullable=True)
 
+    # Crawler: custom User-Agent (whitelist in Cloudflare); crawl blocked (403/4xx)
+    crawler_user_agent = Column(String(500), nullable=True)
+    crawl_blocked = Column(Boolean, default=False, nullable=False)
+
     # Timestamps
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True

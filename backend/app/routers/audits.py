@@ -155,6 +155,7 @@ async def create_audit(
         senuto_fetch_mode=audit_data.senuto_fetch_mode,
         run_ai_pipeline=audit_data.run_ai_pipeline if audit_data.run_ai_pipeline is not None else True,
         run_execution_plan=audit_data.run_execution_plan if audit_data.run_execution_plan is not None else True,
+        crawler_user_agent=(audit_data.crawler_user_agent or "").strip() or None,
     )
     
     db.add(new_audit)
@@ -566,12 +567,30 @@ async def delete_audit(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to delete this audit"
             )
-    
+
+    # Remove RAG vectors for this audit from Qdrant (best-effort)
+    try:
+        from app.services.qdrant_client import delete_points_by_filter
+        from qdrant_client.http import models as qmodels
+        await delete_points_by_filter(
+            "audit_rag_chunks",
+            qmodels.Filter(
+                must=[
+                    qmodels.FieldCondition(
+                        key="audit_id",
+                        match=qmodels.MatchValue(value=str(audit_id)),
+                    )
+                ]
+            ),
+        )
+    except Exception as e:
+        logger.warning("Qdrant cleanup failed for audit %s: %s", audit_id, e)
+
     # Delete audit - cascade will handle competitors and tasks via ON DELETE CASCADE
     await db.delete(audit)
     await db.commit()
-    
-    logger.info(f"Audit {audit_id} deleted successfully by user {current_user['id']}")
+
+    logger.info("Audit %s deleted successfully by user %s", audit_id, current_user["id"])
 
 
 @router.get("/{audit_id}/raw")

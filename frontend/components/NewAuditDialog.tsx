@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { X, AlertCircle, Globe, Layers, Sparkles, CheckCircle2 } from 'lucide-react'
+import { X, AlertCircle, Globe, Layers, Sparkles, CheckCircle2, ChevronDown, ChevronUp, Settings2 } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -61,6 +61,8 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
   const [senutoFetchMode, setSenutoFetchMode] = useState('subdomain')
   const [runAiPipeline, setRunAiPipeline] = useState(true)
   const [runExecutionPlan, setRunExecutionPlan] = useState(true)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [crawlerUserAgent, setCrawlerUserAgent] = useState('')
   const { currentWorkspace } = useWorkspace()
 
   const {
@@ -128,6 +130,7 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
         senuto_fetch_mode: senutoFetchMode,
         run_ai_pipeline: runAiPipeline,
         run_execution_plan: runExecutionPlan,
+        crawler_user_agent: crawlerUserAgent.trim() || undefined,
       }
 
       const newAudit = await auditsAPI.create(currentWorkspace.id, auditData)
@@ -326,6 +329,37 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess }: NewAuditDialog
                 (konkretne zadania do wdrożenia)
               </span>
             </div>
+          </div>
+
+          {/* Advanced: Custom User-Agent */}
+          <div className="border-t border-primary/5 pt-3 mt-2">
+            <button
+              type="button"
+              onClick={() => setAdvancedOpen((o) => !o)}
+              className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Settings2 className="h-3.5 w-3.5" />
+              Zaawansowane
+              {advancedOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            </button>
+            {advancedOpen && (
+              <div className="space-y-2 mt-3">
+                <Label htmlFor="crawler-ua" className="text-[11px] font-bold uppercase text-muted-foreground">
+                  User-Agent crawlera (opcjonalne)
+                </Label>
+                <Input
+                  id="crawler-ua"
+                  type="text"
+                  placeholder="np. SiteSpector/1.0 twoja-domena.pl"
+                  value={crawlerUserAgent}
+                  onChange={(e) => setCrawlerUserAgent(e.target.value)}
+                  className="rounded-xl border-primary/10 text-xs"
+                />
+                <p className="text-[10px] text-muted-foreground italic">
+                  Ustaw custom User-Agent, aby ominąć blokady Cloudflare/WAF. Poproś właściciela strony o whitelistowanie.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-6">

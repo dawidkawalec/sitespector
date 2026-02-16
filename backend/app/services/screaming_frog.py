@@ -5,7 +5,7 @@ Screaming Frog SEO Spider integration via Docker container.
 import logging
 import json
 import asyncio
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import csv
 import io
 from urllib.parse import urlparse
@@ -13,6 +13,8 @@ from urllib.parse import urlparse
 import httpx
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_USER_AGENT = "SiteSpector/1.0"
 
 def _origin_from_url(url: str) -> str:
     """Return scheme://host for any input URL."""
@@ -22,7 +24,7 @@ def _origin_from_url(url: str) -> str:
     return f"{p.scheme}://{p.netloc}".rstrip("/")
 
 
-async def _detect_sitemaps(base_url: str) -> Dict[str, Any]:
+async def _detect_sitemaps(base_url: str, user_agent: Optional[str] = None) -> Dict[str, Any]:
     """Detect sitemap(s) via common endpoints + robots.txt.
 
     Returns:
@@ -36,6 +38,7 @@ async def _detect_sitemaps(base_url: str) -> Dict[str, Any]:
     ]
 
     found: list[str] = []
+    ua = (user_agent or "").strip() or DEFAULT_USER_AGENT
 
     def _add(u: str) -> None:
         u = (u or "").strip()
@@ -44,9 +47,10 @@ async def _detect_sitemaps(base_url: str) -> Dict[str, Any]:
 
     timeout = httpx.Timeout(10.0, connect=5.0)
     async with httpx.AsyncClient(follow_redirects=True, timeout=timeout) as client:
+        headers = {"User-Agent": ua}
         # 1) robots.txt Sitemap: lines
         try:
-            r = await client.get(f"{origin}/robots.txt", headers={"User-Agent": "SiteSpector/1.0"})
+            r = await client.get(f"{origin}/robots.txt", headers=headers)
             if r.status_code == 200 and r.text:
                 for line in r.text.splitlines():
                     if line.lower().startswith("sitemap:"):
@@ -57,7 +61,7 @@ async def _detect_sitemaps(base_url: str) -> Dict[str, Any]:
         # 2) Common sitemap endpoints (follow redirects)
         for u in candidates:
             try:
-                r = await client.get(u, headers={"User-Agent": "SiteSpector/1.0"})
+                r = await client.get(u, headers=headers)
                 if r.status_code != 200:
                     continue
                 ct = (r.headers.get("content-type") or "").lower()
@@ -87,7 +91,7 @@ async def _clean_crawl_output() -> None:
     await asyncio.wait_for(proc.communicate(), timeout=10)
 
 
-async def _run_single_crawl(url: str) -> Dict[str, Any]:
+async def _run_single_crawl(url: str, user_agent: Optional[str] = None) -> Dict[str, Any]:
     """Execute a single Screaming Frog crawl attempt. Returns parsed tab data."""
     from app.config import settings
 
@@ -99,6 +103,8 @@ async def _run_single_crawl(url: str) -> Dict[str, Any]:
         "/usr/local/bin/crawl.sh",
         url,
     ]
+    if (user_agent or "").strip():
+        cmd.append((user_agent or "").strip())
 
     # Register license if configured
     if settings.SCREAMING_FROG_USER and settings.SCREAMING_FROG_KEY:
@@ -159,7 +165,7 @@ async def _run_single_crawl(url: str) -> Dict[str, Any]:
     return crawl_data_tabs
 
 
-async def crawl_url(url: str, max_retries: int = 2) -> Dict[str, Any]:
+async def crawl_url(url: str, max_retries: int = 2, user_agent: Optional[str] = None) -> Dict[str, Any]:
     """
     Run Screaming Frog crawl with automatic retry.
 
@@ -168,6 +174,7 @@ async def crawl_url(url: str, max_retries: int = 2) -> Dict[str, Any]:
     Args:
         url: Website URL to crawl
         max_retries: Total attempts (default 2 = 1 original + 1 retry)
+        user_agent: Optional custom User-Agent (whitelist in Cloudflare/WAF)
 
     Returns:
         Dictionary with comprehensive crawl results
@@ -181,13 +188,13 @@ async def crawl_url(url: str, max_retries: int = 2) -> Dict[str, Any]:
     for attempt in range(1, max_retries + 1):
         try:
             logger.info("Crawl attempt %d/%d for %s", attempt, max_retries, url)
-            crawl_data_tabs = await _run_single_crawl(url)
+            crawl_data_tabs = await _run_single_crawl(url, user_agent=user_agent)
 
             crawl_data = _transform_sf_data(crawl_data_tabs, url)
 
-            # Sitemap detection
+            # Sitemap detection (same UA as crawl)
             try:
-                sitemap_info = await _detect_sitemaps(url)
+                sitemap_info = await _detect_sitemaps(url, user_agent=user_agent)
                 crawl_data["has_sitemap"] = bool(sitemap_info.get("has_sitemap"))
                 if sitemap_info.get("sitemap_url"):
                     crawl_data["sitemap_url"] = sitemap_info["sitemap_url"]
@@ -230,7 +237,9 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
         
     # Find homepage
     homepage = next((item for item in data if item.get('Address') == url or item.get('Address') == url + '/'), data[0])
-    
+    homepage_status = int(homepage.get("Status Code", 0) or 200)
+    crawl_blocked = homepage_status >= 400
+
     # Process ALL pages and images
     all_pages = []
     images_data = []
@@ -297,6 +306,8 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
     
     return {
         "url": url,
+        "crawl_blocked": crawl_blocked,
+        "crawl_blocked_status": homepage_status if crawl_blocked else None,
         "title": homepage.get('Title 1', ''),
         "title_length": int(homepage.get('Title 1 Length', 0) or 0),
         "meta_description": homepage.get('Meta Description 1', ''),

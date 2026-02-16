@@ -379,6 +379,11 @@ export default function SeoPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-6">
+      {audit.crawl_blocked && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+          Dane z crawlu są niepełne (strona zablokowała crawlera). Analiza SEO i zadania mogą być niepełne.
+        </div>
+      )}
       <div className="flex items-center gap-3">
         <Search className="h-8 w-8 text-primary" />
         <h1 className="text-3xl font-bold">Analiza SEO</h1>

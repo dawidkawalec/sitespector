@@ -181,6 +181,7 @@ class AuditCreate(AuditBase):
     senuto_fetch_mode: Optional[str] = Field(default="subdomain", description="Senuto fetch mode")
     run_ai_pipeline: Optional[bool] = Field(default=True, description="Run AI analysis automatically")
     run_execution_plan: Optional[bool] = Field(default=True, description="Generate execution plan automatically")
+    crawler_user_agent: Optional[str] = Field(default=None, max_length=500, description="Custom User-Agent for crawler (whitelist in Cloudflare)")
 
     @validator("competitors")
     def validate_competitors(cls, v: List[str]) -> List[str]:
@@ -231,6 +232,8 @@ class AuditResponse(AuditBase):
     competitors: List[CompetitorResponse] = []
     senuto_country_id: Optional[int] = None
     senuto_fetch_mode: Optional[str] = None
+    crawler_user_agent: Optional[str] = None
+    crawl_blocked: bool = False
 
     class Config:
         from_attributes = True
