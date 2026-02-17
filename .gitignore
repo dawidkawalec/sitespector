@@ -66,6 +66,9 @@ logs/
 *.sqlite
 *.sqlite3
 
+# Supabase CLI temp
+supabase/.temp/
+
 # Docker
 .docker/
 
