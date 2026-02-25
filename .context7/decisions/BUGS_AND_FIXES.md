@@ -8,6 +8,30 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-013: Chat messages disappear after sending (race condition)
+
+**Reported**: 2026-02-25
+
+**Status**: ✅ FIXED (2026-02-25)
+
+**Severity**: HIGH
+
+**Description**:
+After sending a chat message, the message would appear (optimistic update) then immediately vanish. Reloading or navigating away and back would restore the messages.
+
+**Root cause**:
+Race condition in `ChatPanel.tsx`. When `sendMessage()` called `createNewConversation()` then `setActiveConversation(newId)`, the `useEffect` watching `activeConversationId` fired **before** optimistic messages were appended. It fetched the conversation from server (0 messages, brand new) and called `setMessages()` — replacing the empty array and overwriting the optimistic messages that were added a few ms later.
+
+**Fix** (`frontend/components/chat/ChatPanel.tsx`):
+1. Added `sendingConvoIdRef = useRef<string | null>(null)`.
+2. Set `sendingConvoIdRef.current = convoId` **before** calling `appendMessage()` (optimistic).
+3. In the load-on-switch `useEffect`: skip fetch if `sendingConvoIdRef.current === activeConversationId`.
+4. Double-check ref inside `.then()` callback before calling `setMessages`.
+5. Only call `setMessages` if server returned non-empty array (guards against empty-response overwrite).
+6. Clear `sendingConvoIdRef.current = null` in both `onDone` and `onError`.
+
+---
+
 ### BUG-006: Alembic migration failed due to duplicate ENUM type
 
 **Reported**: 2026-02-14
@@ -1498,7 +1522,35 @@ Additionally, `retrieve_context()` called `embed_query()` without any error hand
 
 ---
 
+## BUG-041: Contaminated baseline data after project feature rollout
+
+**Date**: 2026-02-25  
+**Severity**: Medium  
+**Status**: RESOLVED
+
+**Symptom**:
+- Mixed legacy/test data (projects, audits, schedules, chat) made project-based regression testing unreliable.
+- New audits could be compared against stale entities from earlier feature iterations.
+
+**Root Cause**:
+- Feature rollout happened on top of pre-existing development and validation records across two databases (Supabase + VPS Postgres).
+- No coordinated cross-system reset was performed after introducing project-scoped entities.
+
+**Fix**:
+1. VPS reset (`sitespector-postgres`): truncate `audits`, `competitors`, `audit_tasks`, `audit_schedules`, `chat_conversations`, `chat_messages`, `chat_attachments`, `chat_message_feedback`, `chat_shares`, `chat_usage`.
+2. Reset VPS user audit counters: `users.audits_count = 0`.
+3. Supabase reset (via backend service role): delete all rows from `projects`, `project_members`.
+4. Reset subscription usage counters: `subscriptions.audits_used_this_month = 0`.
+5. Verify all key tables have `count(*) = 0` and no non-zero usage counters remain.
+
+**Files/Systems Touched**:
+- VPS container: `sitespector-postgres`
+- Backend service-role path: `backend/app/lib/supabase.py`
+- Context docs: `.context7/decisions/DECISIONS_LOG.md`
+
+---
+
 **Last Updated**: 2026-02-25  
-**Resolved Bugs**: 38 (incl. BUG-040 landing memory leak)  
+**Resolved Bugs**: 39 (incl. BUG-041 baseline data reset)  
 **Known Issues**: 1  
 **Watching**: 2

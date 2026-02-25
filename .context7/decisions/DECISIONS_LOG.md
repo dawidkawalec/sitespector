@@ -1,5 +1,16 @@
 # Architectural Decisions Log
 
+## Mandatory Project Flow + Sidebar Redesign (2026-02-25)
+
+- **Decision**: Enforce `Workspace → Project → Audit` flow. Dashboard no longer creates audits — only shows workspace trends. Audits must always belong to a project (`project_id` required at UI level). Added backend endpoint `PATCH /api/audits/{id}/assign-project` for migrating orphaned audits.
+- **Rationale**: Audits created from dashboard had `project_id = NULL` so they never appeared in project views. Users were confused. Clean hierarchy needed for scalability.
+- **Implementation**:
+  - `dashboard/page.tsx`: Removed "Nowy Audyt" button + `NewAuditDialog`. Now shows workspace trends + read-only recent audits list with CTA to create project.
+  - `backend/app/routers/audits.py`: Added `PATCH /{audit_id}/assign-project` endpoint.
+  - `frontend/lib/api.ts`: Added `auditsAPI.assignProject()`.
+- **Sidebar redesign**: Replaced flat audit dropdown with expandable projects tree. Each project item expands to show its 3 most recent audits + "Nowy audyt" button. Added search bar that filters projects by name/URL. Active project auto-expands. Audit nav sections still show when on `/audits/*` routes.
+- **Outcome**: Clear flow enforced. Sidebar scales to 10+ projects without becoming unreadable.
+
 ## Projects within Workspaces (2026-02-17)
 
 - **Decision**: Introduce a **Project** entity between Workspace and Audit. One project = one website (e.g. matkaaptekarka.pl). Audits, schedules, and team assignments are scoped to projects. Projects and project_members live in **Supabase**; `project_id` added to VPS `audits` and `audit_schedules` (nullable, no FK).
@@ -769,6 +780,25 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 
 ---
 
+## ADR-042: Cross-System Baseline Data Reset (Projects + Audits + Chat) (2026-02-25)
+
+**Context**: After introducing project-scoped audits and chat features, legacy and test records created during development made end-to-end validation noisy and hard to trust.
+
+**Decision**:
+- Perform one-time production-safe data reset for runtime entities while preserving schema, RLS, triggers, users, and workspace structure.
+- Reset on VPS Postgres: `audits`, `competitors`, `audit_tasks`, `audit_schedules`, `chat_*`, `chat_usage` + `users.audits_count = 0`.
+- Reset on Supabase: `projects`, `project_members` + `subscriptions.audits_used_this_month = 0`.
+
+**Consequences**:
+- Clean baseline for full regression testing of project/audit flows.
+- No migration or policy changes required.
+- Historical audit/project/chat data is intentionally removed.
+
+### Related Files
+`backend/app/models.py`, `.context7/infrastructure/DATABASE.md`
+
+---
+
 **Last Updated**: 2026-02-25
-**Total Decisions**: 41 accepted
+**Total Decisions**: 42 accepted
 **Review**: Update when making significant architectural changes.

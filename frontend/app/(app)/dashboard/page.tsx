@@ -1,31 +1,19 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { auditsAPI, projectsAPI, CreateAuditData } from '@/lib/api'
+import { useQuery } from '@tanstack/react-query'
+import { auditsAPI, projectsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { NewAuditDialog } from '@/components/NewAuditDialog'
 import { SystemStatus } from '@/components/SystemStatus'
-import { formatDate, formatNumber, formatScore, getScoreColor, getStatusBadgeVariant, truncateUrl, cn } from '@/lib/utils'
-import { Loader2, Plus, Trash, RefreshCw, TrendingUp, Activity, Search, Gauge, Sparkles, Layout } from 'lucide-react'
+import { formatDate, formatScore, getScoreColor, getStatusBadgeVariant, truncateUrl, cn, formatNumber } from '@/lib/utils'
+import { Loader2, Plus, RefreshCw, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { 
   AreaChart, 
   Area, 
@@ -34,28 +22,15 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  Cell 
 } from 'recharts'
-import { motion, AnimatePresence } from 'framer-motion'
-import { RiDashboardFill, RiAddFill, RiHistoryFill, RiSearchEyeFill, RiShieldFlashFill, RiSparklingFill } from 'react-icons/ri'
+import { motion } from 'framer-motion'
+import { RiDashboardFill, RiHistoryFill, RiSearchEyeFill, RiShieldFlashFill } from 'react-icons/ri'
 import { FolderOpen } from 'lucide-react'
-import { toast } from 'sonner'
 
 export default function DashboardPage() {
   const router = useRouter()
-  const queryClient = useQueryClient()
-  const [showNewAuditDialog, setShowNewAuditDialog] = useState(false)
   const [isAuth, setIsAuth] = useState(false)
-  const [deletingAuditId, setDeletingAuditId] = useState<string | null>(null)
-  const deleteToastIdRef = useRef<string | number | null>(null)
   const { currentWorkspace, isLoading: isWorkspaceLoading, error: workspaceError, refreshWorkspaces } = useWorkspace()
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -82,49 +57,6 @@ export default function DashboardPage() {
     queryFn: () => projectsAPI.list(currentWorkspace!.id),
     enabled: isAuth && !!currentWorkspace,
   })
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => auditsAPI.delete(id),
-    onMutate: (id) => {
-      setDeletingAuditId(id)
-      deleteToastIdRef.current = toast.loading('Usuwanie audytu...')
-    },
-    onSuccess: (_, deletedId) => {
-      toast.success('Audyt usunięty')
-      // Invalidate all audit-related queries to clear cache
-      queryClient.invalidateQueries({ queryKey: ['audits'] })
-      queryClient.invalidateQueries({ queryKey: ['audit', deletedId] })
-      refetch()
-    },
-    onError: (err: any) => {
-      toast.error(err?.message ? `Nie udało się usunąć audytu: ${err.message}` : 'Nie udało się usunąć audytu')
-    },
-    onSettled: () => {
-      if (deleteToastIdRef.current) {
-        toast.dismiss(deleteToastIdRef.current)
-      }
-      deleteToastIdRef.current = null
-      setDeletingAuditId(null)
-    },
-  })
-
-  const retryMutation = useMutation({
-    mutationFn: (data: CreateAuditData) => auditsAPI.create(currentWorkspace!.id, data),
-    onSuccess: (newAudit) => router.push(`/audits/${newAudit.id}`),
-  })
-
-  const handleDelete = (e: React.MouseEvent, id: string) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (deleteMutation.isPending) return
-    deleteMutation.mutate(id)
-  }
-
-  const handleRetry = (e: React.MouseEvent, audit: any) => {
-    e.preventDefault()
-    e.stopPropagation()
-    retryMutation.mutate({ url: audit.url })
-  }
 
   if (!isAuth || isWorkspaceLoading) {
     return (
@@ -200,9 +132,15 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={handleLogout} className="rounded-xl">Wyloguj się</Button>
-          <Button onClick={() => setShowNewAuditDialog(true)} variant="accent" className="rounded-xl shadow-lg shadow-accent/20">
-            <RiAddFill className="mr-2 h-5 w-5" /> Nowy Audyt
+          <Button variant="outline" asChild className="rounded-xl">
+            <Link href="/projects">
+              <FolderOpen className="mr-2 h-4 w-4" /> Projekty
+            </Link>
+          </Button>
+          <Button variant="accent" asChild className="rounded-xl shadow-lg shadow-accent/20">
+            <Link href="/projects">
+              <Plus className="mr-2 h-5 w-5" /> Nowy projekt
+            </Link>
           </Button>
         </div>
       </motion.div>
@@ -382,28 +320,27 @@ export default function DashboardPage() {
       {/* System Status */}
       <SystemStatus />
 
-      {/* Audits List */}
+      {/* Recent Audits — read-only overview */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold flex items-center gap-2 text-primary">
-            <RiHistoryFill className="h-6 w-6 text-accent" /> Ostatnie Audyty
+            <RiHistoryFill className="h-6 w-6 text-accent" /> Ostatnie audyty workspace
           </h2>
           <Button variant="ghost" size="sm" onClick={() => refetch()} className="text-muted-foreground">
             <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} /> Odśwież
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-3 gap-4">
-          <AnimatePresence mode="popLayout">
-            {auditsData?.items?.map((audit, index) => (
+        {auditsData?.items && auditsData.items.length > 0 ? (
+          <div className="grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-3 gap-4">
+            {auditsData.items.slice(0, 9).map((audit, index) => (
               <motion.div
                 key={audit.id}
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white dark:bg-slate-900">
+                <Card className="overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white dark:bg-slate-900">
                   <Link href={`/audits/${audit.id}`}>
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
@@ -430,11 +367,11 @@ export default function DashboardPage() {
                             <RiSearchEyeFill className="h-2 w-2" /> SEO
                           </p>
                           <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full">
-                            <motion.div 
+                            <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${audit.seo_score || 0}%` }}
-                              className="h-full bg-accent rounded-full" 
-                              transition={{ duration: 1, delay: 0.5 + (index * 0.1) }}
+                              className="h-full bg-accent rounded-full"
+                              transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
                             />
                           </div>
                         </div>
@@ -443,87 +380,33 @@ export default function DashboardPage() {
                             <RiShieldFlashFill className="h-2 w-2" /> Perf
                           </p>
                           <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full">
-                            <motion.div 
+                            <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${audit.performance_score || 0}%` }}
-                              className="h-full bg-primary rounded-full" 
-                              transition={{ duration: 1, delay: 0.6 + (index * 0.1) }}
+                              className="h-full bg-primary rounded-full"
+                              transition={{ duration: 1, delay: 0.6 + index * 0.1 }}
                             />
                           </div>
                         </div>
                       </div>
                     </CardContent>
                   </Link>
-                  
-                  {/* Hover Actions */}
-                  <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button 
-                      variant="secondary" 
-                      size="icon" 
-                      onClick={(e) => handleRetry(e, audit)}
-                      disabled={deleteMutation.isPending}
-                      className="h-7 w-7 rounded-full bg-white/90 backdrop-blur shadow-sm"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="secondary" 
-                          size="icon" 
-                          className="h-7 w-7 rounded-full bg-white/90 backdrop-blur shadow-sm text-destructive"
-                          disabled={deleteMutation.isPending && deletingAuditId === audit.id}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {deleteMutation.isPending && deletingAuditId === audit.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Trash className="h-3 w-3" />
-                          )}
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Audit</AlertDialogTitle>
-                          <AlertDialogDescription>Are you sure you want to delete audit for {audit.url}?</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel
-                            onClick={(e) => e.stopPropagation()}
-                            disabled={deleteMutation.isPending && deletingAuditId === audit.id}
-                          >
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={(e) => handleDelete(e, audit.id)}
-                            className="bg-red-600 gap-2"
-                            disabled={deleteMutation.isPending && deletingAuditId === audit.id}
-                          >
-                            {deleteMutation.isPending && deletingAuditId === audit.id && (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            )}
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
                 </Card>
               </motion.div>
             ))}
-          </AnimatePresence>
-        </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-4">
+            <RiHistoryFill className="h-12 w-12 opacity-20" />
+            <p className="text-sm">Brak audytów — zacznij od stworzenia projektu</p>
+            <Button variant="accent" asChild className="rounded-xl">
+              <Link href="/projects">
+                <Plus className="mr-2 h-4 w-4" /> Utwórz projekt
+              </Link>
+            </Button>
+          </div>
+        )}
       </div>
-
-      {/* New Audit Dialog */}
-      <NewAuditDialog
-        open={showNewAuditDialog}
-        onOpenChange={setShowNewAuditDialog}
-        onSuccess={() => {
-          refetch()
-          setShowNewAuditDialog(false)
-        }}
-      />
     </div>
   )
 }

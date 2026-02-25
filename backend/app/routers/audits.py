@@ -649,6 +649,56 @@ async def delete_audit(
     logger.info("Audit %s deleted successfully by user %s", audit_id, current_user["id"])
 
 
+@router.patch("/{audit_id}/assign-project", response_model=AuditResponse)
+async def assign_audit_to_project(
+    audit_id: UUID,
+    project_id: Optional[str] = Query(None, description="Project ID to assign (None to unassign)"),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Audit:
+    """
+    Assign (or unassign) an existing audit to a project.
+
+    Use this to migrate orphaned audits that were created without a project_id.
+    Pass project_id=None (omit the query param) to remove the project association.
+
+    Raises:
+        404: Audit not found
+        400: Project not found or wrong workspace
+        403: Not authorized
+    """
+    result = await db.execute(select(Audit).where(Audit.id == audit_id))
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audit not found")
+
+    if not audit.workspace_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Audit has no workspace")
+
+    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
+    if not has_access:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this workspace")
+
+    if project_id:
+        from app.lib.supabase import get_project
+        project = await get_project(project_id)
+        if not project or str(project.get("workspace_id")) != str(audit.workspace_id):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Project not found or does not belong to this workspace",
+            )
+        if not await verify_project_access(current_user["id"], project_id, str(audit.workspace_id)):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to assign to this project")
+        audit.project_id = UUID(project_id)
+    else:
+        audit.project_id = None
+
+    await db.commit()
+    await db.refresh(audit)
+    logger.info("Audit %s assigned to project %s by user %s", audit_id, project_id, current_user["id"])
+    return audit
+
+
 @router.get("/{audit_id}/raw")
 async def download_raw_data(
     audit_id: UUID,

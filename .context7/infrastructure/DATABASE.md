@@ -516,8 +516,24 @@ WHERE schemaname = 'public';
 
 ---
 
-**Last Updated**: 2025-02-03  
+## Operational Runbook: Baseline Reset (Projects + Audits + Chat)
+
+When testing requires a clean baseline after project/audit model changes, perform a coordinated reset:
+
+1. **VPS Postgres** (`sitespector-postgres`):
+   - Truncate runtime data tables: `audits`, `competitors`, `audit_tasks`, `audit_schedules`, `chat_conversations`, `chat_messages`, `chat_attachments`, `chat_message_feedback`, `chat_shares`, `chat_usage`
+   - Reset user audit counters: `UPDATE users SET audits_count = 0`
+2. **Supabase**:
+   - Delete all rows from `projects`, `project_members`
+   - Reset usage counters: `UPDATE subscriptions SET audits_used_this_month = 0`
+3. **Verify**:
+   - `count(*) = 0` on all reset tables
+   - no non-zero usage counters (`users.audits_count`, `subscriptions.audits_used_this_month`)
+
+This reset keeps schema, triggers, policies, users, profiles, workspaces, and memberships intact.
+
+---
+
+**Last Updated**: 2026-02-25  
 **Database**: PostgreSQL 15  
-**Tables**: 3 (users, audits, competitors)  
-**Indexes**: 7  
-**JSONB columns**: 2 (audits.results, competitors.results)
+**Scope Note**: This document covers VPS Postgres plus Supabase linkage for `project_id`.

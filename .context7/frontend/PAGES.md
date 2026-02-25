@@ -107,7 +107,9 @@ Each major section contains a **Surowe dane (RAW)** tab providing access to the 
 
 **Route**: `/dashboard`
 
-**Purpose**: Workspace overview: project cards (name, URL, latest score, audit count, schedule), analytics grid, and recent audits list. Uses `useWorkspace()` and `projectsAPI.list` for project cards.
+**Purpose**: Workspace trends overview — project cards, analytics chart, workspace-level average scores, and read-only recent audits list. **No audit creation here** — users must go to a project to create audits. CTA redirects to `/projects`. Uses `useWorkspace()` and `projectsAPI.list` for project cards.
+
+**Feb 2026 change**: Removed "Nowy Audyt" button and `NewAuditDialog`. Dashboard is read-only analytics. Audit creation flow: Dashboard → Projects → Project page → "Nowy audyt".
 
 ## Project Pages (`app/(app)/projects/`)
 

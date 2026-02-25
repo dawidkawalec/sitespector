@@ -347,6 +347,12 @@ export const auditsAPI = {
       method: 'DELETE',
     }),
 
+  assignProject: (auditId: string, projectId: string | null) =>
+    apiRequest<Audit>(
+      `/api/audits/${auditId}/assign-project${projectId ? `?project_id=${projectId}` : ''}`,
+      { method: 'PATCH' }
+    ),
+
   downloadPDF: async (id: string): Promise<Blob> => {
     const token = await getSupabaseToken()
     const headers: Record<string, string> = {}

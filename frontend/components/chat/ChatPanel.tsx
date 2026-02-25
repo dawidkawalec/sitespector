@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, Database, Loader2, Plus, RefreshCw, Settings2, X } from 'lucide-react'
 import { toast } from 'sonner'
@@ -59,6 +59,10 @@ export function ChatPanel() {
   const streamingPhase = useChatStore((s) => s.streamingPhase)
   const setStreaming = useChatStore((s) => s.setStreaming)
   const setStreamingPhase = useChatStore((s) => s.setStreamingPhase)
+
+  // Tracks the conversation we're currently sending to so the load-on-switch
+  // useEffect doesn't overwrite optimistic messages with the (empty) server state.
+  const sendingConvoIdRef = useRef<string | null>(null)
 
   const usage = useChatStore((s) => s.usage)
   const setUsage = useChatStore((s) => s.setUsage)
@@ -181,16 +185,23 @@ export function ChatPanel() {
   const ragStatus = ragStatusQuery.data?.status ?? null
   const ragReady = ragStatus === 'ready'
 
-  // Load messages for active conversation when switching
+  // Load messages for active conversation when switching.
+  // Skips the fetch when we're currently sending to this conversation to avoid
+  // the race condition where an empty server response overwrites optimistic messages.
   useEffect(() => {
     if (!activeConversationId) return
+    if (sendingConvoIdRef.current === activeConversationId) return
     let cancelled = false
     chatAPI
       .getConversation(activeConversationId)
       .then((data) => {
         if (cancelled) return
+        if (sendingConvoIdRef.current === activeConversationId) return
         upsertConversation({ ...data.conversation, agent: data.agent })
-        setMessages(activeConversationId, data.messages)
+        // Merge: keep local optimistic messages if server returned nothing yet
+        if (data.messages.length > 0) {
+          setMessages(activeConversationId, data.messages)
+        }
       })
       .catch((e) => toast.error(e?.message || 'Failed to load conversation'))
     return () => {
@@ -358,6 +369,10 @@ export function ChatPanel() {
       }
     }
 
+    // Mark this conversation as "sending" before adding optimistic messages.
+    // This prevents the load-on-switch useEffect from overwriting them.
+    sendingConvoIdRef.current = convoId
+
     const now = new Date().toISOString()
     const localUserId = `local-user-${Date.now()}`
     const localAssistantId = `local-assistant-${Date.now()}`
@@ -400,14 +415,18 @@ export function ChatPanel() {
       onSuggestions: (next) =>
         setSuggestions(convoId as string, Array.isArray(next) ? next.filter(Boolean).slice(0, 3) : []),
       onDone: async () => {
+        sendingConvoIdRef.current = null
         setStreaming(null)
         try {
           const data = await chatAPI.getConversation(convoId as string)
           upsertConversation({ ...data.conversation, agent: data.agent })
-          setMessages(convoId as string, data.messages)
+          // Server response is authoritative once streaming is done
+          if (data.messages.length > 0) {
+            setMessages(convoId as string, data.messages)
+          }
           void conversationsQuery.refetch()
         } catch {
-          // Not fatal
+          // Not fatal — optimistic messages remain visible
         }
         if (workspaceId) {
           try {
@@ -417,6 +436,7 @@ export function ChatPanel() {
         }
       },
       onError: (err) => {
+        sendingConvoIdRef.current = null
         setStreaming(null)
         toast.error(err.message)
         appendAssistantDelta(convoId as string, `\n\n[error] ${err.message}`)
