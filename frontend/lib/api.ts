@@ -485,3 +485,180 @@ export const auditsAPI = {
 export const systemAPI = {
   getStatus: () => apiRequest<any>('/api/system/status'),
 }
+
+// ─── Admin API (super admin only) ────────────────────────────────────────────
+
+export interface AdminStats {
+  users: { total: number; new_7d: number; new_30d: number }
+  workspaces: { total: number }
+  projects: { total: number }
+  audits: {
+    total: number
+    today: number
+    this_month: number
+    pending_queue: number
+    by_status: Record<string, number>
+    per_day_30d: Array<{ date: string; count: number }>
+    avg_processing_minutes: number | null
+    avg_overall_score: number | null
+    avg_seo_score: number | null
+    avg_performance_score: number | null
+    avg_content_score: number | null
+  }
+  reports: { pdf_generated: number }
+  billing: { plan_distribution: Record<string, number>; total_revenue_usd: number }
+}
+
+export interface AdminUser {
+  id: string
+  email: string
+  full_name: string | null
+  is_super_admin: boolean
+  created_at: string | null
+  last_sign_in_at: string | null
+  workspace_count: number
+  plan: string
+  audit_limit: number
+  audits_used_this_month: number
+  total_audits: number
+}
+
+export interface AdminUserDetail extends AdminUser {
+  avatar_url: string | null
+  confirmed_at: string | null
+  workspaces: Array<{
+    id: string
+    name: string
+    slug: string
+    type: string
+    role: string
+    created_at: string | null
+    subscription?: {
+      plan: string
+      status: string
+      audit_limit: number
+      audits_used_this_month: number
+    } | null
+  }>
+  projects_count: number
+  total_audits: number
+  audits: Array<{
+    id: string
+    url: string
+    status: string | null
+    overall_score: number | null
+    seo_score: number | null
+    performance_score: number | null
+    content_score: number | null
+    workspace_id: string | null
+    project_id: string | null
+    created_at: string | null
+    completed_at: string | null
+    pdf_url: string | null
+  }>
+  chat_messages_count: number
+}
+
+export interface AdminWorkspace {
+  id: string
+  name: string
+  slug: string
+  type: string
+  owner_id: string | null
+  owner_email: string
+  created_at: string | null
+  member_count: number
+  project_count: number
+  audit_count: number
+  plan: string
+  subscription_status: string
+  audit_limit: number
+  audits_used_this_month: number
+}
+
+export interface AdminAudit {
+  id: string
+  url: string
+  status: string | null
+  overall_score: number | null
+  seo_score: number | null
+  performance_score: number | null
+  content_score: number | null
+  workspace_id: string | null
+  workspace_name: string
+  project_id: string | null
+  created_at: string | null
+  started_at: string | null
+  completed_at: string | null
+  pdf_url: string | null
+  ai_status: string | null
+}
+
+export interface PaginatedResponse<T> {
+  total: number
+  page: number
+  per_page: number
+  items: T[]
+}
+
+export interface AdminAuditsResponse extends PaginatedResponse<AdminAudit> {
+  aggregate: {
+    success_rate: number | null
+    avg_processing_minutes: number | null
+    avg_overall_score: number | null
+    avg_seo_score: number | null
+    avg_performance_score: number | null
+    completed: number
+    failed: number
+  }
+}
+
+export const adminAPI = {
+  getStats: () => apiRequest<AdminStats>('/api/admin/stats'),
+
+  listUsers: (params?: { page?: number; per_page?: number; search?: string }) => {
+    const q = new URLSearchParams()
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.per_page) q.set('per_page', String(params.per_page))
+    if (params?.search) q.set('search', params.search)
+    const qs = q.toString() ? `?${q.toString()}` : ''
+    return apiRequest<PaginatedResponse<AdminUser>>(`/api/admin/users${qs}`)
+  },
+
+  getUser: (userId: string) =>
+    apiRequest<AdminUserDetail>(`/api/admin/users/${userId}`),
+
+  changeUserPlan: (userId: string, data: { workspace_id: string; plan: string; audit_limit?: number }) =>
+    apiRequest<{ success: boolean; workspace_id: string; plan: string }>(
+      `/api/admin/users/${userId}/plan`,
+      { method: 'PATCH', body: JSON.stringify(data) }
+    ),
+
+  listWorkspaces: (params?: { page?: number; per_page?: number; search?: string }) => {
+    const q = new URLSearchParams()
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.per_page) q.set('per_page', String(params.per_page))
+    if (params?.search) q.set('search', params.search)
+    const qs = q.toString() ? `?${q.toString()}` : ''
+    return apiRequest<PaginatedResponse<AdminWorkspace>>(`/api/admin/workspaces${qs}`)
+  },
+
+  listAudits: (params?: {
+    page?: number
+    per_page?: number
+    status?: string
+    date_from?: string
+    date_to?: string
+  }) => {
+    const q = new URLSearchParams()
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.per_page) q.set('per_page', String(params.per_page))
+    if (params?.status) q.set('status', params.status)
+    if (params?.date_from) q.set('date_from', params.date_from)
+    if (params?.date_to) q.set('date_to', params.date_to)
+    const qs = q.toString() ? `?${q.toString()}` : ''
+    return apiRequest<AdminAuditsResponse>(`/api/admin/audits${qs}`)
+  },
+
+  getSystem: () => apiRequest<any>('/api/admin/system'),
+}

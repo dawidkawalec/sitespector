@@ -14,7 +14,7 @@ from typing import Optional
 import logging
 from app.config import settings
 from app.database import init_db, close_db
-from app.routers import auth, audits, billing, schedules, public, tasks, chat, projects
+from app.routers import auth, audits, billing, schedules, public, tasks, chat, projects, admin
 from app.schemas import HealthCheck, ErrorResponse
 from app.auth_supabase import get_current_user
 
@@ -409,6 +409,7 @@ app.include_router(schedules.router, prefix="/api")
 app.include_router(public.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 app.include_router(projects.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 
 # ============================================

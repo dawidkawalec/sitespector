@@ -1,5 +1,21 @@
 # Architectural Decisions Log
 
+## Super Admin Dashboard (2026-02-25)
+
+- **Decision**: Add a full super-admin panel at `/admin/*` accessible only to users with `profiles.is_super_admin = true`.
+- **Rationale**: Platform operators need a global view of all users, workspaces, audits, subscriptions, and system health without relying on direct DB access.
+- **Implementation**:
+  - **DB**: `is_super_admin BOOLEAN DEFAULT FALSE` column added to `public.profiles` (Supabase). Migration SQL in `supabase/schema.sql` comments.
+  - **Backend**: `backend/app/routers/admin.py` — new router at `/api/admin/` with `verify_super_admin` dependency. Endpoints: `/stats`, `/users`, `/users/{id}`, `/users/{id}/plan`, `/workspaces`, `/audits`, `/system`.
+  - **Guard**: `verify_super_admin` checks `profiles.is_super_admin` via Supabase service role. Returns 403 for non-admins.
+  - **Frontend hook**: `frontend/lib/useAdmin.ts` — `useAdmin()` returns `{ isSuperAdmin, isLoading, userId }`.
+  - **Frontend API**: `adminAPI` namespace added to `frontend/lib/api.ts` with typed interfaces.
+  - **Pages**: `frontend/app/(app)/admin/` — layout + 6 pages (overview, users, users/[id], workspaces, audits, system).
+  - **Sidebar**: `UnifiedSidebar` shows "Panel Admina" link (red/shield icon) for super admins only.
+  - **Super admin email**: `info@craftweb.pl` — set via migration SQL.
+- **Security**: All backend admin endpoints require valid Supabase JWT + `is_super_admin = true`. Frontend layout redirects non-admins to `/dashboard`.
+- **Data strategy**: Admin endpoints join Supabase (users, workspaces, subs) + VPS PostgreSQL (audits, chat) in Python.
+
 ## PDF Report System v2 — Modular Multi-Type (2026-02-25)
 
 - **Decision**: Replaced the single-file `pdf_generator.py` (~300 lines, ~10 pages) with a full modular PDF system (`backend/app/services/pdf/` package, 25+ section modules, `backend/templates/pdf/` templates, chart generation via matplotlib).

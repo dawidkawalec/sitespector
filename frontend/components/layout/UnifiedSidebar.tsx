@@ -82,6 +82,7 @@ import { NavSection } from './NavSection'
 import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import { useChatStore } from '@/lib/chat-store'
+import { useAdmin } from '@/lib/useAdmin'
 import { useQuery } from '@tanstack/react-query'
 import { auditsAPI, projectsAPI } from '@/lib/api'
 import type { Project, Audit } from '@/lib/api'
@@ -358,6 +359,7 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
   const router = useRouter()
   const { currentWorkspace } = useWorkspace()
   const toggleChatPanel = useChatStore((s) => s.togglePanel)
+  const { isSuperAdmin } = useAdmin()
 
   // Keyboard shortcut: Ctrl+Shift+C toggles chat
   useEffect(() => {
@@ -752,6 +754,14 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
               className="text-white/70 hover:text-white"
             />
             <SystemStatusSection systemStatus={systemStatus} getStatusColor={getStatusColor} />
+            {isSuperAdmin && (
+              <Link href="/admin" onClick={onAction}>
+                <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors text-red-400/80 hover:bg-white/10 hover:text-red-400">
+                  <Shield className="h-4 w-4 flex-shrink-0" />
+                  <span>Panel Admina</span>
+                </div>
+              </Link>
+            )}
           </div>
         </nav>
 

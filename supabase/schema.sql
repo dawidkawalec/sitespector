@@ -6,9 +6,14 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT,
   avatar_url TEXT,
+  is_super_admin BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migration: add is_super_admin if not exists (idempotent)
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN DEFAULT FALSE;
+-- UPDATE public.profiles SET is_super_admin = TRUE WHERE id = (SELECT id FROM auth.users WHERE email = 'info@craftweb.pl');
 
 -- Workspaces (personal + team)
 CREATE TABLE IF NOT EXISTS public.workspaces (

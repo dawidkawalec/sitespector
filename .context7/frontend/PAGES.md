@@ -22,6 +22,15 @@ app/
 │   └── sitemap/page.tsx       # Mapa strony (human-readable) – pełna struktura linków (bez anchorów typu /#price)
 ├── (app)/                     # Authenticated app with UnifiedSidebar
 │   ├── layout.tsx             # Sidebar layout (workspace switcher)
+│   ├── admin/                 # Super admin panel (is_super_admin = true required)
+│   │   ├── layout.tsx         # Admin layout + guard (redirects non-admins to /dashboard)
+│   │   ├── page.tsx           # Overview: KPIs, charts, plan distribution, status breakdown
+│   │   ├── users/
+│   │   │   ├── page.tsx       # User list (search, pagination, inline plan change)
+│   │   │   └── [userId]/page.tsx  # User detail: profile, workspaces, audits, chat stats
+│   │   ├── workspaces/page.tsx    # All workspaces with owner, plan, member/project/audit counts
+│   │   ├── audits/page.tsx        # All audits with filters, aggregate stats
+│   │   └── system/page.tsx        # Service health cards + worker queue
 │   ├── dashboard/page.tsx    # Dashboard + workspace analytics + project cards
 │   ├── projects/
 │   │   ├── page.tsx           # Project list (create project)
