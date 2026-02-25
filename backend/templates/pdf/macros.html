@@ -1,0 +1,176 @@
+{# ============================================================ #}
+{# SiteSpector PDF Report - Reusable Jinja2 Macros            #}
+{# ============================================================ #}
+
+{# ---- Score card ---- #}
+{% macro score_card(value, label, color=None) %}
+{% set v = value | int %}
+{% set c = color if color else ('#16a34a' if v >= 80 else ('#ca8a04' if v >= 50 else '#dc2626')) %}
+<div class="score-card no-break">
+    <div class="score-value" style="color: {{ c }};">{{ v }}</div>
+    <div class="score-label">{{ label }}</div>
+    {% if v >= 80 %}
+        <div class="score-badge" style="background:#dcfce7;color:#166534;">Dobry</div>
+    {% elif v >= 50 %}
+        <div class="score-badge" style="background:#fef9c3;color:#854d0e;">Wymaga uwagi</div>
+    {% else %}
+        <div class="score-badge" style="background:#fee2e2;color:#991b1b;">Krytyczny</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# ---- Metric card (small) ---- #}
+{% macro metric_card(value, label, color=None) %}
+<div class="metric-card no-break">
+    <div class="metric-value" {% if color %}style="color:{{ color }};"{% endif %}>{{ value }}</div>
+    <div class="metric-label">{{ label }}</div>
+</div>
+{% endmacro %}
+
+{# ---- Badge ---- #}
+{% macro badge(text, cls='badge-info') %}
+<span class="badge {{ cls }}">{{ text }}</span>
+{% endmacro %}
+
+{# ---- Alert box ---- #}
+{% macro alert(title, body='', type='info') %}
+{% set cls_map = {'info':'alert-info','critical':'alert-critical','warning':'alert-warning','success':'alert-success','ai':'alert-ai'} %}
+<div class="alert {{ cls_map.get(type, 'alert-info') }} no-break">
+    {% if title %}<span class="alert-title">{{ title }}</span>{% endif %}
+    {% if body %}<p>{{ body }}</p>{% endif %}
+    {{ caller() if caller is defined else '' }}
+</div>
+{% endmacro %}
+
+{# ---- Simple KV table row ---- #}
+{% macro kv_row(label, value, value_class='') %}
+<tr>
+    <td>{{ label }}</td>
+    <td class="td-bold {{ value_class }}">{{ value }}</td>
+</tr>
+{% endmacro %}
+
+{# ---- Progress bar ---- #}
+{% macro progress_bar(label, value, max_value=100, color=None) %}
+{% set pct = [(value / max_value * 100) | round | int, 100] | min if max_value > 0 else 0 %}
+{% set c = color if color else ('#16a34a' if pct >= 80 else ('#ca8a04' if pct >= 50 else '#dc2626')) %}
+<div class="progress-row">
+    <div class="progress-label">{{ label }}</div>
+    <div class="progress-bar-outer">
+        <div class="progress-bar-inner" style="width: {{ pct }}%; background: {{ c }};"></div>
+    </div>
+    <div class="progress-value" style="color: {{ c }};">{{ value }}</div>
+</div>
+{% endmacro %}
+
+{# ---- Chart embed ---- #}
+{% macro chart(src, caption='', width='100%') %}
+{% if src %}
+<div class="chart-container no-break">
+    <img src="{{ src }}" alt="{{ caption }}" style="width: {{ width }}; height: auto;" />
+    {% if caption %}<div class="chart-caption">{{ caption }}</div>{% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{# ---- Two chart side by side ---- #}
+{% macro chart_pair(src1, caption1, src2, caption2) %}
+{% if src1 or src2 %}
+<div class="chart-pair">
+    {% if src1 %}{{ chart(src1, caption1, '100%') }}{% endif %}
+    {% if src2 %}{{ chart(src2, caption2, '100%') }}{% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{# ---- Part header (coloured section break) ---- #}
+{% macro part_header(part_num, title, subtitle='') %}
+<div class="part-header no-break">
+    <div class="part-header-num">CZĘŚĆ {{ part_num }}</div>
+    <h2 class="part-header-title">{{ title }}</h2>
+    {% if subtitle %}<div class="part-header-subtitle">{{ subtitle }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{# ---- Section heading ---- #}
+{% macro section_heading(num, title) %}
+<h2 id="sec-{{ num }}">{{ num }}. {{ title }}</h2>
+{% endmacro %}
+
+{# ---- Task card (quick win / execution plan item) ---- #}
+{% macro task_card(task, show_fix_data=False) %}
+{% set impact = task.impact | default('medium') %}
+{% set effort = task.effort | default('medium') %}
+{% set priority = task.priority | default('') %}
+{% set impact_cls = {'high':'badge-danger','medium':'badge-warning','low':'badge-success'} %}
+{% set effort_cls = {'easy':'badge-success','medium':'badge-warning','hard':'badge-danger'} %}
+{% set priority_cls = {'critical':'badge-danger','high':'badge-warning','medium':'badge-info','low':'badge-gray'} %}
+<div class="task-card no-break">
+    <div class="task-card-header">
+        <div class="task-card-title">{{ task.title }}</div>
+        <div class="task-card-badges">
+            {% if priority %}
+                <span class="badge {{ priority_cls.get(priority, 'badge-gray') }}">{{ priority | title }}</span>
+            {% endif %}
+            <span class="badge {{ impact_cls.get(impact, 'badge-gray') }}">Wpływ: {{ impact | title }}</span>
+            <span class="badge {{ effort_cls.get(effort, 'badge-gray') }}">Nakład: {{ effort | title }}</span>
+        </div>
+    </div>
+    {% if task.description %}
+        <p class="task-card-desc">{{ task.description }}</p>
+    {% endif %}
+    {% if task.module or task.category %}
+        <div class="task-card-meta">
+            {% if task.module %}Moduł: <strong>{{ task.module | upper }}</strong>{% endif %}
+            {% if task.category %} | Kategoria: <strong>{{ task.category }}</strong>{% endif %}
+        </div>
+    {% endif %}
+    {% if show_fix_data and task.fix_data %}
+        {% if task.fix_data.current_value %}
+            <div class="text-small text-muted mt-8"><strong>Aktualnie:</strong> {{ task.fix_data.current_value | truncate(120) }}</div>
+        {% endif %}
+        {% if task.fix_data.suggested_value %}
+            <div class="text-small mt-8"><strong>Sugestia:</strong> {{ task.fix_data.suggested_value | truncate(120) }}</div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# ---- AI insight list (key_findings / recommendations) ---- #}
+{% macro ai_insight_list(items, icon='•', css_class='') %}
+{% if items %}
+<ul class="list-clean {{ css_class }}">
+    {% for item in items %}
+        <li>{{ icon }} {{ item }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endmacro %}
+
+{# ---- Chip (technology badge) ---- #}
+{% macro chip(text, cls='') %}
+<span class="chip {{ cls }}">{{ text }}</span>
+{% endmacro %}
+
+{# ---- CWV metric row ---- #}
+{% macro cwv_row(label, value, status_label, status_color) %}
+<tr>
+    <td class="td-bold">{{ label }}</td>
+    <td>{{ value }}</td>
+    <td><span class="badge" style="background: {{ status_color }}20; color: {{ status_color }}; border: 1px solid {{ status_color }}40;">{{ status_label }}</span></td>
+</tr>
+{% endmacro %}
+
+{# ---- Roadmap item card ---- #}
+{% macro roadmap_item(item) %}
+<div class="roadmap-item no-break">
+    <div class="roadmap-item-title">{{ item.title }}</div>
+    {% if item.description %}
+        <div class="roadmap-item-desc">{{ item.description }}</div>
+    {% endif %}
+    {% if item.impact %}
+        <div class="task-card-meta">Wpływ: <strong>{{ item.impact | title }}</strong>
+        {% if item.area %} | Obszar: <strong>{{ item.area }}</strong>{% endif %}</div>
+    {% endif %}
+</div>
+{% endmacro %}

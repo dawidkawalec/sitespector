@@ -1,0 +1,45 @@
+{% from '../macros.html' import section_heading, chart %}
+<div class="section">
+    {{ section_heading(sec_num, 'Konkurencja Organiczna') }}
+
+    {% if chart_competitors %}
+        {{ chart(chart_competitors, 'Porównanie z organiczną konkurencją', '100%') }}
+    {% endif %}
+
+    {% if org_comp.competitors %}
+        <h3>Szczegółowe porównanie</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Domena</th>
+                    <th>Wspólne frazy</th>
+                    <th>Widoczność</th>
+                    <th>TOP 3</th>
+                    <th>TOP 10</th>
+                    <th>Domain Rank</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comp in org_comp.competitors %}
+                    <tr>
+                        <td class="td-bold">{{ comp.domain | truncate(30) }}</td>
+                        <td class="td-center">{{ comp.common_keywords | int if comp.common_keywords else '—' }}</td>
+                        <td class="td-center">{{ comp.visibility | round(1) if comp.visibility else '—' }}</td>
+                        <td class="td-center">{{ comp.top3 | int if comp.top3 is defined else '—' }}</td>
+                        <td class="td-center">{{ comp.top10 | int if comp.top10 is defined else '—' }}</td>
+                        <td class="td-center">{{ comp.domain_rank | int if comp.domain_rank else '—' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if org_comp.ai_opportunities %}
+        <h3>Szanse wynikające z analizy konkurencji</h3>
+        <ul>
+            {% for opp in org_comp.ai_opportunities[:6] %}
+                <li>{{ opp }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>

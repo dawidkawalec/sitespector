@@ -1,0 +1,51 @@
+{% from '../macros.html' import section_heading, task_card, chart %}
+<div class="section">
+    {{ section_heading(sec_num, 'Quick Wins') }}
+
+    <p class="text-muted text-small mb-16">
+        Priorytetyzowane zadania o najwyższym stosunku wpływu do nakładu pracy.
+        Wygenerowane przez AI SiteSpector na podstawie pełnej analizy audytu.
+    </p>
+
+    {% if chart_matrix %}
+        {{ chart(chart_matrix, 'Macierz Quick Wins: Wpływ vs Nakład pracy', '90%') }}
+    {% endif %}
+
+    {# Stats #}
+    <div class="metric-grid mb-16">
+        <div class="metric-card">
+            <div class="metric-value">{{ qw_stats.total }}</div>
+            <div class="metric-label">Łącznie</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" style="color: #dc2626;">{{ qw_stats.high_impact }}</div>
+            <div class="metric-label">Wysoki wpływ</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" style="color: #16a34a;">{{ qw_stats.easy_effort }}</div>
+            <div class="metric-label">Łatwe do wdrożenia</div>
+        </div>
+    </div>
+
+    {# Group by impact #}
+    {% if qw_high %}
+        <h3 style="color: #dc2626;">Wysoki wpływ ({{ qw_high | length }})</h3>
+        {% for task in qw_high %}
+            {{ task_card(task) }}
+        {% endfor %}
+    {% endif %}
+
+    {% if qw_medium %}
+        <h3 style="color: #ca8a04;">Średni wpływ ({{ qw_medium | length }})</h3>
+        {% for task in qw_medium %}
+            {{ task_card(task) }}
+        {% endfor %}
+    {% endif %}
+
+    {% if qw_low %}
+        <h3 style="color: #16a34a;">Niski wpływ ({{ qw_low | length }})</h3>
+        {% for task in qw_low %}
+            {{ task_card(task) }}
+        {% endfor %}
+    {% endif %}
+</div>

@@ -1,0 +1,89 @@
+{% from '../macros.html' import section_heading, part_header, ai_insight_list %}
+<div class="section">
+    {{ part_header('VI', 'Strategia AI', 'Insights AI, Cross-Tool Analysis, Quick Wins i Roadmap') }}
+    {{ section_heading(sec_num, 'AI Insights per Obszar') }}
+
+    <p class="text-muted text-small mb-16">
+        Poniżej szczegółowe analizy AI dla każdego obszaru audytu.
+        Każda sekcja zawiera kluczowe obserwacje, problemy priorytetowe i rekomendacje.
+    </p>
+
+    {% set area_labels = {
+        'seo': 'SEO',
+        'performance': 'Wydajność',
+        'visibility': 'Widoczność',
+        'backlinks': 'Backlinki',
+        'ai_overviews': 'AI Overviews',
+        'links': 'Linkowanie',
+        'images': 'Obrazy',
+        'security': 'Bezpieczeństwo',
+        'ux': 'UX'
+    } %}
+
+    {% for area_key, area_data in ai_contexts.items() %}
+        {% if area_data %}
+            <div class="no-break" style="margin-bottom: 24px; page-break-inside: avoid;">
+                <h3>{{ area_labels.get(area_key, area_key | title) }}</h3>
+
+                {% if area_data.get('summary') %}
+                    <div style="font-style: italic; color: #475569; font-size: 8.5pt; margin-bottom: 10px; padding-left: 10px; border-left: 3px solid #e2e8f0;">
+                        {{ area_data.summary }}
+                    </div>
+                {% endif %}
+
+                {% if area_data.get('health_score') is not none %}
+                    <div style="margin-bottom: 8px;">
+                        <span class="badge {{ 'badge-success' if area_data.health_score >= 80 else ('badge-warning' if area_data.health_score >= 50 else 'badge-danger') }}">
+                            Health Score: {{ area_data.health_score | int }}
+                        </span>
+                        {% if area_data.get('overall_health') %}
+                            <span class="badge badge-gray" style="margin-left: 4px;">{{ area_data.overall_health | title }}</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="two-col">
+                    {% if area_data.get('key_findings') %}
+                        <div>
+                            <h4>Kluczowe obserwacje</h4>
+                            {{ ai_insight_list(area_data.key_findings[:4]) }}
+                        </div>
+                    {% endif %}
+                    {% if area_data.get('priority_issues') %}
+                        <div>
+                            <h4>Problemy priorytetowe</h4>
+                            {{ ai_insight_list(area_data.priority_issues[:4], '⚠') }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if area_data.get('recommendations') %}
+                    <h4>Rekomendacje</h4>
+                    {{ ai_insight_list(area_data.recommendations[:5 if not extended else 8], '→') }}
+                {% endif %}
+
+                {% if extended and area_data.get('quick_wins') %}
+                    <h4>Quick Wins — {{ area_labels.get(area_key, area_key | title) }}</h4>
+                    {% for qw in area_data.quick_wins[:3] %}
+                        <div class="task-card no-break">
+                            <div class="task-card-header">
+                                <div class="task-card-title">{{ qw.title }}</div>
+                                <div class="task-card-badges">
+                                    <span class="badge {{ 'badge-danger' if qw.impact == 'high' else ('badge-warning' if qw.impact == 'medium' else 'badge-success') }}">
+                                        {{ qw.impact | title }}
+                                    </span>
+                                    <span class="badge {{ 'badge-success' if qw.effort == 'easy' else ('badge-warning' if qw.effort == 'medium' else 'badge-danger') }}">
+                                        {{ qw.effort | title }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% if qw.description %}<p class="task-card-desc">{{ qw.description }}</p>{% endif %}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if not loop.last %}<hr class="divider">{% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>

@@ -1,0 +1,74 @@
+{% from '../macros.html' import section_heading, chip %}
+<div class="section">
+    {{ section_heading(sec_num, 'Stack Technologiczny') }}
+
+    {% if stack.technologies %}
+        <h3>Wykryte technologie</h3>
+        <div class="mb-16">
+            {% set categories = {} %}
+            {% for tech in stack.technologies %}
+                {# Group by category #}
+                {% set cat = tech.category | default('Inne') %}
+                {% if cat not in categories %}
+                    {% set _ = categories.update({cat: []}) %}
+                {% endif %}
+            {% endfor %}
+
+            {# Show all technologies grouped #}
+            {% for tech in stack.technologies %}
+                {{ chip(tech.name ~ ' (' ~ tech.category ~ ')', 'chip-blue') }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if stack.technologies %}
+        <h3>Lista technologii</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Technologia</th>
+                    <th>Kategoria</th>
+                    <th>Wersja</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tech in stack.technologies %}
+                    <tr>
+                        <td class="td-bold">{{ tech.name }}</td>
+                        <td>{{ tech.category | default('—') }}</td>
+                        <td class="text-small">{{ tech.version | default('—') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <div class="two-col">
+        <div>
+            <h3>Infrastruktura</h3>
+            <table>
+                {% if stack.web_server %}
+                    <tr><td>Serwer WWW</td><td class="td-bold">{{ stack.web_server }}</td></tr>
+                {% endif %}
+                {% if stack.protocol %}
+                    <tr><td>Protokół</td><td class="td-bold">{{ stack.protocol }}</td></tr>
+                {% endif %}
+                {% if stack.cdn %}
+                    <tr><td>CDN</td><td class="td-bold">{{ stack.cdn }}</td></tr>
+                {% endif %}
+            </table>
+        </div>
+        <div>
+            <h3>Rekomendacje</h3>
+            {% if stack.recommendations %}
+                <ul>
+                    {% for rec in stack.recommendations[:5] %}
+                        <li>{{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted text-small">Brak rekomendacji stack technologiczny.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>

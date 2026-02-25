@@ -1,0 +1,34 @@
+{% from '../macros.html' import section_heading %}
+<div class="section">
+    {{ section_heading(sec_num, 'Załącznik D — Tabela Backlinks') }}
+
+    <p class="text-small text-muted mb-8">
+        Lista linków przychodzących ({{ app_bl.backlinks | length }}
+        {% if app_bl.total_count > app_bl.backlinks | length %}z {{ app_bl.total_count }}{% endif %}).
+    </p>
+
+    <table class="appendix-table">
+        <thead>
+            <tr>
+                <th style="width:35%">URL źródłowy</th>
+                <th style="width:20%">Domena</th>
+                <th style="width:20%">Anchor</th>
+                <th>Typ</th>
+                <th>Rel</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bl in app_bl.backlinks %}
+                <tr>
+                    <td class="td-url">{{ bl.url | truncate(50) }}</td>
+                    <td style="font-size: 7.5pt;">{{ bl.domain | truncate(30) if bl.domain else '—' }}</td>
+                    <td style="font-size: 7.5pt;">{{ bl.anchor | truncate(30) if bl.anchor else '(brak)' }}</td>
+                    <td class="td-center">
+                        <span class="badge badge-info">{{ bl.type | truncate(12) if bl.type else '—' }}</span>
+                    </td>
+                    <td class="td-center" style="font-size: 7pt;">{{ bl.get('rel', bl.get('link_attributes', '—')) | truncate(15) }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

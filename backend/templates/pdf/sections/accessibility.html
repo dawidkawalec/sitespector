@@ -1,0 +1,44 @@
+{% from '../macros.html' import score_card, section_heading, kv_row, alert %}
+<div class="section">
+    {{ section_heading(sec_num, 'Dostępność (Accessibility)') }}
+
+    <div class="scores-grid">
+        {% if acc.accessibility_score is not none %}
+            {{ score_card(acc.accessibility_score, 'Accessibility Score') }}
+        {% endif %}
+    </div>
+
+    <div class="two-col">
+        <div>
+            <h3>Kluczowe sprawdzenia</h3>
+            <table>
+                {{ kv_row('Obrazy bez ALT', acc.images_without_alt, 'badge-warning' if acc.images_without_alt > 0 else '') }}
+                {{ kv_row('Mobile Friendly', 'Tak' if acc.mobile_friendly else 'Nie') }}
+                {{ kv_row('Kontrast kolorów', 'OK' if acc.color_contrast_ok else 'Problemy') }}
+                {{ kv_row('Hierarchia nagłówków', 'OK' if acc.heading_hierarchy_ok else 'Nieprawidłowa') }}
+                {{ kv_row('Etykiety formularzy', 'OK' if acc.form_labels_ok else 'Brak etykiet') }}
+            </table>
+        </div>
+        <div>
+            <h3>AI Recommendations</h3>
+            {% if acc.ai_recommendations %}
+                <ul>
+                    {% for rec in acc.ai_recommendations[:6] %}
+                        <li>{{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted text-small">Brak dodatkowych zaleceń.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if acc.issues %}
+        <h3>Wykryte problemy dostępności</h3>
+        {% for issue in acc.issues[:10] %}
+            <div class="alert alert-warning no-break">
+                <p>{{ issue }}</p>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>

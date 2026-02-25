@@ -1,0 +1,44 @@
+{% from '../macros.html' import section_heading, ai_insight_list %}
+<div class="section">
+    {{ section_heading(sec_num, 'Analiza Cross-Tool') }}
+
+    <p class="text-muted text-small mb-16">
+        Analiza korelacji i zależności pomiędzy różnymi obszarami audytu.
+        Identyfikacja synergii i konfliktów pomiędzy SEO, wydajnością, widocznością i UX.
+    </p>
+
+    <div class="two-col">
+        {% if ct.correlations %}
+            <div>
+                <h3>Korelacje</h3>
+                <div class="alert alert-info no-break">
+                    {{ ai_insight_list(ct.correlations[:5]) }}
+                </div>
+            </div>
+        {% endif %}
+        {% if ct.synergies %}
+            <div>
+                <h3>Synergie</h3>
+                <div class="alert alert-success no-break">
+                    {{ ai_insight_list(ct.synergies[:5]) }}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if ct.conflicts %}
+        <h3>Konflikty</h3>
+        <div class="alert alert-warning no-break">
+            {{ ai_insight_list(ct.conflicts[:5]) }}
+        </div>
+    {% endif %}
+
+    {% if ct.unified_recommendations %}
+        <h3>Zunifikowane rekomendacje</h3>
+        <ol>
+            {% for rec in ct.unified_recommendations[:8] %}
+                <li>{{ rec }}</li>
+            {% endfor %}
+        </ol>
+    {% endif %}
+</div>

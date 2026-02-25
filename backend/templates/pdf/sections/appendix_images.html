@@ -1,0 +1,53 @@
+{% from '../macros.html' import section_heading %}
+<div class="section">
+    {{ section_heading(sec_num, 'Załącznik B — Lista Obrazów') }}
+
+    <p class="text-small text-muted mb-8">
+        Analiza obrazów pod kątem SEO (atrybuty ALT) i wydajności (rozmiar pliku).
+        Łącznie: {{ app_img.images | length }}
+        {% if app_img.total_count > app_img.images | length %}z {{ app_img.total_count }}{% endif %} obrazów.
+    </p>
+
+    <table class="appendix-table">
+        <thead>
+            <tr>
+                <th style="width:45%">URL Obrazu</th>
+                <th style="width:25%">Tekst ALT</th>
+                <th>Format</th>
+                <th>Rozmiar</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for img in app_img.images %}
+                <tr>
+                    <td class="td-url">{{ img.url | truncate(60) }}</td>
+                    <td style="font-size: 7.5pt;">
+                        {% if img.alt_text %}
+                            {{ img.alt_text | truncate(40) }}
+                        {% else %}
+                            <span style="color: #dc2626; font-weight: 700;">BRAK ALT</span>
+                        {% endif %}
+                    </td>
+                    <td class="td-center">{{ img.format | upper if img.format else '—' }}</td>
+                    <td class="td-center">
+                        {% if img.size_bytes %}
+                            {% if img.size_bytes > 512000 %}
+                                <span style="color: #dc2626; font-weight: 700;">{{ (img.size_bytes / 1024) | round(0) | int }} KB</span>
+                            {% else %}
+                                {{ (img.size_bytes / 1024) | round(1) }} KB
+                            {% endif %}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="td-center">
+                        {% if not img.alt_text or (img.size_bytes and img.size_bytes > 512000) %}
+                            <span class="badge badge-warning">!</span>
+                        {% else %}
+                            <span class="badge badge-success">OK</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

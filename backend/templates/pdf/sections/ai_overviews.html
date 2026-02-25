@@ -1,0 +1,59 @@
+{% from '../macros.html' import metric_card, section_heading, badge %}
+<div class="section">
+    {{ section_heading(sec_num, 'AI Overviews (Google AIO)') }}
+
+    <p class="text-muted text-small mb-16">
+        AI Overviews to odpowiedzi generowane przez AI w wynikach wyszukiwania Google.
+        Poniższe dane pokazują, jak strona pojawia się w cytatach AIO.
+    </p>
+
+    <div class="metric-grid">
+        {{ metric_card(aio.citations_count | int, 'Cytowania AIO', '#8b5cf6') }}
+        {{ metric_card(aio.avg_position | round(1), 'Śr. pozycja AIO') }}
+        {{ metric_card(aio.keywords_count | int, 'Fraz z AIO') }}
+    </div>
+
+    {% if aio.ai_summary %}
+        <div class="alert alert-ai no-break">
+            <span class="alert-title">AI Insights — AI Overviews</span>
+            <p>{{ aio.ai_summary }}</p>
+        </div>
+    {% endif %}
+
+    {% if aio.keywords %}
+        <h3>Frazy z cytowaniem w AI Overviews</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:35%">Fraza</th>
+                    <th>Wyszuk.</th>
+                    <th>Poz. org.</th>
+                    <th>Poz. AIO</th>
+                    <th>Intencja</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for kw in aio.keywords %}
+                    <tr>
+                        <td class="td-bold">{{ kw.keyword | truncate(40) }}</td>
+                        <td class="td-center">{{ kw.search_volume | int if kw.search_volume else '—' }}</td>
+                        <td class="td-center">{{ kw.organic_position | int if kw.organic_position else '—' }}</td>
+                        <td class="td-center td-bold" style="color: #8b5cf6;">{{ kw.best_aio_position | int if kw.best_aio_position else '—' }}</td>
+                        <td class="td-center">
+                            <span class="badge badge-purple">{{ kw.intent | truncate(12) if kw.intent else '—' }}</span>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if aio.aio_opportunities %}
+        <h3>Możliwości AI Overviews</h3>
+        <ul>
+            {% for opp in aio.aio_opportunities[:5] %}
+                <li>{{ opp }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>

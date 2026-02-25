@@ -1,0 +1,35 @@
+{% from '../macros.html' import section_heading %}
+<div class="section">
+    <h2>Spis Treści</h2>
+    <div class="toc-container">
+        {% for part in toc_parts %}
+            <div class="toc-part">
+                <div class="toc-part-label">{{ part.label }}</div>
+                {% for item in part.items %}
+                    <div class="toc-item">
+                        <span><span class="toc-num">{{ item.num }}.</span> {{ item.title }}</span>
+                        <span class="toc-dots"></span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        {% if skipped_sections %}
+            <div class="toc-part">
+                <div class="toc-part-label" style="color: #94a3b8;">Sekcje pominięte (brak danych)</div>
+                {% for sk in skipped_sections %}
+                    <div class="toc-skipped">
+                        <span style="color: #e2e8f0;">○</span>
+                        {{ sk.label }} — <em>{{ sk.reason }}</em>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="mt-16" style="font-size: 8pt; color: #64748b; border-left: 3px solid #e2e8f0; padding-left: 12px;">
+        Raport zawiera <strong>{{ total_sections }}</strong> sekcji.
+        Typ raportu: <strong>{{ report_type_label }}</strong>.
+        {% if estimated_pages %}Szacowana liczba stron: <strong>{{ estimated_pages }}</strong>.{% endif %}
+    </div>
+</div>

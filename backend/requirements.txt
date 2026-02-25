@@ -27,3 +27,5 @@ qdrant-client==1.14.1
 tenacity==8.2.3
 supabase==2.15.0
 stripe==8.7.0
+matplotlib==3.9.4
+numpy==1.26.4

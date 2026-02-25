@@ -1,0 +1,67 @@
+{% from '../macros.html' import score_card, section_heading, kv_row, alert %}
+<div class="section">
+    {{ section_heading(sec_num, 'Bezpieczeństwo') }}
+
+    {% if sec.security_score is not none %}
+        <div class="scores-grid">
+            {{ score_card(sec.security_score, 'Security Score') }}
+        </div>
+    {% endif %}
+
+    <div class="two-col">
+        <div>
+            <h3>Status bezpieczeństwa</h3>
+            <table>
+                {{ kv_row('HTTPS', '✓ Zabezpieczone' if sec.is_https else '✗ Brak HTTPS') }}
+                {{ kv_row('Certyfikat SSL', '✓ Ważny' if sec.ssl_valid else '✗ Problem') }}
+                {{ kv_row('Mixed Content', sec.mixed_content_count ~ ' problemów' if sec.mixed_content_count else '✓ Brak') }}
+                {{ kv_row('Luki bezpieczeństwa', sec.vulnerabilities_count if sec.vulnerabilities_count else '0') }}
+            </table>
+        </div>
+        <div>
+            <h3>Nagłówki bezpieczeństwa HTTP</h3>
+            <table>
+                {{ kv_row('HSTS', '✓ OK' if sec.hsts else '✗ Brak') }}
+                {{ kv_row('Content Security Policy', '✓ OK' if sec.csp else '✗ Brak') }}
+                {{ kv_row('X-Frame-Options', '✓ OK' if sec.x_frame_options else '✗ Brak') }}
+                {{ kv_row('X-Content-Type', '✓ OK' if sec.x_content_type else '✗ Brak') }}
+                {{ kv_row('Referrer-Policy', '✓ OK' if sec.referrer_policy else '✗ Brak') }}
+            </table>
+        </div>
+    </div>
+
+    {% if not sec.is_https %}
+        <div class="alert alert-critical no-break">
+            <span class="alert-title">KRYTYCZNE: Brak HTTPS</span>
+            <p>Strona nie korzysta z szyfrowania HTTPS. To krytyczny problem bezpieczeństwa i SEO. Google obniża rankingi stron bez SSL.</p>
+        </div>
+    {% endif %}
+
+    {% if sec.vulnerabilities %}
+        <h3>Wykryte luki bezpieczeństwa</h3>
+        {% for vuln in sec.vulnerabilities %}
+            <div class="alert alert-critical no-break">
+                <span class="alert-title">{{ vuln.type }}</span>
+                <p>{{ vuln.description }}</p>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if sec.recommendations %}
+        <h3>Rekomendacje</h3>
+        <ul>
+            {% for rec in sec.recommendations[:6] %}
+                <li>{{ rec }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if sec.ai_key_findings %}
+        <h3>Obserwacje AI</h3>
+        <ul>
+            {% for f in sec.ai_key_findings[:5] %}
+                <li>{{ f }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>

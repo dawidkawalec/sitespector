@@ -1,0 +1,62 @@
+{% from '../macros.html' import section_heading, chart, badge %}
+<div class="section">
+    {{ section_heading(sec_num, 'Słowa Kluczowe — Pozycje') }}
+
+    {% if chart_intent %}
+        <div class="chart-pair">
+            {% if chart_intent %}
+                <div class="chart-container">
+                    <img src="{{ chart_intent }}" alt="Rozkład intencji" style="max-width:100%"/>
+                    <div class="chart-caption">Rozkład intencji wyszukiwania</div>
+                </div>
+            {% endif %}
+            {% if chart_difficulty %}
+                <div class="chart-container">
+                    <img src="{{ chart_difficulty }}" alt="Trudność" style="max-width:100%"/>
+                    <div class="chart-caption">Rozkład trudności słów kluczowych</div>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <h3>Top {{ kw.positions | length }} słów kluczowych</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:35%">Słowo kluczowe</th>
+                <th>Poz.</th>
+                <th>Wyszuk./mies.</th>
+                <th>Intencja</th>
+                <th>Trudność</th>
+                <th>CPC</th>
+                <th>URL</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pos in kw.positions %}
+                <tr>
+                    <td class="td-bold">{{ pos.keyword | truncate(40) }}</td>
+                    <td class="td-center td-bold" style="color: {{ '#16a34a' if pos.position <= 3 else ('#3b82f6' if pos.position <= 10 else '#64748b') }};">
+                        {{ pos.position }}
+                    </td>
+                    <td class="td-center">{{ pos.search_volume | int if pos.search_volume else '—' }}</td>
+                    <td class="td-center">
+                        {% set intent_colors = {'informational':'badge-info','navigational':'badge-success','transactional':'badge-danger','commercial':'badge-warning'} %}
+                        <span class="badge {{ intent_colors.get(pos.intent | lower, 'badge-gray') }}">
+                            {{ pos.intent | truncate(12) if pos.intent else '—' }}
+                        </span>
+                    </td>
+                    <td class="td-center">{{ pos.difficulty if pos.difficulty else '—' }}</td>
+                    <td class="td-center">{{ pos.cpc | round(2) if pos.cpc else '—' }}</td>
+                    <td class="td-url" style="font-size: 7pt;">{{ pos.url | truncate(35) if pos.url else '—' }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if kw.total_count > kw.positions | length %}
+        <p class="text-center text-small text-muted text-italic">
+            Pokazano {{ kw.positions | length }} z {{ kw.total_count }} słów kluczowych.
+            Pełna lista w panelu SiteSpector.
+        </p>
+    {% endif %}
+</div>

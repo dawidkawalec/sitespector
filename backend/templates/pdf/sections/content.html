@@ -1,0 +1,72 @@
+{% from '../macros.html' import score_card, metric_card, section_heading, kv_row, part_header %}
+<div class="section">
+    {{ part_header('V', 'Treść & UX', 'Jakość treści, użyteczność i bezpieczeństwo') }}
+    {{ section_heading(sec_num, 'Analiza Treści') }}
+
+    <div class="scores-grid">
+        {{ score_card(content.quality_score, 'Jakość treści') }}
+        {{ score_card(content.readability_score, 'Czytelność') }}
+    </div>
+
+    <div class="two-col">
+        <div>
+            <h3>Metryki treści</h3>
+            <table>
+                {{ kv_row('Śr. liczba słów', content.word_count) }}
+                {{ kv_row('Czytelność Flesch', content.flesch_score | round(1) if content.flesch_score else 'N/A') }}
+                {{ kv_row('Thin Content', content.thin_content_count, 'badge-warning' if content.thin_content_count > 0 else '') }}
+                {{ kv_row('Duplikaty wewnętrzne', content.duplicate_count, 'badge-warning' if content.duplicate_count > 0 else '') }}
+                {{ kv_row('Has Title', 'Tak' if content.has_title else 'Nie') }}
+                {{ kv_row('Has Meta Desc', 'Tak' if content.has_meta_description else 'Nie') }}
+                {{ kv_row('Has H1', 'Tak' if content.has_h1 else 'Nie') }}
+            </table>
+        </div>
+        <div>
+            <h3>Ton i styl</h3>
+            {% if content.tone_voice %}
+                <div class="alert alert-info no-break">
+                    <span class="alert-title">Ton wypowiedzi</span>
+                    <p>{{ content.tone_voice }}</p>
+                </div>
+            {% endif %}
+            {% if content.summary %}
+                <p class="text-small text-muted">{{ content.summary }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if content.recommendations %}
+        <h3>Rekomendacje AI</h3>
+        <ul>
+            {% for rec in content.recommendations[:8] %}
+                <li>{{ rec }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if content.ai_key_findings %}
+        <h3>Kluczowe obserwacje (AI)</h3>
+        <ul>
+            {% for f in content.ai_key_findings[:5] %}
+                <li>{{ f }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if content.ai_quick_wins %}
+        <h4>Quick Wins — Treść</h4>
+        {% for qw in content.ai_quick_wins[:3] %}
+            <div class="task-card no-break">
+                <div class="task-card-header">
+                    <div class="task-card-title">{{ qw.title }}</div>
+                    <div class="task-card-badges">
+                        <span class="badge {{ 'badge-danger' if qw.impact == 'high' else ('badge-warning' if qw.impact == 'medium' else 'badge-success') }}">
+                            Wpływ: {{ qw.impact | title }}
+                        </span>
+                    </div>
+                </div>
+                {% if qw.description %}<p class="task-card-desc">{{ qw.description }}</p>{% endif %}
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>

@@ -1,0 +1,59 @@
+{% from '../macros.html' import section_heading, chart, roadmap_item %}
+<div class="section">
+    {{ section_heading(sec_num, 'Roadmap Strategiczny') }}
+
+    <p class="text-muted text-small mb-16">
+        Strategiczny plan działania podzielony na horyzonty czasowe,
+        wygenerowany przez AI SiteSpector na podstawie pełnej analizy.
+    </p>
+
+    {% if chart_roadmap %}
+        {{ chart(chart_roadmap, 'Rozkład zadań według horyzontu czasowego', '80%') }}
+    {% endif %}
+
+    <div style="display: flex; gap: 14px; margin-top: 20px;">
+        {# Immediate Actions #}
+        <div style="flex: 1;">
+            <div class="roadmap-col-header roadmap-immediate">
+                🔴 Natychmiast<br>
+                <span style="font-weight: 400; font-size: 7pt;">({{ roadmap.immediate_actions | length }} zadań)</span>
+            </div>
+            {% for item in roadmap.immediate_actions %}
+                {{ roadmap_item(item) }}
+            {% endfor %}
+        </div>
+        {# Short term #}
+        <div style="flex: 1;">
+            <div class="roadmap-col-header roadmap-short">
+                🟡 1–3 miesiące<br>
+                <span style="font-weight: 400; font-size: 7pt;">({{ roadmap.short_term | length }} zadań)</span>
+            </div>
+            {% for item in roadmap.short_term %}
+                {{ roadmap_item(item) }}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 14px; margin-top: 16px;">
+        {# Medium term #}
+        <div style="flex: 1;">
+            <div class="roadmap-col-header roadmap-medium">
+                🟢 3–6 miesięcy<br>
+                <span style="font-weight: 400; font-size: 7pt;">({{ roadmap.medium_term | length }} zadań)</span>
+            </div>
+            {% for item in roadmap.medium_term %}
+                {{ roadmap_item(item) }}
+            {% endfor %}
+        </div>
+        {# Long term #}
+        <div style="flex: 1;">
+            <div class="roadmap-col-header roadmap-long">
+                🔵 6–12 miesięcy<br>
+                <span style="font-weight: 400; font-size: 7pt;">({{ roadmap.long_term | length }} zadań)</span>
+            </div>
+            {% for item in roadmap.long_term %}
+                {{ roadmap_item(item) }}
+            {% endfor %}
+        </div>
+    </div>
+</div>

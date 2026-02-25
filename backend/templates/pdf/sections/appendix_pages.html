@@ -1,0 +1,51 @@
+{% from '../macros.html' import part_header, section_heading %}
+<div class="section">
+    {{ part_header('VII', 'Załączniki', 'Pełne tabele danych: strony, obrazy, słowa kluczowe, backlinki') }}
+    {{ section_heading(sec_num, 'Załącznik A — Lista Stron') }}
+
+    <p class="text-small text-muted mb-8">
+        Wszystkie przeskanowane podstrony ({{ app.pages | length }}
+        {% if app.total_count > app.pages | length %}z {{ app.total_count }}{% endif %}).
+    </p>
+
+    <table class="appendix-table">
+        <thead>
+            <tr>
+                <th style="width:48%">URL</th>
+                <th>Status</th>
+                <th>Tytuł</th>
+                <th>Słowa</th>
+                <th>Inlinks</th>
+                <th>Outlinks</th>
+                <th>Rozmiar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for page in app.pages %}
+                <tr>
+                    <td class="td-url">{{ page.url | truncate(70) }}</td>
+                    <td class="td-center">
+                        <span class="badge {{ 'badge-success' if page.status_code == 200 else ('badge-warning' if page.status_code in [301, 302, 307, 308] else 'badge-danger') }}">
+                            {{ page.status_code }}
+                        </span>
+                    </td>
+                    <td style="font-size: 7pt;">{{ page.title | truncate(35) if page.title else '—' }}</td>
+                    <td class="td-center">{{ page.word_count or 0 }}</td>
+                    <td class="td-center">{{ page.inlinks or 0 }}</td>
+                    <td class="td-center">{{ page.outlinks or 0 }}</td>
+                    <td class="td-center">
+                        {% if page.size_bytes %}
+                            {{ (page.size_bytes / 1024) | round(1) }} KB
+                        {% else %}—{% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if app.total_count > app.pages | length %}
+        <p class="text-center text-small text-muted text-italic">
+            Pokazano {{ app.pages | length }} z {{ app.total_count }} stron.
+        </p>
+    {% endif %}
+</div>

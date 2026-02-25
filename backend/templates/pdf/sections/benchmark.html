@@ -1,0 +1,64 @@
+{% from '../macros.html' import section_heading, score_card, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'Benchmark Branżowy') }}
+
+    <p class="text-muted text-small mb-16">
+        Porównanie wyników Twojej witryny ze średnią branżową na podstawie danych Lighthouse.
+    </p>
+
+    <div class="scores-grid">
+        {{ score_card(bench.performance_score, 'Performance') }}
+        {{ score_card(bench.accessibility_score, 'Accessibility') }}
+        {{ score_card(bench.seo_score, 'SEO') }}
+        {{ score_card(bench.best_practices_score, 'Best Practices') }}
+    </div>
+
+    {% if bench.industry_avg %}
+        <h3>Porównanie z branżą</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metryka</th>
+                    <th>Twój wynik</th>
+                    <th>Śr. branżowa</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in bench.comparison_rows %}
+                    <tr>
+                        <td class="td-bold">{{ row.label }}</td>
+                        <td class="td-center td-bold" style="color: {{ '#16a34a' if row.yours >= row.avg else '#dc2626' }};">
+                            {{ row.yours }}
+                        </td>
+                        <td class="td-center text-muted">{{ row.avg }}</td>
+                        <td class="td-center">
+                            <span class="badge {{ 'badge-success' if row.yours >= row.avg else 'badge-danger' }}">
+                                {{ 'Powyżej' if row.yours >= row.avg else 'Poniżej' }}
+                            </span>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if bench.percentile is not none %}
+        <h3>Pozycja percentylowa</h3>
+        <div class="alert alert-info no-break">
+            <p>Twoja strona osiąga lepsze wyniki niż <strong>{{ bench.percentile | int }}%</strong> witryn w Twojej kategorii branżowej.</p>
+        </div>
+        <div class="progress-row">
+            <div class="progress-label">Percentyl</div>
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" style="width: {{ bench.percentile | int }}%; background: {{ '#16a34a' if bench.percentile >= 75 else ('#ca8a04' if bench.percentile >= 50 else '#dc2626') }};"></div>
+            </div>
+            <div class="progress-value">{{ bench.percentile | int }}%</div>
+        </div>
+    {% endif %}
+
+    {% if bench.insights %}
+        <h3>Wnioski</h3>
+        <p>{{ bench.insights }}</p>
+    {% endif %}
+</div>

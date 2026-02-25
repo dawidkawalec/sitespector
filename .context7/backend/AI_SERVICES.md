@@ -121,86 +121,88 @@ Instead of storing AI analyses as monolithic JSON blobs, each item is stored as 
 
 ---
 
-## PDF Generator
+## PDF Generator (v2)
 
-**Location**: `backend/app/services/pdf_generator.py` + `backend/templates/report.html`
+**Location**: `backend/app/services/pdf/` (new package) + `backend/templates/pdf/`
 
-**Status**: ✅ **FULLY COMPLETED** (2025-02-03)
+**Legacy**: `backend/app/services/pdf_generator.py` + `backend/templates/report.html` (kept for reference)
+
+**Status**: ✅ **FULLY REBUILT** (2026-02-25) — Modular, multi-type system
 
 ### Architecture
 
-1. **Data Extraction** (`_extract_report_data()`)
-   - NO FALLBACKS - raises exceptions if critical data missing
-   - Validates: results exist, crawl data exists, lighthouse data exists
-   - Aggregates recommendations from all AI sections
-   - Parses emoji prefixes (❌, ⚠️, ✅, 🤖) for color-coding
-
-2. **Template Rendering** (`report.html`)
-   - All 9 sections fully implemented
-   - NO `|default()` filters - shows actual data or explicit errors
-   - Color-coded recommendations by emoji
-   - Dynamic action plan based on real scores
-
-### PDF Sections
-
-**Section 1 - Executive Summary** ✅
-- Overall scores table
-- Local business detection
-
-**Section 2 - Table of Contents** ✅
-- Dynamic based on data availability
-
-**Section 3 - SEO Technical Analysis** ✅
-- Crawl metrics: pages_crawled, internal_links_count, total_images, images_without_alt
-- Meta tags table with validation
-- H1 structure display
-- Technical metrics: status_code, load_time, size_bytes, word_count
-
-**Section 4 - Performance Analysis** ✅
-- Desktop Core Web Vitals (7 metrics)
-- Mobile Core Web Vitals (7 metrics)
-- Performance recommendations with impact level
-- Color-coded issues
-
-**Section 5 - Content Analysis** ✅
-- Metrics table: quality_score, readability_score, word_count, has_title, has_meta_description, has_h1
-- AI summary
-- Color-coded recommendations (✅ green, ⚠️ yellow, ❌ red, 🤖 blue)
-
-**Section 6 - Local SEO** ✅ (conditional)
-- Shows only if is_local_business = true
-- has_schema_markup, has_nap indicators
-- Color-coded recommendations
-
-**Section 7 - Competitive Analysis** ✅ (conditional)
-- Handles "no competitors" case
-- Color-coded boxes: strengths (green), weaknesses (red), opportunities (blue), recommendations (yellow)
-
-**Section 8 - Action Plan** ✅
-- **Dynamic priorities** based on real scores:
-  - High: performance_score < 50, seo_score < 50, alt_missing > 50%
-  - Medium: content_score < 70, missing local SEO
-  - Low: continuous improvements
-- Aggregated recommendations from all sections
-- AI recommendations section
-
-**Section 9 - Appendix** ✅
-- Code examples (schema markup)
-- Contact information
-
-### Error Handling
-
-```python
-# _extract_report_data() validation
-if not results:
-    raise ValueError(f"Cannot generate PDF - audit has no results")
-
-if not crawl_data:
-    raise ValueError("Cannot generate PDF - missing Screaming Frog data")
-
-if not lighthouse_data:
-    raise ValueError("Cannot generate PDF - missing Lighthouse data")
 ```
+backend/app/services/pdf/
+  __init__.py          → exports generate_pdf()
+  generator.py         → orchestrator (main entry point)
+  config.py            → ReportTypeConfig for executive/standard/full
+  charts.py            → matplotlib SVG chart generators
+  styles.py            → WeasyPrint CSS (A4, header/footer)
+  utils.py             → helpers (score_color, fmt_ms, cwv_status, etc.)
+  sections/            → per-section data extractors (25+ modules)
+    executive_summary.py, technical_overview.py, on_page_seo.py,
+    internal_links.py, performance.py, lighthouse_detail.py,
+    accessibility.py, visibility_overview.py, keywords.py,
+    position_changes.py, organic_competitors.py, backlinks.py,
+    ai_overviews.py, content.py, ux_mobile.py, security.py,
+    tech_stack.py, ai_insights.py, cross_tool.py, quick_wins.py,
+    roadmap.py, execution_plan.py, benchmark.py,
+    appendix_pages.py, appendix_images.py, appendix_keywords.py, appendix_backlinks.py
+
+backend/templates/pdf/
+  base.html            → WeasyPrint base with @page running header/footer
+  macros.html          → Jinja2 reusable macros (score cards, badges, alerts, etc.)
+  sections/            → 25+ section templates
+```
+
+### 3 Report Types
+
+| Type | Pages | Audience | Key additions |
+|------|-------|----------|--------------|
+| `executive` | 15–25 | C-level, presentations | Scores, TOP metrics, TOP 5 QW |
+| `standard` | 50–80 | Marketing teams | Full SEO, Perf, Senuto TOP 50, AI strategy |
+| `full` | 80–150+ | SEO agencies | All raw data, ALL pages, TOP 200 keywords |
+
+### API Endpoint
+
+```
+GET /api/audits/{audit_id}/pdf?report_type=standard
+# report_type: executive | standard | full (default: standard)
+```
+
+### 25+ PDF Sections (Full report)
+
+**PART I** — Executive Summary
+**PART II** — SEO Techniczne (Technical Overview, On-Page SEO, Internal Links)
+**PART III** — Wydajność (Performance CWV, Lighthouse Detail, Accessibility)
+**PART IV** — Widoczność Organiczna (Visibility, Keywords, Changes, Competitors, Backlinks, AIO)
+**PART V** — Treść & UX (Content, UX/Mobile, Security, Tech Stack)
+**PART VI** — Strategia AI (AI Insights x9, Cross-Tool, Quick Wins, Roadmap, Execution Plan, Benchmark)
+**PART VII** — Załączniki (All Pages, Images, Keywords TOP 200, Backlinks TOP 100)
+
+### Charts (matplotlib SVG embedded)
+
+- Score gauges (semi-circle per metric)
+- CWV comparison Desktop vs Mobile (grouped horizontal bar + color thresholds)
+- HTTP status pie chart
+- Keyword distribution (stacked bar TOP 3/10/50)
+- Intent distribution pie
+- Impact/Effort scatter matrix (Quick Wins)
+- Roadmap timeline bar
+- Execution plan priority bar
+- Seasonality line chart
+- Competitor comparison bar
+
+### Header/Footer on every page (WeasyPrint @page)
+
+- **Header**: SiteSpector logo (orange magnifier SVG) | URL | Report type
+- **Footer left**: "SiteSpector — Profesjonalny Audyt SEO & AI | sitespector.pl | kontakt@sitespector.pl"
+- **Footer right**: "Strona X z Y"
+
+### New dependencies
+
+- `matplotlib==3.9.4` — chart SVG generation
+- `numpy==1.26.4` — math for gauge + charts
 
 ### Data Aggregation
 

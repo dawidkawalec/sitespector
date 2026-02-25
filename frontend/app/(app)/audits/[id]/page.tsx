@@ -254,9 +254,11 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
         <div className="flex flex-wrap gap-2">
           {audit.status === 'completed' && (
             <>
-              <Button onClick={downloadPDF} size="sm">
-                <Download className="mr-2 h-4 w-4" /> Pobierz PDF
-              </Button>
+              <Link href={`/audits/${params.id}/pdf`}>
+                <Button size="sm">
+                  <Download className="mr-2 h-4 w-4" /> Pobierz PDF
+                </Button>
+              </Link>
               <Button variant="outline" onClick={downloadRawData} size="sm" title="Raw JSON">
                 <FileJson className="h-4 w-4" />
               </Button>

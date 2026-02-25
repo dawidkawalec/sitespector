@@ -1,0 +1,91 @@
+{% from '../macros.html' import section_heading, badge %}
+<div class="section">
+    {{ section_heading(sec_num, 'Lighthouse — Szczegółowe Audyty') }}
+
+    <p class="text-muted text-small mb-16">
+        Lighthouse przeprowadza 176 sprawdzeń w 4 kategoriach.
+        Poniżej najważniejsze możliwości optymalizacji i diagnostyka.
+    </p>
+
+    {# Opportunities #}
+    {% if lh.opportunities %}
+        <h3>Możliwości optymalizacji</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:45%">Tytuł</th>
+                    <th>Wartość / Oszczędność</th>
+                    <th>Opis</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in lh.opportunities %}
+                    <tr>
+                        <td class="td-bold">
+                            {{ item.title }}
+                            <span class="badge {{ 'badge-danger' if item.score < 0.5 else 'badge-warning' }}">
+                                {{ (item.score * 100) | int }}%
+                            </span>
+                        </td>
+                        <td class="text-small td-center">{{ item.displayValue or '—' }}</td>
+                        <td class="text-small text-muted">{{ item.description | truncate(100) if item.description else '' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# Diagnostics #}
+    {% if lh.diagnostics %}
+        <h3>Diagnostyka</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:45%">Tytuł</th>
+                    <th>Wartość</th>
+                    <th>Opis</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in lh.diagnostics %}
+                    <tr>
+                        <td class="td-bold">{{ item.title }}</td>
+                        <td class="text-small td-center">{{ item.displayValue or '—' }}</td>
+                        <td class="text-small text-muted">{{ item.description | truncate(100) if item.description else '' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# Passed (Full report only) #}
+    {% if extended and lh.passed %}
+        <h3>Zdane sprawdzenia</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+            {% for item in lh.passed %}
+                <span class="chip chip-green" style="font-size: 7pt;">✓ {{ item.title | truncate(40) }}</span>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {# Mobile opportunities (if different from desktop) #}
+    {% if lh.mobile_opportunities %}
+        <h3>Dodatkowe możliwości — Mobile</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:50%">Tytuł</th>
+                    <th>Wartość</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in lh.mobile_opportunities[:10] %}
+                    <tr>
+                        <td class="td-bold">{{ item.title }}</td>
+                        <td class="text-small">{{ item.displayValue or '—' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>

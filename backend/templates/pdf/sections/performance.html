@@ -1,0 +1,70 @@
+{% from '../macros.html' import metric_card, score_card, chart, part_header, section_heading, kv_row, cwv_row %}
+<div class="section">
+    {{ part_header('III', 'Wydajność', 'Analiza szybkości, Core Web Vitals i Lighthouse') }}
+    {{ section_heading(sec_num, 'Wydajność & Core Web Vitals') }}
+
+    {# Scores #}
+    <div class="scores-grid">
+        {{ score_card(perf.desktop_score, 'Performance Desktop') }}
+        {{ score_card(perf.mobile_score, 'Performance Mobile') }}
+        {{ score_card(perf.accessibility_score, 'Accessibility') }}
+        {{ score_card(perf.best_practices_score, 'Best Practices') }}
+    </div>
+
+    {# CWV Comparison chart #}
+    {% if chart_cwv %}
+        {{ chart(chart_cwv, 'Core Web Vitals — Desktop vs Mobile (niższa wartość = lepiej)', '100%') }}
+    {% endif %}
+
+    {# CWV Tables Desktop/Mobile #}
+    <div class="two-col">
+        <div>
+            <h3>Core Web Vitals — Desktop</h3>
+            <table>
+                <thead><tr><th>Metryka</th><th>Wartość</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for row in perf.desktop_cwv %}
+                        {{ cwv_row(row.label, row.value_fmt, row.status_label, row.status_color) }}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <h3>Core Web Vitals — Mobile</h3>
+            <table>
+                <thead><tr><th>Metryka</th><th>Wartość</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for row in perf.mobile_cwv %}
+                        {{ cwv_row(row.label, row.value_fmt, row.status_label, row.status_color) }}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# AI Performance analysis #}
+    {% if perf.ai_summary %}
+        <h3>Analiza AI — Wydajność</h3>
+        <div class="alert alert-ai no-break">
+            <p>{{ perf.ai_summary }}</p>
+        </div>
+    {% endif %}
+
+    {% if perf.ai_key_findings %}
+        <h4>Kluczowe obserwacje</h4>
+        <ul>
+            {% for f in perf.ai_key_findings[:5] %}
+                <li>{{ f }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if perf.ai_recommendations %}
+        <h4>Rekomendacje</h4>
+        <ul>
+            {% for r in perf.ai_recommendations[:5] %}
+                <li>{{ r }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>

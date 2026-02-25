@@ -1,0 +1,88 @@
+{% from '../macros.html' import section_heading, metric_card %}
+<div class="section">
+    {{ section_heading(sec_num, 'Zmiany Pozycji') }}
+
+    <div class="metric-grid">
+        {{ metric_card(changes.wins_count | int, 'Wzrosty pozycji', '#16a34a') }}
+        {{ metric_card(changes.losses_count | int, 'Spadki pozycji', '#dc2626') }}
+        {{ metric_card(changes.new_keywords_count | int, 'Nowe frazy', '#3b82f6') }}
+        {{ metric_card(changes.lost_keywords_count | int, 'Utracone frazy', '#94a3b8') }}
+    </div>
+
+    <div class="two-col">
+        {% if changes.top_wins %}
+            <div>
+                <h3>Największe wzrosty</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fraza</th>
+                            <th>Poz. przed</th>
+                            <th>Poz. po</th>
+                            <th>Zmiana</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for w in changes.top_wins %}
+                            <tr>
+                                <td>{{ w.keyword | truncate(30) }}</td>
+                                <td class="td-center">{{ w.position_before | int }}</td>
+                                <td class="td-center td-bold" style="color: #16a34a;">{{ w.position_after | int }}</td>
+                                <td class="td-center td-bold" style="color: #16a34a;">+{{ w.change | int }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if changes.top_losses %}
+            <div>
+                <h3>Największe spadki</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fraza</th>
+                            <th>Poz. przed</th>
+                            <th>Poz. po</th>
+                            <th>Zmiana</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for l in changes.top_losses %}
+                            <tr>
+                                <td>{{ l.keyword | truncate(30) }}</td>
+                                <td class="td-center">{{ l.position_before | int }}</td>
+                                <td class="td-center td-bold" style="color: #dc2626;">{{ l.position_after | int }}</td>
+                                <td class="td-center td-bold" style="color: #dc2626;">{{ l.change | int }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if changes.cannibalization %}
+        <h3>Kanibalizacja słów kluczowych</h3>
+        <p class="text-muted text-small mb-8">Frazy, na które pozycjonuje się wiele podstron jednocześnie.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fraza</th>
+                    <th>Poz. główna</th>
+                    <th>URL główny</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in changes.cannibalization[:15] %}
+                    <tr>
+                        <td>{{ c.keyword | truncate(35) }}</td>
+                        <td class="td-center">{{ c.position }}</td>
+                        <td class="td-url" style="font-size: 7pt;">{{ c.url | truncate(40) }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>

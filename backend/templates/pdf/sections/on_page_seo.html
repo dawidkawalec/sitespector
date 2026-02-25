@@ -1,0 +1,117 @@
+{% from '../macros.html' import metric_card, chart, section_heading, kv_row, badge, alert %}
+<div class="section">
+    {{ section_heading(sec_num, 'On-Page SEO') }}
+
+    <div class="metric-grid">
+        {{ metric_card(onpage.missing_titles, 'Brak tytułu', '#dc2626' if onpage.missing_titles > 0 else '#16a34a') }}
+        {{ metric_card(onpage.missing_descriptions, 'Brak meta desc', '#ca8a04' if onpage.missing_descriptions > 0 else '#16a34a') }}
+        {{ metric_card(onpage.missing_h1, 'Brak H1', '#ca8a04' if onpage.missing_h1 > 0 else '#16a34a') }}
+        {{ metric_card(onpage.duplicate_titles, 'Duplikaty tytułów') }}
+        {{ metric_card(onpage.thin_content_count, 'Thin Content') }}
+    </div>
+
+    <div class="two-col">
+        <div>
+            <h3>Tytuły stron</h3>
+            <table>
+                {{ kv_row('Stron z tytułem', onpage.has_title_count) }}
+                {{ kv_row('Brak tytułu', onpage.missing_titles) }}
+                {{ kv_row('Duplikat tytułu', onpage.duplicate_titles) }}
+                {{ kv_row('Zbyt krótkie (<30 zn.)', onpage.short_titles) }}
+                {{ kv_row('Zbyt długie (>60 zn.)', onpage.long_titles) }}
+            </table>
+        </div>
+        <div>
+            <h3>Meta Description</h3>
+            <table>
+                {{ kv_row('Stron z meta desc', onpage.has_desc_count) }}
+                {{ kv_row('Brak meta description', onpage.missing_descriptions) }}
+                {{ kv_row('Duplikaty', onpage.duplicate_descriptions) }}
+                {{ kv_row('Zbyt krótkie (<70 zn.)', onpage.short_descriptions) }}
+                {{ kv_row('Zbyt długie (>160 zn.)', onpage.long_descriptions) }}
+            </table>
+        </div>
+    </div>
+
+    <h3>Nagłówki H1/H2</h3>
+    <table>
+        {{ kv_row('Strony z H1', onpage.has_h1_count) }}
+        {{ kv_row('Brak H1', onpage.missing_h1) }}
+        {{ kv_row('Wiele H1', onpage.multiple_h1) }}
+        {{ kv_row('Strony z H2', onpage.has_h2_count) }}
+    </table>
+
+    <h3>Jakość treści</h3>
+    <div class="two-col">
+        <div>
+            <table>
+                {{ kv_row('Śr. liczba słów', onpage.avg_word_count) }}
+                {{ kv_row('Thin Content (<200 słów)', onpage.thin_content_count) }}
+                {{ kv_row('Duplikaty wewnętrzne', onpage.duplicate_content_count) }}
+                {{ kv_row('Śr. czytelność Flesch', onpage.avg_flesch | round(1) if onpage.avg_flesch else 'N/A') }}
+            </table>
+        </div>
+        <div>
+            <table>
+                {{ kv_row('Obrazy łącznie', onpage.total_images) }}
+                {{ kv_row('Obrazy bez ALT', onpage.images_without_alt, 'badge-warning' if onpage.images_without_alt > 0 else '') }}
+            </table>
+        </div>
+    </div>
+
+    {# Pages needing attention - sample table #}
+    {% if onpage.pages_sample %}
+        <h3>Strony wymagające uwagi (próba)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50%;">URL</th>
+                    <th>Status</th>
+                    <th>Tytuł</th>
+                    <th>Słowa</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in onpage.pages_sample %}
+                    <tr>
+                        <td class="td-url">{{ page.url | truncate(60) }}</td>
+                        <td class="td-center">
+                            <span class="badge {{ 'badge-success' if page.status_code == 200 else ('badge-warning' if page.status_code in [301, 302] else 'badge-danger') }}">
+                                {{ page.status_code }}
+                            </span>
+                        </td>
+                        <td class="text-small">{{ page.title | truncate(40) if page.title else '—' }}</td>
+                        <td class="td-center">{{ page.word_count or 0 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# Raw SF tabs (Full report only) #}
+    {% if onpage.sf_tabs_data and extended %}
+        <div class="page-break">
+            <h3>Surowe dane Screaming Frog — Tytuły</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:55%">URL</th>
+                        <th>Tytuł</th>
+                        <th>Dług.</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in onpage.sf_tabs_data.titles[:50] %}
+                        <tr>
+                            <td class="td-url">{{ row.get('Address', row.get('url', '')) | truncate(60) }}</td>
+                            <td class="text-small">{{ row.get('Title 1', row.get('title', '')) | truncate(50) }}</td>
+                            <td class="td-center">{{ row.get('Title 1 Length', '') }}</td>
+                            <td class="td-center">{{ row.get('Status Code', '') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>

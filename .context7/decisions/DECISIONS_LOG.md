@@ -1,5 +1,28 @@
 # Architectural Decisions Log
 
+## PDF Report System v2 — Modular Multi-Type (2026-02-25)
+
+- **Decision**: Replaced the single-file `pdf_generator.py` (~300 lines, ~10 pages) with a full modular PDF system (`backend/app/services/pdf/` package, 25+ section modules, `backend/templates/pdf/` templates, chart generation via matplotlib).
+- **Rationale**: Old PDF covered only ~8 sections with no Senuto data, no AI contexts, no charts, no execution plan. New system supports 25+ sections covering all audit data sources (SF crawl, Lighthouse, Senuto, 9 AI contexts, cross-tool analysis, execution plan tasks). Added 3 pre-configured report types for different audiences.
+- **Implementation**:
+  - `backend/app/services/pdf/__init__.py` — exports `generate_pdf()`
+  - `backend/app/services/pdf/generator.py` — main orchestrator
+  - `backend/app/services/pdf/config.py` — `ReportTypeConfig` for `executive/standard/full`
+  - `backend/app/services/pdf/charts.py` — matplotlib SVG charts (15 chart types)
+  - `backend/app/services/pdf/styles.py` — WeasyPrint CSS A4 with `@page` running header/footer
+  - `backend/app/services/pdf/utils.py` — shared helpers
+  - `backend/app/services/pdf/sections/` — 27 Python data extractors
+  - `backend/templates/pdf/base.html` — WeasyPrint base with running elements
+  - `backend/templates/pdf/macros.html` — Jinja2 reusable macros
+  - `backend/templates/pdf/sections/` — 18 section HTML templates
+  - `backend/app/routers/audits.py` — PDF endpoint extended with `?report_type=executive|standard|full`
+  - `frontend/app/(app)/audits/[id]/pdf/page.tsx` — new UI with 3-option report type selector
+  - `backend/requirements.txt` — added `matplotlib==3.9.4`, `numpy==1.26.4`
+- **Header/Footer**: Every page (except cover) shows SiteSpector logo SVG + URL + report type in header, and branding + page numbers in footer via WeasyPrint `@page` margin boxes.
+- **Charts**: matplotlib with Agg backend (no GUI), exported as base64 SVG strings, embedded in HTML `<img src="data:image/svg+xml;base64,...">`.
+- **Backward compat**: Old `pdf_generator.py` kept in place but no longer called by the API endpoint.
+- **Outcome**: Professional 50–150 page reports covering all audit data, usable by different audiences (executive/marketing/technical).
+
 ## Mandatory Project Flow + Sidebar Redesign (2026-02-25)
 
 - **Decision**: Enforce `Workspace → Project → Audit` flow. Dashboard no longer creates audits — only shows workspace trends. Audits must always belong to a project (`project_id` required at UI level). Added backend endpoint `PATCH /api/audits/{id}/assign-project` for migrating orphaned audits.

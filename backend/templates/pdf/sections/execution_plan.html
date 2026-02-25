@@ -1,0 +1,47 @@
+{% from '../macros.html' import section_heading, task_card, chart %}
+<div class="section">
+    {{ section_heading(sec_num, 'Plan Wykonania (Execution Plan)') }}
+
+    <p class="text-muted text-small mb-16">
+        Szczegółowa lista zadań do wykonania, wygenerowana automatycznie na podstawie wyników audytu.
+        Zadania posegregowane według modułu i priorytetu.
+    </p>
+
+    {% if chart_priority %}
+        {{ chart(chart_priority, 'Zadania według priorytetu', '70%') }}
+    {% endif %}
+
+    <div class="metric-grid mb-16">
+        <div class="metric-card">
+            <div class="metric-value">{{ ep_stats.total }}</div>
+            <div class="metric-label">Łącznie zadań</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" style="color: #7f1d1d;">{{ ep_stats.critical }}</div>
+            <div class="metric-label">Krytyczne</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" style="color: #dc2626;">{{ ep_stats.high }}</div>
+            <div class="metric-label">Wysokie</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" style="color: #16a34a;">{{ ep_stats.quick_wins }}</div>
+            <div class="metric-label">Quick Wins</div>
+        </div>
+    </div>
+
+    {% set module_labels = {
+        'seo': 'SEO', 'performance': 'Wydajność', 'visibility': 'Widoczność',
+        'ai_overviews': 'AI Overviews', 'links': 'Linki', 'images': 'Obrazy',
+        'ux': 'UX', 'security': 'Bezpieczeństwo'
+    } %}
+
+    {% for module_key, module_tasks in tasks_by_module.items() %}
+        {% if module_tasks %}
+            <h3>{{ module_labels.get(module_key, module_key | title) }} ({{ module_tasks | length }})</h3>
+            {% for task in module_tasks %}
+                {{ task_card(task, show_fix_data=extended) }}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+</div>

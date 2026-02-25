@@ -1,0 +1,40 @@
+{% from '../macros.html' import section_heading %}
+<div class="section">
+    {{ section_heading(sec_num, 'Załącznik C — Tabela Słów Kluczowych') }}
+
+    <p class="text-small text-muted mb-8">
+        Rozszerzona lista słów kluczowych ({{ app_kw.keywords | length }}
+        {% if app_kw.total_count > app_kw.keywords | length %}z {{ app_kw.total_count }}{% endif %}).
+    </p>
+
+    <table class="appendix-table">
+        <thead>
+            <tr>
+                <th style="width:35%">Fraza</th>
+                <th>Poz.</th>
+                <th>Wyszuk./mies.</th>
+                <th>Intencja</th>
+                <th>Trudność</th>
+                <th>CPC</th>
+                <th>URL</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for kw in app_kw.keywords %}
+                <tr>
+                    <td style="font-size: 8pt;">{{ kw.keyword | truncate(45) }}</td>
+                    <td class="td-center td-bold" style="color: {{ '#16a34a' if kw.position <= 3 else ('#3b82f6' if kw.position <= 10 else '#64748b') }};">
+                        {{ kw.position }}
+                    </td>
+                    <td class="td-center">{{ kw.search_volume | int if kw.search_volume else '—' }}</td>
+                    <td class="td-center">
+                        <span style="font-size: 7pt;">{{ kw.intent | truncate(10) if kw.intent else '—' }}</span>
+                    </td>
+                    <td class="td-center">{{ kw.difficulty if kw.difficulty else '—' }}</td>
+                    <td class="td-center">{{ kw.cpc | round(2) if kw.cpc else '—' }}</td>
+                    <td class="td-url" style="font-size: 6.5pt;">{{ kw.url | truncate(30) if kw.url else '—' }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

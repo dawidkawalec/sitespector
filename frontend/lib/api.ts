@@ -353,7 +353,7 @@ export const auditsAPI = {
       { method: 'PATCH' }
     ),
 
-  downloadPDF: async (id: string): Promise<Blob> => {
+  downloadPDF: async (id: string, reportType: 'executive' | 'standard' | 'full' = 'standard'): Promise<Blob> => {
     const token = await getSupabaseToken()
     const headers: Record<string, string> = {}
 
@@ -361,7 +361,7 @@ export const auditsAPI = {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${API_URL}/api/audits/${id}/pdf`, {
+    const response = await fetch(`${API_URL}/api/audits/${id}/pdf?report_type=${reportType}`, {
       headers,
     })
 

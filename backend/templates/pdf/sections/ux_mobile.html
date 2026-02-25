@@ -1,0 +1,53 @@
+{% from '../macros.html' import score_card, section_heading, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'UX & Mobile') }}
+
+    <div class="scores-grid">
+        {% if ux.ux_score is not none %}
+            {{ score_card(ux.ux_score, 'UX Score') }}
+        {% endif %}
+        {% if ux.accessibility_score is not none %}
+            {{ score_card(ux.accessibility_score, 'Accessibility') }}
+        {% endif %}
+    </div>
+
+    <div class="two-col">
+        <div>
+            <h3>Ocena UX</h3>
+            <table>
+                {{ kv_row('UX Score', ux.ux_score | int ~ '/100' if ux.ux_score is not none else 'N/A') }}
+                {{ kv_row('Mobile Friendly', 'Tak ✓' if ux.mobile_friendly else 'Nie ✗') }}
+                {{ kv_row('Accessibility', ux.accessibility_score | int ~ '/100' if ux.accessibility_score is not none else 'N/A') }}
+            </table>
+
+            <h3>Accessibility Checklist</h3>
+            <table>
+                {{ kv_row('Kontrast kolorów', '✓ OK' if ux.color_contrast_ok else '✗ Problem') }}
+                {{ kv_row('Hierarchia nagłówków', '✓ OK' if ux.heading_hierarchy_ok else '✗ Nieprawidłowa') }}
+                {{ kv_row('ALT dla obrazów', '✓ OK' if ux.images_alt_ok else '✗ Brakuje ALT') }}
+                {{ kv_row('Etykiety formularzy', '✓ OK' if ux.form_labels_ok else '✗ Brak etykiet') }}
+            </table>
+        </div>
+        <div>
+            <h3>AI Rekomendacje UX</h3>
+            {% if ux.ai_recommendations %}
+                <ul>
+                    {% for rec in ux.ai_recommendations[:6] %}
+                        <li>{{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted text-small">Brak zaleceń AI dla UX.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if ux.ai_key_findings %}
+        <h3>Kluczowe obserwacje AI</h3>
+        <ul>
+            {% for f in ux.ai_key_findings[:5] %}
+                <li>{{ f }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>

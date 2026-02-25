@@ -1,0 +1,85 @@
+{% from '../macros.html' import metric_card, section_heading, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'Profil Linków Przychodzących (Backlinks)') }}
+
+    <div class="metric-grid">
+        {{ metric_card(bl.backlinks_count | int, 'Backlinki łącznie') }}
+        {{ metric_card(bl.ref_domains_count | int, 'Domeny odsyłające') }}
+        {{ metric_card(bl.follow_pct | round(0) ~ '%', 'Follow linki') }}
+        {{ metric_card(bl.nofollow_pct | round(0) ~ '%', 'Nofollow linki') }}
+    </div>
+
+    <div class="two-col">
+        <div>
+            <h3>Statystyki profilu linków</h3>
+            <table>
+                {{ kv_row('Backlinki łącznie', bl.backlinks_count | int) }}
+                {{ kv_row('Domeny odsyłające', bl.ref_domains_count | int) }}
+                {{ kv_row('Domeny IP', bl.ref_ips_count | int if bl.ref_ips_count else 'N/A') }}
+                {{ kv_row('Linki Follow', bl.follow_count | int if bl.follow_count else 'N/A') }}
+                {{ kv_row('Linki Nofollow', bl.nofollow_count | int if bl.nofollow_count else 'N/A') }}
+            </table>
+        </div>
+        <div>
+            <h3>AI Insights — Backlinks</h3>
+            {% if bl.ai_key_findings %}
+                <ul>
+                    {% for f in bl.ai_key_findings[:5] %}
+                        <li>{{ f }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted text-small">Brak danych AI dla tej sekcji.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if bl.top_anchors %}
+        <h3>Najpopularniejsze anchor texty</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:60%">Anchor</th>
+                    <th>Liczba linków</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for anchor in bl.top_anchors[:15] %}
+                    <tr>
+                        <td>{{ anchor.anchor | truncate(60) if anchor.anchor else '(brak tekstu)' }}</td>
+                        <td class="td-center td-bold">{{ anchor.count | int }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if bl.top_ref_domains %}
+        <h3>Najważniejsze domeny odsyłające</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:60%">Domena</th>
+                    <th>Backlinki</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for domain in bl.top_ref_domains[:20] %}
+                    <tr>
+                        <td class="td-bold">{{ domain.domain | truncate(50) }}</td>
+                        <td class="td-center">{{ domain.backlinks_count | int if domain.backlinks_count else 1 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if bl.ai_recommendations %}
+        <h3>Rekomendacje AI</h3>
+        <ul>
+            {% for rec in bl.ai_recommendations[:5] %}
+                <li>{{ rec }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>

@@ -1,0 +1,61 @@
+{% from '../macros.html' import metric_card, chart, part_header, section_heading, kv_row, badge %}
+<div class="section">
+    {{ part_header('II', 'SEO Techniczne', 'Analiza struktury technicznej, crawlowalności i on-page') }}
+    {{ section_heading(sec_num, 'Przegląd Techniczny') }}
+
+    <div class="metric-grid">
+        {{ metric_card(tech.pages_crawled, 'Strony') }}
+        {{ metric_card(tech.broken_links, 'Błędy 404', '#dc2626' if tech.broken_links > 0 else '#16a34a') }}
+        {{ metric_card(tech.redirects, 'Przekierowania') }}
+        {{ metric_card(tech.missing_canonical, 'Brak canonical', '#ca8a04' if tech.missing_canonical > 0 else '#16a34a') }}
+        {{ metric_card(tech.noindex_pages, 'Noindex') }}
+    </div>
+
+    {% if chart_http_status %}
+        {{ chart(chart_http_status, 'Rozkład statusów HTTP stron', '90%') }}
+    {% endif %}
+
+    <div class="two-col">
+        <div>
+            <h3>Struktura stron</h3>
+            <table>
+                {{ kv_row('Wszystkich stron', tech.pages_crawled) }}
+                {{ kv_row('200 OK', tech.pages_200) }}
+                {{ kv_row('Błędy 404', tech.broken_links, 'badge-danger' if tech.broken_links > 0 else '') }}
+                {{ kv_row('Przekierowania 3xx', tech.redirects) }}
+                {{ kv_row('Noindex', tech.noindex_pages) }}
+                {{ kv_row('Brak canonical', tech.missing_canonical) }}
+                {{ kv_row('Brak meta description', tech.missing_description) }}
+            </table>
+        </div>
+        <div>
+            <h3>Linkowanie i crawl</h3>
+            <table>
+                {{ kv_row('Linki wewnętrzne', tech.internal_links) }}
+                {{ kv_row('Linki zewnętrzne', tech.external_links) }}
+                {{ kv_row('Linki uszkodzone', tech.broken_links) }}
+                {{ kv_row('Protokół', 'HTTPS ✓' if tech.is_https else 'HTTP (brak SSL)') }}
+                {{ kv_row('Sitemap', tech.sitemap_url if tech.has_sitemap else 'Nie wykryto') }}
+                {{ kv_row('Robots.txt', 'Dostępny' if tech.has_robots else 'Brak') }}
+            </table>
+        </div>
+    </div>
+
+    {# Crawl blocked warning #}
+    {% if tech.crawl_blocked %}
+        <div class="alert alert-critical no-break">
+            <span class="alert-title">⚠ Crawlowanie zablokowane</span>
+            <p>Strona blokuje crawlery (robots.txt lub meta noindex). Dane mogą być niepełne.</p>
+        </div>
+    {% endif %}
+
+    {# Sitemap info #}
+    {% if tech.sitemaps %}
+        <h4>Wykryte sitemaps</h4>
+        <ul class="list-clean">
+            {% for sm in tech.sitemaps[:10] %}
+                <li><code style="font-size: 7.5pt;">{{ sm }}</code></li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>

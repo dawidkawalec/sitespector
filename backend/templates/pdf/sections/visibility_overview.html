@@ -1,0 +1,94 @@
+{% from '../macros.html' import metric_card, chart, part_header, section_heading, kv_row %}
+<div class="section">
+    {{ part_header('IV', 'Widoczność Organiczna', 'Analiza Senuto: pozycje, trendy, konkurencja, backlinki') }}
+    {{ section_heading(sec_num, 'Widoczność — Przegląd') }}
+
+    <div class="metric-grid">
+        {{ metric_card(vis.keywords_count | int, 'Słów kluczowych TOP 50', '#3b82f6') }}
+        {{ metric_card(vis.top3_count | int, 'TOP 3', '#16a34a') }}
+        {{ metric_card(vis.top10_count | int, 'TOP 10', '#3b82f6') }}
+        {{ metric_card(vis.domain_rank | int, 'Domain Rank', '#8b5cf6') }}
+        {{ metric_card(vis.visibility | round(1), 'Widoczność', '#06b6d4') }}
+        {{ metric_card(vis.ads_equivalent, 'Ekw. reklam (PLN)', '#f59e0b') }}
+    </div>
+
+    {# Keyword distribution chart #}
+    {% if chart_keyword_dist %}
+        {{ chart(chart_keyword_dist, 'Rozkład słów kluczowych według pozycji', '80%') }}
+    {% endif %}
+
+    {# Seasonality chart #}
+    {% if chart_seasonality %}
+        {{ chart(chart_seasonality, 'Trendy sezonowości widoczności', '100%') }}
+    {% endif %}
+
+    <h3>Statystyki domeny</h3>
+    <div class="two-col">
+        <div>
+            <table>
+                {{ kv_row('Słowa kluczowe TOP 3', vis.top3_count | int) }}
+                {{ kv_row('Słowa kluczowe TOP 10', vis.top10_count | int) }}
+                {{ kv_row('Słowa kluczowe TOP 50', vis.top50_count | int) }}
+                {{ kv_row('Widoczność', vis.visibility | round(2)) }}
+                {{ kv_row('Domain Rank', vis.domain_rank | int) }}
+            </table>
+        </div>
+        <div>
+            <table>
+                {{ kv_row('Ekwiwalent reklamowy', vis.ads_equivalent ~ ' PLN') }}
+                {{ kv_row('Ekwiwalent kliknięć', vis.clicks_equivalent | int if vis.clicks_equivalent else 'N/A') }}
+                {{ kv_row('Słowa kluczowe AI Overviews', vis.aio_keywords_count | int) }}
+                {{ kv_row('Cytowania AIO', vis.aio_citations | int) }}
+            </table>
+        </div>
+    </div>
+
+    {# AI Visibility insights #}
+    {% if vis.ai_summary %}
+        <h3>Analiza AI — Widoczność</h3>
+        <div class="alert alert-ai no-break">
+            <p>{{ vis.ai_summary }}</p>
+        </div>
+    {% endif %}
+
+    {% if vis.ai_key_findings %}
+        <h4>Kluczowe obserwacje</h4>
+        <ul>
+            {% for f in vis.ai_key_findings[:5] %}
+                <li>{{ f }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if vis.keyword_opportunities %}
+        <h4>Możliwości słów kluczowych</h4>
+        <ul>
+            {% for opp in vis.keyword_opportunities[:5] %}
+                <li>{{ opp }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {# Top sections #}
+    {% if vis.sections %}
+        <h3>Top sekcje witryny (widoczność)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:55%">Sekcja</th>
+                    <th>Słowa kl. TOP10</th>
+                    <th>Est. ruch</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sec in vis.sections[:10] %}
+                    <tr>
+                        <td class="td-url">{{ sec.get('section', sec.get('path', '')) | truncate(50) }}</td>
+                        <td class="td-center">{{ sec.get('keywords_count', sec.get('keywords_top10', 0)) }}</td>
+                        <td class="td-center">{{ sec.get('estimated_traffic', 0) | int }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>

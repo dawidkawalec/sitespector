@@ -1,0 +1,84 @@
+{% from '../macros.html' import score_card, metric_card, alert, chart, part_header, section_heading, ai_insight_list %}
+<div class="section">
+    {{ part_header('I', 'Podsumowanie', 'Ogólna ocena stanu witryny i kluczowe wnioski strategiczne') }}
+    {{ section_heading(sec_num, 'Executive Summary') }}
+
+    {# Scores row #}
+    {% if chart_scores %}
+        {{ chart(chart_scores, 'Wyniki audytu (0–100)', '100%') }}
+    {% else %}
+        <div class="scores-grid">
+            {{ score_card(exec.overall_score, 'Ogółem') }}
+            {{ score_card(exec.seo_score, 'SEO') }}
+            {{ score_card(exec.performance_score, 'Wydajność') }}
+            {{ score_card(exec.content_score, 'Treść') }}
+        </div>
+    {% endif %}
+
+    {# Health status #}
+    {% if exec.health_status %}
+        <div class="metric-grid" style="margin-bottom: 20px;">
+            {{ metric_card(exec.health_label, 'Stan ogólny', exec.health_color) }}
+            {{ metric_card(exec.pages_crawled, 'Stron przeskanowanych') }}
+            {{ metric_card(exec.broken_links, 'Uszkodzone linki') }}
+            {{ metric_card(exec.lcp_desktop, 'LCP Desktop') }}
+        </div>
+    {% endif %}
+
+    {# AI Summary #}
+    {% if exec.ai_summary %}
+        <h3>Podsumowanie AI</h3>
+        <div class="alert alert-ai no-break">
+            <p style="font-style: italic; color: #5b21b6; line-height: 1.6;">{{ exec.ai_summary }}</p>
+        </div>
+    {% endif %}
+
+    {# Strengths #}
+    {% if exec.strengths %}
+        <h3>Mocne strony</h3>
+        {{ ai_insight_list(exec.strengths, '✓') }}
+    {% endif %}
+
+    {# Critical Issues #}
+    {% if exec.critical_issues %}
+        <h3>Problemy krytyczne</h3>
+        {% for issue in exec.critical_issues %}
+            <div class="alert alert-critical no-break">
+                <p>{{ issue }}</p>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {# Top recommendations #}
+    {% if exec.top_recommendations %}
+        <h3>Kluczowe rekomendacje</h3>
+        {{ ai_insight_list(exec.top_recommendations, '→') }}
+    {% endif %}
+
+    {# Growth potential #}
+    {% if exec.growth_potential %}
+        <h3>Potencjał wzrostu</h3>
+        <div class="alert alert-success no-break">
+            <p>{{ exec.growth_potential }}</p>
+        </div>
+    {% endif %}
+
+    {# Senuto quick stats #}
+    {% if exec.senuto_stats %}
+        <h3>Widoczność organiczna (Senuto)</h3>
+        <div class="metric-grid">
+            {% if exec.senuto_stats.keywords_count is not none %}
+                {{ metric_card(exec.senuto_stats.keywords_count | int, 'Słów kluczowych TOP 50', '#3b82f6') }}
+            {% endif %}
+            {% if exec.senuto_stats.visibility is not none %}
+                {{ metric_card(exec.senuto_stats.visibility | round(1), 'Widoczność', '#8b5cf6') }}
+            {% endif %}
+            {% if exec.senuto_stats.backlinks_count is not none %}
+                {{ metric_card(exec.senuto_stats.backlinks_count | int, 'Backlinki', '#06b6d4') }}
+            {% endif %}
+            {% if exec.senuto_stats.domain_rank is not none %}
+                {{ metric_card(exec.senuto_stats.domain_rank | int, 'Domain Rank', '#f59e0b') }}
+            {% endif %}
+        </div>
+    {% endif %}
+</div>

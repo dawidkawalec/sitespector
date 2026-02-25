@@ -1,0 +1,85 @@
+{% from '../macros.html' import metric_card, section_heading, kv_row, alert %}
+<div class="section">
+    {{ section_heading(sec_num, 'Linkowanie Wewnętrzne') }}
+
+    <div class="metric-grid">
+        {{ metric_card(links.internal_count, 'Linki wewnętrzne') }}
+        {{ metric_card(links.external_count, 'Linki zewnętrzne') }}
+        {{ metric_card(links.broken_count, 'Uszkodzone linki', '#dc2626' if links.broken_count > 0 else '#16a34a') }}
+        {{ metric_card(links.redirect_count, 'Przekierowania') }}
+    </div>
+
+    {% if links.broken_count > 0 %}
+        <div class="alert alert-critical no-break">
+            <span class="alert-title">Wykryto {{ links.broken_count }} uszkodzonych linków (404)</span>
+            <p>Uszkodzone linki negatywnie wpływają na crawlowalność i UX. Zalecana natychmiastowa naprawa.</p>
+        </div>
+    {% else %}
+        <div class="alert alert-success no-break">
+            <p>Brak uszkodzonych linków wewnętrznych. ✓</p>
+        </div>
+    {% endif %}
+
+    <div class="two-col">
+        <div>
+            <h3>Struktura linkowania</h3>
+            <table>
+                {{ kv_row('Linki wewnętrzne', links.internal_count) }}
+                {{ kv_row('Linki zewnętrzne', links.external_count) }}
+                {{ kv_row('Uszkodzone (404)', links.broken_count) }}
+                {{ kv_row('Przekierowania', links.redirect_count) }}
+            </table>
+        </div>
+        <div>
+            <h3>AI Insights</h3>
+            {% if links.ai_findings %}
+                <ul class="list-clean">
+                    {% for finding in links.ai_findings[:5] %}
+                        <li>→ {{ finding }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted text-small">Brak danych AI dla tej sekcji.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if links.pages_sample %}
+        <h3>Strony z problemami linkowania (próba)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:55%">URL</th>
+                    <th>Kod</th>
+                    <th>Inlinks</th>
+                    <th>Outlinks</th>
+                    <th>Ext. Outlinks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in links.pages_sample %}
+                    <tr>
+                        <td class="td-url">{{ page.url | truncate(60) }}</td>
+                        <td class="td-center">
+                            <span class="badge {{ 'badge-success' if page.status_code == 200 else ('badge-warning' if page.status_code in [301, 302] else 'badge-danger') }}">
+                                {{ page.status_code }}
+                            </span>
+                        </td>
+                        <td class="td-center">{{ page.inlinks or 0 }}</td>
+                        <td class="td-center">{{ page.outlinks or 0 }}</td>
+                        <td class="td-center">{{ page.external_outlinks or 0 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if links.ai_recommendations %}
+        <h3>Rekomendacje AI</h3>
+        <ul>
+            {% for rec in links.ai_recommendations[:6] %}
+                <li>{{ rec }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>

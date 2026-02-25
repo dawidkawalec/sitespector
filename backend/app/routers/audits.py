@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc
 from sqlalchemy.orm import selectinload
 from app.database import get_db
-from app.models import User, Audit, Competitor, AuditStatus
+from app.models import User, Audit, Competitor, AuditStatus, AuditTask
 from app.schemas import (
     AuditCreate,
     AuditResponse,
@@ -33,7 +33,8 @@ from app.schemas import (
 )
 from app.auth_supabase import get_current_user, verify_workspace_access, verify_project_access
 from app.lib.supabase import supabase, get_workspace_subscription, increment_audit_usage, check_audit_limit
-from app.services.pdf_generator import generate_pdf
+from app.services.pdf import generate_pdf as generate_pdf_v2
+from app.services.pdf_generator import generate_pdf as generate_pdf_legacy
 from app.services.data_exporter import export_raw_data
 from app.services.ai_analysis import (
     generate_fix_suggestion, analyze_single_page, generate_quick_wins, generate_alt_text,
@@ -776,11 +777,15 @@ async def download_raw_data(
 @router.get("/{audit_id}/pdf")
 async def download_audit_pdf(
     audit_id: UUID,
+    report_type: str = Query(default="standard", regex="^(executive|standard|full)$"),
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> FileResponse:
     """
     Download PDF report for an audit.
+    
+    Query params:
+      - report_type: 'executive' | 'standard' | 'full' (default: standard)
     """
     result = await db.execute(
         select(Audit)
@@ -801,7 +806,6 @@ async def download_audit_pdf(
                 detail="Not authorized to access this audit"
             )
     else:
-        # Legacy audit
         if audit.user_id != current_user["id"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -810,9 +814,34 @@ async def download_audit_pdf(
         
     if audit.status != AuditStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Audit not completed yet")
+
+    # Load execution plan tasks
+    tasks_result = await db.execute(
+        select(AuditTask)
+        .where(AuditTask.audit_id == audit_id)
+        .order_by(AuditTask.sort_order, AuditTask.priority)
+    )
+    tasks_list = [
+        {
+            "id": str(t.id),
+            "module": t.module,
+            "title": t.title,
+            "description": t.description,
+            "category": t.category,
+            "priority": t.priority.value if t.priority else "medium",
+            "impact": t.impact,
+            "effort": t.effort,
+            "is_quick_win": t.is_quick_win,
+            "fix_data": t.fix_data or {},
+            "status": t.status.value if t.status else "pending",
+            "notes": t.notes,
+            "source": t.source,
+            "sort_order": t.sort_order,
+        }
+        for t in tasks_result.scalars().all()
+    ]
         
     try:
-        # Prepare audit data for PDF generator
         audit_data = {
             "id": str(audit.id),
             "url": audit.url,
@@ -827,16 +856,21 @@ async def download_audit_pdf(
             "competitors": [
                 {"url": c.url, "status": c.status.value, "results": c.results or {}}
                 for c in audit.competitors
-            ]
+            ],
         }
         
-        pdf_path = await generate_pdf(str(audit_id), audit_data)
+        pdf_path = await generate_pdf_v2(
+            str(audit_id),
+            audit_data,
+            tasks_list=tasks_list,
+            report_type=report_type,
+        )
         
-        # Add CORS headers manually for FileResponse
+        type_suffix = f"_{report_type}" if report_type != "standard" else ""
         response = FileResponse(
             path=pdf_path,
-            filename=f"sitespector_audit_{audit_id}.pdf",
-            media_type="application/pdf"
+            filename=f"sitespector_audit_{audit_id}{type_suffix}.pdf",
+            media_type="application/pdf",
         )
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Credentials"] = "true"
@@ -844,8 +878,8 @@ async def download_audit_pdf(
         return response
         
     except Exception as e:
-        logger.error(f"PDF generation error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to generate PDF")
+        logger.error(f"PDF generation error (type={report_type}): {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
 
 
 @router.post("/{audit_id}/fix-suggestion", response_model=FixSuggestionResponse)
