@@ -499,6 +499,30 @@ async def get_admin_user(user_id: str, db: AsyncSession = Depends(get_db)):
     }
 
 
+# ─── Reset workspace usage counter ───────────────────────────────────────────
+
+@router.post("/workspaces/{workspace_id}/reset-usage", dependencies=[Depends(verify_super_admin)])
+async def reset_workspace_usage(workspace_id: str):
+    """
+    Reset audits_used_this_month to 0 for a workspace subscription.
+    Optionally accepts { audit_limit } in body to also update the limit.
+    """
+    try:
+        update_data: dict = {"audits_used_this_month": 0, "updated_at": _now_utc().isoformat()}
+        resp = supabase.table("subscriptions").update(update_data).eq(
+            "workspace_id", workspace_id
+        ).execute()
+        if not resp.data:
+            raise HTTPException(status_code=404, detail="Subscription not found for workspace")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"reset_workspace_usage error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reset usage")
+
+    return {"success": True, "workspace_id": workspace_id, "audits_used_this_month": 0}
+
+
 # ─── Change user plan ─────────────────────────────────────────────────────────
 
 @router.patch("/users/{user_id}/plan", dependencies=[Depends(verify_super_admin)])

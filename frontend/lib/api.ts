@@ -661,4 +661,10 @@ export const adminAPI = {
   },
 
   getSystem: () => apiRequest<any>('/api/admin/system'),
+
+  resetWorkspaceUsage: (workspaceId: string) =>
+    apiRequest<{ success: boolean; workspace_id: string; audits_used_this_month: number }>(
+      `/api/admin/workspaces/${workspaceId}/reset-usage`,
+      { method: 'POST' }
+    ),
 }

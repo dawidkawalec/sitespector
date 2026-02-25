@@ -39,6 +39,7 @@ import {
   Activity,
   Building2,
   FileDown,
+  RotateCcw,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pl } from 'date-fns/locale'
@@ -112,6 +113,15 @@ export default function AdminUserDetailPage() {
       setPlanDialog(null)
     },
     onError: (e: any) => toast.error(e.message ?? 'Błąd'),
+  })
+
+  const resetMutation = useMutation({
+    mutationFn: (workspaceId: string) => adminAPI.resetWorkspaceUsage(workspaceId),
+    onSuccess: (_, workspaceId) => {
+      toast.success('Licznik audytów zresetowany do 0')
+      qc.invalidateQueries({ queryKey: ['admin-user', userId] })
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Błąd resetowania'),
   })
 
   const openPlanDialog = (wsId: string, currentPlan: string, currentLimit: number) => {
@@ -287,21 +297,38 @@ export default function AdminUserDetailPage() {
                         {sub?.audits_used_this_month ?? '–'}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs gap-1"
-                          onClick={() =>
-                            openPlanDialog(
-                              ws.id,
-                              sub?.plan ?? 'free',
-                              sub?.audit_limit ?? PLAN_LIMITS[sub?.plan ?? 'free']
-                            )
-                          }
-                        >
-                          <CreditCard className="h-3 w-3" />
-                          Zmień plan
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs gap-1"
+                            disabled={resetMutation.isPending}
+                            onClick={() => resetMutation.mutate(ws.id)}
+                            title="Resetuj licznik audytów tego miesiąca do 0"
+                          >
+                            {resetMutation.isPending ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <RotateCcw className="h-3 w-3" />
+                            )}
+                            Reset limitu
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs gap-1"
+                            onClick={() =>
+                              openPlanDialog(
+                                ws.id,
+                                sub?.plan ?? 'free',
+                                sub?.audit_limit ?? PLAN_LIMITS[sub?.plan ?? 'free']
+                              )
+                            }
+                          >
+                            <CreditCard className="h-3 w-3" />
+                            Zmień plan
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )

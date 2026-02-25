@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminAPI } from '@/lib/api'
+import { toast } from 'sonner'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, Loader2, RotateCcw } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pl } from 'date-fns/locale'
 
@@ -42,10 +43,20 @@ function fmtDate(iso: string | null | undefined) {
 }
 
 export default function AdminWorkspacesPage() {
+  const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const PER_PAGE = 20
+
+  const resetMutation = useMutation({
+    mutationFn: (workspaceId: string) => adminAPI.resetWorkspaceUsage(workspaceId),
+    onSuccess: () => {
+      toast.success('Licznik audytów zresetowany do 0')
+      qc.invalidateQueries({ queryKey: ['admin-workspaces'] })
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Błąd resetowania'),
+  })
 
   const handleSearchChange = (val: string) => {
     setSearch(val)
@@ -97,6 +108,7 @@ export default function AdminWorkspacesPage() {
                   <TableHead className="text-right">Audyty</TableHead>
                   <TableHead className="text-right">Limit / Użyte</TableHead>
                   <TableHead>Utworzony</TableHead>
+                  <TableHead className="text-right">Akcje</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -152,6 +164,23 @@ export default function AdminWorkspacesPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                         {fmtDate(ws.created_at)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1"
+                          disabled={resetMutation.isPending}
+                          onClick={() => resetMutation.mutate(ws.id)}
+                          title="Resetuj licznik audytów tego miesiąca do 0"
+                        >
+                          {resetMutation.isPending ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <RotateCcw className="h-3 w-3" />
+                          )}
+                          Reset
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
