@@ -26,10 +26,13 @@ Professional SaaS platform for automated website auditing that combines:
 ### ✅ What Works (Production-Ready)
 - **Authentication**: Supabase Auth (email/password, OAuth, magic links).
 - **Workspace Management**: Personal and team workspaces with role-based access.
+- **Projects**: CRUD + membership + project-scoped audits/schedules + UI.
 - **Subscription & Billing**: Stripe integration with usage tracking.
 - **Audit Pipeline**: Screaming Frog + Lighthouse + Gemini AI.
-- **Infrastructure**: 9 Docker containers on Hetzner VPS with Let's Encrypt SSL (hardened: SSH key-only, UFW deny outgoing, fail2ban, segmented Docker networks).
+- **RAG Chat**: Agent chat with Qdrant vector store, semantic chunking, streaming.
+- **Infrastructure**: 10 Docker containers on Hetzner VPS with Let's Encrypt SSL (hardened: SSH key-only, UFW deny outgoing, fail2ban, segmented Docker networks, memory limits).
 - **Frontend**: Next.js 14 App Router with Unified Context-Aware Sidebar.
+- **Landing**: 18+ marketing pages (Polish), blog, case studies, legal pages, SEO (sitemap, robots.txt, JSON-LD, OG images).
 
 ## Architecture Overview
 SiteSpector uses a **Dual Database Strategy**:
@@ -39,6 +42,6 @@ SiteSpector uses a **Dual Database Strategy**:
 See **[.context7/project/ARCHITECTURE.md](ARCHITECTURE.md)** for details.
 
 ---
-**Last Updated**: 2026-02-15
+**Last Updated**: 2026-02-25
 **Status**: Production SaaS Platform
 **Maintainer**: Dawid

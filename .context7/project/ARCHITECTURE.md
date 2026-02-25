@@ -25,12 +25,14 @@ graph TD
 ## Container Services
 1. **nginx**: Handles SSL termination (Let's Encrypt) and routing.
 2. **frontend**: Next.js 14 standalone build.
-3. **backend**: FastAPI REST API.
-4. **worker**: Background processor for audits.
-5. **postgres**: Local audit database.
-6. **qdrant**: Vector store for audit-scoped RAG chat.
-7. **screaming-frog**: Headless SEO crawler.
-8. **lighthouse**: Performance auditing engine.
+3. **landing**: Next.js marketing site (mem_limit: 512m).
+4. **backend**: FastAPI REST API.
+5. **worker**: Background processor for audits.
+6. **postgres**: Local audit database.
+7. **qdrant**: Vector store for audit-scoped RAG chat.
+8. **screaming-frog**: Headless SEO crawler.
+9. **lighthouse**: Performance auditing engine.
+10. **dozzle**: Docker log viewer (SSH tunnel only, not publicly exposed).
 
 ---
 ## Frontend Layout Notes (App UX)
@@ -44,4 +46,4 @@ The authenticated app has a persistent right-side ChatPanel (desktop) which redu
 This avoids "squished" grids/cards when the chat is open by default.
 
 ---
-**Last Updated**: 2026-02-16
+**Last Updated**: 2026-02-25

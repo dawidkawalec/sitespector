@@ -734,6 +734,41 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 
 ---
 
-**Last Updated**: 2026-02-16
-**Total Decisions**: 38 accepted
+## ADR-040: Landing Container Memory Limit (512 MB) (2026-02-25)
+
+**Context**: After 8 days uptime, `sitespector-landing` consumed 10.41 GiB (68% of VPS RAM). Next.js standalone server leaks memory through unreturned ISR/SSR child processes. No memory limit was configured, allowing unbounded growth.
+
+**Decision**: Add `mem_limit: 512m` and `memswap_limit: 512m` to the landing service in `docker-compose.prod.yml`. The `restart: unless-stopped` policy will auto-restart the container when it hits the limit.
+
+**Consequences**:
+- Landing cannot consume more than 512 MB RAM (normal usage is ~67 MB).
+- Auto-restart on OOM prevents the VPS from becoming unresponsive.
+- Brief service interruption (~5s) during auto-restart is acceptable for a landing page.
+
+### Related Files
+`docker-compose.prod.yml`
+
+---
+
+## ADR-041: Docker System Prune + Repository Cleanup (2026-02-25)
+
+**Context**: VPS disk was at 80% (29GB/38GB) due to accumulated Docker images, build cache, and unused layers. Root directory had 7 stale planning/security markdown files.
+
+**Decision**: 
+- Run `docker system prune -af` on VPS (reclaimed 19.34 GB, disk → 31%).
+- Move stale files to `.archive/security/` and `.archive/old-plans/`.
+- Remove duplicate `agents.md` (lowercase copy of `AGENTS.md`).
+
+**Consequences**:
+- VPS disk at healthy 31% usage.
+- Root directory contains only `README.md` and `AGENTS.md`.
+- Historical docs preserved in `.archive/` for reference.
+
+### Related Files
+`.archive/`, `docker-compose.prod.yml`
+
+---
+
+**Last Updated**: 2026-02-25
+**Total Decisions**: 41 accepted
 **Review**: Update when making significant architectural changes.

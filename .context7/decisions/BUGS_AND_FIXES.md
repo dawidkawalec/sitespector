@@ -564,32 +564,16 @@ refetchInterval: (query) => {
 
 **Reported**: 2025-01-20
 
-**Status**: 🔴 KNOWN ISSUE (not fixed yet)
+**Status**: ✅ RESOLVED (2025-02-03)
 
 **Severity**: MEDIUM
 
 **Description**:
-- PDF generator works but sections 4-9 are empty
-- Only cover page and summary render
-- Users download PDF with blank pages
+- PDF generator works but sections 4-9 were empty
 
-**Missing sections**:
-- Section 4: SEO Technical Analysis
-- Section 5: Performance Analysis
-- Section 6: Content Analysis
-- Section 7: Local SEO (conditional)
-- Section 8: Competitive Analysis (conditional)
-- Section 9: Action Plan
+**Fix**: All 8 PDF sections fully implemented with real data, no fallbacks. See `MISSING_FEATURES.md` for details.
 
-**Root cause**:
-- Template has placeholders but no data rendering logic
-- Worker saves PDF but template incomplete
-
-**Workaround**: Users can download raw data (ZIP)
-
-**Priority**: HIGH - Next after frontend rendering
-
-**Related**: backend/templates/report.html
+**Related**: backend/templates/report.html, backend/app/services/pdf_generator.py
 
 ---
 
@@ -614,24 +598,13 @@ refetchInterval: (query) => {
 
 **Reported**: 2025-01-25
 
-**Status**: 🟡 KNOWN LIMITATION
-
-**Severity**: LOW (MVP)
+**Status**: ✅ RESOLVED (2026-02-15)
 
 **Description**:
-- No rate limiting on API endpoints
-- Users can spam audit creation
-- No protection against abuse
+- Rate limiting implemented in nginx after security hardening (BUG-032).
+- 10r/s on `/api/`, 3r/s on `/login` and `/register`.
 
-**Root cause**:
-- Not implemented (MVP phase)
-- Focus on core functionality first
-
-**Solution**: Add rate limiting middleware (future)
-
-**Impact**: Low (solo user testing)
-
-**Related**: backend/app/main.py
+**Related**: docker/nginx/nginx.conf, BUG-032
 
 ---
 
@@ -1504,7 +1477,28 @@ Additionally, `retrieve_context()` called `embed_query()` without any error hand
 
 ---
 
-**Last Updated**: 2026-02-16  
-**Resolved Bugs**: 37 (incl. BUG-039 RAG quota resilience)  
-**Known Issues**: 3  
+## BUG-040: Landing page memory leak (10.4 GiB after 8 days)
+
+**Date**: 2026-02-25  
+**Severity**: Critical  
+**Status**: RESOLVED (mitigated; root cause is Next.js process leak)
+
+**Symptom**: `docker stats` showed `sitespector-landing` consuming **10.41 GiB (68% of RAM)** after 8 days uptime. VPS had only 4.4 GiB available. Multiple zombie `/bin/sh` child processes spawned by `next-server`.
+
+**Root Cause**: Next.js standalone server (`node server.js`) has a known memory leak pattern where ISR/SSR child processes accumulate over time without being reaped. No memory limit was set on the container, allowing unbounded growth.
+
+**Fix**:
+1. Restarted landing container: memory dropped from 10.41 GiB → 67 MiB.
+2. Added `mem_limit: 512m` and `memswap_limit: 512m` to `docker-compose.prod.yml` landing service.
+3. Container will auto-restart (`restart: unless-stopped`) when hitting the 512 MB limit, preventing future unbounded growth.
+
+**Files Changed**: `docker-compose.prod.yml`
+
+**Related**: WATCH-001 pattern (memory leak monitoring)
+
+---
+
+**Last Updated**: 2026-02-25  
+**Resolved Bugs**: 38 (incl. BUG-040 landing memory leak)  
+**Known Issues**: 1  
 **Watching**: 2
