@@ -30,7 +30,7 @@
 ```bash
 # Production VPS uses SSH keys only.
 # Root SSH login is disabled; use the deploy user.
-ssh -i ~/.ssh/hetzner_sitespector_2026 deploy@<VPS_IP>
+ssh -i ~/.ssh/hetzner_sitespector_2026 deploy@46.225.134.48
 
 # If you have an SSH config entry (recommended), this also works:
 # ssh sitespector-prod
@@ -96,7 +96,7 @@ git push origin release
 **SSH to VPS**:
 
 ```bash
-ssh deploy@<VPS_IP>
+ssh -i ~/.ssh/hetzner_sitespector_2026 deploy@46.225.134.48
 cd /opt/sitespector
 git pull origin release
 ```
@@ -314,7 +314,7 @@ CORS_ORIGINS=["https://sitespector.app","https://www.sitespector.app"]
 ### Updating Environment Variables
 
 **Process**:
-1. SSH to VPS: `ssh deploy@46.225.134.48`
+1. SSH to VPS: `ssh -i ~/.ssh/hetzner_sitespector_2026 deploy@46.225.134.48`
 2. Edit: `nano /opt/sitespector/.env`
 3. Save and exit
 4. Restart services:
@@ -336,7 +336,7 @@ docker compose -f docker-compose.prod.yml restart backend worker
 
 ```bash
 # 1. SSH to VPS
-ssh deploy@46.225.134.48
+ssh -i ~/.ssh/hetzner_sitespector_2026 deploy@46.225.134.48
 cd /opt/sitespector
 
 # 2. Pull latest code
@@ -360,7 +360,7 @@ docker logs sitespector-frontend --tail 50
 
 ```bash
 # 1. SSH to VPS
-ssh deploy@46.225.134.48
+ssh -i ~/.ssh/hetzner_sitespector_2026 deploy@46.225.134.48
 cd /opt/sitespector
 
 # 2. Pull latest code
@@ -495,7 +495,7 @@ docker exec -it sitespector-postgres psql -U sitespector_user -d sitespector_db
 
 ```bash
 # 1. SSH to VPS
-ssh deploy@46.225.134.48
+ssh -i ~/.ssh/hetzner_sitespector_2026 deploy@46.225.134.48
 cd /opt/sitespector
 
 # 2. View commit history
@@ -722,7 +722,7 @@ ALL OTHER OUTBOUND UDP BLOCKED (prevents UDP flood DDoS)
 
 ```bash
 # SSH to VPS
-ssh deploy@46.225.134.48
+ssh -i ~/.ssh/hetzner_sitespector_2026 deploy@46.225.134.48
 
 # Navigate to project
 cd /opt/sitespector

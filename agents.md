@@ -58,7 +58,7 @@ Register → Workspace created automatically
 
 ```bash
 # Deploy
-ssh vps "cd /opt/sitespector && git pull && docker compose restart frontend backend worker"
+ssh -i ~/.ssh/hetzner_sitespector_2026 deploy@46.225.134.48 "cd /opt/sitespector && git pull origin release && docker compose -f docker-compose.prod.yml build frontend && docker compose -f docker-compose.prod.yml up -d frontend"
 
 # Logs
 docker logs sitespector-backend --tail 100
