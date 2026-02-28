@@ -11,7 +11,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, cast, Date, text
+from sqlalchemy import func, cast, Date, text, case
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -710,12 +710,12 @@ async def list_admin_audits(
         func.avg(Audit.seo_score).label("avg_seo"),
         func.avg(Audit.performance_score).label("avg_perf"),
         func.sum(
-            func.case(
+            case(
                 (Audit.status == AuditStatus.COMPLETED, 1), else_=0
             )
         ).label("completed"),
         func.sum(
-            func.case(
+            case(
                 (Audit.status == AuditStatus.FAILED, 1), else_=0
             )
         ).label("failed"),
