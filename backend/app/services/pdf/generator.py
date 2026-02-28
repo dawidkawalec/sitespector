@@ -217,6 +217,27 @@ def _safe_chart(fn, *args, **kwargs) -> str:
         return ""
 
 
+def _safe_extract(fn, *args, **kwargs) -> Optional[Dict]:
+    """Call extractor fn, return None on failure (section will be skipped)."""
+    try:
+        return fn(*args, **kwargs)
+    except Exception as e:
+        logger.warning(f"Section extractor failed ({fn.__module__}.{fn.__name__}): {e}", exc_info=True)
+        return None
+
+
+def _append_section(sections_html: List[str], template_name: str, data: Optional[Dict], extra: Dict = None) -> bool:
+    """Render and append a section. Returns False if data is None (skipped)."""
+    if data is None:
+        sections_html.append(
+            f'<div class="section"><p class="text-muted text-small">Sekcja pominięta z powodu błędu danych: {template_name}</p></div>'
+        )
+        return False
+    ctx = {**(extra or {}), **data}
+    sections_html.append(_render_section(template_name, ctx))
+    return True
+
+
 async def generate_pdf(
     audit_id: str,
     audit_data: Dict[str, Any],
@@ -292,380 +313,266 @@ async def generate_pdf(
         estimated_pages=cfg.estimated_pages,
     ))
 
+    def _sec(sid, fn, *args, template=None, extra=None, **kwargs):
+        """Extract + render one section safely. Skips on extractor failure."""
+        data = _safe_extract(fn, *args, **kwargs)
+        if data is None:
+            return
+        ctx = {**data, "sec_num": next_sec(), **(extra or {})}
+        sections_html.append(_render_section(template or sid, ctx))
+
     # ---- EXECUTIVE SUMMARY ----
     if cfg.is_enabled("executive_summary"):
-        exec_data = executive_summary.extract(audit_data)
-        chart_scores = _safe_chart(
-            scores_overview_chart,
-            exec_data["exec"]["overall_score"] or 0,
-            exec_data["exec"]["seo_score"] or 0,
-            exec_data["exec"]["performance_score"] or 0,
-            exec_data["exec"]["content_score"] or 0,
-        )
-        sections_html.append(_render_section("executive_summary", {
-            **exec_data,
-            "sec_num": next_sec(),
-            "chart_scores": chart_scores,
-        }))
+        exec_data = _safe_extract(executive_summary.extract, audit_data)
+        if exec_data:
+            chart_scores = _safe_chart(
+                scores_overview_chart,
+                exec_data["exec"].get("overall_score") or 0,
+                exec_data["exec"].get("seo_score") or 0,
+                exec_data["exec"].get("performance_score") or 0,
+                exec_data["exec"].get("content_score") or 0,
+            )
+            sections_html.append(_render_section("executive_summary", {
+                **exec_data, "sec_num": next_sec(), "chart_scores": chart_scores,
+            }))
 
     # ---- TECHNICAL OVERVIEW ----
     if cfg.is_enabled("technical_overview"):
-        tech_data = technical_overview.extract(audit_data)
-        crawl = results.get("crawl") or {}
-        chart_http = _safe_chart(http_status_pie, crawl.get("pages_by_status") or {})
-        sections_html.append(_render_section("technical_overview", {
-            **tech_data,
-            "sec_num": next_sec(),
-            "chart_http_status": chart_http,
-        }))
+        tech_data = _safe_extract(technical_overview.extract, audit_data)
+        if tech_data:
+            crawl = results.get("crawl") or {}
+            chart_http = _safe_chart(http_status_pie, crawl.get("pages_by_status") or {})
+            sections_html.append(_render_section("technical_overview", {
+                **tech_data, "sec_num": next_sec(), "chart_http_status": chart_http,
+            }))
 
     # ---- ON-PAGE SEO ----
     if cfg.is_enabled("on_page_seo"):
-        max_rows = cfg.get_max_rows("on_page_seo", 50)
-        extended = cfg.is_extended("on_page_seo")
-        onpage_data = on_page_seo.extract(audit_data, max_rows=max_rows, extended=extended)
-        sections_html.append(_render_section("on_page_seo", {
-            **onpage_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("on_page_seo", on_page_seo.extract, audit_data,
+             max_rows=cfg.get_max_rows("on_page_seo", 50),
+             extended=cfg.is_extended("on_page_seo"))
 
     # ---- HEADING ANALYSIS ----
     if cfg.is_enabled("heading_analysis"):
-        extended = cfg.is_extended("heading_analysis")
-        ha_data = heading_analysis.extract(audit_data, extended=extended)
-        sections_html.append(_render_section("heading_analysis", {
-            **ha_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("heading_analysis", heading_analysis.extract, audit_data,
+             extended=cfg.is_extended("heading_analysis"))
 
     # ---- URL STRUCTURE ----
     if cfg.is_enabled("url_structure"):
-        us_data = url_structure.extract(audit_data)
-        sections_html.append(_render_section("url_structure", {
-            **us_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("url_structure", url_structure.extract, audit_data)
 
     # ---- REDIRECT ANALYSIS ----
     if cfg.is_enabled("redirect_analysis"):
-        ra_data = redirect_analysis.extract(audit_data)
-        sections_html.append(_render_section("redirect_analysis", {
-            **ra_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("redirect_analysis", redirect_analysis.extract, audit_data)
 
     # ---- STRUCTURED DATA ----
     if cfg.is_enabled("structured_data"):
-        sd_data = structured_data.extract(audit_data)
-        sections_html.append(_render_section("structured_data", {
-            **sd_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("structured_data", structured_data.extract, audit_data)
 
     # ---- ROBOTS.TXT & SITEMAP ----
     if cfg.is_enabled("robots_sitemap"):
-        rs_data = robots_sitemap.extract(audit_data)
-        sections_html.append(_render_section("robots_sitemap", {
-            **rs_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("robots_sitemap", robots_sitemap.extract, audit_data)
 
     # ---- INTERNAL LINKS ----
     if cfg.is_enabled("internal_links"):
-        max_rows = cfg.get_max_rows("internal_links", 50)
-        links_data = internal_links.extract(audit_data, max_rows=max_rows)
-        sections_html.append(_render_section("internal_links", {
-            **links_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("internal_links", internal_links.extract, audit_data,
+             max_rows=cfg.get_max_rows("internal_links", 50))
 
     # ---- PERFORMANCE ----
     if cfg.is_enabled("performance"):
-        perf_data = performance.extract(audit_data)
-        chart_cwv = _safe_chart(
-            cwv_comparison_chart,
-            perf_data["perf"]["desktop_cwv_dict"],
-            perf_data["perf"]["mobile_cwv_dict"],
-        )
-        sections_html.append(_render_section("performance", {
-            **perf_data,
-            "sec_num": next_sec(),
-            "chart_cwv": chart_cwv,
-        }))
+        perf_data = _safe_extract(performance.extract, audit_data)
+        if perf_data:
+            chart_cwv = _safe_chart(
+                cwv_comparison_chart,
+                perf_data["perf"].get("desktop_cwv_dict", {}),
+                perf_data["perf"].get("mobile_cwv_dict", {}),
+            )
+            sections_html.append(_render_section("performance", {
+                **perf_data, "sec_num": next_sec(), "chart_cwv": chart_cwv,
+            }))
 
     # ---- LIGHTHOUSE DETAIL ----
     if cfg.is_enabled("lighthouse_detail"):
-        max_rows = cfg.get_max_rows("lighthouse_detail", 15)
-        extended = cfg.is_extended("lighthouse_detail")
-        lh_data = lighthouse_detail.extract(audit_data, max_rows=max_rows, extended=extended)
-        sections_html.append(_render_section("lighthouse_detail", {
-            **lh_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("lighthouse_detail", lighthouse_detail.extract, audit_data,
+             max_rows=cfg.get_max_rows("lighthouse_detail", 15),
+             extended=cfg.is_extended("lighthouse_detail"))
 
     # ---- ACCESSIBILITY ----
     if cfg.is_enabled("accessibility"):
-        acc_data = accessibility.extract(audit_data)
-        sections_html.append(_render_section("accessibility", {
-            **acc_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("accessibility", accessibility.extract, audit_data)
 
     # ---- SENUTO SECTIONS (conditional) ----
     if has_senuto:
         # Visibility overview
         if cfg.is_enabled("visibility_overview"):
-            vis_data = visibility_overview.extract(audit_data)
-            senuto_vis = (results.get("senuto") or {}).get("visibility") or {}
-            positions_raw = vis_data["vis"]["positions_raw"]
-
-            chart_kw_dist = _safe_chart(
-                keyword_distribution_chart,
-                vis_data["vis"]["top3_count"],
-                vis_data["vis"]["top10_count"],
-                vis_data["vis"]["top50_count"],
-            )
-            # Seasonality
-            chart_seasonality = ""
-            seasonality = vis_data["vis"].get("seasonality")
-            if seasonality and isinstance(seasonality, dict):
-                months = list(seasonality.keys())
-                raw_vals = list(seasonality.values())
-                # values may be numbers or dicts like {"visibility": 123, ...}
-                def _extract_num(v) -> float:
-                    if isinstance(v, (int, float)):
-                        return float(v)
-                    if isinstance(v, dict):
-                        for key in ("visibility", "keywords", "value", "count"):
-                            if key in v:
-                                try:
-                                    return float(v[key])
-                                except (TypeError, ValueError):
-                                    pass
-                    return 0.0
-                vals = [_extract_num(v) for v in raw_vals]
-                if months and any(v > 0 for v in vals):
-                    chart_seasonality = _safe_chart(
-                        line_chart,
-                        months,
-                        [{"label": "Widoczność", "values": vals, "color": "#3b82f6"}],
-                        title="Sezonowość widoczności",
-                        filled=True,
-                    )
-
-            sections_html.append(_render_section("visibility_overview", {
-                **vis_data,
-                "sec_num": next_sec(),
-                "chart_keyword_dist": chart_kw_dist,
-                "chart_seasonality": chart_seasonality,
-            }))
+            vis_data = _safe_extract(visibility_overview.extract, audit_data)
+            if vis_data:
+                chart_kw_dist = _safe_chart(
+                    keyword_distribution_chart,
+                    vis_data["vis"].get("top3_count", 0),
+                    vis_data["vis"].get("top10_count", 0),
+                    vis_data["vis"].get("top50_count", 0),
+                )
+                chart_seasonality = ""
+                seasonality = vis_data["vis"].get("seasonality")
+                if seasonality and isinstance(seasonality, dict):
+                    months = list(seasonality.keys())
+                    raw_vals = list(seasonality.values())
+                    def _extract_num(v) -> float:
+                        if isinstance(v, (int, float)):
+                            return float(v)
+                        if isinstance(v, dict):
+                            for key in ("visibility", "keywords", "value", "count"):
+                                if key in v:
+                                    try:
+                                        return float(v[key])
+                                    except (TypeError, ValueError):
+                                        pass
+                        return 0.0
+                    vals = [_extract_num(v) for v in raw_vals]
+                    if months and any(v > 0 for v in vals):
+                        chart_seasonality = _safe_chart(
+                            line_chart, months,
+                            [{"label": "Widoczność", "values": vals, "color": "#3b82f6"}],
+                            title="Sezonowość widoczności", filled=True,
+                        )
+                sections_html.append(_render_section("visibility_overview", {
+                    **vis_data, "sec_num": next_sec(),
+                    "chart_keyword_dist": chart_kw_dist,
+                    "chart_seasonality": chart_seasonality,
+                }))
 
         # Keywords
         if cfg.is_enabled("keywords") and "keywords" not in skipped_ids:
-            max_rows = cfg.get_max_rows("keywords", 50)
-            kw_data = keywords.extract(audit_data, max_rows=max_rows)
-            vis_positions = kw_data["kw"]["positions"]
-            chart_intent = _safe_chart(intent_distribution_chart, vis_positions)
-            sections_html.append(_render_section("keywords", {
-                **kw_data,
-                "sec_num": next_sec(),
-                "chart_intent": chart_intent,
-                "chart_difficulty": "",
-            }))
+            kw_data = _safe_extract(keywords.extract, audit_data,
+                                    max_rows=cfg.get_max_rows("keywords", 50))
+            if kw_data:
+                chart_intent = _safe_chart(intent_distribution_chart,
+                                           kw_data["kw"].get("positions", []))
+                sections_html.append(_render_section("keywords", {
+                    **kw_data, "sec_num": next_sec(),
+                    "chart_intent": chart_intent, "chart_difficulty": "",
+                }))
 
         # Position changes
         if cfg.is_enabled("position_changes") and "position_changes" not in skipped_ids:
-            max_rows = cfg.get_max_rows("position_changes", 20)
-            ext = cfg.is_extended("position_changes")
-            ch_data = position_changes.extract(audit_data, max_rows=max_rows)
-            sections_html.append(_render_section("position_changes", {
-                **ch_data,
-                "sec_num": next_sec(),
-            }))
+            _sec("position_changes", position_changes.extract, audit_data,
+                 max_rows=cfg.get_max_rows("position_changes", 20))
 
         # Organic competitors
         if cfg.is_enabled("organic_competitors") and "organic_competitors" not in skipped_ids:
-            oc_data = organic_competitors.extract(audit_data)
-            chart_comp = _safe_chart(
-                competitor_comparison_chart,
-                oc_data["org_comp"]["competitors"],
-                "common_keywords",
-                "Wspólne frazy kluczowe z konkurencją",
-            )
-            sections_html.append(_render_section("organic_competitors", {
-                **oc_data,
-                "sec_num": next_sec(),
-                "chart_competitors": chart_comp,
-            }))
+            oc_data = _safe_extract(organic_competitors.extract, audit_data)
+            if oc_data:
+                chart_comp = _safe_chart(
+                    competitor_comparison_chart,
+                    oc_data["org_comp"].get("competitors", []),
+                    "common_keywords", "Wspólne frazy kluczowe z konkurencją",
+                )
+                sections_html.append(_render_section("organic_competitors", {
+                    **oc_data, "sec_num": next_sec(), "chart_competitors": chart_comp,
+                }))
 
         # Backlinks
         if cfg.is_enabled("backlinks") and "backlinks" not in skipped_ids:
-            max_rows = cfg.get_max_rows("backlinks", 50)
-            bl_data = backlinks.extract(audit_data, max_rows=max_rows)
-            sections_html.append(_render_section("backlinks", {
-                **bl_data,
-                "sec_num": next_sec(),
-            }))
+            _sec("backlinks", backlinks.extract, audit_data,
+                 max_rows=cfg.get_max_rows("backlinks", 50))
 
         # AI Overviews
         if has_aio and cfg.is_enabled("ai_overviews") and "ai_overviews" not in skipped_ids:
-            max_rows = cfg.get_max_rows("ai_overviews", 20)
-            aio_data = ai_overviews.extract(audit_data, max_rows=max_rows)
-            sections_html.append(_render_section("ai_overviews", {
-                **aio_data,
-                "sec_num": next_sec(),
-            }))
+            _sec("ai_overviews", ai_overviews.extract, audit_data,
+                 max_rows=cfg.get_max_rows("ai_overviews", 20))
 
         # Cannibalization
         if cfg.is_enabled("cannibalization"):
-            can_data = cannibalization.extract(audit_data)
-            sections_html.append(_render_section("cannibalization", {
-                **can_data,
-                "sec_num": next_sec(),
-            }))
+            _sec("cannibalization", cannibalization.extract, audit_data)
 
         # Anchor Text Distribution
         if cfg.is_enabled("anchor_text"):
-            at_data = anchor_text.extract(audit_data)
-            sections_html.append(_render_section("anchor_text", {
-                **at_data,
-                "sec_num": next_sec(),
-            }))
+            _sec("anchor_text", anchor_text.extract, audit_data)
 
     # ---- CONTENT ----
     if cfg.is_enabled("content"):
-        ct_data = content.extract(audit_data)
-        sections_html.append(_render_section("content", {
-            **ct_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("content", content.extract, audit_data)
 
     # ---- UX MOBILE ----
     if cfg.is_enabled("ux_mobile"):
-        ux_data = ux_mobile.extract(audit_data)
-        sections_html.append(_render_section("ux_mobile", {
-            **ux_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("ux_mobile", ux_mobile.extract, audit_data)
 
     # ---- SECURITY ----
     if cfg.is_enabled("security"):
-        sec_data = security.extract(audit_data)
-        sections_html.append(_render_section("security", {
-            **sec_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("security", security.extract, audit_data)
 
     # ---- TECH STACK ----
     if cfg.is_enabled("tech_stack"):
-        ts_data = tech_stack.extract(audit_data)
-        sections_html.append(_render_section("tech_stack", {
-            **ts_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("tech_stack", tech_stack.extract, audit_data)
 
     # ---- AI INSIGHTS PER AREA ----
     if cfg.is_enabled("ai_insights"):
-        extended = cfg.is_extended("ai_insights")
-        ai_data = ai_insights.extract(audit_data, extended=extended)
-        sections_html.append(_render_section("ai_insights", {
-            **ai_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("ai_insights", ai_insights.extract, audit_data,
+             extended=cfg.is_extended("ai_insights"))
 
     # ---- CROSS-TOOL ----
     if cfg.is_enabled("cross_tool"):
-        ct_data = cross_tool.extract(audit_data)
-        sections_html.append(_render_section("cross_tool", {
-            **ct_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("cross_tool", cross_tool.extract, audit_data)
 
     # ---- QUICK WINS ----
     if cfg.is_enabled("quick_wins"):
         max_rows_qw = cfg.get_max_rows("quick_wins", 24)
-        qw_data = quick_wins.extract(audit_data, max_rows=max_rows_qw)
-        all_qw = qw_data["qw_high"] + qw_data["qw_medium"] + qw_data["qw_low"]
-        chart_matrix = _safe_chart(impact_effort_matrix, all_qw)
-        sections_html.append(_render_section("quick_wins", {
-            **qw_data,
-            "sec_num": next_sec(),
-            "chart_matrix": chart_matrix,
-        }))
+        qw_data = _safe_extract(quick_wins.extract, audit_data, max_rows=max_rows_qw)
+        if qw_data:
+            all_qw = qw_data.get("qw_high", []) + qw_data.get("qw_medium", []) + qw_data.get("qw_low", [])
+            chart_matrix = _safe_chart(impact_effort_matrix, all_qw)
+            sections_html.append(_render_section("quick_wins", {
+                **qw_data, "sec_num": next_sec(), "chart_matrix": chart_matrix,
+            }))
 
     # ---- ROADMAP ----
     immediate_only = cfg.is_enabled("roadmap_immediate") and not cfg.is_enabled("roadmap_full")
     roadmap_section_id = "roadmap_immediate" if immediate_only else "roadmap_full"
     if cfg.is_enabled(roadmap_section_id):
-        rm_data = roadmap.extract(audit_data, immediate_only=immediate_only)
-        chart_rm = _safe_chart(roadmap_timeline_chart, rm_data["roadmap"])
-        sections_html.append(_render_section("roadmap", {
-            **rm_data,
-            "sec_num": next_sec(),
-            "chart_roadmap": chart_rm,
-        }))
+        rm_data = _safe_extract(roadmap.extract, audit_data, immediate_only=immediate_only)
+        if rm_data:
+            chart_rm = _safe_chart(roadmap_timeline_chart, rm_data.get("roadmap", {}))
+            sections_html.append(_render_section("roadmap", {
+                **rm_data, "sec_num": next_sec(), "chart_roadmap": chart_rm,
+            }))
 
     # ---- EXECUTION PLAN ----
     if cfg.is_enabled("execution_plan"):
         max_rows_ep = cfg.get_max_rows("execution_plan", 30)
         extended_ep = cfg.is_extended("execution_plan")
-        ep_data = execution_plan.extract(
-            audit_data,
-            tasks=tasks_list,
-            max_rows=max_rows_ep,
-            extended=extended_ep,
-        )
-        all_tasks_for_chart = tasks_list[:max_rows_ep] if not extended_ep else tasks_list
-        chart_priority = _safe_chart(execution_plan_priority_chart, all_tasks_for_chart)
-        sections_html.append(_render_section("execution_plan", {
-            **ep_data,
-            "sec_num": next_sec(),
-            "chart_priority": chart_priority,
-        }))
+        ep_data = _safe_extract(execution_plan.extract, audit_data,
+                                tasks=tasks_list, max_rows=max_rows_ep, extended=extended_ep)
+        if ep_data:
+            all_tasks_for_chart = tasks_list[:max_rows_ep] if not extended_ep else tasks_list
+            chart_priority = _safe_chart(execution_plan_priority_chart, all_tasks_for_chart)
+            sections_html.append(_render_section("execution_plan", {
+                **ep_data, "sec_num": next_sec(), "chart_priority": chart_priority,
+            }))
 
     # ---- BENCHMARK ----
     if cfg.is_enabled("benchmark"):
-        bench_data = benchmark.extract(audit_data)
-        sections_html.append(_render_section("benchmark", {
-            **bench_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("benchmark", benchmark.extract, audit_data)
 
     # ---- APPENDIX PAGES ----
     if cfg.is_enabled("appendix_pages"):
-        max_rows_ap = cfg.get_max_rows("appendix_pages")  # None = all
-        ap_data = appendix_pages.extract(audit_data, max_rows=max_rows_ap)
-        sections_html.append(_render_section("appendix_pages", {
-            **ap_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("appendix_pages", appendix_pages.extract, audit_data,
+             max_rows=cfg.get_max_rows("appendix_pages"))
 
     # ---- APPENDIX IMAGES ----
     if cfg.is_enabled("appendix_images"):
-        max_rows_ai = cfg.get_max_rows("appendix_images", 100)
-        ai_app_data = appendix_images.extract(audit_data, max_rows=max_rows_ai)
-        sections_html.append(_render_section("appendix_images", {
-            **ai_app_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("appendix_images", appendix_images.extract, audit_data,
+             max_rows=cfg.get_max_rows("appendix_images", 100))
 
     # ---- APPENDIX KEYWORDS ----
     if cfg.is_enabled("appendix_keywords") and has_senuto:
-        max_rows_ak = cfg.get_max_rows("appendix_keywords", 200)
-        ak_data = appendix_keywords.extract(audit_data, max_rows=max_rows_ak)
-        sections_html.append(_render_section("appendix_keywords", {
-            **ak_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("appendix_keywords", appendix_keywords.extract, audit_data,
+             max_rows=cfg.get_max_rows("appendix_keywords", 200))
 
     # ---- APPENDIX BACKLINKS ----
     if cfg.is_enabled("appendix_backlinks") and has_senuto:
-        max_rows_abl = cfg.get_max_rows("appendix_backlinks", 100)
-        abl_data = appendix_backlinks.extract(audit_data, max_rows=max_rows_abl)
-        sections_html.append(_render_section("appendix_backlinks", {
-            **abl_data,
-            "sec_num": next_sec(),
-        }))
+        _sec("appendix_backlinks", appendix_backlinks.extract, audit_data,
+             max_rows=cfg.get_max_rows("appendix_backlinks", 100))
 
     # ---- Assemble full HTML ----
     body_content = "\n".join(sections_html)

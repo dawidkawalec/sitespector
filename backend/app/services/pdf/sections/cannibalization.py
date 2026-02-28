@@ -1,7 +1,7 @@
 """Data extractor for Keyword Cannibalization section."""
 
 from typing import Any, Dict, List
-from ..utils import safe_int
+from ..utils import safe_int, as_list
 
 
 def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -9,11 +9,14 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     senuto = results.get("senuto") or {}
     visibility = senuto.get("visibility") or {}
 
-    # Cannibalization data from Senuto
-    cannibalization_raw = visibility.get("cannibalization") or {}
-    cannibal_keywords = cannibalization_raw.get("keywords") or []
-    if not cannibal_keywords and isinstance(cannibalization_raw, list):
+    # Cannibalization data from Senuto — may be list or dict
+    cannibalization_raw = visibility.get("cannibalization")
+    if isinstance(cannibalization_raw, list):
         cannibal_keywords = cannibalization_raw
+    elif isinstance(cannibalization_raw, dict):
+        cannibal_keywords = as_list(cannibalization_raw.get("keywords") or cannibalization_raw.get("data"))
+    else:
+        cannibal_keywords = []
 
     # Build cannibalization groups
     cannibal_groups = []
@@ -41,7 +44,7 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
         cannibal_groups.sort(key=lambda x: -(x.get("volume") or 0))
 
     # Also check positions data for multiple URLs per keyword
-    positions = visibility.get("positions") or []
+    positions = as_list(visibility.get("positions"))
     if not cannibal_groups and positions:
         pos_keyword_map: Dict[str, List] = {}
         for p in positions:

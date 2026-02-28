@@ -1,13 +1,14 @@
 """Data extractor for Appendix - Keywords."""
 
 from typing import Any, Dict
+from ..utils import as_list
 
 
 def extract(audit_data: Dict[str, Any], max_rows: int = 200) -> Dict[str, Any]:
     results = audit_data.get("results") or {}
     senuto = results.get("senuto") or {}
     vis = senuto.get("visibility") or {}
-    positions = vis.get("positions") or []
+    positions = as_list(vis.get("positions"))
     total_count = len(positions)
     # Sort by volume then position
     sorted_kw = sorted(

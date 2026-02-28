@@ -1,7 +1,7 @@
 """Data extractor for Anchor Text Distribution section."""
 
 from typing import Any, Dict, List
-from ..utils import safe_int
+from ..utils import safe_int, as_list
 
 
 def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -9,11 +9,14 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     senuto = results.get("senuto") or {}
     backlinks_data = senuto.get("backlinks") or {}
 
-    # Anchor text from Senuto backlinks
-    anchors_raw = backlinks_data.get("anchors") or {}
-    anchor_list = anchors_raw.get("data") or []
-    if not anchor_list and isinstance(anchors_raw, list):
+    # Anchor text from Senuto backlinks — may be list or dict
+    anchors_raw = backlinks_data.get("anchors")
+    if isinstance(anchors_raw, list):
         anchor_list = anchors_raw
+    elif isinstance(anchors_raw, dict):
+        anchor_list = as_list(anchors_raw.get("data") or anchors_raw.get("anchors"))
+    else:
+        anchor_list = []
 
     # Process anchor text data
     anchors = []
