@@ -754,3 +754,674 @@ docker exec sitespector-backend printenv | grep -E "DATABASE|JWT|GEMINI"
 **Last Updated**: 2026-02-15  
 **Deployment target**: Hetzner VPS (46.225.134.48), domain sitespector.app  
 **Status**: Production-ready, Let's Encrypt SSL, fully hardened (SSH key-only, UFW anti-DDoS, fail2ban, Docker read-only sockets, network segmentation, API auth, rate limiting, security monitoring)
+
+# SiteSpector - Docker Configuration (Production)
+
+## Overview
+
+SiteSpector runs as **10 Docker containers** orchestrated by Docker Compose on the VPS.
+
+- **Config file**: `docker-compose.prod.yml`
+- **Project dir on VPS**: `/opt/sitespector`
+- **Branch**: `release`
+- **External ports exposed on host**: **only** `80` and `443` via `sitespector-nginx`
+
+## Networks (Hardening)
+
+Production uses 2 networks:
+
+- `sitespector-internal` (**internal: true**) - for services that should not need internet egress
+- `sitespector-external` - for services that need internet (e.g. crawlers / Lighthouse)
+
+This is defense-in-depth in addition to host-level UFW.
+
+## Services (Production)
+
+### 1) `nginx` (Reverse Proxy)
+
+- Exposes **host ports** `80` and `443`
+- Mounts Let’s Encrypt certs from host:
+  - `/etc/letsencrypt:/etc/letsencrypt:ro`
+- Routes:
+  - `/api/*` -> `backend:8000`
+  - `/health` -> `backend:8000/health`
+  - `/` -> `frontend:3000`
+  - selected marketing/auth routes -> `landing:3001`
+
+### 2) `frontend` (Next.js app)
+
+- Internal only (no host port binding)
+- Requires rebuild on code changes (standalone build)
+
+### 3) `landing` (Next.js landing/content/auth)
+
+- Internal only (no host port binding)
+- Serves marketing pages, `/login`, `/register`, and the public docs route `/docs` (landing docs, **not** FastAPI Swagger)
+
+### 4) `backend` (FastAPI)
+
+- Internal only (no host port binding)
+- Healthcheck: `/health`
+- **Swagger/OpenAPI disabled in production** (see `ENVIRONMENT=production`)
+- Uses `.env` for database + secrets
+
+### 5) `worker` (Background processor)
+
+- Internal only (no host port binding)
+- Executes audits by `docker exec` into other containers
+- `docker.sock` mount is **read-only**:
+  - `/var/run/docker.sock:/var/run/docker.sock:ro`
+
+### 6) `postgres`
+
+- Internal only
+- Persistent volume: `postgres_data`
+- Credentials are provided via `.env` variables (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`)
+
+### 7) `screaming-frog`
+
+- Needs external network access (downloads, crawling)
+- Controlled via `docker exec` from worker
+
+### 8) `lighthouse`
+
+- Needs external network access (fetching pages)
+- Controlled via `docker exec` from worker
+
+### 9) `dozzle` (Docker logs viewer)
+### 10) `qdrant` (Vector DB for RAG)
+
+- Internal only (no host port binding)
+- Stores audit-scoped embeddings for agent chat
+- Used by backend/worker via internal DNS: `http://qdrant:6333`
+- Persistent volume: `qdrant_data`
+
+
+- Runs but is **NOT exposed publicly** via nginx
+- Intended access: SSH tunnel to container port `8080` (internal)
+- Docker socket mount is **read-only** (`:ro`)
+
+## Docker Socket Safety
+
+Docker socket mounts must be `:ro` (read-only) in production.
+If stronger isolation is required, use a Docker socket proxy (see `SECURITY_HARDENING_PLAN.md` Phase 2).
+
+## Common Commands (VPS)
+
+```bash
+cd /opt/sitespector
+
+# Start / restart
+docker compose -f docker-compose.prod.yml up -d
+
+# Full restart
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml up -d
+
+# Status
+docker ps
+
+# Logs
+docker logs sitespector-backend --tail 100
+```
+
+---
+**Last Updated**: 2026-02-15  
+**Services**: 10 containers  
+**Orchestration**: Docker Compose  
+**Networks**: `sitespector-internal` (internal=true) + `sitespector-external`
+
+## Dockerfiles
+
+### Backend Dockerfile (`backend/Dockerfile`)
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 8000
+
+# Default command (overridden in docker-compose)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+---
+
+### Frontend Dockerfile (`frontend/Dockerfile`)
+
+```dockerfile
+FROM node:20-alpine AS base
+
+FROM base AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+ENV NEXT_TELEMETRY_DISABLED 1
+
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+RUN npm run build
+
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+CMD ["node", "server.js"]
+```
+
+**Build stages**:
+1. deps: Install dependencies
+2. builder: Build Next.js app
+3. runner: Production runtime (minimal)
+
+**Output**: Standalone build (includes Node.js runtime)
+
+---
+
+## Common Commands
+
+### Start all services
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Stop all services
+
+```bash
+docker compose -f docker-compose.prod.yml down
+```
+
+### Restart service
+
+```bash
+docker compose -f docker-compose.prod.yml restart backend
+```
+
+### Rebuild service
+
+```bash
+docker compose -f docker-compose.prod.yml build --no-cache frontend
+docker compose -f docker-compose.prod.yml up -d frontend
+```
+
+### View logs
+
+```bash
+docker logs sitespector-backend --tail 100 -f
+```
+
+### Execute command in container
+
+```bash
+docker exec -it sitespector-backend bash
+docker exec sitespector-backend alembic upgrade head
+```
+
+---
+
+## Environment Variables
+
+**Loaded from**: `.env` file (production only)
+
+**Backend/Worker**:
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `GEMINI_API_KEY`
+- `SCREAMING_FROG_USER`, `KEY`, `EMAIL`
+
+**Frontend**:
+- `NEXT_PUBLIC_API_URL` (build-time)
+
+---
+
+## Networking
+
+**Container-to-container**:
+- `backend:8000` (from worker)
+- `postgres:5432` (from backend/worker)
+- `frontend:3000` (from nginx)
+
+**External access**:
+- Nginx: 80, 443 (host ports)
+
+---
+
+## Restart Policy
+
+**All services**: `restart: unless-stopped`
+
+**Behavior**:
+- Auto-restart on crash
+- Don't restart if manually stopped
+- Restart on host reboot
+
+---
+
+**Last Updated**: 2026-02-15  
+**Services**: 9 containers  
+**Orchestration**: Docker Compose  
+**Networks**: `sitespector-internal` (internal=true) + `sitespector-external`
+
+# SiteSpector - Nginx Configuration
+
+## Overview
+
+Nginx acts as reverse proxy and SSL termination for SiteSpector.
+
+**Config file**: `docker/nginx/nginx.conf`
+
+**Container**: `sitespector-nginx`
+
+**Ports**: 80 (HTTP), 443 (HTTPS)
+
+---
+
+## Configuration Structure
+
+### Global Settings
+
+```nginx
+events {
+    worker_connections 1024;  # Max connections per worker
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Logging
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # Performance
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript 
+               application/json application/javascript 
+               application/xml+rss application/rss+xml 
+               font/truetype font/opentype 
+               application/vnd.ms-fontobject 
+               image/svg+xml;
+}
+```
+
+---
+
+## Upstream Servers
+
+```nginx
+upstream backend {
+    server backend:8000;
+}
+
+upstream landing {
+    server landing:3001;
+}
+
+upstream frontend {
+    server frontend:3000;
+}
+```
+
+**Purpose**: Define backend services for load balancing and routing.
+
+---
+
+## HTTP Server (Port 80)
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+    return 301 https://$host$request_uri;
+}
+```
+
+**Purpose**: Redirect all HTTP to HTTPS
+
+---
+
+## HTTPS Server (Port 443)
+
+### SSL Configuration
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name sitespector.app www.sitespector.app;
+
+    # SSL certificates (Let's Encrypt; host mounts full /etc/letsencrypt)
+    ssl_certificate /etc/letsencrypt/live/sitespector.app/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/sitespector.app/privkey.pem;
+
+    # SSL settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    # Max upload size (for PDF reports)
+    client_max_body_size 20M;
+}
+```
+
+**SSL**: Let's Encrypt (production)
+
+**TLS versions**: 1.2, 1.3 only (secure)
+
+---
+
+### API Routes
+
+```nginx
+location /api/ {
+    proxy_pass http://backend;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_cache_bypass $http_upgrade;
+    
+    # Timeouts for long-running audits
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+    proxy_read_timeout 300s;
+}
+```
+
+**Routing**: `/api/*` → `backend:8000`
+
+**Timeouts**: 5 minutes (300s) for PDF generation
+
+---
+
+### Health Check Endpoint
+
+```nginx
+location /health {
+    proxy_pass http://backend/health;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+```
+
+**Routing**: `/health` → `backend:8000/health`
+
+**Purpose**: Backend health check (no `/api` prefix)
+
+---
+
+### Frontend Routes
+
+```nginx
+location / {
+    proxy_pass http={frontend};
+    # ...
+}
+```
+
+**Routing**: Everything else → `frontend:3000`
+
+### Landing Page Routes (SiteSpector Landing)
+
+The landing page application handles the root URL, auth pages, and all marketing/content pages.
+
+```nginx
+location = / { proxy_pass http://landing; }
+location /login { proxy_pass http://landing; }
+location /register { proxy_pass http://landing; }
+location /regulamin { proxy_pass http://landing; }
+location /polityka-prywatnosci { proxy_pass http://landing; }
+location /polityka-cookies { proxy_pass http://landing; }
+location /kontakt { proxy_pass http://landing; }
+location /o-nas { proxy_pass http://landing; }
+location /sitemap { proxy_pass http://landing; }
+location /blog { proxy_pass http://landing; }
+location /docs { proxy_pass http://landing; }
+location /case-study { proxy_pass http://landing; }
+location /porownanie { proxy_pass http://landing; }
+location /cennik { proxy_pass http://landing; }
+location /changelog { proxy_pass http://landing; }
+
+# SEO & AI crawlers
+location /sitemap.xml { proxy_pass http://landing; }
+location /robots.txt { proxy_pass http://landing; }
+location /llms.txt { proxy_pass http://frontend; add_header Content-Type text/markdown; }
+```
+
+**Notes**:
+- `/docs` is a **landing** route (public content). It is **not** FastAPI Swagger.
+- FastAPI Swagger/OpenAPI/ReDoc are disabled in production; verify with:
+  - `curl -I https://sitespector.app/api/docs` -> 404
+  - `curl -I https://sitespector.app/api/openapi.json` -> 404
+- `landing` implements `sitemap.xml` and `robots.txt` via Next.js App Router metadata routes:
+  - `landing/src/app/sitemap.ts`
+  - `landing/src/app/robots.ts`
+- Social sharing images are generated dynamically by `landing` at `/og` (`landing/src/app/og/route.tsx`).
+
+**WebSocket support**: Yes (upgrade header)
+
+---
+
+### Next.js Static Files
+
+```nginx
+location /_next/static {
+    proxy_pass http://frontend;
+    proxy_cache_valid 200 60m;
+    add_header Cache-Control "public, max-age=3600, immutable";
+}
+```
+
+**Caching**: 60 minutes for static assets
+
+**Purpose**: Optimize Next.js asset delivery
+
+---
+
+## SSL Certificate
+
+### Current: Let's Encrypt
+
+**Location**: `/etc/letsencrypt/live/sitespector.app/`
+
+**Files**:
+- `fullchain.pem` - Certificate
+- `privkey.pem` - Private key
+
+**Generate**:
+```bash
+certbot certonly --standalone -d sitespector.app -d www.sitespector.app
+```
+
+**Nginx Volume**:
+```yaml
+volumes:
+  - /etc/letsencrypt:/etc/letsencrypt:ro
+```
+
+---
+## Security Hardening (Edge)
+
+Production nginx applies:
+
+- **Security headers**: `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`
+- **Reduced fingerprinting**: `server_tokens off` (do not expose nginx version)
+- **Rate limiting**:
+  - `/api/` -> 10 r/s (burst 20)
+  - `/login` + `/register` -> 3 r/s (burst 5)
+
+Monitoring endpoints are protected at the **application layer** (FastAPI `X-Admin-Token`).
+
+---
+
+## Request Flow Examples
+
+### Frontend Page Load
+
+```
+Browser
+  ↓ HTTPS request: https://sitespector.app/
+Nginx (443)
+  ↓ proxy_pass / → frontend:3000
+Frontend Container (Next.js)
+  ↓ Server-side render
+HTML Response
+  ↓
+Browser (renders page)
+```
+
+### API Request
+
+```
+Browser
+  ↓ POST https://sitespector.app/api/audits (Bearer token)
+Nginx (443)
+  ↓ proxy_pass /api/* → backend:8000
+Backend Container (FastAPI)
+  ↓ Process request
+JSON Response
+  ↓
+Nginx
+  ↓
+Browser (React Query updates)
+```
+
+---
+
+## Logging
+
+**Access log**: `/var/log/nginx/access.log`  
+**Error log**: `/var/log/nginx/error.log`
+
+**View logs**:
+```bash
+docker logs sitespector-nginx --tail 100
+```
+
+---
+
+## Common Issues
+
+### 502 Bad Gateway
+
+**Cause**: Backend/frontend container not running
+
+**Fix**:
+```bash
+docker ps  # Check if backend/frontend running
+docker compose -f docker-compose.prod.yml restart backend frontend
+```
+
+### SSL Certificate Warning
+
+**Cause**: If using IP only with self-signed cert, browser shows warning.
+
+**Fix**: Use https://sitespector.app (Let's Encrypt – no warning). For IP-only, accept browser warning.
+
+### 413 Payload Too Large
+
+**Cause**: File upload exceeds `client_max_body_size`
+
+**Fix**: Increase limit in nginx.conf
+```nginx
+client_max_body_size 50M;
+```
+
+---
+
+## Performance Tuning
+
+### Enable HTTP/2
+
+```nginx
+listen 443 ssl http2;
+```
+
+### Increase Worker Processes
+
+```nginx
+worker_processes auto;  # Use all CPU cores
+```
+
+### Optimize Gzip Compression
+
+```nginx
+gzip_comp_level 6;  # Compression level (1-9)
+gzip_buffers 16 8k;
+```
+
+---
+
+## Testing Configuration
+
+### Test config syntax
+
+```bash
+docker exec sitespector-nginx nginx -t
+```
+
+### Reload without downtime
+
+```bash
+docker exec sitespector-nginx nginx -s reload
+```
+
+---
+
+**Last Updated**: 2026-02-15  
+**Version**: Nginx (container reports `nginx/1.29.5`)  
+**SSL**: Let's Encrypt (`sitespector.app`, `www.sitespector.app`)  
+**Status**: Production-ready (hardened: headers + rate limiting)
