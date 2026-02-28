@@ -337,7 +337,7 @@ export function PublicNavbar() {
                             </div>
                           ) : null}
                         </div>
-                      </Link>
+                      </a>
                     )
                   })}
                 </div>
