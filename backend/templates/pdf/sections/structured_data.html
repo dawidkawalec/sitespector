@@ -1,0 +1,129 @@
+{% from 'macros.html' import metric_card, section_heading, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'Dane Strukturalne (Schema.org / JSON-LD)') }}
+
+    <div class="info-box">
+        <p>Dane strukturalne (Schema.org / JSON-LD) to sposób na komunikowanie robotom Google informacji o treści strony w ustandaryzowanym formacie. Prawidłowo zaimplementowane dane strukturalne mogą skutkować wyświetlaniem "rich snippets" w wynikach wyszukiwania — gwiazdek ocen, FAQ, breadcrumbs, kalendarzy itp. — co znacząco zwiększa CTR. Implementacja Schema.org jest ważnym sygnałem E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness).</p>
+    </div>
+
+    {% if not sd.found %}
+        <div class="alert alert-critical no-break">
+            <span class="alert-title">Brak danych strukturalnych (Schema.org) na stronie głównej</span>
+            <p>Strona nie implementuje żadnych danych strukturalnych w formacie JSON-LD. To szansa na zysk CTR poprzez rich snippets w Google. Priorytetowo wdróż: Organization/LocalBusiness (identyfikacja firmy), BreadcrumbList (nawigacja) i WebSite (wyszukiwarka sitelinks).</p>
+        </div>
+
+        {% if sd.missing_suggestions %}
+            <h3>Rekomendowane typy Schema do wdrożenia</h3>
+            <table>
+                <thead><tr><th>Typ Schema</th><th>Korzyść SEO</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td class="td-bold">Organization / LocalBusiness</td>
+                        <td class="text-small">Identyfikacja firmy, panel Google Knowledge Panel, wiarygodność E-E-A-T</td>
+                    </tr>
+                    <tr>
+                        <td class="td-bold">BreadcrumbList</td>
+                        <td class="text-small">Wyświetlanie ścieżki nawigacji w snippecie Google — zwiększa CTR</td>
+                    </tr>
+                    <tr>
+                        <td class="td-bold">WebSite</td>
+                        <td class="text-small">Aktywuje pole wyszukiwarki Sitelinks w Google dla Twojej marki</td>
+                    </tr>
+                    <tr>
+                        <td class="td-bold">FAQPage</td>
+                        <td class="text-small">Rozwijane pytania i odpowiedzi bezpośrednio w wynikach Google</td>
+                    </tr>
+                    <tr>
+                        <td class="td-bold">Article / BlogPosting</td>
+                        <td class="text-small">Wyświetlanie autora, daty i obrazka w Google News i Top Stories</td>
+                    </tr>
+                    <tr>
+                        <td class="td-bold">Product / Offer</td>
+                        <td class="text-small">Wyświetlanie ceny, dostępności i ocen w wynikach produktów</td>
+                    </tr>
+                </tbody>
+            </table>
+        {% endif %}
+
+    {% else %}
+        <div class="metric-grid">
+            {{ metric_card(sd.count, 'Bloków JSON-LD znalezionych', '#16a34a') }}
+            {{ metric_card(sd.types | length, 'Typów Schema.org') }}
+            {{ metric_card(sd.schemas | selectattr('has_issues') | list | length, 'Schematów z błędami', '#dc2626' if sd.has_issues else '#16a34a') }}
+        </div>
+
+        {# --- Detected schemas --- #}
+        <h3>Wykryte typy Schema.org</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:30%">Typ Schema</th>
+                    <th style="width:15%">Status</th>
+                    <th>Problemy / Ocena</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for schema in sd.schemas %}
+                    <tr>
+                        <td class="td-bold">{{ schema.type }}</td>
+                        <td class="td-center">
+                            <span class="badge {{ 'badge-danger' if schema.has_issues else 'badge-success' }}">
+                                {{ '⚠ Błędy' if schema.has_issues else '✓ OK' }}
+                            </span>
+                        </td>
+                        <td class="text-small">
+                            {% if schema.issues %}
+                                {{ schema.issues | join(', ') }}
+                            {% elif schema.is_important %}
+                                Ważny typ — poprawnie zaimplementowany ✓
+                            {% else %}
+                                Brak problemów
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {# --- Missing suggestions --- #}
+        {% if sd.missing_suggestions %}
+            <div class="page-break">
+                <h3>Rekomendowane dodatkowe typy Schema</h3>
+                <div class="info-box-light">
+                    <p>Poniższe typy Schema.org nie zostały znalezione na stronie głównej, ale mogą przynieść korzyści SEO jako rich snippets w wynikach Google.</p>
+                </div>
+                <table>
+                    <thead><tr><th>Brakujący typ Schema</th><th>Korzyść</th></tr></thead>
+                    <tbody>
+                        {% for suggestion in sd.missing_suggestions %}
+                            <tr>
+                                <td class="td-bold">{{ suggestion.split('—')[0] | trim }}</td>
+                                <td class="text-small">{{ suggestion.split('—')[1] | trim if '—' in suggestion else suggestion }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    {# --- Schema.org types reference --- #}
+    <div class="page-break">
+        <h3>Najważniejsze typy Schema.org dla stron biznesowych</h3>
+        <table>
+            <thead><tr><th>Typ</th><th>Zastosowanie</th><th>Rich Snippet</th></tr></thead>
+            <tbody>
+                <tr><td class="td-bold">Organization</td><td class="text-small">Dane firmowe: nazwa, logo, kontakt, social media</td><td class="text-small">Knowledge Panel, logo w wynikach</td></tr>
+                <tr><td class="td-bold">LocalBusiness</td><td class="text-small">Firma lokalna: adres, godziny otwarcia, obszar obsługi</td><td class="text-small">Panel lokalny, mapa, godziny</td></tr>
+                <tr><td class="td-bold">Product + Offer</td><td class="text-small">Produkty z ceną i dostępnością</td><td class="text-small">Cena, ocena, dostępność w SERP</td></tr>
+                <tr><td class="td-bold">Article / BlogPosting</td><td class="text-small">Artykuły blogowe z autorem i datą</td><td class="text-small">Data, autor, miniatura w Google News</td></tr>
+                <tr><td class="td-bold">FAQPage</td><td class="text-small">Lista pytań i odpowiedzi</td><td class="text-small">Rozwijane Q&A bezpośrednio w wynikach</td></tr>
+                <tr><td class="td-bold">BreadcrumbList</td><td class="text-small">Ścieżka nawigacji (np. Home > Usługi > SEO)</td><td class="text-small">Breadcrumbs pod tytułem w wynikach</td></tr>
+                <tr><td class="td-bold">WebSite</td><td class="text-small">Dane strony z polem SearchAction</td><td class="text-small">Wyszukiwarka Sitelinks w Google</td></tr>
+                <tr><td class="td-bold">Service</td><td class="text-small">Usługi z opisem, ceną, obszarem</td><td class="text-small">Wyróżnienie usług w wynikach</td></tr>
+                <tr><td class="td-bold">Review / AggregateRating</td><td class="text-small">Oceny i recenzje produktów/usług</td><td class="text-small">Gwiazdki w wynikach wyszukiwania</td></tr>
+                <tr><td class="td-bold">HowTo</td><td class="text-small">Instrukcje krok po kroku</td><td class="text-small">Kroki procedury w SERP</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>

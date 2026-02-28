@@ -1,0 +1,131 @@
+{% from 'macros.html' import metric_card, section_heading, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'Analiza Przekierowań (Redirects)') }}
+
+    <div class="info-box">
+        <p>Przekierowania HTTP (301, 302) są narzędziem zarządzania strukturą URL. Przekierowanie stałe (301) przekazuje ok. 90% autorytetu linku, tymczasowe (302) — znacznie mniej. Każde dodatkowe przekierowanie w łańcuchu to kolejna strata autorytetu i marnowanie crawl budget. Wewnętrzne linki przez przekierowania powinny być aktualizowane do bezpośrednich URL.</p>
+    </div>
+
+    <div class="metric-grid">
+        {{ metric_card(redirect.total_redirects, 'Przekierowań łącznie') }}
+        {{ metric_card(redirect.count_301, 'Stałe (301)') }}
+        {{ metric_card(redirect.count_302, 'Tymczasowe (302)', '#ca8a04' if redirect.count_302 > 0 else '#16a34a') }}
+        {{ metric_card(redirect.count_307_308, 'Inne (307/308)') }}
+        {{ metric_card(redirect.external_redirects_count, 'Zewnętrzne (inna domena)', '#ca8a04' if redirect.external_redirects_count > 0 else '#16a34a') }}
+        {{ metric_card(redirect.http_redirects_count, 'Redirect do HTTP (⬇️ downgrade)', '#dc2626' if redirect.http_redirects_count > 0 else '#16a34a') }}
+    </div>
+
+    {# --- Type explanation --- #}
+    <h3>Typy przekierowań HTTP — znaczenie dla SEO</h3>
+    <table>
+        <thead><tr><th>Kod</th><th>Typ</th><th>Przekazanie autorytetu</th><th>Wpływ na SEO</th></tr></thead>
+        <tbody>
+            <tr>
+                <td class="td-bold" style="color:#16a34a;">301</td>
+                <td>Stałe (Moved Permanently)</td>
+                <td class="td-center">~90%</td>
+                <td class="text-small">Preferowany dla trwałych zmian URL. Google przechodzi link equity. Używaj zawsze dla migracji.</td>
+            </tr>
+            <tr>
+                <td class="td-bold" style="color:#ca8a04;">302</td>
+                <td>Tymczasowe (Found)</td>
+                <td class="td-center">Minimalne</td>
+                <td class="text-small">Google traktuje jako tymczasowe — może nie przekazywać rankingi. Używaj tylko dla prawdziwie tymczasowych zmian.</td>
+            </tr>
+            <tr>
+                <td class="td-bold" style="color:#ca8a04;">307</td>
+                <td>Tymczasowe (Temporary Redirect)</td>
+                <td class="td-center">Minimalne</td>
+                <td class="text-small">HTTP/1.1 wersja 302. Zachowuje metodę HTTP. Rzadko używane w SEO.</td>
+            </tr>
+            <tr>
+                <td class="td-bold" style="color:#16a34a;">308</td>
+                <td>Stałe (Permanent Redirect)</td>
+                <td class="td-center">~90%</td>
+                <td class="text-small">HTTP/1.1 wersja 301. Zachowuje metodę HTTP. Równoważny z 301 dla SEO.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {# --- HTTP downgrade warning --- #}
+    {% if redirect.http_redirects_count > 0 %}
+        <div class="alert alert-critical no-break">
+            <span class="alert-title">KRYTYCZNE: {{ redirect.http_redirects_count }} przekierowań prowadzi do HTTP (downgrade)</span>
+            <p>Strona HTTPS przekierowuje do HTTP — to poważny błąd bezpieczeństwa. Przeglądarki mogą wyświetlać ostrzeżenie o braku bezpieczeństwa. Google obniża rankingi stron bez HTTPS. Wszystkie przekierowania powinny prowadzić do HTTPS.</p>
+        </div>
+        {% if redirect.http_redirects %}
+            <table>
+                <thead><tr><th>URL</th><th>Kod</th><th>Cel (HTTP — błąd)</th></tr></thead>
+                <tbody>
+                    {% for r in redirect.http_redirects %}
+                        <tr>
+                            <td class="td-url">{{ r.url }}</td>
+                            <td class="td-center"><span class="badge badge-danger">{{ r.status }}</span></td>
+                            <td class="td-url" style="color:#dc2626; font-size:7pt;">{{ r.redirect_url }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    {% endif %}
+
+    {# --- External redirects --- #}
+    {% if redirect.external_redirects %}
+        <div class="page-break">
+            <h3>Przekierowania na zewnętrzne domeny ({{ redirect.external_redirects_count }})</h3>
+            <div class="info-box-light">
+                <p>Przekierowania na inne domeny mogą przekazywać autorytet SEO poza Twoją domenę. Sprawdź czy to intencjonalne (np. rebranding) i czy domeny docelowe są zaufane.</p>
+            </div>
+            <table>
+                <thead><tr><th style="width:35%">URL źródłowy</th><th>Kod</th><th style="width:45%">Domena docelowa</th></tr></thead>
+                <tbody>
+                    {% for r in redirect.external_redirects %}
+                        <tr>
+                            <td class="td-url">{{ r.url }}</td>
+                            <td class="td-center"><span class="badge badge-warning">{{ r.status }}</span></td>
+                            <td class="td-url text-small">{{ r.redirect_url }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- High-value redirects --- #}
+    {% if redirect.high_value_redirects %}
+        <div class="page-break">
+            <h3>Przekierowania wg liczby inlinks (strony o największym autorytecie)</h3>
+            <div class="info-box-light">
+                <p>Strony z wieloma inlinkami, które są przekierowane, tracą autorytet przy każdym przekierowaniu. Priorytetowo zaktualizuj linki wewnętrzne do poniższych stron, by prowadziły bezpośrednio do docelowego URL.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:35%">URL (przekierowany)</th>
+                        <th>Kod</th>
+                        <th>Inlinks</th>
+                        <th style="width:35%">Przekierowanie do</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in redirect.high_value_redirects %}
+                        <tr>
+                            <td class="td-url">{{ r.url }}</td>
+                            <td class="td-center"><span class="badge {{ 'badge-success' if r.status == 301 else 'badge-warning' }}">{{ r.status }}</span></td>
+                            <td class="td-center">{{ r.inlinks }}</td>
+                            <td class="td-url text-muted" style="font-size:7pt;">{{ r.redirect_url }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- 302 warning --- #}
+    {% if redirect.count_302 > 0 %}
+        <div class="alert alert-warning no-break">
+            <span class="alert-title">{{ redirect.count_302 }} przekierowań tymczasowych (302) — rozważ zmianę na 301</span>
+            <p>Jeśli przekierowania 302 są trwałe (strona na stałe przeniesiona), zmień je na 301. Przekierowania 302 nie przekazują autorytetu SEO i Google może nie indeksować docelowych URL.</p>
+        </div>
+    {% endif %}
+</div>

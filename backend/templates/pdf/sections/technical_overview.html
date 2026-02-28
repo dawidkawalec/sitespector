@@ -1,61 +1,236 @@
-{% from '../macros.html' import metric_card, chart, part_header, section_heading, kv_row, badge %}
+{% from 'macros.html' import metric_card, chart, part_header, section_heading, kv_row, badge %}
 <div class="section">
     {{ part_header('II', 'SEO Techniczne', 'Analiza struktury technicznej, crawlowalności i on-page') }}
     {{ section_heading(sec_num, 'Przegląd Techniczny') }}
 
-    <div class="metric-grid">
-        {{ metric_card(tech.pages_crawled, 'Strony') }}
-        {{ metric_card(tech.broken_links, 'Błędy 404', '#dc2626' if tech.broken_links > 0 else '#16a34a') }}
-        {{ metric_card(tech.redirects, 'Przekierowania') }}
-        {{ metric_card(tech.missing_canonical, 'Brak canonical', '#ca8a04' if tech.missing_canonical > 0 else '#16a34a') }}
-        {{ metric_card(tech.noindex_pages, 'Noindex') }}
+    <div class="info-box">
+        <p>Sekcja techniczna analizuje jak roboty wyszukiwarek (Google, Bing) widzą i indeksują Twoją stronę. Problemy techniczne mogą blokować widoczność w wynikach wyszukiwania nawet przy doskonałej treści. Dane pochodzą z przeszukania (crawlu) całej struktury domeny.</p>
     </div>
 
-    {% if chart_http_status %}
-        {{ chart(chart_http_status, 'Rozkład statusów HTTP stron', '90%') }}
-    {% endif %}
-
-    <div class="two-col">
-        <div>
-            <h3>Struktura stron</h3>
-            <table>
-                {{ kv_row('Wszystkich stron', tech.pages_crawled) }}
-                {{ kv_row('200 OK', tech.pages_200) }}
-                {{ kv_row('Błędy 404', tech.broken_links, 'badge-danger' if tech.broken_links > 0 else '') }}
-                {{ kv_row('Przekierowania 3xx', tech.redirects) }}
-                {{ kv_row('Noindex', tech.noindex_pages) }}
-                {{ kv_row('Brak canonical', tech.missing_canonical) }}
-                {{ kv_row('Brak meta description', tech.missing_description) }}
-            </table>
-        </div>
-        <div>
-            <h3>Linkowanie i crawl</h3>
-            <table>
-                {{ kv_row('Linki wewnętrzne', tech.internal_links) }}
-                {{ kv_row('Linki zewnętrzne', tech.external_links) }}
-                {{ kv_row('Linki uszkodzone', tech.broken_links) }}
-                {{ kv_row('Protokół', 'HTTPS ✓' if tech.is_https else 'HTTP (brak SSL)') }}
-                {{ kv_row('Sitemap', tech.sitemap_url if tech.has_sitemap else 'Nie wykryto') }}
-                {{ kv_row('Robots.txt', 'Dostępny' if tech.has_robots else 'Brak') }}
-            </table>
-        </div>
-    </div>
-
-    {# Crawl blocked warning #}
+    {# --- Crawl blocked warning --- #}
     {% if tech.crawl_blocked %}
         <div class="alert alert-critical no-break">
-            <span class="alert-title">⚠ Crawlowanie zablokowane</span>
-            <p>Strona blokuje crawlery (robots.txt lub meta noindex). Dane mogą być niepełne.</p>
+            <span class="alert-title">⚠ KRYTYCZNE: Crawlowanie zablokowane</span>
+            <p>Strona zwróciła kod HTTP {{ tech.crawl_blocked_status or '4xx' }} podczas próby crawlowania. Roboty wyszukiwarek mogą nie być w stanie zaindeksować strony. Sprawdź plik robots.txt i konfigurację serwera.</p>
         </div>
     {% endif %}
 
-    {# Sitemap info #}
+    {# --- Main metrics --- #}
+    <div class="metric-grid">
+        {{ metric_card(tech.pages_crawled, 'Przeskanowane strony') }}
+        {{ metric_card(tech.broken_links, 'Błędy 404', '#dc2626' if tech.broken_links > 0 else '#16a34a') }}
+        {{ metric_card(tech.redirects, 'Przekierowania 3xx', '#ca8a04' if tech.redirects > 5 else '#16a34a') }}
+        {{ metric_card(tech.missing_canonical, 'Brak canonical', '#ca8a04' if tech.missing_canonical > 0 else '#16a34a') }}
+        {{ metric_card(tech.missing_description, 'Brak meta desc', '#ca8a04' if tech.missing_description > 0 else '#16a34a') }}
+        {{ metric_card(tech.noindex_pages, 'Strony noindex') }}
+    </div>
+
+    {# --- HTTP Status chart --- #}
+    {% if chart_http_status %}
+        {{ chart(chart_http_status, 'Rozkład statusów HTTP — przeskanowane strony', '80%') }}
+    {% endif %}
+
+    {# --- Two-column overview --- #}
+    <div class="two-col">
+        <div>
+            <h3>Statystyki stron</h3>
+            <table>
+                <tbody>
+                    {{ kv_row('Wszystkich stron', tech.pages_crawled) }}
+                    {{ kv_row('200 OK (indeksowalne)', tech.pages_200) }}
+                    {{ kv_row('301 Przekierowanie stałe', tech.pages_301) }}
+                    {{ kv_row('302 Przekierowanie tymczasowe', tech.pages_302) }}
+                    {{ kv_row('404 Strona nie istnieje', tech.broken_links, 'badge-danger' if tech.broken_links > 0 else '') }}
+                    {{ kv_row('Strony z noindex', tech.noindex_pages) }}
+                    {{ kv_row('Brak tagu canonical', tech.missing_canonical, 'badge-warning' if tech.missing_canonical > 0 else '') }}
+                    {{ kv_row('Brak meta description', tech.missing_description, 'badge-warning' if tech.missing_description > 0 else '') }}
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <h3>Linkowanie i infrastruktura</h3>
+            <table>
+                <tbody>
+                    {{ kv_row('Linki wewnętrzne', tech.internal_links) }}
+                    {{ kv_row('Linki zewnętrzne', tech.external_links) }}
+                    {{ kv_row('Linki uszkodzone (404)', tech.broken_links, 'badge-danger' if tech.broken_links > 0 else '') }}
+                    {{ kv_row('Protokół', '✓ HTTPS (SSL aktywny)' if tech.is_https else '✗ HTTP — brak szyfrowania!') }}
+                    {{ kv_row('Mapa strony (sitemap)', tech.sitemap_url if tech.has_sitemap else '✗ Nie wykryto') }}
+                    {{ kv_row('Plik robots.txt', '✓ Dostępny' if tech.has_robots else '✗ Brak') }}
+                    {{ kv_row('Max. głębokość crawlu', tech.max_crawl_depth ~ ' poziomów') }}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# --- Homepage analysis --- #}
+    <h3>Analiza strony głównej</h3>
+    <div class="info-box-light">
+        <p>Strona główna ma szczególne znaczenie dla SEO — to zazwyczaj strona z największym autorytetem i punktem wejścia dla robotów.</p>
+    </div>
+    <table>
+        <tbody>
+            {% if tech.homepage_title %}
+                {{ kv_row('Tytuł strony głównej', tech.homepage_title ~ ' (' ~ tech.homepage_title_len ~ ' zn.)') }}
+                {% if tech.homepage_title_len < 30 %}
+                    <tr><td colspan="2" class="text-muted text-small">⚠ Tytuł zbyt krótki — zalecane 50–60 znaków dla maksymalnego CTR w Google</td></tr>
+                {% elif tech.homepage_title_len > 60 %}
+                    <tr><td colspan="2" class="text-muted text-small">⚠ Tytuł może zostać obcięty w SERP — zalecane max. 60 znaków</td></tr>
+                {% endif %}
+            {% else %}
+                {{ kv_row('Tytuł strony głównej', '✗ BRAK — krytyczny błąd SEO', 'badge-danger') }}
+            {% endif %}
+            {% if tech.homepage_desc %}
+                {{ kv_row('Meta description', tech.homepage_desc[:80] ~ '...' if tech.homepage_desc|length > 80 else tech.homepage_desc) }}
+                {{ kv_row('Długość meta desc', tech.homepage_desc_len ~ ' zn.' ~ (' ✓' if 70 <= tech.homepage_desc_len <= 160 else ' ⚠ poza zakresem 70-160')) }}
+            {% else %}
+                {{ kv_row('Meta description', '✗ BRAK — Google generuje własny snippet', 'badge-warning') }}
+            {% endif %}
+            {% if tech.homepage_h1s %}
+                {% for h1 in tech.homepage_h1s %}
+                    {{ kv_row('Nagłówek H1' if loop.first else 'Nagłówek H1 (duplikat!)', h1) }}
+                {% endfor %}
+                {% if tech.homepage_h1s|length > 1 %}
+                    <tr><td colspan="2" class="text-muted text-small">⚠ Wiele H1 na stronie — zalecany dokładnie jeden nagłówek H1</td></tr>
+                {% endif %}
+            {% else %}
+                {{ kv_row('Nagłówek H1', '✗ BRAK — kluczowy czynnik rankingowy', 'badge-warning') }}
+            {% endif %}
+            {% if tech.homepage_load_time %}
+                {{ kv_row('Czas ładowania (TTFB)', tech.homepage_load_time ~ ' s') }}
+            {% endif %}
+            {% if tech.homepage_size_kb %}
+                {{ kv_row('Rozmiar strony głównej', tech.homepage_size_kb ~ ' KB') }}
+            {% endif %}
+        </tbody>
+    </table>
+
+    {# --- Detected sitemaps --- #}
     {% if tech.sitemaps %}
-        <h4>Wykryte sitemaps</h4>
+        <h3>Wykryte mapy strony (sitemaps)</h3>
         <ul class="list-clean">
             {% for sm in tech.sitemaps[:10] %}
                 <li><code style="font-size: 7.5pt;">{{ sm }}</code></li>
             {% endfor %}
         </ul>
+    {% elif not tech.has_sitemap %}
+        <div class="alert alert-warning no-break">
+            <span class="alert-title">Brak mapy strony (sitemap.xml)</span>
+            <p>Nie wykryto pliku sitemap.xml. Mapa strony pomaga robotom Google efektywnie odkrywać wszystkie strony w domenie, szczególnie te głęboko w strukturze. Zalecane wdrożenie sitemap i jej zgłoszenie w Google Search Console.</p>
+        </div>
+    {% endif %}
+
+    {# --- 404 errors with URLs --- #}
+    {% if tech.problem_404 %}
+        <div class="page-break">
+            <h3>Strony zwracające błąd 404 ({{ tech.problem_404|length }} wykrytych)</h3>
+            <div class="info-box-light">
+                <p>Strony 404 marnują tzw. "link equity" — autorytet przekazywany przez linki przychodzące trafia w pustkę. Każdy błąd 404 powinien być przekierowany (301) do tematycznie powiązanej strony lub strony głównej.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:80%">URL ze statusem 404</th>
+                        <th>Kod HTTP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in tech.problem_404 %}
+                        <tr>
+                            <td class="td-url">{{ page.url }}</td>
+                            <td class="td-center"><span class="badge badge-danger">{{ page.status }}</span></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- Redirects --- #}
+    {% if tech.problem_redirects %}
+        <div class="page-break">
+            <h3>Przekierowania 3xx ({{ tech.problem_redirects|length }} wykrytych)</h3>
+            <div class="info-box-light">
+                <p>Wewnętrzne linki prowadzące przez przekierowania marnują crawl budget i mogą obniżać pozycje. Zalecane jest aktualizowanie linków wewnętrznych tak, by prowadziły bezpośrednio do docelowego adresu URL bez pośrednich przekierowań.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:40%">URL źródłowy</th>
+                        <th>Kod</th>
+                        <th style="width:40%">Przekierowanie do</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in tech.problem_redirects %}
+                        <tr>
+                            <td class="td-url">{{ page.url }}</td>
+                            <td class="td-center"><span class="badge badge-warning">{{ page.status }}</span></td>
+                            <td class="td-url text-muted">{{ page.redirect_url | truncate(60) if page.redirect_url else '—' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- Missing canonical --- #}
+    {% if tech.problem_no_canonical %}
+        <div class="page-break">
+            <h3>Strony bez tagu canonical ({{ tech.problem_no_canonical|length }} wykrytych)</h3>
+            <div class="info-box-light">
+                <p>Tag canonical informuje Google, która wersja URL jest "preferowaną" i zapobiega duplikacji treści. Bez niego Google może indeksować wiele wariantów tej samej strony (np. z parametrami URL), co rozmywa autorytet SEO.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:70%">URL</th>
+                        <th>Tytuł strony</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in tech.problem_no_canonical %}
+                        <tr>
+                            <td class="td-url">{{ page.url }}</td>
+                            <td class="text-small">{{ page.title | truncate(40) if page.title else '—' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- Missing meta description --- #}
+    {% if tech.problem_no_description %}
+        <div class="page-break">
+            <h3>Strony bez meta description ({{ tech.problem_no_description|length }} przykładów)</h3>
+            <div class="info-box-light">
+                <p>Meta description to krótki opis strony wyświetlany w wynikach Google pod tytułem. Nie jest bezpośrednim czynnikiem rankingowym, ale wpływa na CTR (kliknięcia). Brak meta description oznacza, że Google wybierze fragment treści samodzielnie — często nieoptymalni.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:70%">URL</th>
+                        <th>Tytuł strony</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in tech.problem_no_description %}
+                        <tr>
+                            <td class="td-url">{{ page.url }}</td>
+                            <td class="text-small">{{ page.title | truncate(40) if page.title else '—' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- HTTPS warning --- #}
+    {% if not tech.is_https %}
+        <div class="alert alert-critical no-break">
+            <span class="alert-title">KRYTYCZNE: Brak certyfikatu HTTPS/SSL</span>
+            <p>Strona nie korzysta z protokołu HTTPS. Od 2018 roku Google oznacza strony HTTP jako "Niezabezpieczone" w przeglądarce Chrome, co dramatycznie obniża zaufanie użytkowników i jest negatywnym sygnałem dla algorytmów rankingowych. Zalecane natychmiastowe wdrożenie certyfikatu SSL (bezpłatny Let's Encrypt).</p>
+        </div>
     {% endif %}
 </div>

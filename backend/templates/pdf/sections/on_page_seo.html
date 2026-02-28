@@ -1,91 +1,298 @@
-{% from '../macros.html' import metric_card, chart, section_heading, kv_row, badge, alert %}
+{% from 'macros.html' import metric_card, chart, section_heading, kv_row, badge, alert %}
 <div class="section">
     {{ section_heading(sec_num, 'On-Page SEO') }}
 
+    <div class="info-box">
+        <p>Optymalizacja on-page obejmuje wszystkie elementy HTML widoczne przez wyszukiwarki bezpośrednio na stronie. Dobrze zoptymalizowane tagi meta, nagłówki i treść przekładają się bezpośrednio na wyższe pozycje i wyższy CTR w wynikach wyszukiwania.</p>
+    </div>
+
     <div class="metric-grid">
-        {{ metric_card(onpage.missing_titles, 'Brak tytułu', '#dc2626' if onpage.missing_titles > 0 else '#16a34a') }}
+        {{ metric_card(onpage.missing_titles_count, 'Brak tytułu', '#dc2626' if onpage.missing_titles_count > 0 else '#16a34a') }}
         {{ metric_card(onpage.missing_descriptions, 'Brak meta desc', '#ca8a04' if onpage.missing_descriptions > 0 else '#16a34a') }}
         {{ metric_card(onpage.missing_h1, 'Brak H1', '#ca8a04' if onpage.missing_h1 > 0 else '#16a34a') }}
-        {{ metric_card(onpage.duplicate_titles, 'Duplikaty tytułów') }}
-        {{ metric_card(onpage.thin_content_count, 'Thin Content') }}
+        {{ metric_card(onpage.duplicate_title_groups, 'Duplikaty tytułów') }}
+        {{ metric_card(onpage.thin_content_count, 'Thin Content (<300 słów)', '#ca8a04' if onpage.thin_content_count > 0 else '#16a34a') }}
+        {{ metric_card(onpage.images_without_alt, 'Obrazy bez ALT', '#ca8a04' if onpage.images_without_alt > 0 else '#16a34a') }}
     </div>
 
-    <div class="two-col">
-        <div>
-            <h3>Tytuły stron</h3>
-            <table>
-                {{ kv_row('Stron z tytułem', onpage.has_title_count) }}
-                {{ kv_row('Brak tytułu', onpage.missing_titles) }}
-                {{ kv_row('Duplikat tytułu', onpage.duplicate_titles) }}
-                {{ kv_row('Zbyt krótkie (<30 zn.)', onpage.short_titles) }}
-                {{ kv_row('Zbyt długie (>60 zn.)', onpage.long_titles) }}
-            </table>
-        </div>
-        <div>
-            <h3>Meta Description</h3>
-            <table>
-                {{ kv_row('Stron z meta desc', onpage.has_desc_count) }}
-                {{ kv_row('Brak meta description', onpage.missing_descriptions) }}
-                {{ kv_row('Duplikaty', onpage.duplicate_descriptions) }}
-                {{ kv_row('Zbyt krótkie (<70 zn.)', onpage.short_descriptions) }}
-                {{ kv_row('Zbyt długie (>160 zn.)', onpage.long_descriptions) }}
-            </table>
-        </div>
+    {# =================== TITLE ANALYSIS =================== #}
+    <h3>Analiza tagów Title</h3>
+    <div class="info-box-light">
+        <p><strong>Tag &lt;title&gt;</strong> to jeden z najsilniejszych czynników rankingowych. Wyświetla się jako niebieski link w wynikach Google. Optymalna długość to 50–60 znaków. Każda strona powinna mieć unikalny, zawierający słowo kluczowe tytuł.</p>
     </div>
-
-    <h3>Nagłówki H1/H2</h3>
-    <table>
-        {{ kv_row('Strony z H1', onpage.has_h1_count) }}
-        {{ kv_row('Brak H1', onpage.missing_h1) }}
-        {{ kv_row('Wiele H1', onpage.multiple_h1) }}
-        {{ kv_row('Strony z H2', onpage.has_h2_count) }}
-    </table>
-
-    <h3>Jakość treści</h3>
     <div class="two-col">
         <div>
             <table>
-                {{ kv_row('Śr. liczba słów', onpage.avg_word_count) }}
-                {{ kv_row('Thin Content (<200 słów)', onpage.thin_content_count) }}
-                {{ kv_row('Duplikaty wewnętrzne', onpage.duplicate_content_count) }}
-                {{ kv_row('Śr. czytelność Flesch', onpage.avg_flesch | round(1) if onpage.avg_flesch else 'N/A') }}
+                <tbody>
+                    {{ kv_row('Strony z tytułem', onpage.has_title_count ~ ' / ' ~ onpage.total_indexable) }}
+                    {{ kv_row('Brak tytułu', onpage.missing_titles_count, 'badge-danger' if onpage.missing_titles_count > 0 else '') }}
+                    {{ kv_row('Duplikaty tytułów (grup)', onpage.duplicate_title_groups, 'badge-warning' if onpage.duplicate_title_groups > 0 else '') }}
+                    {{ kv_row('Zbyt krótkie (<30 zn.)', onpage.short_titles) }}
+                    {{ kv_row('Zbyt długie (>60 zn.)', onpage.long_titles) }}
+                </tbody>
             </table>
         </div>
         <div>
-            <table>
-                {{ kv_row('Obrazy łącznie', onpage.total_images) }}
-                {{ kv_row('Obrazy bez ALT', onpage.images_without_alt, 'badge-warning' if onpage.images_without_alt > 0 else '') }}
-            </table>
+            <div class="info-box-light">
+                <strong>Optymalne parametry tytułu:</strong>
+                <ul style="margin: 6px 0 0 0; padding-left: 16px; font-size: 8pt;">
+                    <li>Długość: 50–60 znaków</li>
+                    <li>Zawiera główne słowo kluczowe</li>
+                    <li>Unikalny w skali domeny</li>
+                    <li>Nie zaczyna się od nazwy marki</li>
+                    <li>Oddaje intencję wyszukiwania</li>
+                </ul>
+            </div>
         </div>
     </div>
 
-    {# Pages needing attention - sample table #}
-    {% if onpage.pages_sample %}
-        <h3>Strony wymagające uwagi (próba)</h3>
+    {% if onpage.missing_title_pages %}
+        <h4>Strony bez tytułu ({{ onpage.missing_titles_count }} łącznie)</h4>
         <table>
-            <thead>
-                <tr>
-                    <th style="width: 50%;">URL</th>
-                    <th>Status</th>
-                    <th>Tytuł</th>
-                    <th>Słowa</th>
-                </tr>
-            </thead>
+            <thead><tr><th style="width:75%">URL</th><th>Słów</th></tr></thead>
             <tbody>
-                {% for page in onpage.pages_sample %}
+                {% for p in onpage.missing_title_pages %}
                     <tr>
-                        <td class="td-url">{{ page.url | truncate(60) }}</td>
-                        <td class="td-center">
-                            <span class="badge {{ 'badge-success' if page.status_code == 200 else ('badge-warning' if page.status_code in [301, 302] else 'badge-danger') }}">
-                                {{ page.status_code }}
-                            </span>
-                        </td>
-                        <td class="text-small">{{ page.title | truncate(40) if page.title else '—' }}</td>
-                        <td class="td-center">{{ page.word_count or 0 }}</td>
+                        <td class="td-url">{{ p.url }}</td>
+                        <td class="td-center">{{ p.word_count or 0 }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
+    {% endif %}
+
+    {% if onpage.dup_title_examples %}
+        <h4>Przykłady duplikatów tytułów</h4>
+        <div class="alert alert-warning no-break">
+            <span class="alert-title">Wykryto {{ onpage.duplicate_title_groups }} grup zduplikowanych tytułów</span>
+            <p>Zduplikowane tytuły powodują kanibalizację słów kluczowych — Google nie wie, którą stronę powinien rankingować na dane zapytanie. Każda strona musi mieć unikalny tytuł.</p>
+        </div>
+        <table>
+            <thead><tr><th style="width:40%">Tytuł (zduplikowany)</th><th>URL</th></tr></thead>
+            <tbody>
+                {% for ex in onpage.dup_title_examples %}
+                    <tr>
+                        <td class="text-small">{{ ex.title }}</td>
+                        <td class="td-url">{{ ex.url }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if onpage.long_title_pages %}
+        <h4>Tytuły zbyt długie (>60 zn.) — {{ onpage.long_titles }} stron</h4>
+        <table>
+            <thead><tr><th style="width:60%">URL</th><th>Tytuł</th><th>Dług.</th></tr></thead>
+            <tbody>
+                {% for p in onpage.long_title_pages %}
+                    <tr>
+                        <td class="td-url">{{ p.url }}</td>
+                        <td class="text-small">{{ p.title }}</td>
+                        <td class="td-center badge-warning">{{ p.title_len }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# =================== META DESCRIPTION =================== #}
+    <div class="page-break">
+        <h3>Analiza Meta Description</h3>
+        <div class="info-box-light">
+            <p><strong>Meta description</strong> nie jest bezpośrednim czynnikiem rankingowym, ale wpływa na CTR — dobrze napisany opis zachęca do kliknięcia i może zwiększyć ruch organiczny o 5–30%. Optymalna długość to 70–160 znaków. Modele AI (ChatGPT, Perplexity) używają meta description do oceny trafności strony.</p>
+        </div>
+        <div class="two-col">
+            <div>
+                <table>
+                    <tbody>
+                        {{ kv_row('Strony z meta desc', onpage.has_desc_count ~ ' / ' ~ onpage.total_indexable) }}
+                        {{ kv_row('Brak meta description', onpage.missing_descriptions, 'badge-warning' if onpage.missing_descriptions > 0 else '') }}
+                        {{ kv_row('Duplikaty meta desc', onpage.duplicate_descriptions, 'badge-warning' if onpage.duplicate_descriptions > 0 else '') }}
+                        {{ kv_row('Zbyt krótkie (<70 zn.)', onpage.short_descriptions) }}
+                        {{ kv_row('Zbyt długie (>160 zn.)', onpage.long_descriptions) }}
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div class="info-box-light">
+                    <strong>Optymalne parametry meta desc:</strong>
+                    <ul style="margin: 6px 0 0 0; padding-left: 16px; font-size: 8pt;">
+                        <li>Długość: 70–160 znaków</li>
+                        <li>Zawiera główne słowo kluczowe</li>
+                        <li>Zawiera CTA (np. "Sprawdź", "Dowiedz się")</li>
+                        <li>Unikalny i opisuje korzyść dla użytkownika</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% if onpage.missing_desc_pages %}
+            <h4>Strony bez meta description ({{ onpage.missing_descriptions }} łącznie)</h4>
+            <table>
+                <thead><tr><th style="width:75%">URL</th><th>Słów</th></tr></thead>
+                <tbody>
+                    {% for p in onpage.missing_desc_pages %}
+                        <tr>
+                            <td class="td-url">{{ p.url }}</td>
+                            <td class="td-center">{{ p.word_count or 0 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    {# =================== H1 ANALYSIS =================== #}
+    <div class="page-break">
+        <h3>Analiza nagłówków H1</h3>
+        <div class="info-box-light">
+            <p><strong>Nagłówek H1</strong> to najważniejszy nagłówek na stronie — powinien być dokładnie jeden, unikalny, zawierać główne słowo kluczowe i opisywać główny temat strony. Brak H1 lub wiele H1 na stronie to typowy błąd negatywnie wpływający na SEO. Nagłówki H1 nie powinny być identyczne z tagiem &lt;title&gt;.</p>
+        </div>
+        <div class="two-col">
+            <div>
+                <table>
+                    <tbody>
+                        {{ kv_row('Strony z H1', onpage.has_h1_count ~ ' / ' ~ onpage.total_indexable) }}
+                        {{ kv_row('Brak H1', onpage.missing_h1, 'badge-warning' if onpage.missing_h1 > 0 else '') }}
+                        {{ kv_row('Duplikaty H1 (grup)', onpage.duplicate_h1_groups, 'badge-warning' if onpage.duplicate_h1_groups > 0 else '') }}
+                        {{ kv_row('H1 = Title (identyczne)', onpage.h1_equals_title_count) }}
+                        {{ kv_row('Strony z H2', onpage.has_h2_count) }}
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div class="info-box-light">
+                    <strong>Zalecenia dotyczące H1:</strong>
+                    <ul style="margin: 6px 0 0 0; padding-left: 16px; font-size: 8pt;">
+                        <li>Dokładnie jeden H1 na podstronie</li>
+                        <li>Unikalny w skali całej domeny</li>
+                        <li>Różny od tagu &lt;title&gt; (uzupełniający)</li>
+                        <li>Zawiera główne słowo kluczowe</li>
+                        <li>Nie stosuj H1 w nagłówkach/stopkach (site-wide)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% if onpage.missing_h1_pages %}
+            <h4>Strony bez nagłówka H1 ({{ onpage.missing_h1 }} łącznie)</h4>
+            <table>
+                <thead><tr><th style="width:60%">URL</th><th>Tytuł</th><th>Słów</th></tr></thead>
+                <tbody>
+                    {% for p in onpage.missing_h1_pages %}
+                        <tr>
+                            <td class="td-url">{{ p.url }}</td>
+                            <td class="text-small">{{ p.title | truncate(40) if p.title else '—' }}</td>
+                            <td class="td-center">{{ p.word_count or 0 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+        {% if onpage.dup_h1_examples %}
+            <h4>Przykłady zduplikowanych H1</h4>
+            <table>
+                <thead><tr><th style="width:40%">Nagłówek H1</th><th>URL</th></tr></thead>
+                <tbody>
+                    {% for ex in onpage.dup_h1_examples %}
+                        <tr>
+                            <td class="text-small">{{ ex.h1 }}</td>
+                            <td class="td-url">{{ ex.url }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    {# =================== THIN CONTENT =================== #}
+    {% if onpage.thin_content_count > 0 %}
+        <div class="page-break">
+            <h3>Strony z Thin Content ({{ onpage.thin_content_count }} stron)</h3>
+            <div class="info-box-light">
+                <p><strong>Thin Content</strong> to strony z bardzo małą ilością treści (poniżej 300 słów). Google w ramach "Helpful Content System" aktywnie deprecjonuje domeny z dużą ilością stron niskiej wartości. Thin Content może powodować obniżenie rankingów całej domeny. Zalecane jest rozbudowanie treści lub usunięcie/noindexowanie takich stron.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:55%">URL</th>
+                        <th>Tytuł</th>
+                        <th>Słów</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in onpage.thin_content_pages %}
+                        <tr>
+                            <td class="td-url">{{ p.url }}</td>
+                            <td class="text-small">{{ p.title | truncate(35) if p.title else '—' }}</td>
+                            <td class="td-center" style="color:#dc2626;font-weight:bold;">{{ p.word_count or 0 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# =================== CONTENT OVERVIEW =================== #}
+    <h3>Przegląd jakości treści</h3>
+    <div class="two-col">
+        <div>
+            <table>
+                <tbody>
+                    {{ kv_row('Śr. liczba słów na stronie', onpage.avg_word_count) }}
+                    {{ kv_row('Thin Content (<300 słów)', onpage.thin_content_count, 'badge-warning' if onpage.thin_content_count > 0 else '') }}
+                    {{ kv_row('Duplikaty wewnętrzne', onpage.duplicate_content_count, 'badge-warning' if onpage.duplicate_content_count > 0 else '') }}
+                    {{ kv_row('Śr. czytelność (Flesch)', (onpage.avg_flesch | string) ~ '/100' if onpage.avg_flesch else 'N/A') }}
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <table>
+                <tbody>
+                    {{ kv_row('Obrazy łącznie', onpage.total_images) }}
+                    {{ kv_row('Obrazy bez atrybutu ALT', onpage.images_without_alt, 'badge-warning' if onpage.images_without_alt > 0 else '') }}
+                </tbody>
+            </table>
+            {% if onpage.avg_flesch %}
+                <div class="info-box-light" style="margin-top:8px;">
+                    <strong>Skala czytelności Flesch:</strong>
+                    <div style="font-size:7.5pt; margin-top:4px;">
+                        90–100: Bardzo łatwy | 70–90: Łatwy | 50–70: Przeciętny | 30–50: Trudny | 0–30: Bardzo trudny
+                    </div>
+                    <div style="font-size:7.5pt;">Wynik {{ onpage.avg_flesch }}/100 —
+                        {% if onpage.avg_flesch >= 70 %} dobra czytelność dla szerokiej publiczności
+                        {% elif onpage.avg_flesch >= 50 %} przeciętna czytelność — rozważ prostszy język
+                        {% else %} trudna w odczytaniu treść — zalecane uproszczenie
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# =================== IMAGES WITHOUT ALT =================== #}
+    {% if onpage.images_no_alt_sample %}
+        <div class="page-break">
+            <h3>Obrazy bez atrybutu ALT ({{ onpage.images_without_alt }} łącznie)</h3>
+            <div class="info-box-light">
+                <p>Atrybut ALT opisuje zawartość obrazu dla robotów wyszukiwarek i czytników ekranu (accessibility). Brak ALT oznacza, że Google nie może zaindeksować obrazu w Google Grafika. Szczególnie ważne dla witryn e-commerce gdzie obrazy produktów mogą generować ruch. Nie wszystkie obrazy wymagają ALT — ikony dekoracyjne i tła powinny mieć pusty ALT (alt="").</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:80%">URL obrazu</th>
+                        <th>Rozmiar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for img in onpage.images_no_alt_sample %}
+                        <tr>
+                            <td class="td-url" style="font-size:7pt;">{{ img.url }}</td>
+                            <td class="td-center">{{ img.size_kb }} KB</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% endif %}
 
     {# Raw SF tabs (Full report only) #}
@@ -102,7 +309,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for row in onpage.sf_tabs_data.titles[:50] %}
+                    {% for row in onpage.sf_tabs_data.titles[:100] %}
                         <tr>
                             <td class="td-url">{{ row.get('Address', row.get('url', '')) | truncate(60) }}</td>
                             <td class="text-small">{{ row.get('Title 1', row.get('title', '')) | truncate(50) }}</td>

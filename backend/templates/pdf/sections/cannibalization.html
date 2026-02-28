@@ -1,0 +1,68 @@
+{% from 'macros.html' import metric_card, section_heading, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'Kanibalizacja Słów Kluczowych') }}
+
+    <div class="info-box">
+        <p>Kanibalizacja słów kluczowych (keyword cannibalization) to sytuacja, gdy dwie lub więcej stron w domenie konkurują ze sobą o te same frazy kluczowe. Google nie wie, którą stronę pokazać wyżej — w efekcie obie mogą rankingować niżej niż jedna, dobrze zoptymalizowana strona. To zjawisko jest szczególnie groźne dla fraz z dużym wolumenem wyszukiwań.</p>
+    </div>
+
+    {% if not cannibal.has_data %}
+        <div class="alert alert-success no-break">
+            <p>✓ Brak wykrytych problemów z kanibalizacją słów kluczowych lub brak danych Senuto. Kanibalizacja wymaga danych o pozycjach z Senuto/Search Console.</p>
+        </div>
+    {% else %}
+
+    <div class="metric-grid">
+        {{ metric_card(cannibal.total_groups, 'Grup kanibalizacji', '#dc2626' if cannibal.total_groups > 0 else '#16a34a') }}
+        {{ metric_card(cannibal.total_affected_pages, 'Stron dotkniętych') }}
+        {{ metric_card(cannibal.high_volume_groups, 'Grup z high-vol (≥100 wyszukiwań)', '#dc2626' if cannibal.high_volume_groups > 0 else '#16a34a') }}
+    </div>
+
+    {% if cannibal.total_groups > 0 %}
+        <div class="alert alert-critical no-break">
+            <span class="alert-title">Wykryto {{ cannibal.total_groups }} grup kanibalizacji — potencjalna utrata ruchu</span>
+            <p>Zalecane działania: (1) Wytypuj jedną stronę jako "główną" dla każdego słowa kluczowego, (2) Scal lub przekieruj słabsze strony do głównej, (3) Zaktualizuj linki wewnętrzne by wzmocnić stronę główną, (4) Dodaj canonical tag na stronach pomocniczych.</p>
+        </div>
+
+        <div class="page-break">
+            <h3>Grupy kanibalizacji ({{ cannibal.total_groups }} łącznie)</h3>
+            {% for group in cannibal.groups %}
+                <div class="task-card no-break" style="margin-bottom: 10px;">
+                    <div class="task-card-header">
+                        <div class="task-card-title">Fraza: "{{ group.keyword }}"</div>
+                        <div class="task-card-badges">
+                            {% if group.volume %}
+                                <span class="badge badge-info">{{ group.volume }} wyszukiwań/mies.</span>
+                            {% endif %}
+                            <span class="badge badge-warning">{{ group.pages | length }} konkurujących stron</span>
+                        </div>
+                    </div>
+                    <table style="margin-top: 6px;">
+                        <thead>
+                            <tr>
+                                <th style="width:70%">URL</th>
+                                <th>Pozycja</th>
+                                <th>Wyszuk./mies.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for page in group.pages %}
+                                <tr>
+                                    <td class="td-url" style="font-size:7.5pt;">{{ page.url }}</td>
+                                    <td class="td-center">
+                                        <span class="badge {{ 'badge-success' if page.position and page.position <= 3 else ('badge-warning' if page.position and page.position <= 10 else 'badge-info') }}">
+                                            {{ page.position or '?' }}
+                                        </span>
+                                    </td>
+                                    <td class="td-center">{{ page.volume or '—' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% endif %}
+</div>

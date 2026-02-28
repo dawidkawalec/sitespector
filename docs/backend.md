@@ -341,7 +341,7 @@ Instead of storing AI analyses as monolithic JSON blobs, each item is stored as 
 
 **Legacy**: `backend/app/services/pdf_generator.py` + `backend/templates/report.html` (kept for reference)
 
-**Status**: ✅ **FULLY REBUILT** (2026-02-25) — Modular, multi-type system
+**Status**: ✅ **MEGA UPGRADE** (2026-02-28) — 35+ sections, rich data, full professional reports
 
 ### Architecture
 
@@ -351,9 +351,9 @@ backend/app/services/pdf/
   generator.py         → orchestrator (main entry point)
   config.py            → ReportTypeConfig for executive/standard/full
   charts.py            → matplotlib SVG chart generators
-  styles.py            → WeasyPrint CSS (A4, header/footer)
+  styles.py            → WeasyPrint CSS (A4, header/footer, info-box)
   utils.py             → helpers (score_color, fmt_ms, cwv_status, etc.)
-  sections/            → per-section data extractors (25+ modules)
+  sections/            → per-section data extractors (35+ modules)
     executive_summary.py, technical_overview.py, on_page_seo.py,
     internal_links.py, performance.py, lighthouse_detail.py,
     accessibility.py, visibility_overview.py, keywords.py,
@@ -361,12 +361,19 @@ backend/app/services/pdf/
     ai_overviews.py, content.py, ux_mobile.py, security.py,
     tech_stack.py, ai_insights.py, cross_tool.py, quick_wins.py,
     roadmap.py, execution_plan.py, benchmark.py,
-    appendix_pages.py, appendix_images.py, appendix_keywords.py, appendix_backlinks.py
+    appendix_pages.py, appendix_images.py, appendix_keywords.py, appendix_backlinks.py,
+    heading_analysis.py, url_structure.py, redirect_analysis.py,
+    cannibalization.py, anchor_text.py,
+    structured_data.py, robots_sitemap.py
+
+backend/app/services/
+  technical_seo_extras.py  → async HTTP collector for Schema.org, robots.txt,
+                              sitemap, domain variants, HTML semantics
 
 backend/templates/pdf/
   base.html            → WeasyPrint base with @page running header/footer
   macros.html          → Jinja2 reusable macros (score cards, badges, alerts, etc.)
-  sections/            → 25+ section templates
+  sections/            → 35+ section templates
 ```
 
 ### 3 Report Types
@@ -375,7 +382,7 @@ backend/templates/pdf/
 |------|-------|----------|--------------|
 | `executive` | 15–25 | C-level, presentations | Scores, TOP metrics, TOP 5 QW |
 | `standard` | 50–80 | Marketing teams | Full SEO, Perf, Senuto TOP 50, AI strategy |
-| `full` | 80–150+ | SEO agencies | All raw data, ALL pages, TOP 200 keywords |
+| `full` | 150–250+ | SEO agencies | All raw data, ALL pages, ALL keywords, all new sections, no row limits |
 
 ### API Endpoint
 
@@ -384,15 +391,36 @@ GET /api/audits/{audit_id}/pdf?report_type=standard
 # report_type: executive | standard | full (default: standard)
 ```
 
-### 25+ PDF Sections (Full report)
+### 35+ PDF Sections (Full report)
 
 **PART I** — Executive Summary
-**PART II** — SEO Techniczne (Technical Overview, On-Page SEO, Internal Links)
+**PART II** — SEO Techniczne
+  - Technical Overview (404s, redirects, missing canonicals, HTTPS, crawl depth)
+  - On-Page SEO (title/description/H1 per-page analysis, thin content, alt text)
+  - Heading Hierarchy Analysis (H1/H2 issues, duplicates, H1=Title)
+  - URL Structure Analysis (length, non-ASCII, underscores, depth distribution)
+  - Redirect Analysis (301/302 breakdown, HTTP downgrades, external redirects)
+  - Internal Links (orphan pages, inlinks distribution, redirect chains)
+  - Structured Data (Schema.org types, issues, missing schemas)
+  - Robots.txt & Sitemap & Domain Config
+
 **PART III** — Wydajność (Performance CWV, Lighthouse Detail, Accessibility)
 **PART IV** — Widoczność Organiczna (Visibility, Keywords, Changes, Competitors, Backlinks, AIO)
-**PART V** — Treść & UX (Content, UX/Mobile, Security, Tech Stack)
+  - Keyword Cannibalization (Senuto data, competing pages, high-volume keywords)
+  - Anchor Text Distribution (branded/exact-match/naked/generic breakdown)
+
+**PART V** — Treść & UX (Content readability, UX/Mobile, Security per-header, Tech Stack)
 **PART VI** — Strategia AI (AI Insights x9, Cross-Tool, Quick Wins, Roadmap, Execution Plan, Benchmark)
 **PART VII** — Załączniki (All Pages, Images, Keywords TOP 200, Backlinks TOP 100)
+
+### New Data Collection (technical_seo_extras.py)
+
+Called during worker audit pipeline (step "4a") after Screaming Frog crawl:
+- **Schema.org**: Fetches homepage HTML, extracts JSON-LD, detects types (Organization, Product, LocalBusiness, etc.), checks for issues
+- **Robots.txt**: Downloads and parses robots.txt, identifies blocked paths, crawl-delay, sitemap URLs, full-block detection
+- **Sitemap**: Downloads and parses sitemap XML/index, checks coverage vs crawled URLs, detects stale entries (>6 months)
+- **Domain variants**: Checks www/non-www + http/https redirect behavior, determines preferred canonical URL
+- **HTML semantics**: Analyzes homepage for HTML5 semantic elements (header, nav, main, article, footer)
 
 ### Charts (matplotlib SVG embedded)
 

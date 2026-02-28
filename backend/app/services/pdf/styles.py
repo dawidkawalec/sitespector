@@ -562,4 +562,32 @@ tr:hover td { background: #f1f5f9; }
 /* ========== APPENDIX TABLES ========== */
 .appendix-table th { font-size: 7pt; }
 .appendix-table td { font-size: 7.5pt; padding: 5px 8px; }
+
+/* ========== INFO BOXES ========== */
+.info-box {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin: 10px 0 16px 0;
+    font-size: 8.5pt;
+    color: #1e40af;
+    line-height: 1.5;
+}
+.info-box p { margin: 0; }
+.info-box strong { color: #1e3a8a; }
+
+.info-box-light {
+    background: #f8fafc;
+    border-left: 3px solid #94a3b8;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 8px 0 12px 0;
+    font-size: 8pt;
+    color: #475569;
+    line-height: 1.5;
+}
+.info-box-light p { margin: 0; }
+.info-box-light strong { color: #334155; }
+
 """

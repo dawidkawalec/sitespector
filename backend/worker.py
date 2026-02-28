@@ -14,6 +14,7 @@ from app.models import Audit, AuditStatus, Competitor, CompetitorStatus, AuditSc
 from app.config import settings
 from app.services import screaming_frog, lighthouse, ai_analysis, senuto
 from app.services import ai_execution_plan
+from app.services import technical_seo_extras
 from app.services.rag_service import index_audit_for_rag
 
 # Configure logging
@@ -162,7 +163,34 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
             await add_audit_log(audit, "competitors", "success", f"Processed {len(competitors)} competitors", duration)
             await db.commit()
 
-            # 4. Calculate Technical Scores
+            # 4a. Technical SEO Extras (structured data, robots.txt, sitemap, semantic HTML)
+            audit.processing_step = "technical_extras:start"
+            await add_audit_log(audit, "technical_extras", "running", "Collecting structured data, robots.txt and sitemap analysis...")
+            await db.commit()
+
+            step_start = datetime.utcnow()
+            try:
+                all_page_urls = [p.get("url", "") for p in crawl_data.get("all_pages", [])]
+                extras = await technical_seo_extras.collect_technical_extras(
+                    url=audit.url,
+                    crawled_urls=all_page_urls,
+                    sitemap_url=crawl_data.get("sitemap_url"),
+                    user_agent=getattr(audit, "crawler_user_agent", None) or None,
+                )
+                crawl_data["structured_data"] = extras.get("structured_data") or {}
+                crawl_data["robots_txt"] = extras.get("robots_txt") or {}
+                crawl_data["sitemap_analysis"] = extras.get("sitemap_analysis") or {}
+                crawl_data["domain_config"] = extras.get("domain_config") or {}
+                crawl_data["semantic_html"] = extras.get("semantic_html") or {}
+                duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
+                audit.processing_step = "technical_extras:done"
+                await add_audit_log(audit, "technical_extras", "success", "Technical extras collected", duration)
+            except Exception as e:
+                logger.warning("Technical extras collection failed (non-fatal): %s", e)
+                await add_audit_log(audit, "technical_extras", "warning", f"Technical extras skipped: {str(e)}")
+            await db.commit()
+
+            # 4b. Calculate Technical Scores
             desktop_data = lighthouse_data.get("desktop", {})
             seo_score = calculate_seo_score(crawl_data, desktop_data)
             performance_score = desktop_data.get("performance_score", 0)

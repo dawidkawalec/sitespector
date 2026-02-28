@@ -1607,3 +1607,25 @@ Additionally, `retrieve_context()` called `embed_query()` without any error hand
 - `frontend/components/chat/ChatToggleButton.tsx`
 
 **Related**: Zustand Persist middleware documentation.
+
+---
+
+### BUG-044: PDF download broken on production (Jinja2 TemplateNotFound)
+
+**Reported**: 2026-02-28
+
+**Status**: ✅ FIXED (2026-02-28)
+
+**Severity**: CRITICAL
+
+**Description**:
+All PDF report downloads were failing on production. The backend returned 500 errors when attempting to generate any PDF report.
+
+**Root cause**:
+Jinja2's `FileSystemLoader` was configured with base directory `templates/pdf/`. All 29 section templates used `{% from '../macros.html' import ... %}` with a relative path containing `..`. Jinja2 does not resolve relative paths from the template file's location — it resolves them from the loader's root directory. So `../macros.html` resolved to a path outside the root, causing `jinja2.exceptions.TemplateNotFound: ../macros.html`.
+
+**Fix**:
+Replaced all instances of `{% from '../macros.html' import ... %}` with `{% from 'macros.html' import ... %}` across all 29 HTML templates in `backend/templates/pdf/sections/`.
+
+**Files Changed**:
+- `backend/templates/pdf/sections/*.html` (all 29 section templates)

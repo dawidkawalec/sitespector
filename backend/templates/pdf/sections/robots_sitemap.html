@@ -1,0 +1,204 @@
+{% from 'macros.html' import section_heading, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'Robots.txt, Sitemap i Konfiguracja Domeny') }}
+
+    <div class="info-box">
+        <p>Trzy elementy fundamentalnej konfiguracji technicznej SEO: (1) <strong>robots.txt</strong> — instrukcje dla robotów crawlujących co mogą indeksować, (2) <strong>sitemap.xml</strong> — mapa strony pomagająca Google odkrywać i priorytetyzować strony, (3) <strong>konfiguracja domeny</strong> — właściwa kanonizacja www/non-www i http/https eliminuje duplikację treści na poziomie domeny.</p>
+    </div>
+
+    {# =================== DOMAIN CONFIG =================== #}
+    <h3>Konfiguracja Domeny (www / https)</h3>
+    <div class="info-box-light">
+        <p>Wszystkie warianty domeny (www vs non-www, http vs https) powinny prowadzić do jednego preferowanego URL przez przekierowanie 301. Brak kanonizacji domeny powoduje duplikację treści — Google może uznać dwa warianty jako oddzielne strony i podzielić autorytet między nie.</p>
+    </div>
+
+    {% if domain.issues %}
+        {% for issue in domain.issues %}
+            <div class="alert alert-critical no-break">
+                <span class="alert-title">⚠ {{ issue }}</span>
+            </div>
+        {% endfor %}
+    {% elif domain.has_data %}
+        <div class="alert alert-success no-break">
+            <p>✓ Konfiguracja domeny prawidłowa — wszystkie warianty URL prawidłowo przekierowują do: <strong>{{ domain.preferred_url }}</strong></p>
+        </div>
+    {% endif %}
+
+    {% if domain.variants %}
+        <table>
+            <thead><tr><th>Wariant URL</th><th>Kod HTTP</th><th>Przekierowanie do</th></tr></thead>
+            <tbody>
+                {% for name, info in domain.variants.items() %}
+                    <tr>
+                        <td class="td-url" style="font-size:7.5pt;">{{ info.url if info.url else name }}</td>
+                        <td class="td-center">
+                            {% if info.status == 'error' %}
+                                <span class="badge badge-warning">Błąd</span>
+                            {% elif info.status == 200 and not info.redirects_to %}
+                                <span class="badge {{ 'badge-success' if 'https' in (info.url or '') else 'badge-danger' }}">200 OK</span>
+                            {% else %}
+                                <span class="badge badge-warning">{{ info.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="td-url text-muted" style="font-size:7pt;">{{ info.redirects_to | truncate(60) if info.redirects_to else '— (brak redirect)' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# =================== ROBOTS.TXT =================== #}
+    <div class="page-break">
+        <h3>Analiza Robots.txt</h3>
+        <div class="info-box-light">
+            <p>Plik robots.txt (standard Robots Exclusion Protocol) zawiera instrukcje dla robotów crawlujących — które strony mogą indeksować. Błędna konfiguracja może zablokować indeksowanie ważnych stron (lub całej witryny). Dobra praktyka: dołącz link do sitemap.xml, ustaw właściwe reguły dla Googlebot i unikaj blokowania zasobów CSS/JS.</p>
+        </div>
+
+        {% if robots.has_data %}
+            {% if robots.full_block %}
+                <div class="alert alert-critical no-break">
+                    <span class="alert-title">KRYTYCZNE: Cała strona zablokowana dla robotów (Disallow: /)</span>
+                    <p>Plik robots.txt zabrania crawlowania całej witryny. Google nie może zaindeksować żadnej strony. Usuń lub popraw linię "Disallow: /" natychmiast!</p>
+                </div>
+            {% elif robots.has_issues %}
+                {% for issue in robots.issues %}
+                    <div class="alert alert-warning no-break">
+                        <span class="alert-title">{{ issue }}</span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-success no-break">
+                    <p>✓ Plik robots.txt skonfigurowany poprawnie.</p>
+                </div>
+            {% endif %}
+
+            <div class="two-col">
+                <div>
+                    <h4>Statystyki pliku</h4>
+                    <table>
+                        <tbody>
+                            {{ kv_row('Liczba User-Agentów', robots.user_agents | length) }}
+                            {{ kv_row('Liczba wierszy', robots.content_lines) }}
+                            {{ kv_row('Crawl-Delay', robots.crawl_delay ~ ' s' if robots.crawl_delay else 'Brak') }}
+                            {{ kv_row('Sitemap URL w robots.txt', robots.sitemap_urls | length | string ~ ' linków') }}
+                            {{ kv_row('Blokady dla Googlebot', robots.googlebot_disallow | length) }}
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    {% if robots.googlebot_disallow %}
+                        <h4>Blokowane ścieżki (Googlebot)</h4>
+                        <ul class="list-clean">
+                            {% for path in robots.googlebot_disallow %}
+                                <li><code style="font-size:7.5pt;">Disallow: {{ path }}</code></li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# --- Robots.txt content preview --- #}
+            {% if robots.content %}
+                <h4>Zawartość robots.txt (podgląd)</h4>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:10px; font-family:monospace; font-size:7pt; white-space:pre-wrap; max-height:300px; overflow:hidden;">{{ robots.content[:2000] }}</div>
+                {% if robots.content | length > 2000 %}
+                    <p class="text-muted text-small">(Wyświetlono pierwsze 2000 z {{ robots.content | length }} znaków)</p>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <div class="alert alert-warning no-break">
+                <span class="alert-title">Brak danych o robots.txt</span>
+                <p>Plik robots.txt jest wymagany przez standard. Nawet jeśli nie chcesz niczego blokować, plik powinien istnieć z Sitemap: linkiem i ogólną regułą User-agent: *.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    {# =================== SITEMAP ANALYSIS =================== #}
+    <div class="page-break">
+        <h3>Analiza Sitemap.xml</h3>
+        <div class="info-box-light">
+            <p>Plik sitemap.xml to lista wszystkich ważnych URL strony. Pomaga Google odkryć i prawidłowo priorytetyzować strony, zwłaszcza te głęboko w strukturze lub ze słabym linkowaniem wewnętrznym. Zalecane: zgłoś sitemap w Google Search Console, utrzymuj aktualność lastmod, usuń z sitemap strony noindex i 404.</p>
+        </div>
+
+        {% if sitemap_data.has_data %}
+            {% if sitemap_data.is_index %}
+                <div class="alert alert-info no-break">
+                    <span class="alert-title">Sitemap Index — {{ sitemap_data.child_count }} podmap wykrytych</span>
+                    <p>Sitemap indeks zawiera linki do {{ sitemap_data.child_count }} pliku sitemap. To prawidłowa struktura dla dużych witryn.</p>
+                </div>
+                {% if sitemap_data.child_sitemaps %}
+                    <h4>Podmapy:</h4>
+                    <ul class="list-clean">
+                        {% for sm in sitemap_data.child_sitemaps[:20] %}
+                            <li><code style="font-size:7pt;">{{ sm }}</code></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% else %}
+                <div class="two-col">
+                    <div>
+                        <h4>Statystyki sitemap</h4>
+                        <table>
+                            <tbody>
+                                {{ kv_row('URL w sitemap', sitemap_data.total_urls) }}
+                                {{ kv_row('Pokrycie crawlu', (sitemap_data.coverage_pct | string ~ '%') if sitemap_data.coverage_pct else 'N/A') }}
+                                {{ kv_row('Zawiera lastmod', '✓ Tak' if sitemap_data.has_lastmod else '✗ Brak') }}
+                                {{ kv_row('Stare wpisy (>1 rok)', sitemap_data.stale_entries, 'badge-warning' if sitemap_data.stale_entries > 0 else '') }}
+                                {{ kv_row('URL w sitemap, nieznalezione w crawlu', sitemap_data.in_sitemap_not_crawled_count) }}
+                                {{ kv_row('URL crawlowane, bez sitemap', sitemap_data.crawled_not_in_sitemap_count) }}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        {% if sitemap_data.stale_entries > 0 %}
+                            <div class="alert alert-warning no-break">
+                                <span class="alert-title">{{ sitemap_data.stale_entries }} starych wpisów w sitemap (lastmod > 1 rok)</span>
+                                <p>Zaktualizuj lastmod dla aktualnych stron. Stare wpisy mogą sugerować robotom, że strona nie jest regularnie aktualizowana.</p>
+                            </div>
+                        {% endif %}
+                        {% if sitemap_data.in_sitemap_not_crawled_count > 0 %}
+                            <div class="alert alert-warning no-break">
+                                <span class="alert-title">{{ sitemap_data.in_sitemap_not_crawled_count }} URL w sitemap nie zostało znalezionych w crawlu</span>
+                                <p>Sprawdź te URL — mogą być stronami 404 lub z błędami. Usuń nieistniejące strony z sitemap.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# URLs in sitemap not crawled #}
+                {% if sitemap_data.in_sitemap_not_crawled %}
+                    <h4>URL w sitemap, niedostępne w crawlu (próba)</h4>
+                    <table>
+                        <thead><tr><th>URL (w sitemap, ale niedostępny)</th></tr></thead>
+                        <tbody>
+                            {% for url in sitemap_data.in_sitemap_not_crawled %}
+                                <tr><td class="td-url text-small">{{ url }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+
+                {# Crawled pages not in sitemap #}
+                {% if sitemap_data.crawled_not_in_sitemap %}
+                    <h4>Crawlowane strony bez sitemap (próba)</h4>
+                    <div class="info-box-light">
+                        <p>Strony dostępne w crawlu, ale brakujące w sitemap. Rozważ dodanie ważnych stron do sitemap.xml.</p>
+                    </div>
+                    <table>
+                        <thead><tr><th>URL (w crawlu, brak w sitemap)</th></tr></thead>
+                        <tbody>
+                            {% for url in sitemap_data.crawled_not_in_sitemap %}
+                                <tr><td class="td-url text-small">{{ url }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <div class="alert alert-warning no-break">
+                <span class="alert-title">Brak danych sitemap lub błąd parsowania</span>
+                <p>Sitemap.xml nie została przeanalizowana. Sprawdź czy sitemap.xml istnieje pod adresem {{ sitemap_data.url if sitemap_data.url else 'domeny/sitemap.xml' }} i czy jest poprawnie sformatowanym XML.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>

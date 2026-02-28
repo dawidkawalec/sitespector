@@ -1,0 +1,141 @@
+{% from 'macros.html' import metric_card, section_heading, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'Analiza Struktury URL') }}
+
+    <div class="info-box">
+        <p>Przyjazne, opisowe adresy URL to jeden z czynników wpływających na pozycje w wyszukiwarce. Dobre URL są krótkie, zawierają słowa kluczowe oddzielone myślnikami, nie zawierają znaków specjalnych ani parametrów i odzwierciedlają logiczną hierarchię strony. Złe URL trudniej zapamiętać, mają niższy CTR i mogą komplikować crawling.</p>
+    </div>
+
+    <div class="metric-grid">
+        {{ metric_card(url_struct.total, 'Stron przeanalizowanych') }}
+        {{ metric_card(url_struct.total_with_issues, 'URL z problemami', '#ca8a04' if url_struct.total_with_issues > 0 else '#16a34a') }}
+        {{ metric_card(url_struct.avg_url_length, 'Śr. długość URL (zn.)') }}
+        {{ metric_card(url_struct.issues_count.too_long, 'URL zbyt długich (>100 zn.)', '#ca8a04' if url_struct.issues_count.too_long > 0 else '#16a34a') }}
+        {{ metric_card(url_struct.issues_count.non_ascii, 'URL z nie-ASCII', '#dc2626' if url_struct.issues_count.non_ascii > 0 else '#16a34a') }}
+        {{ metric_card(url_struct.issues_count.underscores, 'URL z podkreśleniami', '#ca8a04' if url_struct.issues_count.underscores > 0 else '#16a34a') }}
+    </div>
+
+    {# --- URL best practices table --- #}
+    <h3>Wymagania Google dla przyjaznych URL</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Wymaganie</th>
+                <th>Zalecenie</th>
+                <th>Stan</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="td-bold">Krótkie URL (do 100 zn.)</td>
+                <td class="text-small">Preferuj URL poniżej 75 znaków dla łatwego udostępniania i wyświetlania w SERP</td>
+                <td class="td-center"><span class="badge {{ 'badge-success' if url_struct.issues_count.too_long == 0 else 'badge-warning' }}">{{ '✓ OK' if url_struct.issues_count.too_long == 0 else (url_struct.issues_count.too_long | string ~ ' problemów') }}</span></td>
+            </tr>
+            <tr>
+                <td class="td-bold">Tylko znaki ASCII</td>
+                <td class="text-small">Bez polskich liter, spacji i znaków specjalnych w URL</td>
+                <td class="td-center"><span class="badge {{ 'badge-success' if url_struct.issues_count.non_ascii == 0 else 'badge-danger' }}">{{ '✓ OK' if url_struct.issues_count.non_ascii == 0 else (url_struct.issues_count.non_ascii | string ~ ' problemów') }}</span></td>
+            </tr>
+            <tr>
+                <td class="td-bold">Małe litery</td>
+                <td class="text-small">URL case-sensitive — wielkie i małe litery tworzą różne adresy</td>
+                <td class="td-center"><span class="badge {{ 'badge-success' if url_struct.issues_count.uppercase == 0 else 'badge-warning' }}">{{ '✓ OK' if url_struct.issues_count.uppercase == 0 else (url_struct.issues_count.uppercase | string ~ ' problemów') }}</span></td>
+            </tr>
+            <tr>
+                <td class="td-bold">Myślniki zamiast podkreśleń</td>
+                <td class="text-small">Google traktuje myślnik jako separator słów, podkreślenie — nie. Użyj "moj-artykul" zamiast "moj_artykul"</td>
+                <td class="td-center"><span class="badge {{ 'badge-success' if url_struct.issues_count.underscores == 0 else 'badge-warning' }}">{{ '✓ OK' if url_struct.issues_count.underscores == 0 else (url_struct.issues_count.underscores | string ~ ' problemów') }}</span></td>
+            </tr>
+            <tr>
+                <td class="td-bold">Bez parametrów query</td>
+                <td class="text-small">Parametry (?id=1&page=2) utrudniają crawling i mogą tworzyć duplikaty treści</td>
+                <td class="td-center"><span class="badge {{ 'badge-success' if url_struct.issues_count.query_params == 0 else 'badge-warning' }}">{{ '✓ OK' if url_struct.issues_count.query_params == 0 else (url_struct.issues_count.query_params | string ~ ' problemów') }}</span></td>
+            </tr>
+            <tr>
+                <td class="td-bold">Maks. 4 poziomy głębokości</td>
+                <td class="text-small">Głębsze strony są rzadziej crawlowane — ograniczaj zagnieżdżenie do 3-4 poziomów</td>
+                <td class="td-center"><span class="badge {{ 'badge-success' if url_struct.issues_count.too_deep == 0 else 'badge-warning' }}">{{ '✓ OK' if url_struct.issues_count.too_deep == 0 else (url_struct.issues_count.too_deep | string ~ ' problemów') }}</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    {# --- Depth distribution --- #}
+    {% if url_struct.depth_dist %}
+        <div class="page-break">
+            <h3>Rozkład głębokości URL</h3>
+            <div class="info-box-light">
+                <p>Strony na głębokości 0–2 poziomów są crawlowane priorytetowo. Strony na poziomie 5+ mogą być pomijane przez crawlery Google lub traktowane jako mniej istotne.</p>
+            </div>
+            <table>
+                <thead><tr><th>Głębokość</th><th>Liczba URL</th><th>Przykład</th><th>Ocena</th></tr></thead>
+                <tbody>
+                    {% for depth, count in url_struct.depth_dist.items() %}
+                        <tr>
+                            <td class="td-bold">Poziom {{ depth }}</td>
+                            <td class="td-center">{{ count }}</td>
+                            <td class="text-muted text-small">{{ '/slug' * depth if depth > 0 else '/' }}</td>
+                            <td class="td-center">
+                                {% if depth <= 2 %}
+                                    <span class="badge badge-success">Doskonały</span>
+                                {% elif depth <= 4 %}
+                                    <span class="badge badge-info">Dobry</span>
+                                {% elif depth == 5 %}
+                                    <span class="badge badge-warning">Głęboki</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Zbyt głęboki</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- Problem URLs --- #}
+    {% if url_struct.non_ascii %}
+        <div class="page-break">
+            <h3>URL z niedozwolonymi znakami (nie-ASCII) — {{ url_struct.issues_count.non_ascii }} stron</h3>
+            <table>
+                <thead><tr><th>URL z problemem</th></tr></thead>
+                <tbody>
+                    {% for item in url_struct.non_ascii %}
+                        <tr><td class="td-url" style="color:#dc2626;">{{ item.url }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {% if url_struct.underscores %}
+        <div class="page-break">
+            <h3>URL z podkreśleniami (_) zamiast myślników (-) — {{ url_struct.issues_count.underscores }} stron</h3>
+            <div class="info-box-light">
+                <p>Google dokumentuje preferencję dla myślnika jako separatora słów w URL. Migracja URL z podkreśleniami na myślniki z przekierowaniami 301 może poprawić rankingi na długi ogon fraz.</p>
+            </div>
+            <table>
+                <thead><tr><th>URL z podkreśleniami</th></tr></thead>
+                <tbody>
+                    {% for item in url_struct.underscores %}
+                        <tr><td class="td-url">{{ item.url }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {% if url_struct.too_long %}
+        <h3>URL zbyt długie (>100 znaków) — {{ url_struct.issues_count.too_long }} stron</h3>
+        <table>
+            <thead><tr><th>URL</th><th>Długość</th></tr></thead>
+            <tbody>
+                {% for item in url_struct.too_long %}
+                    <tr>
+                        <td class="td-url" style="font-size:7pt;">{{ item.url }}</td>
+                        <td class="td-center badge-warning">{{ item.length }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>

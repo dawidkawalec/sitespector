@@ -22,6 +22,11 @@ from .sections import (
     executive_summary,
     technical_overview,
     on_page_seo,
+    heading_analysis,
+    url_structure,
+    redirect_analysis,
+    structured_data,
+    robots_sitemap,
     internal_links,
     performance,
     lighthouse_detail,
@@ -32,6 +37,8 @@ from .sections import (
     organic_competitors,
     backlinks,
     ai_overviews,
+    cannibalization,
+    anchor_text,
     content,
     ux_mobile,
     security,
@@ -86,7 +93,11 @@ TOC_PARTS = [
     },
     {
         "label": "CZĘŚĆ II — SEO TECHNICZNE",
-        "sections": ["technical_overview", "on_page_seo", "internal_links"],
+        "sections": [
+            "technical_overview", "on_page_seo", "heading_analysis",
+            "url_structure", "redirect_analysis", "structured_data",
+            "robots_sitemap", "internal_links",
+        ],
     },
     {
         "label": "CZĘŚĆ III — WYDAJNOŚĆ",
@@ -94,7 +105,11 @@ TOC_PARTS = [
     },
     {
         "label": "CZĘŚĆ IV — WIDOCZNOŚĆ ORGANICZNA",
-        "sections": ["visibility_overview", "keywords", "position_changes", "organic_competitors", "backlinks", "ai_overviews"],
+        "sections": [
+            "visibility_overview", "keywords", "position_changes",
+            "organic_competitors", "backlinks", "ai_overviews",
+            "cannibalization", "anchor_text",
+        ],
     },
     {
         "label": "CZĘŚĆ V — TREŚĆ & UX",
@@ -114,6 +129,11 @@ SECTION_LABELS = {
     "executive_summary": "Executive Summary",
     "technical_overview": "Przegląd Techniczny",
     "on_page_seo": "On-Page SEO",
+    "heading_analysis": "Analiza Hierarchii Nagłówków (H1-H2)",
+    "url_structure": "Analiza Struktury URL",
+    "redirect_analysis": "Analiza Przekierowań",
+    "structured_data": "Dane Strukturalne (Schema.org)",
+    "robots_sitemap": "Robots.txt, Sitemap i Konfiguracja Domeny",
     "internal_links": "Linkowanie Wewnętrzne",
     "performance": "Wydajność & Core Web Vitals",
     "lighthouse_detail": "Lighthouse — Szczegółowe Audyty",
@@ -124,6 +144,8 @@ SECTION_LABELS = {
     "organic_competitors": "Konkurencja Organiczna",
     "backlinks": "Profil Linków Przychodzących",
     "ai_overviews": "AI Overviews (Google AIO)",
+    "cannibalization": "Kanibalizacja Słów Kluczowych",
+    "anchor_text": "Dystrybucja Anchor Text",
     "content": "Analiza Treści",
     "ux_mobile": "UX & Mobile",
     "security": "Bezpieczeństwo",
@@ -307,6 +329,47 @@ async def generate_pdf(
             "sec_num": next_sec(),
         }))
 
+    # ---- HEADING ANALYSIS ----
+    if cfg.is_enabled("heading_analysis"):
+        extended = cfg.is_extended("heading_analysis")
+        ha_data = heading_analysis.extract(audit_data, extended=extended)
+        sections_html.append(_render_section("heading_analysis", {
+            **ha_data,
+            "sec_num": next_sec(),
+        }))
+
+    # ---- URL STRUCTURE ----
+    if cfg.is_enabled("url_structure"):
+        us_data = url_structure.extract(audit_data)
+        sections_html.append(_render_section("url_structure", {
+            **us_data,
+            "sec_num": next_sec(),
+        }))
+
+    # ---- REDIRECT ANALYSIS ----
+    if cfg.is_enabled("redirect_analysis"):
+        ra_data = redirect_analysis.extract(audit_data)
+        sections_html.append(_render_section("redirect_analysis", {
+            **ra_data,
+            "sec_num": next_sec(),
+        }))
+
+    # ---- STRUCTURED DATA ----
+    if cfg.is_enabled("structured_data"):
+        sd_data = structured_data.extract(audit_data)
+        sections_html.append(_render_section("structured_data", {
+            **sd_data,
+            "sec_num": next_sec(),
+        }))
+
+    # ---- ROBOTS.TXT & SITEMAP ----
+    if cfg.is_enabled("robots_sitemap"):
+        rs_data = robots_sitemap.extract(audit_data)
+        sections_html.append(_render_section("robots_sitemap", {
+            **rs_data,
+            "sec_num": next_sec(),
+        }))
+
     # ---- INTERNAL LINKS ----
     if cfg.is_enabled("internal_links"):
         max_rows = cfg.get_max_rows("internal_links", 50)
@@ -437,6 +500,22 @@ async def generate_pdf(
             aio_data = ai_overviews.extract(audit_data, max_rows=max_rows)
             sections_html.append(_render_section("ai_overviews", {
                 **aio_data,
+                "sec_num": next_sec(),
+            }))
+
+        # Cannibalization
+        if cfg.is_enabled("cannibalization"):
+            can_data = cannibalization.extract(audit_data)
+            sections_html.append(_render_section("cannibalization", {
+                **can_data,
+                "sec_num": next_sec(),
+            }))
+
+        # Anchor Text Distribution
+        if cfg.is_enabled("anchor_text"):
+            at_data = anchor_text.extract(audit_data)
+            sections_html.append(_render_section("anchor_text", {
+                **at_data,
                 "sec_num": next_sec(),
             }))
 

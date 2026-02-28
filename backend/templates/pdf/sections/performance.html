@@ -1,9 +1,13 @@
-{% from '../macros.html' import metric_card, score_card, chart, part_header, section_heading, kv_row, cwv_row %}
+{% from 'macros.html' import metric_card, score_card, chart, part_header, section_heading, kv_row, cwv_row %}
 <div class="section">
     {{ part_header('III', 'Wydajność', 'Analiza szybkości, Core Web Vitals i Lighthouse') }}
     {{ section_heading(sec_num, 'Wydajność & Core Web Vitals') }}
 
-    {# Scores #}
+    <div class="info-box">
+        <p>Core Web Vitals (CWV) to zestaw metryk szybkości, które Google oficjalnie włączył do algorytmu rankingowego w 2021 r. Strony spełniające progi CWV mogą korzystać z premii rankingowej. Dane mierzą rzeczywiste doświadczenie użytkownika — LCP (ładowanie), CLS (stabilność) i INP/TBT (interaktywność).</p>
+    </div>
+
+    {# --- Scores --- #}
     <div class="scores-grid">
         {{ score_card(perf.desktop_score, 'Performance Desktop') }}
         {{ score_card(perf.mobile_score, 'Performance Mobile') }}
@@ -11,12 +15,45 @@
         {{ score_card(perf.best_practices_score, 'Best Practices') }}
     </div>
 
-    {# CWV Comparison chart #}
+    {# --- Score interpretation --- #}
+    <div class="two-col" style="margin-bottom: 16px;">
+        <div>
+            <div class="info-box-light">
+                <strong>Interpretacja wyników Lighthouse:</strong>
+                <div style="margin-top: 6px; font-size: 8pt;">
+                    <div style="display:flex; gap:16px;">
+                        <span style="color:#16a34a;">● 90–100: Dobry</span>
+                        <span style="color:#ca8a04;">● 50–89: Wymaga poprawy</span>
+                        <span style="color:#dc2626;">● 0–49: Słaby</span>
+                    </div>
+                    <div style="margin-top:4px; color:#64748b;">Wynik mobilny jest zawsze niższy niż desktopowy ze względu na ograniczone zasoby urządzeń mobilnych.</div>
+                </div>
+            </div>
+        </div>
+        <div>
+            {% if perf.desktop_score and perf.mobile_score %}
+                <div class="info-box-light">
+                    <strong>Priorytet optymalizacji:</strong>
+                    <div style="font-size:8pt; margin-top:6px; color:#64748b;">
+                        {% if perf.mobile_score < 50 %}
+                        Mobile ({{ perf.mobile_score | int }}%) wymaga <strong>pilnej</strong> optymalizacji — ponad 60% ruchu pochodzi z urządzeń mobilnych.
+                        {% elif perf.mobile_score < 75 %}
+                        Mobile ({{ perf.mobile_score | int }}%) ma znaczny potencjał poprawy — optymalizuj mobile jako priorytet.
+                        {% else %}
+                        Wyniki mobile są satysfakcjonujące. Skup się na CWV "Good" threshold.
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# --- CWV Comparison chart --- #}
     {% if chart_cwv %}
-        {{ chart(chart_cwv, 'Core Web Vitals — Desktop vs Mobile (niższa wartość = lepiej)', '100%') }}
+        {{ chart(chart_cwv, 'Core Web Vitals — Desktop vs Mobile (ms, niższa wartość = lepiej)', '100%') }}
     {% endif %}
 
-    {# CWV Tables Desktop/Mobile #}
+    {# --- CWV Tables --- #}
     <div class="two-col">
         <div>
             <h3>Core Web Vitals — Desktop</h3>
@@ -42,7 +79,70 @@
         </div>
     </div>
 
-    {# AI Performance analysis #}
+    {# --- CWV thresholds explanation --- #}
+    <div class="page-break">
+        <h3>Progi Core Web Vitals — co mierzą i czego wymagają</h3>
+        <div class="info-box-light">
+            <p>Google ocenia CWV na podstawie danych realnych użytkowników z Chrome (CrUX). Poniższe progi dotyczą percentyla 75. — tzn. 75% użytkowników musi osiągać wynik "Good".</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metryka</th>
+                    <th>Co mierzy</th>
+                    <th style="color:#16a34a;">✓ Dobry</th>
+                    <th style="color:#ca8a04;">⚠ Poprawa</th>
+                    <th style="color:#dc2626;">✗ Słaby</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="td-bold">LCP</td>
+                    <td class="text-small">Czas ładowania największego elementu (obraz, blok tekstu). Postrzegana szybkość strony.</td>
+                    <td class="td-center" style="color:#16a34a;">≤ 2.5s</td>
+                    <td class="td-center" style="color:#ca8a04;">2.5–4.0s</td>
+                    <td class="td-center" style="color:#dc2626;">&gt; 4.0s</td>
+                </tr>
+                <tr>
+                    <td class="td-bold">FCP</td>
+                    <td class="text-small">Czas do pojawienia się pierwszego elementu na ekranie. Pierwsza "widoczność" strony.</td>
+                    <td class="td-center" style="color:#16a34a;">≤ 1.8s</td>
+                    <td class="td-center" style="color:#ca8a04;">1.8–3.0s</td>
+                    <td class="td-center" style="color:#dc2626;">&gt; 3.0s</td>
+                </tr>
+                <tr>
+                    <td class="td-bold">CLS</td>
+                    <td class="text-small">Niespodziewane przesunięcia layoutu podczas ładowania. Stabilność wizualna.</td>
+                    <td class="td-center" style="color:#16a34a;">≤ 0.1</td>
+                    <td class="td-center" style="color:#ca8a04;">0.1–0.25</td>
+                    <td class="td-center" style="color:#dc2626;">&gt; 0.25</td>
+                </tr>
+                <tr>
+                    <td class="td-bold">TBT</td>
+                    <td class="text-small">Czas blokowania wątku głównego. Zastępuje INP w Lighthouse — mierzy responsywność.</td>
+                    <td class="td-center" style="color:#16a34a;">≤ 200ms</td>
+                    <td class="td-center" style="color:#ca8a04;">200–600ms</td>
+                    <td class="td-center" style="color:#dc2626;">&gt; 600ms</td>
+                </tr>
+                <tr>
+                    <td class="td-bold">TTFB</td>
+                    <td class="text-small">Czas do pierwszego bajtu serwera. Szybkość odpowiedzi serwera/CDN.</td>
+                    <td class="td-center" style="color:#16a34a;">≤ 800ms</td>
+                    <td class="td-center" style="color:#ca8a04;">800ms–1.8s</td>
+                    <td class="td-center" style="color:#dc2626;">&gt; 1.8s</td>
+                </tr>
+                <tr>
+                    <td class="td-bold">SI</td>
+                    <td class="text-small">Speed Index — jak szybko wypełnia się zawartość widocznego obszaru (above the fold).</td>
+                    <td class="td-center" style="color:#16a34a;">≤ 3.4s</td>
+                    <td class="td-center" style="color:#ca8a04;">3.4–5.8s</td>
+                    <td class="td-center" style="color:#dc2626;">&gt; 5.8s</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {# --- AI analysis --- #}
     {% if perf.ai_summary %}
         <h3>Analiza AI — Wydajność</h3>
         <div class="alert alert-ai no-break">
@@ -53,16 +153,16 @@
     {% if perf.ai_key_findings %}
         <h4>Kluczowe obserwacje</h4>
         <ul>
-            {% for f in perf.ai_key_findings[:5] %}
+            {% for f in perf.ai_key_findings %}
                 <li>{{ f }}</li>
             {% endfor %}
         </ul>
     {% endif %}
 
     {% if perf.ai_recommendations %}
-        <h4>Rekomendacje</h4>
+        <h4>Rekomendacje do wdrożenia</h4>
         <ul>
-            {% for r in perf.ai_recommendations[:5] %}
+            {% for r in perf.ai_recommendations %}
                 <li>{{ r }}</li>
             {% endfor %}
         </ul>

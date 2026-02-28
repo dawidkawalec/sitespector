@@ -1,91 +1,111 @@
-{% from '../macros.html' import section_heading, badge %}
+{% from 'macros.html' import section_heading, badge %}
 <div class="section">
     {{ section_heading(sec_num, 'Lighthouse — Szczegółowe Audyty') }}
 
-    <p class="text-muted text-small mb-16">
-        Lighthouse przeprowadza 176 sprawdzeń w 4 kategoriach.
-        Poniżej najważniejsze możliwości optymalizacji i diagnostyka.
-    </p>
+    <div class="info-box">
+        <p>Lighthouse to narzędzie Google przeprowadzające 176 automatycznych sprawdzeń w 4 kategoriach: Performance, Accessibility, Best Practices i SEO. Wyniki podzielone są na: <strong>Możliwości optymalizacji</strong> (z szacowaną oszczędnością czasu), <strong>Diagnostykę</strong> (problemy do naprawienia) i <strong>Zdane sprawdzenia</strong>.</p>
+    </div>
 
-    {# Opportunities #}
+    {# --- Opportunities --- #}
     {% if lh.opportunities %}
-        <h3>Możliwości optymalizacji</h3>
+        <h3>Możliwości optymalizacji — Desktop ({{ lh.opportunities | length }})</h3>
+        <div class="info-box-light">
+            <p>Poniższe elementy mają bezpośredni wpływ na wynik Performance i czas ładowania. Posortowane według priorytetu (najgorszy wynik na górze). Wartość w kolumnie "Oszczędność" pokazuje szacowany zysk czasu po wdrożeniu.</p>
+        </div>
         <table>
             <thead>
                 <tr>
-                    <th style="width:45%">Tytuł</th>
-                    <th>Wartość / Oszczędność</th>
-                    <th>Opis</th>
+                    <th style="width:38%">Problem</th>
+                    <th style="width:12%">Wynik</th>
+                    <th style="width:12%">Oszczędność</th>
+                    <th style="width:38%">Opis i zalecenie</th>
                 </tr>
             </thead>
             <tbody>
                 {% for item in lh.opportunities %}
                     <tr>
-                        <td class="td-bold">
-                            {{ item.title }}
-                            <span class="badge {{ 'badge-danger' if item.score < 0.5 else 'badge-warning' }}">
-                                {{ (item.score * 100) | int }}%
+                        <td class="td-bold" style="font-size:8pt;">{{ item.title }}</td>
+                        <td class="td-center">
+                            <span class="badge {{ 'badge-danger' if (item.score or 0) < 0.3 else ('badge-warning' if (item.score or 0) < 0.7 else 'badge-success') }}">
+                                {{ ((item.score or 0) * 100) | int }}%
                             </span>
                         </td>
-                        <td class="text-small td-center">{{ item.displayValue or '—' }}</td>
-                        <td class="text-small text-muted">{{ item.description | truncate(100) if item.description else '' }}</td>
+                        <td class="td-center text-small">{{ item.displayValue or '—' }}</td>
+                        <td class="text-small text-muted" style="font-size:7.5pt;">{{ item.description | truncate(120) if item.description else '' }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% endif %}
 
-    {# Diagnostics #}
+    {# --- Diagnostics --- #}
     {% if lh.diagnostics %}
-        <h3>Diagnostyka</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width:45%">Tytuł</th>
-                    <th>Wartość</th>
-                    <th>Opis</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in lh.diagnostics %}
+        <div class="page-break">
+            <h3>Diagnostyka — błędy i ostrzeżenia ({{ lh.diagnostics | length }})</h3>
+            <div class="info-box-light">
+                <p>Diagnostyczne sprawdzenia nie przekładają się bezpośrednio na wynik Lighthouse, ale są ważnymi problemami technicznymi (SEO, bezpieczeństwo, dostępność) wymagającymi uwagi.</p>
+            </div>
+            <table>
+                <thead>
                     <tr>
-                        <td class="td-bold">{{ item.title }}</td>
-                        <td class="text-small td-center">{{ item.displayValue or '—' }}</td>
-                        <td class="text-small text-muted">{{ item.description | truncate(100) if item.description else '' }}</td>
+                        <th style="width:40%">Problem</th>
+                        <th style="width:15%">Wartość</th>
+                        <th style="width:45%">Opis</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
-
-    {# Passed (Full report only) #}
-    {% if extended and lh.passed %}
-        <h3>Zdane sprawdzenia</h3>
-        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
-            {% for item in lh.passed %}
-                <span class="chip chip-green" style="font-size: 7pt;">✓ {{ item.title | truncate(40) }}</span>
-            {% endfor %}
+                </thead>
+                <tbody>
+                    {% for item in lh.diagnostics %}
+                        <tr>
+                            <td class="td-bold" style="font-size:8pt;">{{ item.title }}</td>
+                            <td class="text-small td-center">{{ item.displayValue or '—' }}</td>
+                            <td class="text-small text-muted" style="font-size:7.5pt;">{{ item.description | truncate(120) if item.description else '' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     {% endif %}
 
-    {# Mobile opportunities (if different from desktop) #}
+    {# --- Mobile-specific opportunities --- #}
     {% if lh.mobile_opportunities %}
-        <h3>Dodatkowe możliwości — Mobile</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width:50%">Tytuł</th>
-                    <th>Wartość</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in lh.mobile_opportunities[:10] %}
+        <div class="page-break">
+            <h3>Dodatkowe możliwości — Mobile</h3>
+            <div class="info-box-light">
+                <p>Poniższe problemy dotyczą wyłącznie wersji mobilnej i nie występują na desktopie. Priorytet zależy od udziału ruchu mobilnego w Twoim projekcie.</p>
+            </div>
+            <table>
+                <thead>
                     <tr>
-                        <td class="td-bold">{{ item.title }}</td>
-                        <td class="text-small">{{ item.displayValue or '—' }}</td>
+                        <th style="width:45%">Problem</th>
+                        <th style="width:15%">Oszczędność</th>
+                        <th style="width:40%">Opis</th>
                     </tr>
+                </thead>
+                <tbody>
+                    {% for item in lh.mobile_opportunities %}
+                        <tr>
+                            <td class="td-bold" style="font-size:8pt;">{{ item.title }}</td>
+                            <td class="text-small td-center">{{ item.displayValue or '—' }}</td>
+                            <td class="text-small text-muted" style="font-size:7.5pt;">{{ item.description | truncate(100) if item.description else '' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- Passed (Full report only) --- #}
+    {% if extended and lh.passed %}
+        <div class="page-break">
+            <h3>Zdane sprawdzenia Lighthouse ({{ lh.passed | length }})</h3>
+            <div class="info-box-light">
+                <p>Poniższe elementy spełniają wymagania Lighthouse. Stanowią one mocne strony technicznej optymalizacji strony.</p>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                {% for item in lh.passed %}
+                    <span style="background:#dcfce7; color:#166534; border:1px solid #86efac; border-radius:4px; padding:3px 8px; font-size:7pt;">✓ {{ item.title | truncate(45) }}</span>
                 {% endfor %}
-            </tbody>
-        </table>
+            </div>
+        </div>
     {% endif %}
 </div>

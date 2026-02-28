@@ -1,67 +1,134 @@
-{% from '../macros.html' import score_card, section_heading, kv_row, alert %}
+{% from 'macros.html' import score_card, section_heading, kv_row, alert %}
 <div class="section">
     {{ section_heading(sec_num, 'Bezpieczeństwo') }}
 
+    <div class="info-box">
+        <p>Bezpieczeństwo strony wpływa zarówno na zaufanie użytkowników, jak i rankingi SEO. Brak HTTPS to sygnał negatywny dla Google od 2018 r. Nagłówki bezpieczeństwa HTTP chronią przed atakami i są sprawdzane przez Lighthouse w kategorii "Best Practices". W erze AI crawlerów, właściwa konfiguracja bezpieczeństwa sygnalizuje wiarygodność strony.</p>
+    </div>
+
+    {# --- Score --- #}
     {% if sec.security_score is not none %}
         <div class="scores-grid">
             {{ score_card(sec.security_score, 'Security Score') }}
+            <div class="score-card no-break">
+                <div class="score-value" style="color: {{ '#16a34a' if sec.is_https else '#dc2626' }};">{{ '✓' if sec.is_https else '✗' }}</div>
+                <div class="score-label">HTTPS / SSL</div>
+                <div class="score-badge" style="background:{{ '#dcfce7' if sec.is_https else '#fee2e2' }};color:{{ '#166534' if sec.is_https else '#991b1b' }};">
+                    {{ 'Aktywny' if sec.is_https else 'BRAK' }}
+                </div>
+            </div>
+            <div class="score-card no-break">
+                <div class="score-value" style="color: {{ '#16a34a' if sec.headers_missing|length == 0 else ('#ca8a04' if sec.missing_high_severity|length == 0 else '#dc2626') }};">{{ sec.headers_present_count }}/{{ sec.headers_total }}</div>
+                <div class="score-label">Nagłówki bezp.</div>
+                <div class="score-badge" style="background:{{ '#dcfce7' if sec.headers_missing|length == 0 else ('#fef9c3' if sec.missing_high_severity|length == 0 else '#fee2e2') }};color:{{ '#166534' if sec.headers_missing|length == 0 else ('#854d0e' if sec.missing_high_severity|length == 0 else '#991b1b') }};">
+                    {{ 'Komplet' if sec.headers_missing|length == 0 else (sec.headers_missing|length ~ ' brakujących') }}
+                </div>
+            </div>
         </div>
     {% endif %}
 
-    <div class="two-col">
-        <div>
-            <h3>Status bezpieczeństwa</h3>
-            <table>
-                {{ kv_row('HTTPS', '✓ Zabezpieczone' if sec.is_https else '✗ Brak HTTPS') }}
-                {{ kv_row('Certyfikat SSL', '✓ Ważny' if sec.ssl_valid else '✗ Problem') }}
-                {{ kv_row('Mixed Content', sec.mixed_content_count ~ ' problemów' if sec.mixed_content_count else '✓ Brak') }}
-                {{ kv_row('Luki bezpieczeństwa', sec.vulnerabilities_count if sec.vulnerabilities_count else '0') }}
-            </table>
-        </div>
-        <div>
-            <h3>Nagłówki bezpieczeństwa HTTP</h3>
-            <table>
-                {{ kv_row('HSTS', '✓ OK' if sec.hsts else '✗ Brak') }}
-                {{ kv_row('Content Security Policy', '✓ OK' if sec.csp else '✗ Brak') }}
-                {{ kv_row('X-Frame-Options', '✓ OK' if sec.x_frame_options else '✗ Brak') }}
-                {{ kv_row('X-Content-Type', '✓ OK' if sec.x_content_type else '✗ Brak') }}
-                {{ kv_row('Referrer-Policy', '✓ OK' if sec.referrer_policy else '✗ Brak') }}
-            </table>
-        </div>
-    </div>
-
+    {# --- HTTPS Critical Warning --- #}
     {% if not sec.is_https %}
         <div class="alert alert-critical no-break">
-            <span class="alert-title">KRYTYCZNE: Brak HTTPS</span>
-            <p>Strona nie korzysta z szyfrowania HTTPS. To krytyczny problem bezpieczeństwa i SEO. Google obniża rankingi stron bez SSL.</p>
+            <span class="alert-title">KRYTYCZNE: Brak certyfikatu HTTPS/SSL</span>
+            <p>Strona działa na niezabezpieczonym protokole HTTP. Google od 2018 r. aktywnie obniża rankingi stron bez SSL. Przeglądarki Chrome i Firefox wyświetlają ostrzeżenie "Niezabezpieczone", co drastycznie obniża konwersję. Certyfikat Let's Encrypt jest bezpłatny — wdróż HTTPS natychmiast.</p>
         </div>
     {% endif %}
 
+    {# --- Mixed content warning --- #}
+    {% if sec.mixed_content_count and sec.mixed_content_count > 0 %}
+        <div class="alert alert-warning no-break">
+            <span class="alert-title">Mixed Content: {{ sec.mixed_content_count }} zasobów HTTP na stronie HTTPS</span>
+            <p>Strona ładuje zasoby (obrazy, skrypty, style) przez HTTP na stronie z HTTPS. To obniża ocenę bezpieczeństwa i może powodować błędy w przeglądarce. Zaktualizuj wszystkie zasoby do HTTPS.</p>
+        </div>
+    {% endif %}
+
+    {# --- Per-header analysis --- #}
+    <div class="page-break">
+        <h3>Analiza nagłówków bezpieczeństwa HTTP</h3>
+        <div class="info-box-light">
+            <p>Nagłówki HTTP bezpieczeństwa to dodatkowa warstwa ochrony konfigurowana na poziomie serwera. Lighthouse sprawdza ich obecność w kategorii "Best Practices". Brak nagłówków wysokiego priorytetu (HSTS, CSP) jest sygnałem negatywnym dla crawlerów AI oceniających wiarygodność strony.</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:28%">Nagłówek</th>
+                    <th style="width:8%">Status</th>
+                    <th style="width:8%">Priorytet</th>
+                    <th style="width:56%">Opis / Rekomendacja</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for header in sec.headers_all %}
+                    <tr>
+                        <td class="td-bold" style="font-size:8pt;">{{ header.name }}</td>
+                        <td class="td-center">
+                            {% if header.present %}
+                                <span class="badge badge-success">✓ OK</span>
+                            {% else %}
+                                <span class="badge {{ 'badge-danger' if header.severity == 'high' else 'badge-warning' }}">✗ Brak</span>
+                            {% endif %}
+                        </td>
+                        <td class="td-center">
+                            <span class="badge {{ 'badge-danger' if header.severity == 'high' else ('badge-warning' if header.severity == 'medium' else 'badge-info') }}">
+                                {{ {'high': 'Wysoki', 'medium': 'Średni', 'low': 'Niski'}.get(header.severity, header.severity) }}
+                            </span>
+                        </td>
+                        <td class="text-small" style="font-size:7.5pt;">
+                            {{ header.description }}
+                            {% if not header.present %}
+                                <div style="color:#ca8a04; margin-top:3px;"><strong>Zalecenie:</strong> {{ header.recommendation }}</div>
+                            {% elif header.value %}
+                                <div style="color:#64748b; margin-top:3px; font-size:7pt; word-break:break-all;">Wartość: <code>{{ header.value[:80] }}</code></div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# --- Missing high severity headers --- #}
+    {% if sec.missing_high_severity %}
+        <div class="alert alert-critical no-break">
+            <span class="alert-title">Krytyczne brakujące nagłówki bezpieczeństwa:</span>
+            <ul style="margin: 8px 0 0 0; padding-left: 18px;">
+                {% for h in sec.missing_high_severity %}
+                    <li><strong>{{ h.name }}</strong> — {{ h.recommendation }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {# --- Vulnerabilities --- #}
     {% if sec.vulnerabilities %}
-        <h3>Wykryte luki bezpieczeństwa</h3>
+        <h3>Wykryte luki bezpieczeństwa ({{ sec.vulnerabilities_count }})</h3>
         {% for vuln in sec.vulnerabilities %}
             <div class="alert alert-critical no-break">
-                <span class="alert-title">{{ vuln.type }}</span>
-                <p>{{ vuln.description }}</p>
+                <span class="alert-title">{{ vuln.type or 'Luka bezpieczeństwa' }}</span>
+                <p>{{ vuln.description or '' }}</p>
             </div>
         {% endfor %}
     {% endif %}
 
-    {% if sec.recommendations %}
-        <h3>Rekomendacje</h3>
-        <ul>
-            {% for rec in sec.recommendations[:6] %}
-                <li>{{ rec }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    {% if sec.ai_key_findings %}
-        <h3>Obserwacje AI</h3>
-        <ul>
-            {% for f in sec.ai_key_findings[:5] %}
-                <li>{{ f }}</li>
-            {% endfor %}
-        </ul>
+    {# --- AI Recommendations --- #}
+    {% if sec.ai_key_findings or sec.ai_recommendations or sec.recommendations %}
+        <h3>Rekomendacje i obserwacje</h3>
+        {% if sec.ai_key_findings %}
+            <h4>Kluczowe obserwacje AI</h4>
+            <ul>
+                {% for f in sec.ai_key_findings %}
+                    <li>{{ f }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if sec.recommendations or sec.ai_recommendations %}
+            <h4>Rekomendacje do wdrożenia</h4>
+            <ul>
+                {% for rec in (sec.recommendations + sec.ai_recommendations) | unique %}
+                    <li>{{ rec }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     {% endif %}
 </div>

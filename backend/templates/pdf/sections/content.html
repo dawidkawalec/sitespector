@@ -1,53 +1,171 @@
-{% from '../macros.html' import score_card, metric_card, section_heading, kv_row, part_header %}
+{% from 'macros.html' import score_card, metric_card, section_heading, kv_row, part_header %}
 <div class="section">
     {{ part_header('V', 'Treść & UX', 'Jakość treści, użyteczność i bezpieczeństwo') }}
     {{ section_heading(sec_num, 'Analiza Treści') }}
 
+    <div class="info-box">
+        <p>Jakość treści jest jednym z kluczowych czynników rankingowych w dobie algorytmu "Helpful Content System" Google. Treść powinna być wartościowa dla użytkownika, pisana z doświadczenia i wiedzy, a nie wyłącznie pod wyszukiwarki. Analiza obejmuje czytelność, długość, thin content i duplikacje.</p>
+    </div>
+
     <div class="scores-grid">
-        {{ score_card(content.quality_score, 'Jakość treści') }}
+        {{ score_card(content.quality_score, 'Jakość treści (AI)') }}
         {{ score_card(content.readability_score, 'Czytelność') }}
     </div>
 
+    {# --- Content overview --- #}
     <div class="two-col">
         <div>
             <h3>Metryki treści</h3>
             <table>
-                {{ kv_row('Śr. liczba słów', content.word_count) }}
-                {{ kv_row('Czytelność Flesch', content.flesch_score | round(1) if content.flesch_score else 'N/A') }}
-                {{ kv_row('Thin Content', content.thin_content_count, 'badge-warning' if content.thin_content_count > 0 else '') }}
-                {{ kv_row('Duplikaty wewnętrzne', content.duplicate_count, 'badge-warning' if content.duplicate_count > 0 else '') }}
-                {{ kv_row('Has Title', 'Tak' if content.has_title else 'Nie') }}
-                {{ kv_row('Has Meta Desc', 'Tak' if content.has_meta_description else 'Nie') }}
-                {{ kv_row('Has H1', 'Tak' if content.has_h1 else 'Nie') }}
+                <tbody>
+                    {{ kv_row('Śr. liczba słów na stronie', content.word_count) }}
+                    {% if content.flesch_score %}
+                        {{ kv_row('Czytelność Flesch (śr.)', content.flesch_score | string ~ '/100') }}
+                        <tr><td colspan="2" class="text-muted text-small" style="font-style:italic;">{{ content.flesch_label }}</td></tr>
+                    {% endif %}
+                    {{ kv_row('Thin Content (<300 słów)', content.thin_content_count, 'badge-warning' if content.thin_content_count > 0 else '') }}
+                    {{ kv_row('Duplikaty wewnętrzne', content.duplicate_count, 'badge-warning' if content.duplicate_count and content.duplicate_count > 0 else '') }}
+                    {{ kv_row('Ma tytuł (strona główna)', '✓ Tak' if content.has_title else '✗ Brak') }}
+                    {{ kv_row('Ma meta description', '✓ Tak' if content.has_meta_description else '✗ Brak') }}
+                    {{ kv_row('Ma nagłówek H1', '✓ Tak' if content.has_h1 else '✗ Brak') }}
+                </tbody>
             </table>
         </div>
         <div>
-            <h3>Ton i styl</h3>
+            <h3>Skala czytelności Flesch</h3>
+            <div class="info-box-light">
+                <p style="font-size:7.5pt; margin:0; line-height:1.6;">
+                    <span style="color:#16a34a;">● 90–100:</span> Bardzo łatwy<br>
+                    <span style="color:#16a34a;">● 70–89:</span> Łatwy<br>
+                    <span style="color:#ca8a04;">● 50–69:</span> Przeciętny<br>
+                    <span style="color:#dc2626;">● 30–49:</span> Trudny<br>
+                    <span style="color:#dc2626;">● 0–29:</span> Bardzo trudny
+                </p>
+                <p style="font-size:7.5pt; margin-top:8px;">Dla polskich treści docelowych na szeroką publiczność zalecany wynik ≥ 50.</p>
+            </div>
+
             {% if content.tone_voice %}
-                <div class="alert alert-info no-break">
-                    <span class="alert-title">Ton wypowiedzi</span>
-                    <p>{{ content.tone_voice }}</p>
+                <div class="info-box-light" style="margin-top:8px;">
+                    <strong>Ton wypowiedzi (AI):</strong>
+                    <p style="font-size:8pt; margin-top:4px;">{{ content.tone_voice }}</p>
                 </div>
-            {% endif %}
-            {% if content.summary %}
-                <p class="text-small text-muted">{{ content.summary }}</p>
             {% endif %}
         </div>
     </div>
 
+    {# --- Word count distribution --- #}
+    {% if content.word_buckets %}
+        <div class="page-break">
+            <h3>Rozkład długości treści wg stron</h3>
+            <div class="info-box-light">
+                <p>Strony z mniej niż 300 słowami są traktowane przez Google jako Thin Content i mogą negatywnie wpływać na rankingi całej domeny. Strony z 600-1000+ słowami mają znacznie większe szanse na wysokie pozycje w organicznych wynikach wyszukiwania.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Zakres słów</th>
+                        <th>Liczba stron</th>
+                        <th>Ocena</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for range, count in content.word_buckets.items() %}
+                        <tr>
+                            <td class="td-bold">{{ range }} słów</td>
+                            <td class="td-center">{{ count }}</td>
+                            <td class="td-center">
+                                {% if range == '0-100' %}
+                                    <span class="badge badge-danger">Thin Content</span>
+                                {% elif range == '100-300' %}
+                                    <span class="badge badge-warning">Poniżej normy</span>
+                                {% elif range == '300-600' %}
+                                    <span class="badge badge-info">Akceptowalny</span>
+                                {% elif range == '600-1000' %}
+                                    <span class="badge badge-success">Dobry</span>
+                                {% else %}
+                                    <span class="badge badge-success">Bardzo dobry</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- Top content pages --- #}
+    {% if content.top_content_pages %}
+        <h3>Strony z najobszerniejszą treścią</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:55%">URL</th>
+                    <th>Tytuł</th>
+                    <th>Słów</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in content.top_content_pages %}
+                    <tr>
+                        <td class="td-url">{{ page.url }}</td>
+                        <td class="text-small">{{ page.title }}</td>
+                        <td class="td-center" style="color:#16a34a;font-weight:bold;">{{ page.word_count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# --- Thin content pages --- #}
+    {% if content.thin_pages %}
+        <div class="page-break">
+            <h3>Strony z Thin Content ({{ content.thin_content_count }} łącznie)</h3>
+            <div class="alert alert-warning no-break">
+                <span class="alert-title">Thin Content może degradować rankingi całej domeny</span>
+                <p>Zalecane działania: (1) Rozbuduj treść do min. 600 słów, (2) Zastosuj tag noindex jeśli strona ma cel inny niż SEO, (3) Rozważ usunięcie i przekierowanie 301 do powiązanej strony.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:55%">URL</th>
+                        <th>Tytuł</th>
+                        <th>Słów</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in content.thin_pages %}
+                        <tr>
+                            <td class="td-url">{{ page.url }}</td>
+                            <td class="text-small">{{ page.title }}</td>
+                            <td class="td-center" style="color:#dc2626;font-weight:bold;">{{ page.word_count }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- AI summary --- #}
+    {% if content.summary %}
+        <h3>Podsumowanie AI — jakość treści</h3>
+        <div class="alert alert-ai no-break">
+            <p>{{ content.summary }}</p>
+        </div>
+    {% endif %}
+
     {% if content.recommendations %}
         <h3>Rekomendacje AI</h3>
         <ul>
-            {% for rec in content.recommendations[:8] %}
+            {% for rec in content.recommendations %}
                 <li>{{ rec }}</li>
             {% endfor %}
         </ul>
     {% endif %}
 
     {% if content.ai_key_findings %}
-        <h3>Kluczowe obserwacje (AI)</h3>
+        <h3>Kluczowe obserwacje</h3>
         <ul>
-            {% for f in content.ai_key_findings[:5] %}
+            {% for f in content.ai_key_findings %}
                 <li>{{ f }}</li>
             {% endfor %}
         </ul>
@@ -55,14 +173,12 @@
 
     {% if content.ai_quick_wins %}
         <h4>Quick Wins — Treść</h4>
-        {% for qw in content.ai_quick_wins[:3] %}
+        {% for qw in content.ai_quick_wins[:4] %}
             <div class="task-card no-break">
                 <div class="task-card-header">
                     <div class="task-card-title">{{ qw.title }}</div>
                     <div class="task-card-badges">
-                        <span class="badge {{ 'badge-danger' if qw.impact == 'high' else ('badge-warning' if qw.impact == 'medium' else 'badge-success') }}">
-                            Wpływ: {{ qw.impact | title }}
-                        </span>
+                        <span class="badge {{ 'badge-danger' if qw.impact == 'high' else ('badge-warning' if qw.impact == 'medium' else 'badge-success') }}">Wpływ: {{ qw.impact | title }}</span>
                     </div>
                 </div>
                 {% if qw.description %}<p class="task-card-desc">{{ qw.description }}</p>{% endif %}

@@ -1,0 +1,210 @@
+{% from 'macros.html' import metric_card, section_heading, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'Analiza Hierarchii Nagłówków (H1-H2)') }}
+
+    <div class="info-box">
+        <p>Nagłówki HTML (H1–H6) tworzą hierarchię treści strony widoczną zarówno dla użytkowników, jak i robotów wyszukiwarek. Prawidłowa hierarchia nagłówków to jeden z czynników rankingowych i element dostępności (accessibility). Google używa struktury nagłówków do rozumienia tematyki strony i jej sekcji.</p>
+    </div>
+
+    {% if not heading.has_data %}
+        <div class="alert alert-warning no-break">
+            <p>Brak danych o nagłówkach — analiza wymaga danych crawlu ze Screaming Frog.</p>
+        </div>
+    {% else %}
+
+    {# --- Summary metrics --- #}
+    <div class="metric-grid">
+        {{ metric_card(heading.total, 'Stron przeskanowanych') }}
+        {{ metric_card(heading.has_h1, 'Strony z H1', '#16a34a' if heading.missing_h1_count == 0 else '#ca8a04') }}
+        {{ metric_card(heading.missing_h1_count, 'Brak H1', '#dc2626' if heading.missing_h1_count > 0 else '#16a34a') }}
+        {{ metric_card(heading.dup_h1_count, 'Grupy duplikatów H1', '#ca8a04' if heading.dup_h1_count > 0 else '#16a34a') }}
+        {{ metric_card(heading.h1_equals_title_count, 'H1 = Title (identyczne)') }}
+        {{ metric_card(heading.has_h2, 'Strony z H2') }}
+    </div>
+
+    {# --- H1 best practices --- #}
+    <div class="page-break">
+        <h3>Zasady stosowania nagłówka H1</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Zasada</th>
+                    <th>Zalecenie Google</th>
+                    <th>Stan na stronie</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="td-bold">Jeden H1 na stronie</td>
+                    <td class="text-small">Dokładnie jeden nagłówek H1 per podstrona</td>
+                    <td class="td-center">
+                        {% if heading.missing_h1_count == 0 and heading.dup_h1_count == 0 %}
+                            <span class="badge badge-success">✓ OK</span>
+                        {% else %}
+                            <span class="badge badge-warning">⚠ Problemy</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="td-bold">Unikalny H1 w domenie</td>
+                    <td class="text-small">Każda strona musi mieć inny H1</td>
+                    <td class="td-center">
+                        <span class="badge {{ 'badge-success' if heading.dup_h1_count == 0 else 'badge-danger' }}">
+                            {{ '✓ OK' if heading.dup_h1_count == 0 else (heading.dup_h1_count | string ~ ' grup dup.') }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="td-bold">H1 różny od Title</td>
+                    <td class="text-small">H1 i tytuł powinny być różne, komplementarne</td>
+                    <td class="td-center">
+                        <span class="badge {{ 'badge-success' if heading.h1_equals_title_count == 0 else 'badge-warning' }}">
+                            {{ '✓ OK' if heading.h1_equals_title_count == 0 else (heading.h1_equals_title_count | string ~ ' stron') }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="td-bold">H1 nie w header/footer</td>
+                    <td class="text-small">H1 tylko w treści głównej, nie w elementach site-wide</td>
+                    <td class="td-center"><span class="badge badge-info">Sprawdź ręcznie</span></td>
+                </tr>
+                <tr>
+                    <td class="td-bold">H2 ≠ H1 (ta sama strona)</td>
+                    <td class="text-small">H2 nie powinien powtarzać treści H1</td>
+                    <td class="td-center">
+                        <span class="badge {{ 'badge-success' if heading.h1_h2_same_count == 0 else 'badge-warning' }}">
+                            {{ '✓ OK' if heading.h1_h2_same_count == 0 else (heading.h1_h2_same_count | string ~ ' stron') }}
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {# --- Missing H1 --- #}
+    {% if heading.missing_h1_pages %}
+        <div class="page-break">
+            <h3>Strony bez nagłówka H1 ({{ heading.missing_h1_count }} łącznie)</h3>
+            <div class="info-box-light">
+                <p>Brak H1 to istotny błąd SEO. Google traktuje H1 jako główny sygnał opisujący tematykę strony. Każda strona z treścią powinna mieć unikalny, opisowy nagłówek H1 zawierający główne słowo kluczowe.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:55%">URL</th>
+                        <th>Tytuł</th>
+                        <th>Słów</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in heading.missing_h1_pages %}
+                        <tr>
+                            <td class="td-url">{{ page.url }}</td>
+                            <td class="text-small">{{ page.title | truncate(40) if page.title else '—' }}</td>
+                            <td class="td-center">{{ page.word_count or 0 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- Duplicate H1 --- #}
+    {% if heading.dup_h1_examples %}
+        <div class="page-break">
+            <h3>Zduplikowane nagłówki H1 ({{ heading.dup_h1_count }} grup)</h3>
+            <div class="alert alert-critical no-break">
+                <span class="alert-title">Kanibalizacja słów kluczowych przez duplikaty H1</span>
+                <p>Wiele stron z identycznym H1 konkuruje ze sobą w wynikach wyszukiwania na te same frazy. Google nie wie, którą stronę rankingować jako "główną". Każda strona powinna mieć unikalny nagłówek H1 precyzyjnie opisujący jej treść.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:38%">Nagłówek H1 (zduplikowany)</th>
+                        <th style="width:40%">URL</th>
+                        <th>Tytuł</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ex in heading.dup_h1_examples %}
+                        <tr>
+                            <td class="text-small" style="font-style:italic;">{{ ex.h1 }}</td>
+                            <td class="td-url">{{ ex.url }}</td>
+                            <td class="text-small">{{ ex.title }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- H1 = Title --- #}
+    {% if heading.h1_equals_title_pages %}
+        <div class="page-break">
+            <h3>H1 identyczny z Title ({{ heading.h1_equals_title_count }} stron)</h3>
+            <div class="info-box-light">
+                <p>Tag &lt;title&gt; i nagłówek H1 mogą być podobne, ale powinny się uzupełniać, nie duplikować. Title pojawia się w wynikach wyszukiwania jako niebieski link, H1 jest nagłówkiem na stronie — różne miejsca, różne możliwości optymalizacji. Zalecane: Title = fraza kluczowa + brand, H1 = dłuższa, opisowa wersja tematu strony.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:45%">URL</th>
+                        <th>Identyczny Title i H1</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in heading.h1_equals_title_pages %}
+                        <tr>
+                            <td class="td-url">{{ page.url }}</td>
+                            <td class="text-small">{{ page.title }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- H2 analysis --- #}
+    {% if heading.h1_h2_same_pages %}
+        <div class="page-break">
+            <h3>H2 identyczny z H1 na tej samej stronie ({{ heading.h1_h2_same_count }} stron)</h3>
+            <div class="info-box-light">
+                <p>Nagłówek H2 nie powinien powtarzać treści H1 — to marnowanie możliwości optymalizacji na dodatkowe frazy. H2 powinny opisywać poszczególne sekcje artykułu i wprowadzać nowe słowa kluczowe.</p>
+            </div>
+            <table>
+                <thead><tr><th style="width:40%">URL</th><th>H1</th><th>H2 (identyczny)</th></tr></thead>
+                <tbody>
+                    {% for page in heading.h1_h2_same_pages %}
+                        <tr>
+                            <td class="td-url">{{ page.url }}</td>
+                            <td class="text-small">{{ page.h1 }}</td>
+                            <td class="text-small" style="color:#dc2626;">{{ page.h2 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- H2 missing on content pages --- #}
+    {% if heading.missing_h2_pages %}
+        <h3>Strony z treścią bez nagłówka H2 ({{ heading.missing_h2_count }})</h3>
+        <div class="info-box-light">
+            <p>Nagłówki H2 dzielą treść na logiczne sekcje — pomagają zarówno użytkownikom w orientacji, jak i robotom w rozumieniu struktury dokumentu. Strony powyżej 300 słów powinny mieć nagłówki H2 organizujące treść.</p>
+        </div>
+        <table>
+            <thead><tr><th style="width:55%">URL</th><th>Tytuł</th><th>Słów</th></tr></thead>
+            <tbody>
+                {% for page in heading.missing_h2_pages %}
+                    <tr>
+                        <td class="td-url">{{ page.url }}</td>
+                        <td class="text-small">{{ page.title | truncate(35) if page.title else '—' }}</td>
+                        <td class="td-center">{{ page.word_count or 0 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% endif %}{# end if has_data #}
+</div>

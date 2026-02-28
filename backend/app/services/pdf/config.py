@@ -49,7 +49,7 @@ class ReportTypeConfig:
         return sc.extended if sc else False
 
 
-def _make_section(sid: str, enabled: bool = True, max_rows: Optional[int] = None, extended: bool = False) -> SectionConfig:
+def _make_section(sid: str, enabled: bool = True, max_rows: Optional[int] = None, extended: bool = False) -> "SectionConfig":
     return SectionConfig(id=sid, enabled=enabled, max_rows=max_rows, extended=extended)
 
 
@@ -70,18 +70,25 @@ EXECUTIVE = ReportTypeConfig(
         _make_section("content", max_rows=0),
         _make_section("security", max_rows=0),
         _make_section("quick_wins", max_rows=5),
-        _make_section("roadmap_immediate"),                # only immediate actions
+        _make_section("roadmap_immediate"),                 # only immediate actions
         _make_section("benchmark"),
         # Disabled sections
         _make_section("on_page_seo", enabled=False),
         _make_section("internal_links", enabled=False),
         _make_section("lighthouse_detail", enabled=False),
         _make_section("accessibility", enabled=False),
+        _make_section("heading_analysis", enabled=False),
+        _make_section("url_structure", enabled=False),
+        _make_section("redirect_analysis", enabled=False),
+        _make_section("structured_data", enabled=False),
+        _make_section("robots_sitemap", enabled=False),
         _make_section("keywords", enabled=False),
         _make_section("position_changes", enabled=False),
         _make_section("organic_competitors", enabled=False),
         _make_section("backlinks", enabled=False),
         _make_section("ai_overviews", enabled=False),
+        _make_section("cannibalization", enabled=False),
+        _make_section("anchor_text", enabled=False),
         _make_section("ux_mobile", enabled=False),
         _make_section("tech_stack", enabled=False),
         _make_section("ai_insights", enabled=False),
@@ -100,7 +107,7 @@ STANDARD = ReportTypeConfig(
     name="standard",
     label_pl="Standard Report",
     description_pl="Kompletny raport dla zespołów marketingowych. Pełna analiza techniczna, wydajność, widoczność i strategia AI.",
-    estimated_pages="50–80",
+    estimated_pages="60–100",
     color="#1e3a5f",
     sections=[
         _make_section("cover"),
@@ -108,16 +115,17 @@ STANDARD = ReportTypeConfig(
         _make_section("executive_summary"),
         _make_section("technical_overview"),
         _make_section("on_page_seo", max_rows=50),
+        _make_section("heading_analysis"),
         _make_section("internal_links", max_rows=50),
         _make_section("performance"),
-        _make_section("lighthouse_detail", max_rows=10),   # top 10 opportunities
+        _make_section("lighthouse_detail", max_rows=15),
         _make_section("accessibility"),
         _make_section("visibility_overview"),
         _make_section("keywords", max_rows=50),
-        _make_section("position_changes", max_rows=20),
+        _make_section("position_changes", max_rows=25),
         _make_section("organic_competitors"),
         _make_section("backlinks", max_rows=50),
-        _make_section("ai_overviews", max_rows=20),
+        _make_section("ai_overviews", max_rows=25),
         _make_section("content"),
         _make_section("ux_mobile"),
         _make_section("security"),
@@ -128,10 +136,17 @@ STANDARD = ReportTypeConfig(
         _make_section("roadmap_full"),
         _make_section("execution_plan", max_rows=30),
         _make_section("benchmark"),
-        _make_section("appendix_pages", max_rows=50),
+        _make_section("appendix_pages", max_rows=100),
         _make_section("appendix_images", enabled=False),
         _make_section("appendix_keywords", max_rows=100),
         _make_section("appendix_backlinks", max_rows=50),
+        # Disabled in standard
+        _make_section("url_structure", enabled=False),
+        _make_section("redirect_analysis", enabled=False),
+        _make_section("structured_data", enabled=False),
+        _make_section("robots_sitemap", enabled=False),
+        _make_section("cannibalization", enabled=False),
+        _make_section("anchor_text", enabled=False),
     ],
 )
 
@@ -139,39 +154,52 @@ STANDARD = ReportTypeConfig(
 FULL = ReportTypeConfig(
     name="full",
     label_pl="Full Audit Report",
-    description_pl="Pełny raport techniczny. Wszystkie dane surowe, kompletne tabele keywords i backlinks, pełny execution plan.",
-    estimated_pages="80–150+",
+    description_pl="Pełny raport techniczny. Wszystkie dane surowe, kompletna analiza techniczna, SEO, widoczność i strategia AI.",
+    estimated_pages="120–250+",
     color="#1a0533",
     sections=[
         _make_section("cover"),
         _make_section("toc"),
         _make_section("executive_summary"),
+        # Technical SEO - full
         _make_section("technical_overview"),
-        _make_section("on_page_seo", extended=True),       # includes raw SF tabs
+        _make_section("on_page_seo", extended=True),
+        _make_section("heading_analysis", extended=True),
+        _make_section("url_structure"),
+        _make_section("redirect_analysis"),
+        _make_section("structured_data"),
+        _make_section("robots_sitemap"),
         _make_section("internal_links", extended=True),
+        # Performance - full
         _make_section("performance", extended=True),
-        _make_section("lighthouse_detail", extended=True), # opportunities + diagnostics + passed
+        _make_section("lighthouse_detail", extended=True),
         _make_section("accessibility", extended=True),
+        # Visibility - full (unlimited rows)
         _make_section("visibility_overview", extended=True),
-        _make_section("keywords", max_rows=200, extended=True),
-        _make_section("position_changes", max_rows=50, extended=True),
+        _make_section("keywords", max_rows=500, extended=True),
+        _make_section("position_changes", max_rows=100, extended=True),
         _make_section("organic_competitors", extended=True),
-        _make_section("backlinks", max_rows=200, extended=True),
-        _make_section("ai_overviews", max_rows=50, extended=True),
+        _make_section("backlinks", max_rows=500, extended=True),
+        _make_section("ai_overviews", max_rows=100, extended=True),
+        _make_section("cannibalization"),
+        _make_section("anchor_text"),
+        # Content & UX - full
         _make_section("content", extended=True),
         _make_section("ux_mobile", extended=True),
         _make_section("security", extended=True),
         _make_section("tech_stack", extended=True),
+        # AI Strategy - full
         _make_section("ai_insights", extended=True),
         _make_section("cross_tool"),
         _make_section("quick_wins"),
         _make_section("roadmap_full"),
-        _make_section("execution_plan", extended=True),    # includes fix_data
+        _make_section("execution_plan", extended=True),
         _make_section("benchmark"),
-        _make_section("appendix_pages"),                   # all pages
-        _make_section("appendix_images", max_rows=100),
-        _make_section("appendix_keywords", max_rows=200),
-        _make_section("appendix_backlinks", max_rows=100),
+        # Appendices - all data
+        _make_section("appendix_pages"),                    # all pages (no max_rows)
+        _make_section("appendix_images"),                   # all images
+        _make_section("appendix_keywords"),                 # all keywords
+        _make_section("appendix_backlinks"),                # all backlinks
     ],
 )
 

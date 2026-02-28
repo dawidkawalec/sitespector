@@ -1,0 +1,124 @@
+{% from 'macros.html' import metric_card, section_heading, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'Dystrybucja Anchor Text (Backlinks)') }}
+
+    <div class="info-box">
+        <p>Anchor text (tekst kotwicy) linków przychodzących jest silnym sygnałem dla Google o tematyce linkowanej strony. Naturalny profil linków powinien zawierać mix: linki brandowe (nazwą marki), linki exact match (dokładne frazy kluczowe), naked URL (sam adres) i generic ("kliknij tutaj"). Zdominowanie przez exact match anchor to sygnał manipulacji linkami — ryzyko kary Google Penguin.</p>
+    </div>
+
+    {% if not anchor.has_data %}
+        <div class="alert alert-warning no-break">
+            <p>Brak danych o anchor text — analiza wymaga danych z Senuto lub Google Search Console. Upewnij się, że audyt Senuto został przeprowadzony.</p>
+        </div>
+    {% else %}
+
+    <div class="metric-grid">
+        {{ metric_card(anchor.total_anchors, 'Unikalnych anchor textów') }}
+        {{ metric_card(anchor.total_links, 'Linków łącznie') }}
+        {{ metric_card(anchor.distribution.branded.pct | string ~ '%', 'Branded anchors', '#16a34a' if anchor.distribution.branded.pct > 20 else '#ca8a04') }}
+        {{ metric_card(anchor.distribution.exact_match.pct | string ~ '%', 'Exact match anchors', '#ca8a04' if anchor.distribution.exact_match.pct > 30 else '#16a34a') }}
+        {{ metric_card(anchor.distribution.generic.pct | string ~ '%', 'Generic anchors') }}
+        {{ metric_card(anchor.distribution.naked_url.pct | string ~ '%', 'Naked URL anchors') }}
+    </div>
+
+    {# --- Distribution analysis --- #}
+    <h3>Analiza dystrybucji anchor text</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Typ anchor text</th>
+                <th>Liczba</th>
+                <th>Udział %</th>
+                <th>Idealny zakres</th>
+                <th>Ocena</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="td-bold">Branded (nazwa marki)</td>
+                <td class="td-center">{{ anchor.distribution.branded.count }}</td>
+                <td class="td-center td-bold">{{ anchor.distribution.branded.pct }}%</td>
+                <td class="td-center text-small text-muted">40–60%</td>
+                <td class="td-center">
+                    {% set bp = anchor.distribution.branded.pct %}
+                    <span class="badge {{ 'badge-success' if 30 <= bp <= 65 else ('badge-warning' if 20 <= bp < 30 or bp > 65 else 'badge-danger') }}">
+                        {{ 'Dobry' if 30 <= bp <= 65 else ('Zbyt mało' if bp < 30 else 'Zbyt dużo') }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="td-bold">Exact Match (fraza kluczowa)</td>
+                <td class="td-center">{{ anchor.distribution.exact_match.count }}</td>
+                <td class="td-center td-bold">{{ anchor.distribution.exact_match.pct }}%</td>
+                <td class="td-center text-small text-muted">5–20%</td>
+                <td class="td-center">
+                    {% set ep = anchor.distribution.exact_match.pct %}
+                    <span class="badge {{ 'badge-success' if 5 <= ep <= 20 else ('badge-warning' if ep < 5 else 'badge-danger') }}">
+                        {{ 'Dobry' if 5 <= ep <= 20 else ('Za mało' if ep < 5 else '⚠ Ryzyko Penguin') }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="td-bold">Naked URL (sam adres)</td>
+                <td class="td-center">{{ anchor.distribution.naked_url.count }}</td>
+                <td class="td-center td-bold">{{ anchor.distribution.naked_url.pct }}%</td>
+                <td class="td-center text-small text-muted">10–30%</td>
+                <td class="td-center">
+                    {% set np = anchor.distribution.naked_url.pct %}
+                    <span class="badge {{ 'badge-success' if 5 <= np <= 35 else 'badge-warning' }}">{{ 'Dobry' if 5 <= np <= 35 else 'Poza zakresem' }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="td-bold">Generic ("kliknij tutaj" itp.)</td>
+                <td class="td-center">{{ anchor.distribution.generic.count }}</td>
+                <td class="td-center td-bold">{{ anchor.distribution.generic.pct }}%</td>
+                <td class="td-center text-small text-muted">5–15%</td>
+                <td class="td-center">
+                    {% set gp = anchor.distribution.generic.pct %}
+                    <span class="badge {{ 'badge-success' if gp <= 20 else 'badge-warning' }}">{{ 'Dobry' if gp <= 20 else 'Za dużo' }}</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    {# --- Over-optimized warning --- #}
+    {% if anchor.distribution.exact_match.pct > 30 %}
+        <div class="alert alert-critical no-break">
+            <span class="alert-title">Ryzyko Google Penguin — zbyt wysoki udział exact match anchors ({{ anchor.distribution.exact_match.pct }}%)</span>
+            <p>Profil linków zdominowany przez exact match anchors wygląda nienaturalnie i może skutkować ręczną karą Google. Zalecane: dywersyfikacja anchor textów przez uzyskiwanie linków brandowych, naked URL i długoogonowych fraz.</p>
+        </div>
+    {% endif %}
+
+    {# --- Top anchors table --- #}
+    {% if anchor.top_anchors %}
+        <div class="page-break">
+            <h3>TOP {{ anchor.top_anchors | length }} najczęstszych anchor textów</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:45%">Anchor text</th>
+                        <th>Typ</th>
+                        <th>Linków</th>
+                        <th>Domen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in anchor.top_anchors %}
+                        <tr>
+                            <td class="text-small">{{ item.anchor }}</td>
+                            <td class="td-center">
+                                {% set type_labels = {'branded': ('Branded', 'badge-success'), 'exact_match': ('Exact Match', 'badge-warning'), 'naked_url': ('Naked URL', 'badge-info'), 'generic': ('Generic', 'badge-gray')} %}
+                                {% set label_cls = type_labels.get(item.type, ('Other', 'badge-gray')) %}
+                                <span class="badge {{ label_cls[1] }}">{{ label_cls[0] }}</span>
+                            </td>
+                            <td class="td-center td-bold">{{ item.count }}</td>
+                            <td class="td-center">{{ item.domains or '—' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {% endif %}{# end has_data #}
+</div>

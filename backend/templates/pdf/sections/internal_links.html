@@ -1,59 +1,179 @@
-{% from '../macros.html' import metric_card, section_heading, kv_row, alert %}
+{% from 'macros.html' import metric_card, section_heading, kv_row, alert %}
 <div class="section">
     {{ section_heading(sec_num, 'Linkowanie Wewnętrzne') }}
+
+    <div class="info-box">
+        <p>Linkowanie wewnętrzne jest jednym z narzędzi do sterowania tym, jak Google dystrybuuje autorytet (PageRank) między podstronami domeny. Strony z wieloma linkami wewnętrznymi ("inlinks") są traktowane jako ważniejsze. Strony bez linków wewnętrznych ("orphan pages") mogą być pomijane przez crawlery. Anchor text linków wewnętrznych to silny sygnał o tematyce linkowanej strony.</p>
+    </div>
 
     <div class="metric-grid">
         {{ metric_card(links.internal_count, 'Linki wewnętrzne') }}
         {{ metric_card(links.external_count, 'Linki zewnętrzne') }}
         {{ metric_card(links.broken_count, 'Uszkodzone linki', '#dc2626' if links.broken_count > 0 else '#16a34a') }}
-        {{ metric_card(links.redirect_count, 'Przekierowania') }}
+        {{ metric_card(links.redirect_count, 'Przekierowania wewn.', '#ca8a04' if links.redirect_count > 5 else '#16a34a') }}
+        {{ metric_card(links.orphan_count, 'Orphan pages (≤1 inlink)', '#ca8a04' if links.orphan_count > 0 else '#16a34a') }}
     </div>
 
+    {# --- Broken links alert --- #}
     {% if links.broken_count > 0 %}
         <div class="alert alert-critical no-break">
-            <span class="alert-title">Wykryto {{ links.broken_count }} uszkodzonych linków (404)</span>
-            <p>Uszkodzone linki negatywnie wpływają na crawlowalność i UX. Zalecana natychmiastowa naprawa.</p>
+            <span class="alert-title">Wykryto {{ links.broken_count }} uszkodzonych linków wewnętrznych (404)</span>
+            <p>Uszkodzone linki wewnętrzne marnują crawl budget i przerywają przekazywanie autorytetu. Każdy 404 z linku wewnętrznego powinien być naprawiony lub przekierowany (301) do powiązanej strony.</p>
         </div>
     {% else %}
         <div class="alert alert-success no-break">
-            <p>Brak uszkodzonych linków wewnętrznych. ✓</p>
+            <p>✓ Brak uszkodzonych linków wewnętrznych. Dobry stan struktury linków.</p>
         </div>
     {% endif %}
 
-    <div class="two-col">
-        <div>
-            <h3>Struktura linkowania</h3>
+    {# --- Internal redirect alert --- #}
+    {% if links.redirect_count > 0 %}
+        <div class="alert alert-warning no-break">
+            <span class="alert-title">{{ links.redirect_count }} wewnętrznych linków prowadzi przez przekierowania</span>
+            <p>Linki wewnętrzne przechodzące przez przekierowania 301/302 marnują crawl budget i osłabiają przekazywanie autorytetu. Zaktualizuj linki wewnętrzne tak, by prowadziły bezpośrednio do docelowego URL.</p>
+        </div>
+    {% endif %}
+
+    {# --- Inlinks distribution --- #}
+    {% if links.inlinks_buckets %}
+        <div class="page-break">
+            <h3>Rozkład inlinks (linków przychodzących wewnętrznych) per strona</h3>
+            <div class="info-box-light">
+                <p>Im więcej linków wewnętrznych prowadzi do strony, tym większy autorytet jej nadajesz. Strony z 0-1 inlinkami są "słabo połączone" z resztą domeny i mogą mieć problem z pozycjonowaniem nawet przy dobrej treści.</p>
+            </div>
             <table>
-                {{ kv_row('Linki wewnętrzne', links.internal_count) }}
-                {{ kv_row('Linki zewnętrzne', links.external_count) }}
-                {{ kv_row('Uszkodzone (404)', links.broken_count) }}
-                {{ kv_row('Przekierowania', links.redirect_count) }}
+                <thead>
+                    <tr>
+                        <th>Liczba inlinks</th>
+                        <th>Liczba stron</th>
+                        <th>Ocena i zalecenie</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="td-bold">0 inlinks (orphan)</td>
+                        <td class="td-center" style="color:#dc2626;font-weight:bold;">{{ links.inlinks_buckets.get('0', 0) }}</td>
+                        <td class="text-small" style="color:#dc2626;">Strony niedostępne dla crawlerów — dodaj linki z menu lub innych stron</td>
+                    </tr>
+                    <tr>
+                        <td class="td-bold">1 inlink</td>
+                        <td class="td-center" style="color:#ca8a04;font-weight:bold;">{{ links.inlinks_buckets.get('1', 0) }}</td>
+                        <td class="text-small" style="color:#ca8a04;">Bardzo słabo połączone — rozważ dodanie linków z powiązanych artykułów</td>
+                    </tr>
+                    <tr>
+                        <td class="td-bold">2–5 inlinks</td>
+                        <td class="td-center">{{ links.inlinks_buckets.get('2-5', 0) }}</td>
+                        <td class="text-small">Minimalne linkowanie — poprawa wskazana dla ważnych stron</td>
+                    </tr>
+                    <tr>
+                        <td class="td-bold">6–20 inlinks</td>
+                        <td class="td-center" style="color:#16a34a;">{{ links.inlinks_buckets.get('6-20', 0) }}</td>
+                        <td class="text-small" style="color:#16a34a;">Dobre linkowanie wewnętrzne</td>
+                    </tr>
+                    <tr>
+                        <td class="td-bold">21+ inlinks</td>
+                        <td class="td-center" style="color:#16a34a;font-weight:bold;">{{ links.inlinks_buckets.get('21+', 0) }}</td>
+                        <td class="text-small" style="color:#16a34a;">Silne strony — wysoki autorytet wewnętrzny</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
-        <div>
-            <h3>AI Insights</h3>
-            {% if links.ai_findings %}
-                <ul class="list-clean">
-                    {% for finding in links.ai_findings[:5] %}
-                        <li>→ {{ finding }}</li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="text-muted text-small">Brak danych AI dla tej sekcji.</p>
-            {% endif %}
-        </div>
-    </div>
+    {% endif %}
 
-    {% if links.pages_sample %}
-        <h3>Strony z problemami linkowania (próba)</h3>
+    {# --- Top linked pages --- #}
+    {% if links.top_linked_pages %}
+        <h3>Strony z największą liczbą linków wewnętrznych (hub pages)</h3>
+        <div class="info-box-light">
+            <p>Strony z dużą liczbą inlinks to "centra" domeny. Google nadaje im największy autorytet. Sprawdź, czy to Twoje najważniejsze strony docelowe (usługi, produkty, kategorie).</p>
+        </div>
         <table>
             <thead>
                 <tr>
                     <th style="width:55%">URL</th>
-                    <th>Kod</th>
+                    <th>Tytuł</th>
+                    <th>Inlinks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in links.top_linked_pages %}
+                    <tr>
+                        <td class="td-url">{{ page.url }}</td>
+                        <td class="text-small">{{ page.title }}</td>
+                        <td class="td-center" style="color:#16a34a;font-weight:bold;">{{ page.inlinks }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# --- Orphan pages --- #}
+    {% if links.orphan_pages %}
+        <div class="page-break">
+            <h3>Strony "orphan" — bez lub z 1 linkiem wewnętrznym ({{ links.orphan_count }} łącznie)</h3>
+            <div class="info-box-light">
+                <p>Strony bez linków wewnętrznych mogą nie być crawlowane przez Google, nawet jeśli są w sitemap.xml. Priorytetowo dodaj linki wewnętrzne do stron, które mają dobry potencjał rankingowy (ważne usługi, artykuły z ruchem).</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:60%">URL</th>
+                        <th>Tytuł</th>
+                        <th>Inlinks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in links.orphan_pages %}
+                        <tr>
+                            <td class="td-url">{{ page.url }}</td>
+                            <td class="text-small">{{ page.title }}</td>
+                            <td class="td-center" style="color:#dc2626;font-weight:bold;">{{ page.inlinks }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- Redirect pages --- #}
+    {% if links.redirect_pages %}
+        <div class="page-break">
+            <h3>Linki wewnętrzne przez przekierowania ({{ links.redirect_pages | length }})</h3>
+            <div class="info-box-light">
+                <p>Każde przekierowanie 301/302 to strata ok. 10–15% autorytetu linku i marnowanie crawl budget. Zaktualizuj linki wewnętrzne do bezpośrednich URL.</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:35%">URL (przekierowany)</th>
+                        <th>Kod</th>
+                        <th>Inlinks</th>
+                        <th style="width:35%">Docelowy URL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in links.redirect_pages %}
+                        <tr>
+                            <td class="td-url">{{ page.url }}</td>
+                            <td class="td-center"><span class="badge badge-warning">{{ page.status }}</span></td>
+                            <td class="td-center">{{ page.inlinks }}</td>
+                            <td class="td-url text-muted" style="font-size:7pt;">{{ page.redirect_url }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {# --- Problem pages sample --- #}
+    {% if links.pages_sample %}
+        <h3>Strony z problemami statusu HTTP (próba)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:55%">URL</th>
+                    <th>Kod HTTP</th>
                     <th>Inlinks</th>
                     <th>Outlinks</th>
-                    <th>Ext. Outlinks</th>
                 </tr>
             </thead>
             <tbody>
@@ -67,19 +187,29 @@
                         </td>
                         <td class="td-center">{{ page.inlinks or 0 }}</td>
                         <td class="td-center">{{ page.outlinks or 0 }}</td>
-                        <td class="td-center">{{ page.external_outlinks or 0 }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% endif %}
 
-    {% if links.ai_recommendations %}
-        <h3>Rekomendacje AI</h3>
-        <ul>
-            {% for rec in links.ai_recommendations[:6] %}
-                <li>{{ rec }}</li>
-            {% endfor %}
-        </ul>
+    {# --- AI insights --- #}
+    {% if links.ai_findings or links.ai_recommendations %}
+        <h3>Analiza AI — Linkowanie wewnętrzne</h3>
+        {% if links.ai_findings %}
+            <ul>
+                {% for finding in links.ai_findings %}
+                    <li>{{ finding }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if links.ai_recommendations %}
+            <h4>Rekomendacje</h4>
+            <ul>
+                {% for rec in links.ai_recommendations %}
+                    <li>{{ rec }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     {% endif %}
 </div>
