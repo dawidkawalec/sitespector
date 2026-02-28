@@ -296,7 +296,7 @@
     {% endif %}
 
     {# Raw SF tabs (Full report only) #}
-    {% if onpage.sf_tabs_data and extended %}
+    {% if onpage.sf_tabs_data and extended and onpage.sf_tabs_data.get('titles') %}
         <div class="page-break">
             <h3>Surowe dane Screaming Frog — Tytuły</h3>
             <table>
@@ -309,7 +309,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for row in onpage.sf_tabs_data.titles[:100] %}
+                    {% for row in onpage.sf_tabs_data.get('titles', [])[:100] %}
                         <tr>
                             <td class="td-url">{{ row.get('Address', row.get('url', '')) | truncate(60) }}</td>
                             <td class="text-small">{{ row.get('Title 1', row.get('title', '')) | truncate(50) }}</td>

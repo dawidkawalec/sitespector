@@ -430,12 +430,25 @@ async def generate_pdf(
             seasonality = vis_data["vis"].get("seasonality")
             if seasonality and isinstance(seasonality, dict):
                 months = list(seasonality.keys())
-                vals = list(seasonality.values())
-                if months and vals:
+                raw_vals = list(seasonality.values())
+                # values may be numbers or dicts like {"visibility": 123, ...}
+                def _extract_num(v) -> float:
+                    if isinstance(v, (int, float)):
+                        return float(v)
+                    if isinstance(v, dict):
+                        for key in ("visibility", "keywords", "value", "count"):
+                            if key in v:
+                                try:
+                                    return float(v[key])
+                                except (TypeError, ValueError):
+                                    pass
+                    return 0.0
+                vals = [_extract_num(v) for v in raw_vals]
+                if months and any(v > 0 for v in vals):
                     chart_seasonality = _safe_chart(
                         line_chart,
                         months,
-                        [{"label": "Widoczność", "values": [float(v) for v in vals], "color": "#3b82f6"}],
+                        [{"label": "Widoczność", "values": vals, "color": "#3b82f6"}],
                         title="Sezonowość widoczności",
                         filled=True,
                     )
