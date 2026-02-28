@@ -192,7 +192,7 @@ def _build_toc(cfg: ReportTypeConfig, skipped: List[Dict]) -> List[Dict]:
             sec_num += 1
 
         if items:
-            toc_parts.append({"label": part["label"], "items": items})
+            toc_parts.append({"label": part["label"], "entries": items})
 
     return toc_parts
 
@@ -282,7 +282,7 @@ async def generate_pdf(
 
     # TOC
     toc_parts = _build_toc(cfg, skipped_sections)
-    toc_sec_count = sum(len(p["items"]) for p in toc_parts)
+    toc_sec_count = sum(len(p["entries"]) for p in toc_parts)
     toc_tmpl = _jinja_env.get_template("sections/toc.html")
     sections_html.append(toc_tmpl.render(
         toc_parts=toc_parts,

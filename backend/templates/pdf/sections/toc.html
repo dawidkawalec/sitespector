@@ -5,7 +5,7 @@
         {% for part in toc_parts %}
             <div class="toc-part">
                 <div class="toc-part-label">{{ part.label }}</div>
-                {% for item in part.items %}
+                {% for item in part.entries %}
                     <div class="toc-item">
                         <span><span class="toc-num">{{ item.num }}.</span> {{ item.title }}</span>
                         <span class="toc-dots"></span>
