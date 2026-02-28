@@ -15,7 +15,7 @@ export function AgentSelector({
   disabled?: boolean
 }) {
   return (
-    <Select value={value ?? undefined} onValueChange={onChange} disabled={disabled}>
+    <Select value={value ?? ""} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="h-8">
         <SelectValue placeholder="Wybierz agenta" />
       </SelectTrigger>

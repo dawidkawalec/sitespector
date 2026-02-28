@@ -84,7 +84,7 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
     enabled: !!currentAudit?.url && !!currentWorkspace?.id,
   })
 
-  const [comparisonId, setComparisonId] = useState<string | null>(null)
+  const [comparisonId, setComparisonId] = useState<string>("")
   const audits = history || []
 
   // Set default comparison audit (the one before current)
@@ -164,7 +164,7 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
         {audits.length > 1 && (
           <div className="flex items-center gap-3 bg-accent/30 p-2 rounded-lg border">
             <span className="text-xs font-medium text-muted-foreground">Porównaj z:</span>
-            <Select value={comparisonId || ""} onValueChange={setComparisonId}>
+            <Select value={comparisonId} onValueChange={setComparisonId}>
               <SelectTrigger className="w-[220px] h-9 text-xs bg-white dark:bg-gray-950">
                 <SelectValue placeholder="Wybierz audyt..." />
               </SelectTrigger>

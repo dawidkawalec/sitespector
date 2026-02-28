@@ -58,7 +58,7 @@ export default function ClientReportPage({ params }: { params: { id: string } })
   const [showAI, setShowAI] = useState(true)
   const [showQuickWins, setShowQuickWins] = useState(true)
   const [showComparison, setShowComparison] = useState(false)
-  const [comparisonId, setComparisonId] = useState<string | null>(null)
+  const [comparisonId, setComparisonId] = useState<string>("")
   const [customNote, setCustomNote] = useState('')
 
   const { currentWorkspace } = useWorkspace()
@@ -177,7 +177,7 @@ export default function ClientReportPage({ params }: { params: { id: string } })
               {showComparison && (
                 <div className="space-y-2 pt-2">
                   <Label className="text-[10px] uppercase font-bold text-muted-foreground">Wybierz audyt do porównania</Label>
-                  <Select value={comparisonId || ""} onValueChange={setComparisonId}>
+                  <Select value={comparisonId} onValueChange={setComparisonId}>
                     <SelectTrigger className="w-full h-9 text-xs">
                       <SelectValue placeholder="Wybierz poprzedni audyt..." />
                     </SelectTrigger>
