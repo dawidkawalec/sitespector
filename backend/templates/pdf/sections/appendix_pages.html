@@ -21,7 +21,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for page in app.pages %}
+            {% for page in app.pages[:100] %}
                 <tr>
                     <td class="td-url">{{ page.url | truncate(70) }}</td>
                     <td class="td-center">

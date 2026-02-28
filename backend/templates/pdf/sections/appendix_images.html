@@ -19,7 +19,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for img in app_img.images %}
+            {% for img in app_img.images[:100] %}
                 <tr>
                     <td class="td-url">{{ img.url | truncate(60) }}</td>
                     <td style="font-size: 7.5pt;">

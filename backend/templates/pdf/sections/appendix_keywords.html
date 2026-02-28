@@ -20,7 +20,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for kw in app_kw.keywords %}
+            {% for kw in app_kw.keywords[:100] %}
                 <tr>
                     <td style="font-size: 8pt;">{{ kw.keyword | truncate(45) }}</td>
                     <td class="td-center td-bold" style="color: {{ '#16a34a' if kw.position <= 3 else ('#3b82f6' if kw.position <= 10 else '#64748b') }};">

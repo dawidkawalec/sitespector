@@ -18,35 +18,71 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 20) -> Dict[str, Any]:
         cannibalization = as_list(cannibalization_raw)
 
     # Normalize wins/losses: need keyword, position_before, position_after, change
-    def _normalize_changes(items, direction="win"):
-        result = []
-        for item in items[:max_rows]:
+    def _normalize_changes(items):
+        wins_list = []
+        losses_list = []
+        new_list = []
+        lost_list = []
+        
+        for item in items:
             kw = item.get("keyword", "")
-            pos_now = safe_int(item.get("position") or item.get("position_after"))
-            pos_before = safe_int(item.get("position_before"))
-            if pos_before and pos_now:
+            if not kw:
+                continue
+                
+            # Senuto often nests position data in 'statistics'
+            stats = item.get("statistics") or {}
+            
+            pos_now = safe_int(item.get("position") or item.get("position_after") or stats.get("position"))
+            pos_before = safe_int(item.get("position_before") or stats.get("position_before"))
+            
+            # If both are 0 or missing, skip
+            if not pos_now and not pos_before:
+                continue
+                
+            # Change can be explicit or calculated
+            change = safe_int(item.get("change") or item.get("position_change") or stats.get("position_change"))
+            if not change and pos_before and pos_now:
                 change = abs(pos_before - pos_now)
-            else:
-                change = safe_int(item.get("change") or item.get("position_change"))
-            result.append({
+                
+            entry = {
                 "keyword": kw,
                 "position_before": pos_before or "—",
-                "position_after": pos_now,
-                "change": change,
-            })
-        return result
+                "position_after": pos_now or "—",
+                "change": change or 0,
+            }
+            
+            # Categorize
+            if pos_before == 0 and pos_now > 0:
+                new_list.append(entry)
+            elif pos_before > 0 and pos_now == 0:
+                lost_list.append(entry)
+            elif pos_before > 0 and pos_now > 0:
+                if pos_now < pos_before: # Position number is smaller = rank is higher = win
+                    wins_list.append(entry)
+                elif pos_now > pos_before: # Position number is larger = rank is lower = loss
+                    losses_list.append(entry)
+                    
+        return {
+            "wins": sorted(wins_list, key=lambda x: -safe_int(x["change"]))[:max_rows],
+            "losses": sorted(losses_list, key=lambda x: -safe_int(x["change"]))[:max_rows],
+            "new": sorted(new_list, key=lambda x: safe_int(x["position_after"]))[:max_rows], # Sort new by best position
+            "lost": sorted(lost_list, key=lambda x: safe_int(x["position_before"]))[:max_rows], # Sort lost by best previous position
+        }
 
-    top_wins = _normalize_changes(sorted(wins, key=lambda x: -safe_int(x.get("change") or x.get("position_change", 0)))[:max_rows])
-    top_losses = _normalize_changes(sorted(losses, key=lambda x: -safe_int(x.get("change") or x.get("position_change", 0)))[:max_rows])
+    # Process all items together to categorize them properly
+    all_items = wins + losses
+    categorized = _normalize_changes(all_items)
 
     return {
         "changes": {
-            "wins_count": safe_int(meta.get("wins_count") or len(wins)),
-            "losses_count": safe_int(meta.get("losses_count") or len(losses)),
-            "new_keywords_count": 0,
-            "lost_keywords_count": 0,
-            "top_wins": top_wins,
-            "top_losses": top_losses,
+            "wins_count": safe_int(meta.get("wins_count") or len(categorized["wins"])),
+            "losses_count": safe_int(meta.get("losses_count") or len(categorized["losses"])),
+            "new_keywords_count": len(categorized["new"]),
+            "lost_keywords_count": len(categorized["lost"]),
+            "top_wins": categorized["wins"],
+            "top_losses": categorized["losses"],
+            "new_keywords": categorized["new"],
+            "lost_keywords": categorized["lost"],
             "cannibalization": cannibalization[:20],
         }
     }

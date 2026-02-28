@@ -52,7 +52,7 @@ Odpowiedź w formacie JSON:
     "tasks": [
         {
             "title": "Krótki tytuł zadania",
-            "description": "Szczegółowa instrukcja krok po kroku",
+            "description": "BARDZO KRÓTKA instrukcja (max 1-2 zdania, do 150 znaków).",
             "category": "technical",
             "priority": "high|medium|low",
             "impact": "high|medium|low",
@@ -220,7 +220,7 @@ Odpowiedź w formacie JSON:
     "tasks": [
         {
             "title": "Krótki tytuł zadania",
-            "description": "Szczegółowa instrukcja techniczna",
+            "description": "BARDZO KRÓTKA instrukcja (max 1-2 zdania, do 150 znaków).",
             "category": "technical",
             "priority": "critical|high|medium|low",
             "impact": "high|medium|low",
@@ -385,7 +385,7 @@ Odpowiedź w formacie JSON:
     "tasks": [
         {
             "title": "Krótki tytuł zadania",
-            "description": "Strategia targetowania słowa kluczowego + konkretne akcje",
+            "description": "BARDZO KRÓTKA instrukcja (max 1-2 zdania, do 150 znaków).",
             "category": "content",
             "priority": "high|medium|low",
             "impact": "high|medium|low",
@@ -515,7 +515,7 @@ Odpowiedź w JSON:
     "tasks": [
         {
             "title": "Krótki tytuł",
-            "description": "Konkretna instrukcja rewrite contentu",
+            "description": "BARDZO KRÓTKA instrukcja (max 1-2 zdania, do 150 znaków).",
             "category": "content",
             "priority": "high|medium|low",
             "impact": "high|medium|low",
@@ -604,7 +604,7 @@ JSON format:
     "tasks": [
         {
             "title": "Krótki tytuł",
-            "description": "Konkretne instrukcje linkowania",
+            "description": "BARDZO KRÓTKA instrukcja (max 1-2 zdania, do 150 znaków).",
             "category": "offsite|technical",
             "priority": "high|medium|low",
             "impact": "high|medium|low",
@@ -684,7 +684,7 @@ JSON format:
     "tasks": [
         {
             "title": "Krótki tytuł",
-            "description": "Instrukcje optymalizacji",
+            "description": "BARDZO KRÓTKA instrukcja (max 1-2 zdania, do 150 znaków).",
             "category": "technical",
             "priority": "medium|low",
             "impact": "medium|low",
@@ -758,7 +758,7 @@ JSON format:
     "tasks": [
         {
             "title": "Krótki tytuł",
-            "description": "Instrukcje poprawy UX",
+            "description": "BARDZO KRÓTKA instrukcja (max 1-2 zdania, do 150 znaków).",
             "category": "ux",
             "priority": "medium|low",
             "impact": "medium|high",
@@ -827,7 +827,7 @@ JSON format:
     "tasks": [
         {
             "title": "Krótki tytuł",
-            "description": "Instrukcje poprawy security",
+            "description": "BARDZO KRÓTKA instrukcja (max 1-2 zdania, do 150 znaków).",
             "category": "security",
             "priority": "critical|high",
             "impact": "high",

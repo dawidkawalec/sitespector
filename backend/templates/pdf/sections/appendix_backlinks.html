@@ -18,7 +18,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for bl in app_bl.backlinks %}
+            {% for bl in app_bl.backlinks[:100] %}
                 <tr>
                     <td class="td-url">{{ bl.url | truncate(50) }}</td>
                     <td style="font-size: 7.5pt;">{{ bl.domain | truncate(30) if bl.domain else '—' }}</td>
