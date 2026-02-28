@@ -153,7 +153,7 @@ async def get_admin_stats(db: AsyncSession = Depends(get_db)):
     avg_duration_result = await db.execute(
         text(
             "SELECT AVG(EXTRACT(EPOCH FROM (completed_at - started_at)) / 60) "
-            "FROM audits WHERE status = 'completed' AND started_at IS NOT NULL AND completed_at IS NOT NULL"
+            "FROM audits WHERE status = 'COMPLETED' AND started_at IS NOT NULL AND completed_at IS NOT NULL"
         )
     )
     avg_duration_min = avg_duration_result.scalar()
@@ -733,7 +733,7 @@ async def list_admin_audits(
     # Avg processing time
     duration_q = text(
         "SELECT AVG(EXTRACT(EPOCH FROM (completed_at - started_at)) / 60) "
-        "FROM audits WHERE status = 'completed' AND started_at IS NOT NULL AND completed_at IS NOT NULL"
+        "FROM audits WHERE status = 'COMPLETED' AND started_at IS NOT NULL AND completed_at IS NOT NULL"
     )
     duration_result = await db.execute(duration_q)
     avg_duration = duration_result.scalar()

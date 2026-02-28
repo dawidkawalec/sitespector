@@ -1549,8 +1549,30 @@ Additionally, `retrieve_context()` called `embed_query()` without any error hand
 - Context docs: `.context7/decisions/DECISIONS_LOG.md`
 
 ---
-
-**Last Updated**: 2026-02-25  
-**Resolved Bugs**: 39 (incl. BUG-041 baseline data reset)  
-**Known Issues**: 1  
-**Watching**: 2
+  
+  ## BUG-042: Admin Stats 500 Error (Enum Case Mismatch)
+  
+  **Date**: 2026-02-25  
+  **Severity**: High  
+  **Status**: RESOLVED
+  
+  **Symptom**:
+  - `/api/admin/stats` returned 500 Internal Server Error.
+  - Frontend `/admin` dashboard showed empty data and React minified errors.
+  
+  **Root Cause**:
+  - Raw SQL query for `avg_processing_minutes` in `admin.py` used `status = 'completed'`.
+  - PostgreSQL `auditstatus` enum values are uppercase (`COMPLETED`).
+  - `asyncpg` threw `InvalidTextRepresentationError: invalid input value for enum auditstatus: "completed"`.
+  
+  **Fix**:
+  - Updated raw SQL queries in `admin.py` to use `status = 'COMPLETED'`.
+  
+  **Files Changed**: `backend/app/routers/admin.py`
+  
+  ---
+  
+  **Last Updated**: 2026-02-25  
+  **Resolved Bugs**: 40 (incl. BUG-042 enum case mismatch)  
+  **Known Issues**: 1  
+  **Watching**: 2
