@@ -1,14 +1,14 @@
 """Data extractor for Keywords section."""
 
 from typing import Any, Dict
-from ..utils import safe_int, safe_float
+from ..utils import safe_int, safe_float, as_list
 
 
 def extract(audit_data: Dict[str, Any], max_rows: int = 50) -> Dict[str, Any]:
     results = audit_data.get("results") or {}
     senuto = results.get("senuto") or {}
     vis = senuto.get("visibility") or {}
-    positions = vis.get("positions") or []
+    positions = as_list(vis.get("positions"))
 
     # Sort by volume desc, then position asc
     sorted_positions = sorted(

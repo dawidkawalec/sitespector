@@ -1,7 +1,7 @@
 """Data extractor for AI Overviews section."""
 
 from typing import Any, Dict
-from ..utils import safe_float, safe_int
+from ..utils import safe_float, safe_int, as_list
 
 
 def extract(audit_data: Dict[str, Any], max_rows: int = 30) -> Dict[str, Any]:
@@ -10,7 +10,7 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 30) -> Dict[str, Any]:
     vis = senuto.get("visibility") or {}
     aio = vis.get("ai_overviews") or {}
     aio_stats = aio.get("statistics") or {}
-    aio_keywords = aio.get("keywords") or []
+    aio_keywords = as_list(aio.get("keywords"))
     ai_contexts = results.get("ai_contexts") or {}
     aio_ai = ai_contexts.get("ai_overviews") or {}
 

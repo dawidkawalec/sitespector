@@ -1,11 +1,12 @@
 """Data extractor for Quick Wins section."""
 
 from typing import Any, Dict, List
+from ..utils import as_list
 
 
 def extract(audit_data: Dict[str, Any], max_rows: int = 24) -> Dict[str, Any]:
     results = audit_data.get("results") or {}
-    quick_wins: List[Dict] = results.get("quick_wins") or []
+    quick_wins: List[Dict] = as_list(results.get("quick_wins"))
 
     # Cap
     quick_wins = quick_wins[:max_rows]

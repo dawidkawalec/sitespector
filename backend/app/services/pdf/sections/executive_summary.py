@@ -1,7 +1,7 @@
 """Data extractor for Executive Summary section."""
 
 from typing import Any, Dict, Optional
-from ..utils import safe_get, safe_float, safe_int, health_label_pl, health_color, fmt_ms
+from ..utils import safe_get, safe_float, safe_int, health_label_pl, health_color, fmt_ms, as_list
 
 
 def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -53,12 +53,10 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
         or ""
     )
 
-    strengths = exec_summary.get("strengths") or []
-    critical_issues = exec_summary.get("critical_issues") or []
-    top_recommendations = (
-        exec_summary.get("next_steps")
-        or exec_summary.get("recommendations")
-        or []
+    strengths = as_list(exec_summary.get("strengths"))
+    critical_issues = as_list(exec_summary.get("critical_issues"))
+    top_recommendations = as_list(
+        exec_summary.get("next_steps") or exec_summary.get("recommendations")
     )
     growth_potential = exec_summary.get("growth_potential") or exec_summary.get("estimated_impact") or ""
 

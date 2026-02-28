@@ -1,7 +1,7 @@
 """Data extractor for Position Changes section."""
 
 from typing import Any, Dict
-from ..utils import safe_int
+from ..utils import safe_int, as_list
 
 
 def extract(audit_data: Dict[str, Any], max_rows: int = 20) -> Dict[str, Any]:
@@ -9,11 +9,13 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 20) -> Dict[str, Any]:
     senuto = results.get("senuto") or {}
     vis = senuto.get("visibility") or {}
     meta = senuto.get("_meta") or {}
-    wins = vis.get("wins") or []
-    losses = vis.get("losses") or []
-    cannibalization = vis.get("cannibalization") or []
-    if isinstance(cannibalization, dict):
-        cannibalization = cannibalization.get("keywords") or cannibalization.get("data") or []
+    wins = as_list(vis.get("wins"))
+    losses = as_list(vis.get("losses"))
+    cannibalization_raw = vis.get("cannibalization")
+    if isinstance(cannibalization_raw, dict):
+        cannibalization = as_list(cannibalization_raw.get("keywords") or cannibalization_raw.get("data"))
+    else:
+        cannibalization = as_list(cannibalization_raw)
 
     # Normalize wins/losses: need keyword, position_before, position_after, change
     def _normalize_changes(items, direction="win"):

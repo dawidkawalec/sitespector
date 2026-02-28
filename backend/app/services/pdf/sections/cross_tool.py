@@ -1,6 +1,7 @@
 """Data extractor for Cross-Tool Analysis section."""
 
 from typing import Any, Dict
+from ..utils import as_list
 
 
 def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -9,9 +10,9 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
 
     return {
         "ct": {
-            "correlations": ct.get("correlations") or [],
-            "synergies": ct.get("synergies") or [],
-            "conflicts": ct.get("conflicts") or [],
-            "unified_recommendations": ct.get("unified_recommendations") or [],
+            "correlations": as_list(ct.get("correlations")),
+            "synergies": as_list(ct.get("synergies")),
+            "conflicts": as_list(ct.get("conflicts")),
+            "unified_recommendations": as_list(ct.get("unified_recommendations")),
         }
     }

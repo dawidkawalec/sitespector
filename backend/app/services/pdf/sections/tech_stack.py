@@ -7,7 +7,8 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     results = audit_data.get("results") or {}
     ts = results.get("tech_stack") or {}
 
-    technologies = ts.get("technologies") or []
+    from ..utils import as_list
+    technologies = as_list(ts.get("technologies"))
     # Normalize to list of {name, category, version}
     normalized_techs = []
     for t in technologies:

@@ -1,7 +1,7 @@
 """Data extractor for Backlinks section."""
 
 from typing import Any, Dict
-from ..utils import safe_float, safe_int
+from ..utils import safe_float, safe_int, as_list
 
 
 def extract(audit_data: Dict[str, Any], max_rows: int = 50) -> Dict[str, Any]:
@@ -24,7 +24,7 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 50) -> Dict[str, Any]:
     nofollow_pct = (nofollow_count / total_backlinks * 100) if total_backlinks else 0
 
     # Anchors
-    anchors_raw = bl_data.get("anchors") or []
+    anchors_raw = as_list(bl_data.get("anchors"))
     top_anchors = []
     for a in anchors_raw[:20]:
         if isinstance(a, dict):
@@ -34,7 +34,7 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 50) -> Dict[str, Any]:
             })
 
     # Ref domains
-    ref_domains_list = bl_data.get("ref_domains") or []
+    ref_domains_list = as_list(bl_data.get("ref_domains"))
     top_ref_domains = ref_domains_list[:max_rows]
 
     return {

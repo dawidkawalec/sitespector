@@ -165,6 +165,13 @@ def safe_get(data: Dict, *keys, default=None) -> Any:
     return current
 
 
+def as_list(v, default=None) -> list:
+    """Ensure value is a list. Returns [] (or default) if not a list."""
+    if isinstance(v, list):
+        return v
+    return default if default is not None else []
+
+
 def safe_int(v, default: int = 0) -> int:
     try:
         return int(v or 0)

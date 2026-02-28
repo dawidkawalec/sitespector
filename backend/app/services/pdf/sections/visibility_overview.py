@@ -1,7 +1,7 @@
 """Data extractor for Visibility Overview section."""
 
 from typing import Any, Dict
-from ..utils import safe_float, safe_int, safe_get
+from ..utils import safe_float, safe_int, safe_get, as_list
 
 
 def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -16,13 +16,13 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     aio_stats = aio.get("statistics") or {}
 
     # Position distribution (top3, top10, top50)
-    positions = vis.get("positions") or []
+    positions = as_list(vis.get("positions"))
     top3_count = sum(1 for p in positions if safe_int(p.get("position")) <= 3)
     top10_count = sum(1 for p in positions if safe_int(p.get("position")) <= 10)
     top50_count = len(positions)
 
     # Sections
-    sections_urls = vis.get("sections_urls") or vis.get("sections") or []
+    sections_urls = as_list(vis.get("sections_urls") or vis.get("sections"))
 
     # Seasonality data for chart
     seasonality = vis.get("seasonality") or {}
