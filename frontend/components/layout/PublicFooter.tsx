@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useState } from 'react'
 import { RiSearchEyeFill, RiSendPlane2Line } from 'react-icons/ri'
 
@@ -86,13 +85,13 @@ export function PublicFooter() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
-            <Link
+            <a
               href="/"
               className="mb-4 flex items-center gap-2 text-xl font-bold tracking-tight text-white"
             >
               <RiSearchEyeFill size={28} className="text-[#ff8945]" />
               SiteSpector
-            </Link>
+            </a>
             <p className="mt-4 text-sm text-white/80">
               Profesjonalna platforma do audytów SEO i optymalizacji stron
               internetowych.
@@ -144,12 +143,12 @@ export function PublicFooter() {
               <ul className="space-y-3">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    <Link
+                    <a
                       href={link.link}
                       className="text-sm text-white/80 transition-colors hover:text-white"
                     >
                       {link.label}
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>

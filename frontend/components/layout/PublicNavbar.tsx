@@ -222,20 +222,20 @@ export function PublicNavbar() {
       className="public-navbar-bg sticky top-0 z-50 w-full border-b border-[#0b363d]/10 backdrop-blur supports-[backdrop-filter]:bg-[#fff9f5]/80"
     >
       <nav className="container relative mx-auto flex h-16 items-center justify-between px-4">
-        <Link
+        <a
           href="/"
           onClick={() => closeAll()}
           className="public-navbar-logo flex items-center gap-2 text-xl font-bold tracking-tight text-[#0b363d]"
         >
           <RiSearchEyeFill size={28} className="text-[#ff8945]" />
           SiteSpector
-        </Link>
+        </a>
 
         {/* Desktop nav (mega menu) */}
         <div className="hidden items-center gap-8 lg:flex">
           <ul className="flex items-center gap-2">
             <li>
-              <Link
+              <a
                 href="/"
                 onClick={() => closeAll()}
                 className={`rounded-md px-3 py-2 text-sm font-medium text-[#0b363d] transition-colors hover:text-[#ff8945] ${
@@ -243,7 +243,7 @@ export function PublicNavbar() {
                 }`}
               >
                 Start
-              </Link>
+              </a>
             </li>
 
             {panels.map((panel) => (
@@ -270,7 +270,7 @@ export function PublicNavbar() {
             ))}
 
             <li>
-              <Link
+              <a
                 href="/cennik"
                 onClick={() => closeAll()}
                 className={`rounded-md px-3 py-2 text-sm font-medium text-[#0b363d] transition-colors hover:text-[#ff8945] ${
@@ -278,7 +278,7 @@ export function PublicNavbar() {
                 }`}
               >
                 Cennik
-              </Link>
+              </a>
             </li>
           </ul>
 
@@ -318,7 +318,7 @@ export function PublicNavbar() {
                   {panel.items.map((item) => {
                     const Icon = item.icon
                     return (
-                      <Link
+                      <a
                         key={item.href}
                         href={item.href}
                         onClick={() => closeAll()}
@@ -355,21 +355,21 @@ export function PublicNavbar() {
           </SheetTrigger>
           <SheetContent side="right" className="w-[280px] border-[#0b363d]/12 bg-[#fff9f5]">
             <div className="flex flex-col gap-6 pt-8">
-              <Link
+              <a
                 href="/"
                 onClick={() => closeAll()}
                 className="public-navbar-link text-base font-medium text-[#0b363d] transition-colors hover:text-[#ff8945]"
               >
                 Start
-              </Link>
+              </a>
 
-              <Link
+              <a
                 href="/cennik"
                 onClick={() => closeAll()}
                 className="public-navbar-link text-base font-medium text-[#0b363d] transition-colors hover:text-[#ff8945]"
               >
                 Cennik
-              </Link>
+              </a>
 
               <div className="flex flex-col gap-3">
                 {panels.map((panel) => (
@@ -387,14 +387,14 @@ export function PublicNavbar() {
                       <div className="border-t border-[#0b363d]/10 px-4 py-2">
                         <div className="flex flex-col">
                           {panel.items.map((item) => (
-                            <Link
+                            <a
                               key={item.href}
                               href={item.href}
                               onClick={() => closeAll()}
                               className="rounded-lg px-2 py-2 text-sm font-medium text-[#0b363d]/80 transition hover:bg-[#ff8945]/10 hover:text-[#0b363d]"
                             >
                               {item.label}
-                            </Link>
+                            </a>
                           ))}
                         </div>
                       </div>

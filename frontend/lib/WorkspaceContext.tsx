@@ -44,7 +44,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      console.log('🔍 Current user ID:', user?.id)
       
       if (!user) {
         setWorkspaces([])
@@ -59,9 +58,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         .select('workspace_id, role')
         .eq('user_id', user.id)
 
-      console.log('📋 User memberships:', members)
-      console.log('📋 Memberships error:', membersError)
-
       if (membersError) {
         console.error('Error fetching workspace members:', membersError)
         setError(membersError.message || 'Failed to fetch workspace memberships')
@@ -73,8 +69,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         console.warn('⚠️ No workspace memberships found for user:', user.id)
         
         // Try to create a personal workspace as fallback
-        console.log('🔧 Attempting to create personal workspace...')
-        
         const { data: profile } = await supabase
           .from('profiles')
           .select('full_name')
@@ -104,8 +98,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           return
         }
         
-        console.log('✅ Created new workspace:', newWorkspace)
-        
         // Add user as owner
         await supabase.from('workspace_members').insert({
           workspace_id: newWorkspace.id,
@@ -122,7 +114,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           audits_used_this_month: 0
         })
         
-        console.log('✅ Workspace setup complete, retrying fetch...')
         // Retry fetching workspaces
         await fetchWorkspaces()
         return
@@ -134,9 +125,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         .from('workspaces')
         .select('id, name, slug, type, owner_id')
         .in('id', workspaceIds)
-
-      console.log('🏢 Workspaces found:', workspaces)
-      console.log('🏢 Workspaces error:', workspacesError)
 
       if (workspacesError) {
         console.error('Error fetching workspaces:', workspacesError)
@@ -167,14 +155,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         }
       })
 
-      console.log('✅ Final workspace list:', workspaceList)
       setWorkspaces(workspaceList)
 
       // Set current workspace from localStorage or default to first
       const savedWorkspaceId = localStorage.getItem('currentWorkspaceId')
       const workspace = workspaceList.find(w => w.id === savedWorkspaceId) || workspaceList[0]
       setCurrentWorkspace(workspace || null)
-      console.log('✅ Current workspace set to:', workspace)
 
     } catch (error: any) {
       console.error('❌ Unexpected error fetching workspaces:', error)

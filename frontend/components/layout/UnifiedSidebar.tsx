@@ -497,14 +497,14 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link
+                <a
                   href="/"
                   onClick={onAction}
                   className="flex items-center justify-center h-8 w-8 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors shrink-0"
                   aria-label="Strona główna"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                </Link>
+                </a>
               </TooltipTrigger>
               <TooltipContent side="right" className="bg-[#0b363d] border-white/10">
                 <p>Strona główna</p>
