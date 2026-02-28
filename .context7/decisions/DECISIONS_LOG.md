@@ -838,6 +838,17 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 
 ---
 
-**Last Updated**: 2026-02-25
-**Total Decisions**: 42 accepted
+**Last Updated**: 2026-02-28
+**Total Decisions**: 43 accepted
+
+---
+
+## ADR-043: Hydration Mismatch Fix for Persisted Zustand Stores (2026-02-28)
+
+- **Decision**: Use the `mounted` state pattern for all components consuming state from Zustand stores with `persist` middleware (e.g., `useChatStore`).
+- **Rationale**: Persisted stores read from `localStorage` synchronously on the client. During SSR, `localStorage` is unavailable, so the server renders the default state. If the persisted state differs from the default, React throws a hydration error (#418, #423). Delaying rendering until the component is mounted on the client ensures that the first render matches the hydrated state.
+- **Implementation**:
+  - Added `const [mounted, setMounted] = useState(false)` and `useEffect(() => setMounted(true), [])` to `ChatPanel.tsx` and `ChatToggleButton.tsx`.
+  - Components return `null` if `!mounted`.
+- **Outcome**: Eliminated React hydration errors in production console.
 **Review**: Update when making significant architectural changes.

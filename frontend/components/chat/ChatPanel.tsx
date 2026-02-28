@@ -28,6 +28,9 @@ import { ChatUsageBadge } from './ChatUsageBadge'
 type ExportFormat = 'md' | 'txt' | 'csv'
 
 export function ChatPanel() {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
   const { currentWorkspace } = useWorkspace()
   const workspaceId = currentWorkspace?.id ?? null
 
@@ -449,6 +452,8 @@ export function ChatPanel() {
   const isBusy = isStreaming && streamingConversationId === activeConversationId
   const limitReached =
     usage && usage.limit !== null ? usage.messages_sent >= (usage.limit ?? 0) : false
+
+  if (!mounted) return null
 
   return (
     <div

@@ -1572,7 +1572,38 @@ Additionally, `retrieve_context()` called `embed_query()` without any error hand
   
   ---
   
-  **Last Updated**: 2026-02-25  
-  **Resolved Bugs**: 40 (incl. BUG-042 enum case mismatch)  
+  **Last Updated**: 2026-02-28  
+  **Resolved Bugs**: 41 (incl. BUG-043 hydration errors)  
   **Known Issues**: 1  
   **Watching**: 2
+
+---
+
+### BUG-043: React Hydration Errors (#418, #423) in Chat components
+
+**Reported**: 2026-02-28
+
+**Status**: ✅ FIXED (2026-02-28)
+
+**Severity**: MEDIUM
+
+**Description**:
+- Production console showed `Minified React error #418` and `#423`.
+- These are hydration mismatch errors where the server-rendered HTML differs from the first client-side render.
+
+**Root cause**:
+- `useChatStore` uses Zustand's `persist` middleware, which reads from `localStorage`.
+- During SSR, `localStorage` is unavailable, so the store uses default values (e.g., `isPanelOpen: true`).
+- On the client, the store immediately hydrates from `localStorage` (e.g., `isPanelOpen: false`).
+- React detects this difference between the server HTML and client state, causing a hydration failure.
+
+**Fix**:
+- Implemented the `mounted` state pattern in `ChatPanel.tsx` and `ChatToggleButton.tsx`.
+- Components now return `null` during the first render (SSR and first client pass) and only render after `useEffect` sets `mounted: true`.
+- This ensures the component only renders once the persisted state is stable on the client.
+
+**Files Changed**:
+- `frontend/components/chat/ChatPanel.tsx`
+- `frontend/components/chat/ChatToggleButton.tsx`
+
+**Related**: Zustand Persist middleware documentation.

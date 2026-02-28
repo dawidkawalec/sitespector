@@ -111,4 +111,4 @@ docker compose build frontend && docker compose up -d frontend
 
 ---
 
-**Last updated**: 2026-02-25
+**Last updated**: 2026-02-28
