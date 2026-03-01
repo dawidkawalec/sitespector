@@ -1629,3 +1629,41 @@ Replaced all instances of `{% from '../macros.html' import ... %}` with `{% from
 
 **Files Changed**:
 - `backend/templates/pdf/sections/*.html` (all 29 section templates)
+
+---
+
+### BUG-045: PDF Report Bloat and Logic Errors
+
+**Reported**: 2026-02-28
+
+**Status**: ✅ FIXED (2026-02-28)
+
+**Severity**: HIGH
+
+**Description**:
+- Generated PDF reports were excessively long (e.g., 136 pages) due to unfiltered data and lacking row limits in appendix tables.
+- The "Zmiany Pozycji" (Position Changes) section showed confusing "0 -> 0" changes.
+- Tables for Competitors, AI Overviews, and Backlinks often contained empty columns ("---") due to incorrect data mapping from the Senuto API.
+- AI Insights were repetitive and lacked specific context.
+- The PDF design looked outdated and "heavy".
+
+**Root cause**:
+- Missing hard limits (`[:100]`) in Jinja2 templates for appendix loops.
+- `position_changes.py` extractor didn't correctly categorize keywords moving in/out of TOP50 (0 position).
+- Extractors (`organic_competitors.py`, `ai_overviews.py`, `backlinks.py`) used incorrect field names for Senuto's nested API responses.
+- AI prompts lacked explicit instructions to avoid repeating previous findings and to keep task descriptions concise.
+- CSS styles used heavy borders and outdated typography.
+
+**Fix**:
+- **Data & Logic**: Refactored `position_changes.py` to correctly identify "New" (0->X) and "Lost" (X->0) keywords. Updated other extractors with `normalized_*` functions to correctly map nested Senuto data.
+- **Templates**: Added `[:100]` limits to all `appendix_*.html` templates. Added conditional rendering (`{% if %}`) to hide empty tables/sections.
+- **AI**: Updated prompts in `ai_analysis.py` and `ai_execution_plan.py` to be more concise (max 150 chars for tasks) and implemented a `previous_findings` injection mechanism in `worker.py` to prevent repetitive insights.
+- **Design**: Updated `styles.py` to use the 'Inter' font, removed vertical table borders, and modernized metric cards and alerts.
+
+**Files Changed**:
+- `backend/app/services/pdf/styles.py`
+- `backend/app/services/pdf/sections/*.py`
+- `backend/templates/pdf/sections/*.html`
+- `backend/app/services/ai_analysis.py`
+- `backend/app/services/ai_execution_plan.py`
+- `backend/worker.py`

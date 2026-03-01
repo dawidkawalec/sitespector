@@ -176,11 +176,11 @@ FULL = ReportTypeConfig(
         _make_section("accessibility", extended=True),
         # Visibility - full (unlimited rows)
         _make_section("visibility_overview", extended=True),
-        _make_section("keywords", max_rows=500, extended=True),
-        _make_section("position_changes", max_rows=100, extended=True),
+        _make_section("keywords", max_rows=100, extended=True),
+        _make_section("position_changes", max_rows=30, extended=True),
         _make_section("organic_competitors", extended=True),
-        _make_section("backlinks", max_rows=500, extended=True),
-        _make_section("ai_overviews", max_rows=100, extended=True),
+        _make_section("backlinks", max_rows=100, extended=True),
+        _make_section("ai_overviews", max_rows=30, extended=True),
         _make_section("cannibalization"),
         _make_section("anchor_text"),
         # Content & UX - full
@@ -196,10 +196,10 @@ FULL = ReportTypeConfig(
         _make_section("execution_plan", extended=True),
         _make_section("benchmark"),
         # Appendices - all data
-        _make_section("appendix_pages"),                    # all pages (no max_rows)
-        _make_section("appendix_images"),                   # all images
-        _make_section("appendix_keywords"),                 # all keywords
-        _make_section("appendix_backlinks"),                # all backlinks
+        _make_section("appendix_pages", max_rows=100),                    # all pages (no max_rows)
+        _make_section("appendix_images", max_rows=100),                   # all images
+        _make_section("appendix_keywords", max_rows=100),                 # all keywords
+        _make_section("appendix_backlinks", max_rows=100),                # all backlinks
     ],
 )
 

@@ -929,6 +929,12 @@ async def analyze_seo_context(
     title = crawl.get("title", "")
     meta_desc = crawl.get("meta_description", "")
     
+    # Extract sample URLs with issues
+    all_pages = crawl.get("all_pages", [])
+    broken_urls = [p.get("url") for p in all_pages if p.get("status_code", 0) >= 400][:5]
+    noindex_urls = [p.get("url") for p in all_pages if "noindex" in p.get("meta_robots", "").lower()][:5]
+    missing_canonical_urls = [p.get("url") for p in all_pages if not p.get("canonical") and p.get("status_code") == 200][:5]
+    
     lh_desktop = lighthouse.get("desktop", {})
     seo_score = lh_desktop.get("seo_score", 0)
     
@@ -938,7 +944,14 @@ async def analyze_seo_context(
     top50 = senuto_vis.get("statistics", {}).get("statistics", {}).get("top50", 0)
     
     system_prompt = """Jesteś ekspertem SEO. Na podstawie danych ze Screaming Frog, Lighthouse i Senuto 
-    przygotuj kontekstową analizę SEO. Odpowiedz w JSON:
+    przygotuj kontekstową analizę SEO. 
+    
+    ZASADY:
+    1. Każda rekomendacja MUSI odwoływać się do konkretnego URL-a lub elementu strony jeśli jest dostępny.
+    2. Nie powtarzaj ogólnych stwierdzeń typu "zoptymalizuj obrazy" - napisz które konkretnie.
+    3. Nie powtarzaj wniosków z innych sekcji jeśli masz do nich wgląd.
+    
+    Odpowiedz w JSON:
     {
         "key_findings": ["finding1", "finding2", ...],
         "recommendations": ["rec1", "rec2", ...],
@@ -947,7 +960,7 @@ async def analyze_seo_context(
     }"""
     
     user_prompt = f"""Dane SEO do analizy:
-    - Stron: {pages_count}, Błędy 404: {broken_links}, Brak canonical: {missing_canonical}, Noindex: {noindex}
+    - Stron: {pages_count}, Błędy 404: {broken_links} (przykłady: {broken_urls}), Brak canonical: {missing_canonical} (przykłady: {missing_canonical_urls}), Noindex: {noindex} (przykłady: {noindex_urls})
     - Title: {title[:100]}, Meta: {meta_desc[:100]}
     - LH SEO Score: {seo_score}
     - Senuto: TOP3={top3}, TOP10={top10}, TOP50={top50}
@@ -978,8 +991,18 @@ async def analyze_performance_context(
     """
     logger.info("Analyzing performance context")
     
+    # Extract LCP element if available
+    lcp_element = lighthouse_desktop.get("lcp_element") or lighthouse_mobile.get("lcp_element") or "Nieznany"
+    
     system_prompt = """Jesteś ekspertem wydajności stron (Web Performance). Porównaj Desktop i Mobile 
-    i podaj wnioski. Odpowiedz w JSON:
+    i podaj wnioski. 
+    
+    ZASADY:
+    1. Każda rekomendacja MUSI odwoływać się do konkretnego URL-a lub elementu strony.
+    2. Zamiast "zoptymalizuj obrazy" napisz które konkretnie (np. obraz LCP).
+    3. Nie powtarzaj wniosków z innych sekcji.
+    
+    Odpowiedz w JSON:
     {
         "key_findings": ["..."],
         "recommendations": ["..."],
@@ -990,6 +1013,7 @@ async def analyze_performance_context(
     
     user_prompt = f"""Desktop: perf={lighthouse_desktop.get('performance_score', 0)}, FCP={lighthouse_desktop.get('fcp', 0)}ms, LCP={lighthouse_desktop.get('lcp', 0)}ms, CLS={lighthouse_desktop.get('cls', 0)}, TBT={lighthouse_desktop.get('tbt', 0)}ms, TTFB={lighthouse_desktop.get('ttfb', 0)}ms
     Mobile: perf={lighthouse_mobile.get('performance_score', 0)}, FCP={lighthouse_mobile.get('fcp', 0)}ms, LCP={lighthouse_mobile.get('lcp', 0)}ms, CLS={lighthouse_mobile.get('cls', 0)}, TBT={lighthouse_mobile.get('tbt', 0)}ms, TTFB={lighthouse_mobile.get('ttfb', 0)}ms
+    LCP Element: {lcp_element}
     Crawl: pages={crawl.get('pages_crawled', 0)}, avg_load_time={crawl.get('average_response_time', 'N/A')}
     
     Max 5 key_findings, 5 recommendations, 3 quick_wins."""
@@ -1059,7 +1083,13 @@ async def analyze_visibility_context(
     canonical_aio_avg_pos = aio_stats.get("aio_avg_pos", 0)
     
     system_prompt = """Jesteś ekspertem widoczności SEO. Na podstawie danych Senuto przygotuj strategię 
-    widoczności. Odpowiedz w JSON:
+    widoczności. 
+    
+    ZASADY:
+    1. Każda rekomendacja MUSI odwoływać się do konkretnej frazy lub URL-a.
+    2. Nie powtarzaj ogólnych wniosków o wydajności (LCP itp.) - skup się na widoczności i słowach kluczowych.
+    
+    Odpowiedz w JSON:
     {
         "key_findings": ["..."],
         "recommendations": ["..."],
@@ -1144,6 +1174,11 @@ async def analyze_ai_overviews_context(
     )
 
     system_prompt = """Jesteś ekspertem SEO AI Overviews. Przeanalizuj obecność domeny w AIO i podaj strategię.
+    
+    ZASADY:
+    1. Każda rekomendacja MUSI odwoływać się do konkretnej frazy widocznej w AIO lub URL-a.
+    2. Skup się na optymalizacji treści pod "Direct Answers" dla botów AI.
+    
     Odpowiedz w JSON:
     {
         "key_findings": ["..."],

@@ -17,12 +17,29 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
 
     # Position distribution (top3, top10, top50)
     positions = as_list(vis.get("positions"))
-    top3_count = sum(1 for p in positions if safe_int(p.get("position")) <= 3)
-    top10_count = sum(1 for p in positions if safe_int(p.get("position")) <= 10)
-    top50_count = len(positions)
+    top3_count = 0
+    top10_count = 0
+    top50_count = 0
+    
+    for p in positions:
+        stats = p.get("statistics") or {}
+        pos = safe_int(p.get("position") or stats.get("position"))
+        if pos > 0:
+            top50_count += 1
+            if pos <= 3:
+                top3_count += 1
+            if pos <= 10:
+                top10_count += 1
 
     # Sections
-    sections_urls = as_list(vis.get("sections_urls") or vis.get("sections"))
+    sections_raw = as_list(vis.get("sections_urls") or vis.get("sections"))
+    normalized_sections = []
+    for sec in sections_raw:
+        normalized_sections.append({
+            "section": sec.get("section") or sec.get("path") or sec.get("url") or "—",
+            "keywords_count": safe_int(sec.get("keywords_count") or sec.get("keywords_top10") or sec.get("count")),
+            "estimated_traffic": safe_int(sec.get("estimated_traffic") or sec.get("traffic")),
+        })
 
     # Seasonality data for chart
     seasonality = vis.get("seasonality") or {}
@@ -42,7 +59,7 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
             "ai_summary": vis_ai.get("summary") or "",
             "ai_key_findings": vis_ai.get("key_findings") or [],
             "keyword_opportunities": vis_ai.get("keyword_opportunities") or [],
-            "sections": sections_urls[:20],
+            "sections": normalized_sections[:20],
             "seasonality": seasonality,
             "positions_raw": positions,
         }

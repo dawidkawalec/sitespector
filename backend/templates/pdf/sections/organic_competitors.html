@@ -21,17 +21,21 @@
             </thead>
             <tbody>
                 {% for comp in org_comp.competitors %}
+                    {% if comp.common_keywords or comp.visibility or comp.top3 or comp.top10 or comp.domain_rank %}
                     <tr>
                         <td class="td-bold">{{ comp.domain | truncate(30) }}</td>
                         <td class="td-center">{{ comp.common_keywords | int if comp.common_keywords else '—' }}</td>
                         <td class="td-center">{{ comp.visibility | round(1) if comp.visibility else '—' }}</td>
-                        <td class="td-center">{{ comp.top3 | int if comp.top3 is defined else '—' }}</td>
-                        <td class="td-center">{{ comp.top10 | int if comp.top10 is defined else '—' }}</td>
+                        <td class="td-center">{{ comp.top3 | int if comp.top3 is defined and comp.top3 is not none else '—' }}</td>
+                        <td class="td-center">{{ comp.top10 | int if comp.top10 is defined and comp.top10 is not none else '—' }}</td>
                         <td class="td-center">{{ comp.domain_rank | int if comp.domain_rank else '—' }}</td>
                     </tr>
+                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>
+    {% else %}
+        <p class="text-muted text-small">Brak danych o konkurencji dla tej domeny.</p>
     {% endif %}
 
     {% if org_comp.ai_opportunities %}

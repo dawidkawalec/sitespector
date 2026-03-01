@@ -35,7 +35,13 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 50) -> Dict[str, Any]:
 
     # Ref domains
     ref_domains_list = as_list(bl_data.get("ref_domains"))
-    top_ref_domains = ref_domains_list[:max_rows]
+    normalized_ref_domains = []
+    for rd in ref_domains_list:
+        normalized_ref_domains.append({
+            "domain": rd.get("domain") or rd.get("domain_name") or rd.get("ref_domain") or "—",
+            "backlinks_count": safe_int(rd.get("backlinks_count") or rd.get("count") or 1),
+        })
+    top_ref_domains = normalized_ref_domains[:max_rows]
 
     return {
         "bl": {

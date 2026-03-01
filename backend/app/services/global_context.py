@@ -113,14 +113,30 @@ def build_global_snapshot(
 def format_global_snapshot_for_prompt(snapshot: Optional[Dict[str, Any]]) -> str:
     if not snapshot:
         return ""
+    
+    # Extract and remove previous findings to keep the main snapshot clean
+    previous_findings = snapshot.pop("previous_findings", [])
+    
     # Ensure ASCII-only output for prompts.
     blob = json.dumps(snapshot, ensure_ascii=True, separators=(",", ":"), sort_keys=True)
-    return (
+    
+    prompt = (
         "GLOBAL_SNAPSHOT (canonical, cross-module facts; do not contradict):\n"
         f"{blob}\n\n"
+    )
+    
+    if previous_findings:
+        prompt += (
+            "PREVIOUS_FINDINGS (already mentioned in other sections; do not repeat these unless necessary for context):\n"
+            f"{json.dumps(previous_findings, ensure_ascii=True)}\n\n"
+        )
+        
+    prompt += (
         "Rules:\n"
         "- If you do not have data for a topic, say \"brak danych\" (do not guess).\n"
         "- If module-local numbers conflict with GLOBAL_SNAPSHOT, treat GLOBAL_SNAPSHOT as canonical and mention a potential mismatch.\n"
         "- Do not claim \"brak AIO\" when GLOBAL_SNAPSHOT.ai_overviews.has_aio=true.\n"
+        "- IMPORTANT: Do not repeat findings from PREVIOUS_FINDINGS. Focus on new insights for this specific section.\n"
     )
+    return prompt
 

@@ -366,8 +366,27 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 extra={"phase": "ai_contexts"},
             )
             
+            # Helper to call AI with sequential context to avoid duplication
+            ai_contexts = {}
+            
+            async def _call_sequentially(name, func, *args, **kwargs):
+                # Add existing findings to global snapshot to avoid repetition
+                current_findings = []
+                for ctx in ai_contexts.values():
+                    current_findings.extend(ctx.get("key_findings", []))
+                
+                if kwargs.get("global_snapshot"):
+                    kwargs["global_snapshot"]["previous_findings"] = current_findings[:20]
+                
+                res = await func(*args, **kwargs)
+                ai_contexts[name] = res
+
+            # Some can still be parallel if they are very different areas, 
+            # but let's do main ones in a way that they see each other
+            await _call_sequentially("seo", ai_analysis.analyze_seo_context, crawl_data, lighthouse_data, senuto_data, global_snapshot=global_snapshot)
+            
+            # Now run others in parallel but with SEO findings in context
             context_tasks = {
-                "seo": ai_analysis.analyze_seo_context(crawl_data, lighthouse_data, senuto_data, global_snapshot=global_snapshot),
                 "performance": ai_analysis.analyze_performance_context(
                     lighthouse_data.get("desktop", {}),
                     lighthouse_data.get("mobile", {}),
@@ -418,7 +437,6 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 return_exceptions=True
             )
             
-            ai_contexts = {}
             for name, res in zip(ctx_names, ctx_results):
                 if isinstance(res, Exception):
                     logger.error(f"Context AI {name} failed: {res}")

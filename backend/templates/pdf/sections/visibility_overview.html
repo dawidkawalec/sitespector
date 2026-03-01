@@ -83,9 +83,9 @@
             <tbody>
                 {% for sec in vis.sections[:10] %}
                     <tr>
-                        <td class="td-url">{{ sec.get('section', sec.get('path', '')) | truncate(50) }}</td>
-                        <td class="td-center">{{ sec.get('keywords_count', sec.get('keywords_top10', 0)) }}</td>
-                        <td class="td-center">{{ sec.get('estimated_traffic', 0) | int }}</td>
+                        <td class="td-url">{{ sec.section | truncate(50) }}</td>
+                        <td class="td-center">{{ sec.keywords_count }}</td>
+                        <td class="td-center">{{ sec.estimated_traffic | int }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

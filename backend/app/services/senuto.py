@@ -388,6 +388,15 @@ class SenutoClient:
             len(sections_urls),
         )
 
+        # DEBUG: Log sample records to verify field names for PDF extractors
+        if wins: logger.debug("DEBUG_SENUTO: Sample win: %s", wins[0])
+        if losses: logger.debug("DEBUG_SENUTO: Sample loss: %s", losses[0])
+        if competitors: logger.debug("DEBUG_SENUTO: Sample competitor: %s", competitors[0])
+        if aio_keywords: logger.debug("DEBUG_SENUTO: Sample AIO keyword: %s", aio_keywords[0])
+        if backlinks_ref_domains: logger.debug("DEBUG_SENUTO: Sample ref domain: %s", backlinks_ref_domains[0])
+        if sections_urls: logger.debug("DEBUG_SENUTO: Sample section URL: %s", sections_urls[0])
+        if positions_data: logger.debug("DEBUG_SENUTO: Sample position: %s", positions_data[0])
+
         return {
             "country_id": country_id,
             "fetch_mode": fetch_mode,
