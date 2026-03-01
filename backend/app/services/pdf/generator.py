@@ -67,6 +67,9 @@ from .charts import (
     impact_effort_matrix,
     roadmap_timeline_chart,
     execution_plan_priority_chart,
+    pie_chart,
+    horizontal_bar_chart,
+    bar_chart,
 )
 
 logger = logging.getLogger(__name__)
@@ -348,9 +351,30 @@ async def generate_pdf(
 
     # ---- ON-PAGE SEO ----
     if cfg.is_enabled("on_page_seo"):
-        _sec("on_page_seo", on_page_seo.extract, audit_data,
-             max_rows=cfg.get_max_rows("on_page_seo", 50),
-             extended=cfg.is_extended("on_page_seo"))
+        onpage_data = _safe_extract(on_page_seo.extract, audit_data,
+                                    max_rows=cfg.get_max_rows("on_page_seo", 50),
+                                    extended=cfg.is_extended("on_page_seo"))
+        if onpage_data:
+            op = onpage_data["onpage"]
+            issues_labels = ["Brak title", "Brak meta desc.", "Brak H1", "Duplikaty title", "Cienki content"]
+            issues_values = [
+                op.get("missing_titles_count") or 0,
+                op.get("missing_descriptions") or 0,
+                op.get("missing_h1") or 0,
+                op.get("duplicate_title_groups") or 0,
+                op.get("thin_content_count") or 0,
+            ]
+            chart_seo_issues = _safe_chart(
+                horizontal_bar_chart,
+                issues_labels,
+                issues_values,
+                title="Problemy On-Page SEO (liczba stron)",
+                colors=["#dc2626" if v > 0 else "#16a34a" for v in issues_values],
+            ) if any(v > 0 for v in issues_values) else ""
+            sections_html.append(_render_section("on_page_seo", {
+                **onpage_data, "sec_num": next_sec(),
+                "chart_seo_issues": chart_seo_issues,
+            }))
 
     # ---- HEADING ANALYSIS ----
     if cfg.is_enabled("heading_analysis"):
@@ -474,8 +498,30 @@ async def generate_pdf(
 
         # Backlinks
         if cfg.is_enabled("backlinks") and "backlinks" not in skipped_ids:
-            _sec("backlinks", backlinks.extract, audit_data,
-                 max_rows=cfg.get_max_rows("backlinks", 50))
+            bl_data = _safe_extract(backlinks.extract, audit_data,
+                                    max_rows=cfg.get_max_rows("backlinks", 50))
+            if bl_data:
+                bl = bl_data["bl"]
+                chart_bl_profile = _safe_chart(
+                    pie_chart,
+                    ["Follow", "Nofollow"],
+                    [bl.get("follow_count") or 0, bl.get("nofollow_count") or 0],
+                    title="Profil linków",
+                    colors=["#16a34a", "#dc2626"],
+                ) if (bl.get("follow_count") or bl.get("nofollow_count")) else ""
+                ref_domains = bl.get("top_ref_domains") or []
+                chart_ref_domains = _safe_chart(
+                    bar_chart,
+                    [d["domain"][:25] for d in ref_domains[:10]],
+                    [d.get("backlinks_count") or 1 for d in ref_domains[:10]],
+                    title="Top 10 domen odsyłających (liczba linków)",
+                    rotate_labels=True,
+                ) if ref_domains else ""
+                sections_html.append(_render_section("backlinks", {
+                    **bl_data, "sec_num": next_sec(),
+                    "chart_bl_profile": chart_bl_profile,
+                    "chart_ref_domains": chart_ref_domains,
+                }))
 
         # AI Overviews
         if has_aio and cfg.is_enabled("ai_overviews") and "ai_overviews" not in skipped_ids:

@@ -15,6 +15,10 @@
         {{ metric_card(onpage.images_without_alt, 'Obrazy bez ALT', '#ca8a04' if onpage.images_without_alt > 0 else '#16a34a') }}
     </div>
 
+    {% if chart_seo_issues %}
+        {{ chart(chart_seo_issues, 'Przegląd problemów On-Page SEO (liczba stron)', '100%') }}
+    {% endif %}
+
     {# =================== TITLE ANALYSIS =================== #}
     <h3>Analiza tagów Title</h3>
     <div class="info-box-light">

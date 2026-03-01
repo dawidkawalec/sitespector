@@ -6,8 +6,6 @@ CSS styles for PDF report generation via WeasyPrint.
 def get_pdf_css() -> str:
     """Return the complete CSS string for the PDF report."""
     return """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 /* ========== PAGE SETUP ========== */
 @page {
     size: A4;
@@ -65,7 +63,7 @@ def get_pdf_css() -> str:
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
-    font-family: 'Inter', 'Helvetica', 'Arial', sans-serif;
+    font-family: 'Inter', 'Liberation Sans', 'DejaVu Sans', sans-serif;
     font-size: 9.5pt;
     line-height: 1.6;
     color: #334155;
@@ -176,9 +174,10 @@ li {
     font-size: 18pt;
     font-weight: 700;
     color: #ffffff;
-    word-break: break-all;
+    overflow-wrap: anywhere;
+    word-break: normal;
     margin-bottom: 12px;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
 }
 .cover-date {
     font-size: 9.5pt;
