@@ -838,8 +838,8 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 
 ---
 
-**Last Updated**: 2026-02-28
-**Total Decisions**: 43 accepted
+**Last Updated**: 2026-03-03
+**Total Decisions**: 45 accepted
 
 ---
 
@@ -852,3 +852,55 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
   - Components return `null` if `!mounted`.
 - **Outcome**: Eliminated React hydration errors in production console.
 **Review**: Update when making significant architectural changes.
+
+---
+
+## ADR-044: UI Template Stabilization First, Redesign Second (2026-03-03)
+
+- **Decision**: For cross-surface UI issues (app, landing, PDF), prioritize a stabilization pass before any larger visual redesign:
+  1. fix width/responsiveness and wrapping regressions,
+  2. unify logo implementation in frontend,
+  3. reduce global style conflicts,
+  4. improve PDF readability constraints.
+- **Rationale**: Existing regressions were functional-visual blockers (narrow layouts, broken wrapping, inconsistent branding). Stabilization lowers user-facing risk and provides a reliable baseline for future aesthetic upgrades.
+- **Implementation**:
+  - App shell guardrails + chat width tuning:
+    - `frontend/app/(app)/layout.tsx`
+    - `frontend/lib/chat-store.ts`
+  - Client report responsive refactor:
+    - `frontend/app/(app)/audits/[id]/client-report/page.tsx`
+  - Shared frontend logo component:
+    - `frontend/components/brand/SiteSpectorLogo.tsx`
+    - adopted in `UnifiedSidebar`, `PublicNavbar`, `PublicFooter`
+  - Style conflict reduction:
+    - `frontend/app/globals.css`
+    - `landing/src/assets/scss/_general.scss`
+    - `landing/src/assets/scss/_menu.scss`
+    - `landing/src/assets/scss/_mega-menu.scss`
+  - Landing branding consistency:
+    - `landing/src/component/layout/Topbar/page.tsx`
+    - `landing/src/component/layout/Footer/page.tsx`
+  - PDF readability/wrapping improvements:
+    - `backend/app/services/pdf/styles.py`
+    - `backend/templates/pdf/sections/cover.html`
+- **Outcome**:
+  - Reduced layout squeeze under persistent chat panel.
+  - Better handling of long strings/URLs in app and PDF outputs.
+  - Consistent logo scale and baseline typography across frontend/landing.
+  - Established safer baseline for any follow-up visual lifting.
+
+---
+
+## ADR-045: Full-Bleed First Page Strategy for WeasyPrint Cover (2026-03-03)
+
+- **Decision**: Render PDF cover as a true full-page layout by setting `@page :first { margin: 0; }` and sizing cover container to A4 (`210mm x 297mm`), instead of using negative margin compensation.
+- **Rationale**: Negative margins against page boxes are unreliable in WeasyPrint and caused visible white bands and footer overflow outside the dark cover region.
+- **Implementation**:
+  - First page margin reset in `backend/app/services/pdf/styles.py`.
+  - Cover container refactor (`.cover-page`, `.cover-logo`, `.cover-title`, `.cover-url`, `.cover-footer-note`) to stable flex alignment and vertical rhythm.
+  - Minor cover hierarchy polish in `backend/templates/pdf/sections/cover.html` (accent separator line).
+- **Outcome**:
+  - Cover background now fills full A4 page area.
+  - Logo row alignment is stable for SVG icon + brand text.
+  - Footer remains anchored inside the dark cover.
+  - Generated and verified with `tmp/audit_demo_20260303_v5.pdf`.

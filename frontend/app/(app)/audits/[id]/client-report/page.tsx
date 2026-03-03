@@ -103,7 +103,7 @@ export default function ClientReportPage({ params }: { params: { id: string } })
   if (!audit) return null
 
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 @md:px-6 @md:py-8 space-y-6 @md:space-y-8 min-w-0">
       <div className="flex flex-col @md:flex-row @md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <FileText className="h-8 w-8 text-primary" />
@@ -112,11 +112,15 @@ export default function ClientReportPage({ params }: { params: { id: string } })
             <p className="text-muted-foreground text-sm">Dostosuj i wygeneruj profesjonalny raport dla swojego klienta.</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => window.scrollTo({ top: 1000, behavior: 'smooth' })}>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            className="w-full @md:w-auto"
+            onClick={() => window.scrollTo({ top: 1000, behavior: 'smooth' })}
+          >
             <Eye className="mr-2 h-4 w-4" /> Podgląd
           </Button>
-          <Button onClick={handlePrint}>
+          <Button className="w-full @md:w-auto" onClick={handlePrint}>
             <Download className="mr-2 h-4 w-4" /> Eksportuj PDF
           </Button>
         </div>
@@ -207,20 +211,20 @@ export default function ClientReportPage({ params }: { params: { id: string } })
         </div>
 
         {/* Report Preview */}
-        <div className="lg:col-span-2">
+        <div className="@lg:col-span-2 min-w-0">
           <div 
             ref={reportRef} 
-            className="bg-white text-slate-900 shadow-2xl rounded-xl overflow-hidden min-h-[1123px] w-full p-12 print:p-8 print:shadow-none"
+            className="bg-white text-slate-900 shadow-2xl rounded-xl overflow-hidden min-h-[760px] @md:min-h-[900px] w-full p-5 @md:p-8 @lg:p-10 print:p-8 print:shadow-none min-w-0"
           >
             {/* Report Header */}
-            <div className="flex justify-between items-start border-b-4 border-primary pb-8 mb-12">
-              <div>
-                <h2 className="text-4xl font-extrabold text-slate-900 mb-2">{reportTitle}</h2>
-                <p className="text-xl text-slate-500">{clientName || audit.url}</p>
+            <div className="flex flex-col @md:flex-row @md:justify-between @md:items-start gap-4 border-b-4 border-primary pb-6 @md:pb-8 mb-8 @md:mb-12">
+              <div className="min-w-0">
+                <h2 className="text-2xl @md:text-3xl @lg:text-4xl font-extrabold text-slate-900 mb-2 break-words">{reportTitle}</h2>
+                <p className="text-base @md:text-lg @lg:text-xl text-slate-500 break-words">{clientName || audit.url}</p>
               </div>
-              <div className="text-right">
+              <div className="text-left @md:text-right shrink-0">
                 <p className="text-sm font-bold uppercase tracking-wider text-slate-400">Data Raportu</p>
-                <p className="text-lg font-medium">{new Date().toLocaleDateString('pl-PL')}</p>
+                <p className="text-base @md:text-lg font-medium">{new Date().toLocaleDateString('pl-PL')}</p>
               </div>
             </div>
 
@@ -238,16 +242,16 @@ export default function ClientReportPage({ params }: { params: { id: string } })
                   <ArrowLeftRight className="h-6 w-6 text-primary" /> Postępy Optymalizacji
                 </h3>
                 <div className="bg-primary/5 rounded-xl border border-primary/10 p-8">
-                  <div className="grid grid-cols-2 gap-12">
+                  <div className="grid grid-cols-1 @md:grid-cols-2 gap-8 @md:gap-12">
                     <div>
                       <p className="text-sm font-bold text-slate-400 uppercase mb-4">Stan Początkowy ({new Date(comparisonAudit.created_at).toLocaleDateString()})</p>
-                      <div className="text-5xl font-black text-slate-400">{formatScore(comparisonAudit.overall_score || 0)}%</div>
+                      <div className="text-4xl @md:text-5xl font-black text-slate-400">{formatScore(comparisonAudit.overall_score || 0)}%</div>
                     </div>
                     <div>
                       <p className="text-sm font-bold text-primary uppercase mb-4">Stan Obecny ({new Date(audit.created_at).toLocaleDateString()})</p>
                       <div className="flex items-center gap-4">
-                        <div className="text-5xl font-black text-primary">{formatScore(audit.overall_score || 0)}%</div>
-                        <div className="flex items-center gap-1 text-green-600 bg-green-100 px-3 py-1 rounded-full text-lg font-bold">
+                        <div className="text-4xl @md:text-5xl font-black text-primary">{formatScore(audit.overall_score || 0)}%</div>
+                        <div className="flex items-center gap-1 text-green-600 bg-green-100 px-3 py-1 rounded-full text-sm @md:text-lg font-bold">
                           <TrendingUp className="h-5 w-5" />
                           +{formatScore((audit.overall_score || 0) - (comparisonAudit.overall_score || 0))}
                         </div>
@@ -255,7 +259,7 @@ export default function ClientReportPage({ params }: { params: { id: string } })
                     </div>
                   </div>
                   
-                  <div className="mt-8 pt-8 border-t border-primary/10 grid grid-cols-3 gap-4">
+                  <div className="mt-8 pt-8 border-t border-primary/10 grid grid-cols-1 @md:grid-cols-3 gap-4">
                     {[
                       { label: 'SEO', cur: audit.seo_score, prev: comparisonAudit.seo_score },
                       { label: 'Wydajność', cur: audit.performance_score, prev: comparisonAudit.performance_score },
@@ -279,10 +283,10 @@ export default function ClientReportPage({ params }: { params: { id: string } })
             {/* Main Scores */}
             {showScores && (
               <section className="mb-12">
-                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <h3 className="text-xl @md:text-2xl font-bold mb-6 flex items-center gap-2">
                   <Layout className="h-6 w-6 text-primary" /> Podsumowanie Wyników
                 </h3>
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 @md:grid-cols-3 gap-4 @md:gap-6">
                   {[
                     { label: 'SEO Score', val: audit.seo_score },
                     { label: 'Performance', val: audit.performance_score },
@@ -290,7 +294,7 @@ export default function ClientReportPage({ params }: { params: { id: string } })
                   ].map((s, i) => (
                     <div key={i} className="bg-slate-50 p-6 rounded-xl text-center border border-slate-100">
                       <p className="text-sm font-bold text-slate-500 uppercase mb-2">{s.label}</p>
-                      <p className="text-4xl font-black text-primary">{s.val}%</p>
+                      <p className="text-3xl @md:text-4xl font-black text-primary">{s.val}%</p>
                     </div>
                   ))}
                 </div>
@@ -300,17 +304,17 @@ export default function ClientReportPage({ params }: { params: { id: string } })
             {/* AI Summary */}
             {showAI && audit.results?.content_analysis?.summary && (
               <section className="mb-12">
-                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <h3 className="text-xl @md:text-2xl font-bold mb-6 flex items-center gap-2">
                   <Type className="h-6 w-6 text-primary" /> Analiza Strategiczna
                 </h3>
                 <div className="space-y-6">
                   <div className="p-6 bg-primary/5 rounded-xl border border-primary/10">
                     <p className="font-bold text-primary mb-2">Podsumowanie AI:</p>
-                    <p className="text-slate-700 leading-relaxed">{audit.results.content_analysis.summary}</p>
+                    <p className="text-slate-700 leading-relaxed break-words">{audit.results.content_analysis.summary}</p>
                   </div>
                   
                   {audit.results.competitive_analysis && (
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 @md:grid-cols-2 gap-6">
                       <div className="p-4 bg-green-50 rounded-lg border border-green-100">
                         <p className="font-bold text-green-700 mb-2 text-sm uppercase">Mocne Strony:</p>
                         <ul className="text-sm space-y-1 text-slate-600">
@@ -336,17 +340,17 @@ export default function ClientReportPage({ params }: { params: { id: string } })
             {/* Quick Wins */}
             {showQuickWins && (
               <section className="mb-12">
-                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <h3 className="text-xl @md:text-2xl font-bold mb-6 flex items-center gap-2">
                   <CheckCircle2 className="h-6 w-6 text-primary" /> Rekomendacje &quot;Quick Wins&quot;
                 </h3>
                 <div className="space-y-4">
                   {audit.results?.quick_wins && audit.results.quick_wins.length > 0 ? (
                     audit.results.quick_wins.map((win: any, i: number) => (
-                      <div key={i} className="flex gap-4 p-4 border rounded-lg bg-slate-50">
+                      <div key={i} className="flex gap-4 p-4 border rounded-lg bg-slate-50 min-w-0">
                         <div className="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">{i+1}</div>
                         <div>
-                          <p className="font-bold text-slate-800">{win.title}</p>
-                          <p className="text-sm text-slate-500">{win.description}</p>
+                          <p className="font-bold text-slate-800 break-words">{win.title}</p>
+                          <p className="text-sm text-slate-500 break-words">{win.description}</p>
                         </div>
                       </div>
                     ))
@@ -360,9 +364,9 @@ export default function ClientReportPage({ params }: { params: { id: string } })
             )}
 
             {/* Technical Footer */}
-            <div className="mt-auto pt-12 border-t border-slate-200 flex justify-between items-center text-slate-400 text-xs">
-              <p>Wygenerowano przez SiteSpector AI Platform</p>
-              <p>https://sitespector.pl</p>
+            <div className="mt-auto pt-12 border-t border-slate-200 flex flex-col @md:flex-row @md:justify-between @md:items-center gap-2 text-slate-400 text-xs">
+              <p className="break-words">Wygenerowano przez SiteSpector AI Platform</p>
+              <p className="break-all">https://sitespector.pl</p>
             </div>
           </div>
         </div>

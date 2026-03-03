@@ -95,7 +95,7 @@ export const useChatStore = create<ChatState>()(
   persist(
     (set, get) => ({
       isPanelOpen: true,
-      panelWidth: 420,
+      panelWidth: 360,
 
       activeAuditId: null,
       activeWorkspaceId: null,
@@ -114,7 +114,7 @@ export const useChatStore = create<ChatState>()(
 
       setPanelOpen: (open) => set({ isPanelOpen: open }),
       togglePanel: () => set((s) => ({ isPanelOpen: !s.isPanelOpen })),
-      setPanelWidth: (width) => set({ panelWidth: Math.max(320, Math.min(720, width)) }),
+      setPanelWidth: (width) => set({ panelWidth: Math.max(300, Math.min(720, width)) }),
 
       setActiveAudit: (auditId) => {
         const prev = get().activeAuditId

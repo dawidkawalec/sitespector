@@ -8,7 +8,7 @@ body {
 }
 a {
   text-decoration: none;
-  font-size: 20px;
+  font-size: inherit;
 }
 ul {
   list-style: none;
@@ -39,41 +39,50 @@ h6 {
 
 h1,
 h2 {
-  font-weight: 800 !important;
+  font-weight: 800;
 }
 h3 {
-  font-weight: 700 !important;
+  font-weight: 700;
 }
 h4,
 h5,
 h6 {
-  font-weight: 600 !important;
+  font-weight: 600;
 }
 h6 {
-  font-size: 18px !important;
+  font-size: 18px;
 }
 
 // Enforce consistent visual rhythm for "hero" + "section title" patterns.
 .hero-section {
   h1 {
-    font-size: var(--ss-h1-size) !important;
-    line-height: 1.12 !important;
+    font-size: var(--ss-h1-size);
+    line-height: 1.12;
+    text-wrap: balance;
   }
 }
 
 .main-title {
   h1 {
-    font-size: var(--ss-h1-size) !important;
-    line-height: 1.15 !important;
+    font-size: var(--ss-h1-size);
+    line-height: 1.15;
+    text-wrap: balance;
   }
   h2 {
-    font-size: var(--ss-h2-size) !important;
-    line-height: 1.22 !important;
+    font-size: var(--ss-h2-size);
+    line-height: 1.22;
+    text-wrap: balance;
   }
   h3 {
-    font-size: var(--ss-h3-size) !important;
-    line-height: 1.25 !important;
+    font-size: var(--ss-h3-size);
+    line-height: 1.25;
+    text-wrap: balance;
   }
+}
+
+p,
+li {
+  overflow-wrap: anywhere;
 }
 .logo {
   i {

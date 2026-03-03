@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { RiSearchEyeFill, RiSendPlane2Line } from 'react-icons/ri'
+import { RiSendPlane2Line } from 'react-icons/ri'
+import { SiteSpectorLogo } from '@/components/brand/SiteSpectorLogo'
 
 const footerColumns = [
   {
@@ -85,13 +86,11 @@ export function PublicFooter() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
-            <a
+            <SiteSpectorLogo
               href="/"
-              className="mb-4 flex items-center gap-2 text-xl font-bold tracking-tight text-white"
-            >
-              <RiSearchEyeFill size={28} className="text-[#ff8945]" />
-              SiteSpector
-            </a>
+              className="mb-4 text-white"
+              textClassName="text-xl text-white"
+            />
             <p className="mt-4 text-sm text-white/80">
               Profesjonalna platforma do audytów SEO i optymalizacji stron
               internetowych.

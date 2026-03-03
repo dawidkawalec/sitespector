@@ -54,7 +54,20 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    text-wrap: pretty;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+  p,
+  li,
+  td,
+  th {
+    overflow-wrap: anywhere;
   }
 }
 
@@ -83,59 +96,59 @@
   color: inherit;
 }
 .public-light .public-navbar-bg {
-  background-color: #fff9f5 !important;
-  border-color: rgba(11, 54, 61, 0.12) !important;
+  background-color: #fff9f5;
+  border-color: rgba(11, 54, 61, 0.12);
 }
 .public-light .public-navbar-logo,
 .public-light .public-navbar-link {
-  color: #0b363d !important;
+  color: #0b363d;
 }
 .public-light .public-navbar-link:hover {
-  color: #ff8945 !important;
+  color: #ff8945;
 }
 .public-light .public-card {
-  background-color: #ffffff !important;
-  border-color: rgba(11, 54, 61, 0.12) !important;
-  color: #0b363d !important;
+  background-color: #ffffff;
+  border-color: rgba(11, 54, 61, 0.12);
+  color: #0b363d;
 }
 .public-light .public-card-muted {
-  color: #616c6e !important;
+  color: #616c6e;
 }
 .public-light .public-input {
-  background-color: #ffffff !important;
-  border-color: rgba(11, 54, 61, 0.2) !important;
-  color: #0b363d !important;
+  background-color: #ffffff;
+  border-color: rgba(11, 54, 61, 0.2);
+  color: #0b363d;
 }
 .public-light .public-tabs-bg {
-  background-color: rgba(11, 54, 61, 0.08) !important;
+  background-color: rgba(11, 54, 61, 0.08);
 }
 .public-light .public-tabs-trigger[data-state="inactive"] {
-  color: #616c6e !important;
+  color: #616c6e;
 }
 .public-light .public-tabs-trigger[data-state="active"] {
-  background-color: #ffffff !important;
-  color: #0b363d !important;
+  background-color: #ffffff;
+  color: #0b363d;
 }
 .public-light .public-btn-outline {
-  background-color: transparent !important;
-  border-color: #0b363d !important;
-  color: #0b363d !important;
+  background-color: transparent;
+  border-color: #0b363d;
+  color: #0b363d;
 }
 .public-light .public-btn-outline:hover {
-  background-color: rgba(11, 54, 61, 0.06) !important;
+  background-color: rgba(11, 54, 61, 0.06);
 }
 .public-light .public-btn-accent {
-  background-color: #ff8945 !important;
-  color: #ffffff !important;
+  background-color: #ff8945;
+  color: #ffffff;
 }
 .public-light .public-btn-accent:hover {
-  background-color: #e67a3d !important;
-  color: #ffffff !important;
+  background-color: #e67a3d;
+  color: #ffffff;
 }
 .public-light .public-separator {
-  border-color: rgba(11, 54, 61, 0.15) !important;
+  border-color: rgba(11, 54, 61, 0.15);
 }
 .public-light [data-slot="card"] {
-  background-color: #ffffff !important;
-  border-color: rgba(11, 54, 61, 0.12) !important;
+  background-color: #ffffff;
+  border-color: rgba(11, 54, 61, 0.12);
 }

@@ -97,12 +97,12 @@ const Footer = () => {
     <>
       <footer className="section footer-part-3 py-5 footer-part">
         <Container>
-          <Row className="my-5 justify-content-between">
+          <Row className="my-5 justify-content-between g-4">
             <Col lg={4} className="align-self-start">
               <div className="footer-about">
                 <div className="logo">
-                  <Link className="navbar-caption fs-4 text-light ls-1 fw-bold" href="/">
-                    <RiSearchEyeFill size={29} className="text-orange fs-4 mb-1 me-1" />
+                  <Link className="navbar-caption fs-5 text-light ls-1 fw-bold d-inline-flex align-items-center text-nowrap" href="/">
+                    <RiSearchEyeFill size={29} className="text-orange fs-4 me-1 flex-shrink-0" />
                     SiteSpector
                   </Link>
                 </div>

@@ -100,6 +100,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { NewAuditDialog } from '@/components/NewAuditDialog'
+import { SiteSpectorLogo } from '@/components/brand/SiteSpectorLogo'
 
 // ─── Audit navigation sections ────────────────────────────────────────────────
 
@@ -488,12 +489,13 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
       <div className="flex h-screen w-64 flex-col border-r border-white/10 bg-gradient-to-b from-[#0b363d] to-[#001113] text-white">
         {/* Logo + home */}
         <div className="flex h-16 items-center justify-between gap-2 px-4 border-b border-white/10 bg-black/10">
-          <Link href="/dashboard" className="flex items-center gap-2 group shrink-0 min-w-0" onClick={onAction}>
-            <div className="p-1.5 rounded-lg bg-accent/20 text-accent group-hover:bg-accent group-hover:text-white transition-all duration-300 shrink-0">
-              <RiSearchEyeFill className="h-5 w-5" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-white truncate">SiteSpector</span>
-          </Link>
+          <SiteSpectorLogo
+            href="/dashboard"
+            onClick={onAction}
+            iconSize={22}
+            className="group text-white"
+            textClassName="text-lg text-white group-hover:text-white"
+          />
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

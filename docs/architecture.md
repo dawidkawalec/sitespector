@@ -133,4 +133,15 @@ The authenticated app has a persistent right-side **ChatPanel** (desktop) which 
 5. Frontend workspace switch triggers `window.location.reload()` — all state resets.
 
 ---
-**Last updated**: 2026-02-28
+## UI Template Hardening (2026-03-03)
+
+- Authenticated shell now enforces stronger width guardrails: `main` uses `min-w-0` and `overflow-x-hidden` in `frontend/app/(app)/layout.tsx`.
+- Persistent ChatPanel default width was reduced from `420` to `360` in `frontend/lib/chat-store.ts` to limit content squeeze.
+- Report builder (`frontend/app/(app)/audits/[id]/client-report/page.tsx`) was updated to container-query-first behavior (`@md/@lg`), replacing remaining viewport-only spans and rigid print-like spacing.
+- Branding consistency improved by introducing shared logo component `frontend/components/brand/SiteSpectorLogo.tsx` used by app sidebar/public navbar/public footer.
+- Landing typography and menu rules were normalized to reduce overflow risks (`landing/src/assets/scss/_general.scss`, `_menu.scss`, `_mega-menu.scss`).
+- PDF readability/wrapping was hardened in `backend/app/services/pdf/styles.py` and `backend/templates/pdf/sections/cover.html` (long URLs/tables/project names).
+- PDF cover rendering now uses a full-bleed first-page strategy (`@page :first { margin: 0 }` + A4-sized cover block) to prevent white lower bands and footer spillover on client reports.
+
+---
+**Last updated**: 2026-03-03

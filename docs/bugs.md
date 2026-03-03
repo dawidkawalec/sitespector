@@ -1667,3 +1667,130 @@ Replaced all instances of `{% from '../macros.html' import ... %}` with `{% from
 - `backend/app/services/ai_analysis.py`
 - `backend/app/services/ai_execution_plan.py`
 - `backend/worker.py`
+
+---
+
+### BUG-046: PDF Report Round 3 — Visual & Data Fixes
+
+**Reported**: 2026-02-28
+
+**Status**: ✅ FIXED (2026-02-28)
+
+**Severity**: HIGH
+
+**Description**:
+- Cover page URL broke character-by-character due to `word-break: break-all` CSS rule.
+- Google Fonts `@import url()` in `styles.py` failed silently — WeasyPrint has no internet access during PDF rendering, causing fallback to DejaVu Sans.
+- "URL Źródłowy" column in appendix backlinks table was always empty — template used `bl.url` but Senuto data has `ref_url`.
+- Backlinks section had no charts despite having follow/nofollow percentages and ref domains data.
+- On-Page SEO section imported `chart` macro but never used it despite having issue counts.
+
+**Root cause**:
+- `word-break: break-all` is too aggressive — breaks at every character.
+- WeasyPrint runs offline; remote Google Fonts URLs are never fetched.
+- `appendix_backlinks.py` returned raw Senuto data without normalizing field names (`ref_url`, `ref_domain`, `anchor`).
+- `generator.py` rendered backlinks and on_page_seo via simple `_sec()` without chart generation.
+
+**Fix**:
+- Changed `.cover-url` CSS to `overflow-wrap: anywhere; word-break: normal`.
+- Removed Google Fonts `@import`, updated font stack to `'Inter', 'Liberation Sans', 'DejaVu Sans', sans-serif`.
+- Added Inter font download step to `backend/Dockerfile` (falls back to Liberation Sans if download fails).
+- Normalized `appendix_backlinks.py` — maps `ref_url→url`, `ref_domain→domain`, `anchor→anchor`.
+- Added follow/nofollow pie chart and ref domains bar chart to backlinks section in `generator.py` + `backlinks.html`.
+- Added SEO issues horizontal bar chart to on_page_seo section in `generator.py` + `on_page_seo.html`.
+- Imported `pie_chart`, `bar_chart`, `horizontal_bar_chart` in `generator.py`.
+
+**Files Changed**:
+- `backend/app/services/pdf/styles.py`
+- `backend/Dockerfile`
+- `backend/app/services/pdf/sections/appendix_backlinks.py`
+- `backend/app/services/pdf/generator.py`
+- `backend/templates/pdf/sections/backlinks.html`
+- `backend/templates/pdf/sections/on_page_seo.html`
+
+---
+
+### BUG-047: UI templates looked narrow, wrapped poorly, and had inconsistent logo/layout
+
+**Reported**: 2026-03-03
+
+**Status**: ✅ FIXED (2026-03-03)
+
+**Severity**: HIGH
+
+**Description**:
+- Multiple templates looked visually broken: content area too narrow, ugly text wrapping, inconsistent logo scale, and rigid report layout.
+- Most visible issues were in app shell with persistent chat, client-report page, landing navigation/footer, and selected PDF sections.
+
+**Root cause**:
+- Mixed responsive strategies (`lg:` + `@lg:`) in container-constrained pages.
+- Chat panel default width (`420px`) reduced available content width too aggressively.
+- No single source-of-truth logo component in frontend.
+- Over-aggressive global style overrides and broad landing typography rules.
+- PDF tables/cover needed stronger wrapping/readability constraints.
+
+**Fix**:
+- Added app shell guardrails (`min-w-0`, `overflow-x-hidden`) in `frontend/app/(app)/layout.tsx`.
+- Reduced chat default width to `360px` and min width to `300px` in `frontend/lib/chat-store.ts`.
+- Refactored `client-report` to container-query-first responsive classes and flexible spacing.
+- Added shared logo component `frontend/components/brand/SiteSpectorLogo.tsx`, adopted in:
+  - `frontend/components/layout/UnifiedSidebar.tsx`
+  - `frontend/components/layout/PublicNavbar.tsx`
+  - `frontend/components/layout/PublicFooter.tsx`
+- Reduced global style conflicts in `frontend/app/globals.css`.
+- Normalized landing typography/menu/mega-menu behavior:
+  - `landing/src/assets/scss/_general.scss`
+  - `landing/src/assets/scss/_menu.scss`
+  - `landing/src/assets/scss/_mega-menu.scss`
+  - plus topbar/footer component adjustments.
+- Improved PDF text/table/cover wrapping in:
+  - `backend/app/services/pdf/styles.py`
+  - `backend/templates/pdf/sections/cover.html`
+
+**Verification**:
+- Frontend changed-file lint: passed.
+- Landing full lint: passed.
+- Full frontend lint still reports unrelated historical issues outside this change scope.
+
+**Related**:
+- `frontend/app/(app)/layout.tsx`
+- `frontend/app/(app)/audits/[id]/client-report/page.tsx`
+- `frontend/components/brand/SiteSpectorLogo.tsx`
+- `frontend/app/globals.css`
+- `landing/src/assets/scss/_general.scss`
+- `backend/app/services/pdf/styles.py`
+
+---
+
+### BUG-048: PDF cover page rendered as partial height and broken logo alignment
+
+**Reported**: 2026-03-03
+
+**Status**: ✅ FIXED (2026-03-03)
+
+**Severity**: CRITICAL
+
+**Description**:
+- Cover page dark background ended early, leaving a large white block in the lower area.
+- Footer note appeared outside the dark cover zone.
+- Logo row (icon + SiteSpector text) could misalign on WeasyPrint cover render.
+
+**Root cause**:
+- First page kept global `@page` margins because `@page :first` did not define `margin: 0`.
+- Cover used fragile negative-margin compensation instead of full-page dimensions.
+- `inline-flex` on the logo row was less stable with SVG rendering in WeasyPrint.
+
+**Fix**:
+- Added `margin: 0` to `@page :first`.
+- Reworked `.cover-page` to true A4 sizing (`width: 210mm; min-height: 297mm`) and removed negative margins.
+- Switched logo row to `display: flex`, centered all key blocks vertically, and increased spacing rhythm.
+- Updated cover URL wrapping rules for long domains and added a visual separator line under the subtitle.
+- Deployed patched files directly into running `sitespector-backend` container via `docker cp`, then regenerated report.
+
+**Files Changed**:
+- `backend/app/services/pdf/styles.py`
+- `backend/templates/pdf/sections/cover.html`
+
+**Verification**:
+- Generated fresh PDF: `tmp/audit_demo_20260303_v5.pdf`
+- Confirmed container has updated styles/template before render.

@@ -299,6 +299,7 @@ async def generate_pdf(
     cover_tmpl = _jinja_env.get_template("sections/cover.html")
     sections_html.append(cover_tmpl.render(
         audit_url=audit_url,
+        audit_url_display=audit_url_short,
         audit_project_name=project_name,
         generated_date=generated_date,
         report_type_label=cfg.label_pl,

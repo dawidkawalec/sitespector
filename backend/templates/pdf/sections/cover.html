@@ -10,18 +10,18 @@
     </div>
 
     <div class="cover-title">Profesjonalny Audyt SEO & AI</div>
+    <div style="width: 60px; height: 2px; background: #ff8945; margin: 0 auto 32px auto;"></div>
 
     <div class="cover-url-box">
-        <div class="cover-url">{{ audit_url }}</div>
+        <div class="cover-url">{{ audit_url_display or audit_url }}</div>
+        <div class="cover-report-type">{{ report_type_label }}</div>
         <div class="cover-date">Data wygenerowania: {{ generated_date }}</div>
         {% if audit_project_name %}
             <div class="cover-date" style="margin-top: 6px;">Projekt: <strong style="color: #cbd5e1;">{{ audit_project_name }}</strong></div>
         {% endif %}
     </div>
 
-    <div class="cover-report-type">{{ report_type_label }}</div>
-
-    <div style="margin-top: 40px; color: #475569; font-size: 8.5pt;">
+    <div class="cover-footer-note">
         Wygenerowano przez platformę SiteSpector AI &nbsp;·&nbsp; sitespector.pl
     </div>
 </div>

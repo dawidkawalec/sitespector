@@ -55,7 +55,7 @@ export function AuditPageLayout({
   const hasPanel = !!aiPanel || isAiLoading || hasAiData
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 @md:px-6 @md:py-8 min-w-0">
       {/* Toggle button */}
       {hasPanel && (
         <div className="flex justify-end mb-4">

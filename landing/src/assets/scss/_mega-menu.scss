@@ -72,6 +72,10 @@
         margin-left: auto;
         margin-right: auto;
       }
+
+      @media (max-width: 1199px) {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
     .mega-link {
@@ -116,6 +120,7 @@
       font-weight: 600;
       letter-spacing: 0.2px;
       line-height: 1.1;
+      overflow-wrap: anywhere;
     }
 
     .mega-link-desc {

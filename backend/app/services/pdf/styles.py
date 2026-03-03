@@ -6,6 +6,11 @@ CSS styles for PDF report generation via WeasyPrint.
 def get_pdf_css() -> str:
     """Return the complete CSS string for the PDF report."""
     return """
+@font-face {
+    font-family: "DejaVu Sans";
+    src: local("DejaVu Sans");
+}
+
 /* ========== PAGE SETUP ========== */
 @page {
     size: A4;
@@ -40,6 +45,7 @@ def get_pdf_css() -> str:
 }
 
 @page :first {
+    margin: 0;
     @top-left { content: none; }
     @top-right { content: none; }
     @bottom-left { content: none; }
@@ -63,13 +69,19 @@ def get_pdf_css() -> str:
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
-    font-family: 'Inter', 'Liberation Sans', 'DejaVu Sans', sans-serif;
+    font-family: 'DejaVu Sans', 'Liberation Sans', sans-serif;
     font-size: 9.5pt;
     line-height: 1.6;
     color: #334155;
     background: #ffffff;
     margin: 0;
     padding: 0;
+}
+p,
+li,
+td,
+th {
+    overflow-wrap: anywhere;
 }
 
 /* ========== TYPOGRAPHY ========== */
@@ -129,20 +141,23 @@ li {
     page-break-after: always;
     background: #0f172a;
     color: #ffffff;
-    min-height: 26cm;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0;
+    padding: 80px 50px 50px 50px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 60px 40px;
-    margin: -2.2cm -1.8cm -2.5cm -1.8cm;
+    font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
 .cover-logo {
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: center;
     gap: 14px;
-    margin-bottom: 60px;
+    margin: 0 0 48px 0;
 }
 .cover-logo-icon {
     width: 56px;
@@ -159,29 +174,41 @@ li {
     font-weight: 800;
     color: #ffffff;
     letter-spacing: -0.5px;
+    white-space: nowrap;
+    line-height: 1;
+    font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
 .cover-title {
-    font-size: 13pt;
+    font-size: 14pt;
     font-weight: 400;
     color: #94a3b8;
-    margin-bottom: 40px;
-    letter-spacing: 0.5px;
+    margin: 0 0 32px 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
 .cover-url-box {
-    margin-bottom: 60px;
+    width: 13cm;
+    max-width: calc(100% - 12mm);
+    margin: 0 0 40px 0;
 }
 .cover-url {
-    font-size: 18pt;
+    font-size: 20pt;
     font-weight: 700;
     color: #ffffff;
-    overflow-wrap: anywhere;
-    word-break: normal;
-    margin-bottom: 12px;
-    letter-spacing: -0.01em;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    line-height: 1.3;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+    font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
 .cover-date {
     font-size: 9.5pt;
     color: #64748b;
+    line-height: 1.35;
+    margin-top: 4px;
+    font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
 .cover-report-type {
     display: inline-block;
@@ -193,7 +220,16 @@ li {
     font-weight: 600;
     letter-spacing: 1px;
     text-transform: uppercase;
-    margin-bottom: 24px;
+    margin: 6px 0 20px 0;
+    font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
+}
+.cover-footer-note {
+    margin-top: auto;
+    padding-top: 40px;
+    color: #64748b;
+    font-size: 8.5pt;
+    line-height: 1.4;
+    font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
 
 /* ========== TABLE OF CONTENTS ========== */
@@ -320,6 +356,7 @@ table {
     border-collapse: collapse;
     margin: 16px 0;
     font-size: 8.5pt;
+    table-layout: fixed;
     page-break-inside: auto;
 }
 thead { display: table-header-group; }
@@ -340,10 +377,12 @@ td {
     border-bottom: 1px solid #f1f5f9;
     vertical-align: top;
     word-break: break-word;
+    overflow-wrap: anywhere;
+    hyphens: auto;
     color: #334155;
 }
 tr:last-child td { border-bottom: none; }
-.td-url { font-size: 7.5pt; font-family: 'DejaVu Sans Mono', monospace; word-break: break-all; color: #475569; }
+.td-url { font-size: 7.5pt; font-family: 'DejaVu Sans Mono', monospace; word-break: break-all; overflow-wrap: anywhere; color: #475569; }
 .td-center { text-align: center; }
 .td-right { text-align: right; }
 .td-bold { font-weight: 600; color: #0f172a; }

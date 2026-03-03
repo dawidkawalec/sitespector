@@ -14,13 +14,13 @@ import {
   RiMagicLine,
   RiMenu5Line,
   RiQuoteText,
-  RiSearchEyeFill,
   RiShieldCheckLine,
   RiTeamLine,
   RiTerminalBoxLine,
 } from 'react-icons/ri'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { SiteSpectorLogo } from '@/components/brand/SiteSpectorLogo'
 
 type NavLinkItem = {
   label: string
@@ -222,14 +222,12 @@ export function PublicNavbar() {
       className="public-navbar-bg sticky top-0 z-50 w-full border-b border-[#0b363d]/10 backdrop-blur supports-[backdrop-filter]:bg-[#fff9f5]/80"
     >
       <nav className="container relative mx-auto flex h-16 items-center justify-between px-4">
-        <a
+        <SiteSpectorLogo
           href="/"
           onClick={() => closeAll()}
-          className="public-navbar-logo flex items-center gap-2 text-xl font-bold tracking-tight text-[#0b363d]"
-        >
-          <RiSearchEyeFill size={28} className="text-[#ff8945]" />
-          SiteSpector
-        </a>
+          className="public-navbar-logo text-[#0b363d]"
+          textClassName="text-xl text-[#0b363d]"
+        />
 
         {/* Desktop nav (mega menu) */}
         <div className="hidden items-center gap-8 lg:flex">

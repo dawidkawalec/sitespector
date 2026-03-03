@@ -266,13 +266,13 @@ const Topbar = () => {
         onMouseLeave={() => scheduleClosePanel()}
       >
         <Container>
-          <div className="navbar-brand logo">
+          <div className="navbar-brand logo flex-shrink-0">
             <Link
-              className="navbar-caption fs-4 text-primary ls-1 fw-bold"
+              className="navbar-caption fs-5 text-primary ls-1 fw-bold d-inline-flex align-items-center text-nowrap"
               href="/"
               onClick={() => closeAll()}
             >
-              <RiSearchEyeFill size={28} className="text-orange fs-4 mb-2 me-1" /> SiteSpector
+              <RiSearchEyeFill size={28} className="text-orange fs-4 me-1 flex-shrink-0" /> SiteSpector
             </Link>
           </div>
 

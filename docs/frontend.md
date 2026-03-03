@@ -1794,6 +1794,45 @@ All three rendering functions have been implemented:
 
 ---
 
-**Last Updated**: 2025-02-03  
-**Status**: All critical features implemented
+## UI Template Stabilization (2026-03-03)
+
+### Scope delivered
+
+- App shell/content width hardening:
+  - `frontend/app/(app)/layout.tsx`
+  - `frontend/lib/chat-store.ts`
+- Client report responsive refactor (container-query-first):
+  - `frontend/app/(app)/audits/[id]/client-report/page.tsx`
+- Shared frontend logo component:
+  - `frontend/components/brand/SiteSpectorLogo.tsx`
+  - adopted in `UnifiedSidebar`, `PublicNavbar`, `PublicFooter`
+- Global typography/wrapping + public style conflict reduction:
+  - `frontend/app/globals.css`
+- Landing visual cleanup:
+  - `landing/src/component/layout/Topbar/page.tsx`
+  - `landing/src/component/layout/Footer/page.tsx`
+  - `landing/src/assets/scss/_general.scss`
+  - `landing/src/assets/scss/_menu.scss`
+  - `landing/src/assets/scss/_mega-menu.scss`
+- PDF readability/wrapping pass:
+  - `backend/app/services/pdf/styles.py`
+  - `backend/templates/pdf/sections/cover.html`
+
+### QA notes
+
+- Frontend (changed files only): `next lint --file ...` passed with no warnings/errors.
+- Landing full lint: passed with no warnings/errors.
+- Full frontend lint still reports pre-existing unrelated issues in admin and selected audit pages.
+
+### Regression checklist used
+
+- Breakpoints: 360 / 390 / 768 / 1024 / 1280 / 1440.
+- App shell states: chat open/closed and resized.
+- Long content: URLs, long Polish labels, long custom notes.
+- Logo consistency: sidebar + public navbar + public footer + landing topbar/footer + PDF cover.
+
+---
+
+**Last Updated**: 2026-03-03  
+**Status**: Core template stabilization delivered; visual unification baseline in place
 
