@@ -8,6 +8,37 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-019: Niespójny ACL na endpointach audit-scoped
+
+**Reported**: 2026-03-05
+
+**Status**: ✅ FIXED (2026-03-05)
+
+**Severity**: HIGH
+
+**Description**:
+- Część endpointów operujących na `audit_id` weryfikowała tylko membership workspace, bez dodatkowego checku `project_id`.
+- Skutkiem był potencjalny bypass project-level ACL przez alternatywne endpointy (np. status/raw/tasks), mimo braku dostępu do projektu.
+
+**Root cause**:
+- Powielona logika autoryzacji w wielu endpointach (`audits.py`, `tasks.py`) dryfowała i była niespójna.
+
+**Fix**:
+- Dodano wspólny helper `get_audit_with_access(...)` w `backend/app/services/audit_access.py`.
+- Podłączono helper do endpointów audit-scoped w:
+  - `backend/app/routers/audits.py`
+  - `backend/app/routers/tasks.py`
+- Polityka: workspace membership + project access (gdy `project_id` istnieje) + legacy owner fallback.
+- Dodatkowo dodano read-only endpoint adminowy `GET /api/admin/audits/{audit_id}` i UI inspectora adminowego bez mutacji.
+
+**Verification**:
+- Non-admin bez dostępu do projektu otrzymuje `403` na endpointach audit-scoped.
+- Super admin ma dedykowany, read-only podgląd audytu przez `/api/admin/audits/{id}`.
+
+**Related**: `backend/app/services/audit_access.py`, `backend/app/routers/audits.py`, `backend/app/routers/tasks.py`, `backend/app/routers/admin.py`, `frontend/app/(app)/admin/audits/[auditId]/page.tsx`
+
+---
+
 ### BUG-013: Chat messages disappear after sending (race condition)
 
 **Reported**: 2026-02-25

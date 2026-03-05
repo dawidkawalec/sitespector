@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { adminAPI } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,6 +32,7 @@ import {
   TrendingUp,
   FileDown,
   Filter,
+  Eye,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pl } from 'date-fns/locale'
@@ -73,6 +75,7 @@ function fmtDuration(start: string | null, end: string | null) {
 }
 
 export default function AdminAuditsPage() {
+  const router = useRouter()
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -263,18 +266,19 @@ export default function AdminAuditsPage() {
                   <TableHead>PDF</TableHead>
                   <TableHead>Czas</TableHead>
                   <TableHead>Data</TableHead>
+                  <TableHead className="text-right">Akcje</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-10">
+                    <TableCell colSpan={11} className="text-center py-10">
                       <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
                     </TableCell>
                   </TableRow>
                 ) : !data?.items.length ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-10 text-muted-foreground">
+                    <TableCell colSpan={11} className="text-center py-10 text-muted-foreground">
                       Brak audytów
                     </TableCell>
                   </TableRow>
@@ -326,6 +330,17 @@ export default function AdminAuditsPage() {
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                         {fmtDate(a.created_at)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => router.push(`/admin/audits/${a.id}`)}
+                        >
+                          <Eye className="h-3 w-3" />
+                          Podejrzyj
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

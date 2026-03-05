@@ -25,7 +25,8 @@ from app.schemas import (
     TaskSummaryResponse,
     AuditTaskListResponse,
 )
-from app.auth_supabase import get_current_user, verify_workspace_access
+from app.auth_supabase import get_current_user
+from app.services.audit_access import get_audit_with_access
 
 logger = logging.getLogger(__name__)
 
@@ -33,27 +34,8 @@ router = APIRouter(prefix="/audits/{audit_id}/tasks", tags=["Tasks"])
 
 
 async def _verify_audit_access(audit_id: UUID, user_id: str, db: AsyncSession) -> Audit:
-    """Verify user has access to audit via workspace membership."""
-    result = await db.execute(
-        select(Audit).where(Audit.id == audit_id)
-    )
-    audit = result.scalar_one_or_none()
-    
-    if not audit:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Audit not found"
-        )
-    
-    # Verify workspace access
-    has_access = await verify_workspace_access(user_id, str(audit.workspace_id))
-    if not has_access:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not a member of this workspace"
-        )
-    
-    return audit
+    """Verify user has access to audit with unified workspace+project ACL checks."""
+    return await get_audit_with_access(db, audit_id, user_id)
 
 
 @router.get("", response_model=AuditTaskListResponse)

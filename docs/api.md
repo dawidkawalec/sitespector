@@ -467,6 +467,12 @@ Get lightweight audit status for polling (no full results).
 
 **Errors**: Same as `GET /api/audits/{audit_id}`
 
+**ACL note (Mar 2026)**:
+- Audit-scoped endpoints now enforce a unified access rule:
+  - workspace membership is required for workspace audits,
+  - if audit has `project_id`, `verify_project_access` is also required,
+  - legacy audits (without workspace) fall back to owner check (`audit.user_id`).
+
 ---
 
 ### Delete Audit
@@ -536,6 +542,31 @@ Download raw audit data as ZIP file (JSON files).
 - `ai_analysis.json` - AI recommendations
 
 **Errors**: Same as PDF endpoint
+
+---
+
+### Admin: Get Audit Detail (Read-Only)
+
+#### `GET /api/admin/audits/{audit_id}`
+
+Read-only diagnostic endpoint for super admins. Returns full audit payload (including `results`, `processing_logs`, and competitors) without exposing mutating operations.
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Auth**:
+- Requires valid Supabase JWT
+- Requires `profiles.is_super_admin = true`
+
+**Path parameters**:
+- `audit_id` (UUID): Audit ID
+
+**Response** (200):
+- Same core fields as `GET /api/audits/{audit_id}` plus operational metadata used by admin inspector UI.
+
+**Errors**:
+- `401 Unauthorized`: Not authenticated
+- `403 Forbidden`: Super admin access required
+- `404 Not Found`: Audit not found
 
 ---
 
@@ -1007,6 +1038,6 @@ Returns health status of all critical services.
 
 ---
 
-**Last Updated**: 2026-02-15  
+**Last Updated**: 2026-03-05  
 **API Version**: v1  
 **Base URL**: https://sitespector.app/api

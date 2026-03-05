@@ -12,6 +12,27 @@ The **Worker** is a background Python process that polls for pending audits and 
 
 ---
 
+## Audit Access Hardening (Mar 2026)
+
+### Unified ACL helper for audit-scoped endpoints
+
+- New shared helper: `backend/app/services/audit_access.py` -> `get_audit_with_access(...)`
+- Used by:
+  - `backend/app/routers/audits.py` for `/{audit_id}` endpoints (`get`, `status`, `rag-status`, `raw`, `pdf`, AI triggers, quick wins, etc.)
+  - `backend/app/routers/tasks.py` via `_verify_audit_access(...)`
+- Access policy enforced consistently:
+  - workspace audit -> require `verify_workspace_access(...)`,
+  - if `project_id` exists -> also require `verify_project_access(...)`,
+  - legacy audit (no workspace) -> owner fallback (`audit.user_id`).
+
+### Admin read-only audit inspector endpoint
+
+- New endpoint: `GET /api/admin/audits/{audit_id}` in `backend/app/routers/admin.py`
+- Guard: `verify_super_admin`
+- Purpose: return full audit payload for operational diagnostics (read-only), consumed by admin UI `/admin/audits/[auditId]`.
+
+---
+
 ## Worker Architecture
 
 ### Main Loop
@@ -863,7 +884,7 @@ logger.debug(f"AI output: {ai_response}")
 
 ---
 
-**Last Updated**: 2026-02-15  
+**Last Updated**: 2026-03-05  
 **AI Provider**: Google Gemini  
 **Model**: gemini-3-flash  
 **Status**: Rule-based (AI integration ready but disabled)

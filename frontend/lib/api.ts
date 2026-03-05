@@ -594,6 +594,39 @@ export interface AdminAudit {
   ai_status: string | null
 }
 
+export interface AdminAuditDetail {
+  id: string
+  user_id: string | null
+  workspace_id: string | null
+  project_id: string | null
+  url: string
+  status: string | null
+  ai_status: string | null
+  execution_plan_status: string | null
+  processing_step: string | null
+  processing_logs: Array<Record<string, any>> | null
+  progress_percent: number | null
+  overall_score: number | null
+  seo_score: number | null
+  performance_score: number | null
+  content_score: number | null
+  is_local_business: boolean | null
+  results: Record<string, any>
+  pdf_url: string | null
+  error_message: string | null
+  created_at: string | null
+  started_at: string | null
+  completed_at: string | null
+  competitors: Array<{
+    id: string
+    audit_id: string | null
+    url: string
+    status: string | null
+    results: Record<string, any>
+    created_at: string | null
+  }>
+}
+
 export interface PaginatedResponse<T> {
   total: number
   page: number
@@ -659,6 +692,9 @@ export const adminAPI = {
     const qs = q.toString() ? `?${q.toString()}` : ''
     return apiRequest<AdminAuditsResponse>(`/api/admin/audits${qs}`)
   },
+
+  getAudit: (auditId: string) =>
+    apiRequest<AdminAuditDetail>(`/api/admin/audits/${auditId}`),
 
   getSystem: () => apiRequest<any>('/api/admin/system'),
 

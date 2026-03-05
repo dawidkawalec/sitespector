@@ -1,5 +1,25 @@
 # Architectural Decisions Log
 
+## Admin Read-Only Audit Inspector + Unified Audit ACL (2026-03-05)
+
+- **Decision**: Add a dedicated super-admin read-only audit detail endpoint and unify audit-scoped ACL checks via a shared helper.
+- **Rationale**:
+  - Support/debug workflows needed direct audit inspection from admin panel without impersonation.
+  - Existing audit-scoped endpoints had inconsistent access checks (some paths checked workspace only).
+- **Implementation**:
+  - **Backend endpoint**: `GET /api/admin/audits/{audit_id}` in `backend/app/routers/admin.py` (guarded by `verify_super_admin`).
+  - **ACL helper**: `backend/app/services/audit_access.py` -> `get_audit_with_access(...)`.
+  - **Routers migrated**:
+    - `backend/app/routers/audits.py` audit-scoped endpoints now use shared helper.
+    - `backend/app/routers/tasks.py` `_verify_audit_access(...)` now uses shared helper.
+  - **Frontend**:
+    - `frontend/app/(app)/admin/audits/page.tsx` adds "Podejrzyj" action.
+    - `frontend/app/(app)/admin/audits/[auditId]/page.tsx` adds single-page read-only inspector.
+    - `frontend/lib/api.ts` adds `adminAPI.getAudit(...)` + `AdminAuditDetail`.
+- **Security outcome**:
+  - No impersonation mode introduced.
+  - Consistent workspace+project ACL enforcement for audit-scoped access paths.
+
 ## Super Admin Dashboard (2026-02-25)
 
 - **Decision**: Add a full super-admin panel at `/admin/*` accessible only to users with `profiles.is_super_admin = true`.

@@ -29,7 +29,8 @@ app/
 │   │   │   ├── page.tsx       # User list (search, pagination, inline plan change)
 │   │   │   └── [userId]/page.tsx  # User detail: profile, workspaces, audits, chat stats
 │   │   ├── workspaces/page.tsx    # All workspaces with owner, plan, member/project/audit counts
-│   │   ├── audits/page.tsx        # All audits with filters, aggregate stats
+│   │   ├── audits/page.tsx        # All audits with filters, aggregate stats + "Podejrzyj" action
+│   │   │   └── [auditId]/page.tsx # Read-only admin inspector (single-page audit payload view)
 │   │   └── system/page.tsx        # Service health cards + worker queue
 │   ├── dashboard/page.tsx    # Dashboard + workspace analytics + project cards
 │   ├── projects/
@@ -66,6 +67,18 @@ app/
 │   └── invite/[token]/page.tsx
 └── auth/callback/page.tsx     # OAuth callback (Supabase)
 ```
+
+---
+
+## Admin Audit Inspector (`app/(app)/admin/audits/[auditId]/page.tsx`)
+
+**Route**: `/admin/audits/[auditId]`
+
+**Purpose**: Single-page read-only diagnostic view for super admins. Displays metadata, scoring, AI sections, processing logs, and full raw `results` JSON without tabs and without mutating actions.
+
+**Data source**:
+- `adminAPI.getAudit(auditId)` -> `GET /api/admin/audits/{audit_id}`
+- Entry point: "Podejrzyj" button in `app/(app)/admin/audits/page.tsx`
 
 ---
 
@@ -1833,6 +1846,6 @@ All three rendering functions have been implemented:
 
 ---
 
-**Last Updated**: 2026-03-03  
+**Last Updated**: 2026-03-05  
 **Status**: Core template stabilization delivered; visual unification baseline in place
 

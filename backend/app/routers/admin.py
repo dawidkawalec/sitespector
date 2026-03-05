@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, cast, Date, text, case
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from app.auth_supabase import get_current_user
 from app.database import get_db
@@ -787,6 +788,60 @@ async def list_admin_audits(
             "completed": int(stats_row.completed or 0),
             "failed": int(stats_row.failed or 0),
         },
+    }
+
+
+@router.get("/audits/{audit_id}", dependencies=[Depends(verify_super_admin)])
+async def get_admin_audit_detail(
+    audit_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Read-only audit detail for super-admin diagnostics.
+    """
+    result = await db.execute(
+        select(Audit)
+        .options(selectinload(Audit.competitors))
+        .where(Audit.id == audit_id)
+    )
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audit not found")
+
+    return {
+        "id": str(audit.id),
+        "user_id": audit.user_id,
+        "workspace_id": str(audit.workspace_id) if audit.workspace_id else None,
+        "project_id": str(audit.project_id) if audit.project_id else None,
+        "url": audit.url,
+        "status": audit.status.value if hasattr(audit.status, "value") else audit.status,
+        "ai_status": audit.ai_status,
+        "execution_plan_status": audit.execution_plan_status,
+        "processing_step": audit.processing_step,
+        "processing_logs": audit.processing_logs,
+        "progress_percent": None,
+        "overall_score": audit.overall_score,
+        "seo_score": audit.seo_score,
+        "performance_score": audit.performance_score,
+        "content_score": audit.content_score,
+        "is_local_business": audit.is_local_business,
+        "results": audit.results or {},
+        "pdf_url": audit.pdf_url,
+        "error_message": audit.error_message,
+        "created_at": audit.created_at.isoformat() if audit.created_at else None,
+        "started_at": audit.started_at.isoformat() if audit.started_at else None,
+        "completed_at": audit.completed_at.isoformat() if audit.completed_at else None,
+        "competitors": [
+            {
+                "id": str(c.id),
+                "audit_id": str(c.audit_id) if c.audit_id else None,
+                "url": c.url,
+                "status": c.status.value if hasattr(c.status, "value") else c.status,
+                "results": c.results or {},
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+            }
+            for c in (audit.competitors or [])
+        ],
     }
 
 

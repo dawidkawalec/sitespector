@@ -45,6 +45,7 @@ from app.services.ai_analysis import (
 )
 from app.services.screaming_frog import _detect_sitemaps
 from app.services.rag_service import index_audit_for_rag
+from app.services.audit_access import get_audit_with_access
 
 logger = logging.getLogger(__name__)
 
@@ -350,43 +351,12 @@ async def get_audit(
         404: If audit not found
         403: If user is not a member of the workspace
     """
-    result = await db.execute(
-        select(Audit)
-        .options(selectinload(Audit.competitors))
-        .where(Audit.id == audit_id)
+    audit = await get_audit_with_access(
+        db,
+        audit_id,
+        current_user["id"],
+        include_competitors=True,
     )
-    audit = result.scalar_one_or_none()
-    
-    if not audit:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Audit not found"
-        )
-    
-    # Check workspace membership
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
-        if not has_access:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
-        # If audit belongs to a project, also verify project access
-        if audit.project_id:
-            if not await verify_project_access(
-                current_user["id"], str(audit.project_id), str(audit.workspace_id)
-            ):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not authorized to access this audit"
-                )
-    else:
-        # Legacy audit (user_id based) - check user ownership
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
     
     # Enrich with progress + processing logs for the UI progress window.
     # Frontend polls this endpoint while audit is running.
@@ -415,19 +385,7 @@ async def reindex_audit_rag(
     Intended for self-healing and support/debug workflows when the worker failed to index due to
     transient embedding/quota/Qdrant issues.
     """
-    result = await db.execute(select(Audit).where(Audit.id == audit_id))
-    audit = result.scalar_one_or_none()
-    if not audit:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audit not found")
-
-    # Same access check logic as get_audit().
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
-        if not has_access:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this audit")
-    else:
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this audit")
+    await get_audit_with_access(db, audit_id, current_user["id"])
 
     await index_audit_for_rag(db, str(audit_id))
     await db.commit()
@@ -447,18 +405,7 @@ async def get_audit_rag_status(
         status: "ready" | "pending" | "not_applicable"
         indexed_at: ISO timestamp or null
     """
-    result = await db.execute(select(Audit).where(Audit.id == audit_id))
-    audit = result.scalar_one_or_none()
-    if not audit:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audit not found")
-
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
-        if not has_access:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
-    else:
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    audit = await get_audit_with_access(db, audit_id, current_user["id"])
 
     indexed_at = getattr(audit, "rag_indexed_at", None)
     audit_status_val = getattr(audit.status, "value", str(audit.status)) if audit.status else None
@@ -496,32 +443,7 @@ async def get_audit_status(
         404: If audit not found
         403: If user is not a member of the workspace
     """
-    result = await db.execute(
-        select(Audit).where(Audit.id == audit_id)
-    )
-    audit = result.scalar_one_or_none()
-    
-    if not audit:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Audit not found"
-        )
-    
-    # Check workspace membership (same as get_audit)
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
-        if not has_access:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
-    else:
-        # Legacy audit
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
+    audit = await get_audit_with_access(db, audit_id, current_user["id"])
     
     return {
         "id": audit.id,
@@ -587,16 +509,12 @@ async def delete_audit(
         404: If audit not found
         403: If user is not authorized (needs admin/owner role)
     """
-    result = await db.execute(
-        select(Audit).where(Audit.id == audit_id)
+    audit = await get_audit_with_access(
+        db,
+        audit_id,
+        current_user["id"],
+        required_workspace_role="admin",
     )
-    audit = result.scalar_one_or_none()
-    
-    if not audit:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Audit not found"
-        )
     
     # Prevent deletion of audits that are currently processing
     if audit.status in (AuditStatus.PENDING, AuditStatus.PROCESSING):
@@ -605,26 +523,6 @@ async def delete_audit(
             detail="Cannot delete audit that is currently processing. Please wait for completion or cancel it first."
         )
     
-    # Check workspace membership with admin role required
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(
-            current_user["id"], 
-            audit.workspace_id, 
-            required_role="admin"  # Need admin or owner to delete
-        )
-        if not has_access:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to delete this audit (admin role required)"
-            )
-    else:
-        # Legacy audit
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to delete this audit"
-            )
-
     # Remove RAG vectors for this audit from Qdrant (best-effort)
     try:
         from app.services.qdrant_client import delete_points_by_filter
@@ -668,17 +566,10 @@ async def assign_audit_to_project(
         400: Project not found or wrong workspace
         403: Not authorized
     """
-    result = await db.execute(select(Audit).where(Audit.id == audit_id))
-    audit = result.scalar_one_or_none()
-    if not audit:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audit not found")
+    audit = await get_audit_with_access(db, audit_id, current_user["id"])
 
     if not audit.workspace_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Audit has no workspace")
-
-    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
-    if not has_access:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this workspace")
 
     if project_id:
         from app.lib.supabase import get_project
@@ -709,31 +600,12 @@ async def download_raw_data(
     """
     Download raw audit data as ZIP.
     """
-    result = await db.execute(
-        select(Audit)
-        .options(selectinload(Audit.competitors))
-        .where(Audit.id == audit_id)
+    audit = await get_audit_with_access(
+        db,
+        audit_id,
+        current_user["id"],
+        include_competitors=True,
     )
-    audit = result.scalar_one_or_none()
-    
-    if not audit:
-        raise HTTPException(status_code=404, detail="Audit not found")
-    
-    # Check workspace membership
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
-        if not has_access:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
-    else:
-        # Legacy audit
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
         
     if audit.status != AuditStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Audit not completed yet")
@@ -787,30 +659,12 @@ async def download_audit_pdf(
     Query params:
       - report_type: 'executive' | 'standard' | 'full' (default: standard)
     """
-    result = await db.execute(
-        select(Audit)
-        .options(selectinload(Audit.competitors))
-        .where(Audit.id == audit_id)
+    audit = await get_audit_with_access(
+        db,
+        audit_id,
+        current_user["id"],
+        include_competitors=True,
     )
-    audit = result.scalar_one_or_none()
-    
-    if not audit:
-        raise HTTPException(status_code=404, detail="Audit not found")
-    
-    # Check workspace membership
-    if audit.workspace_id:
-        has_access = await verify_workspace_access(current_user["id"], audit.workspace_id)
-        if not has_access:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
-    else:
-        if audit.user_id != current_user["id"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this audit"
-            )
         
     if audit.status != AuditStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Audit not completed yet")
@@ -893,14 +747,7 @@ async def get_fix_suggestion(
     Get AI-generated fix suggestion for a specific SEO issue.
     """
     # Verify access
-    result = await db.execute(select(Audit).where(Audit.id == audit_id))
-    audit = result.scalar_one_or_none()
-    if not audit:
-        raise HTTPException(status_code=404, detail="Audit not found")
-    
-    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
-    if not has_access:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    await get_audit_with_access(db, audit_id, current_user["id"])
     
     return await generate_fix_suggestion(request.issue_type, request.urls)
 
@@ -916,14 +763,7 @@ async def analyze_audit_pages(
     Perform deep AI analysis on specific pages of an audit.
     """
     # Verify access
-    result = await db.execute(select(Audit).where(Audit.id == audit_id))
-    audit = result.scalar_one_or_none()
-    if not audit:
-        raise HTTPException(status_code=404, detail="Audit not found")
-    
-    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
-    if not has_access:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    audit = await get_audit_with_access(db, audit_id, current_user["id"])
     
     if not audit.results or "crawl" not in audit.results or "all_pages" not in audit.results["crawl"]:
         raise HTTPException(status_code=400, detail="Audit data missing")
@@ -966,14 +806,7 @@ async def get_quick_wins(
     Get AI-prioritized Quick Wins for an audit.
     """
     # Verify access
-    result = await db.execute(select(Audit).where(Audit.id == audit_id))
-    audit = result.scalar_one_or_none()
-    if not audit:
-        raise HTTPException(status_code=404, detail="Audit not found")
-    
-    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
-    if not has_access:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    audit = await get_audit_with_access(db, audit_id, current_user["id"])
     
     results = audit.results or {}
     cached_quick_wins = results.get("quick_wins", []) if isinstance(results, dict) else []
@@ -1023,14 +856,7 @@ async def post_generate_alt(
     Generate ALT text for an image using AI.
     """
     # Verify access
-    result = await db.execute(select(Audit).where(Audit.id == audit_id))
-    audit = result.scalar_one_or_none()
-    if not audit:
-        raise HTTPException(status_code=404, detail="Audit not found")
-    
-    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
-    if not has_access:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    await get_audit_with_access(db, audit_id, current_user["id"])
     
     alt_text = await generate_alt_text(request.image_url)
     return {"alt_text": alt_text}
@@ -1049,14 +875,7 @@ async def trigger_ai_analysis(
     import asyncio
     from worker import run_ai_analysis as worker_run_ai
     
-    result = await db.execute(select(Audit).where(Audit.id == audit_id))
-    audit = result.scalar_one_or_none()
-    if not audit:
-        raise HTTPException(status_code=404, detail="Audit not found")
-    
-    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
-    if not has_access:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    audit = await get_audit_with_access(db, audit_id, current_user["id"])
     
     if audit.status != AuditStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Audit must be completed first")
@@ -1086,14 +905,7 @@ async def trigger_ai_context(
     Manually trigger contextual AI analysis for specific area(s).
     Use to regenerate per-area insights without re-running full pipeline.
     """
-    result = await db.execute(select(Audit).where(Audit.id == audit_id))
-    audit = result.scalar_one_or_none()
-    if not audit:
-        raise HTTPException(status_code=404, detail="Audit not found")
-    
-    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
-    if not has_access:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    audit = await get_audit_with_access(db, audit_id, current_user["id"])
     
     if not audit.results:
         raise HTTPException(status_code=400, detail="No audit data available")
@@ -1203,14 +1015,7 @@ async def trigger_execution_plan(
     import asyncio
     from worker import run_execution_plan as worker_run_execution_plan
     
-    result = await db.execute(select(Audit).where(Audit.id == audit_id))
-    audit = result.scalar_one_or_none()
-    if not audit:
-        raise HTTPException(status_code=404, detail="Audit not found")
-    
-    has_access = await verify_workspace_access(current_user["id"], str(audit.workspace_id))
-    if not has_access:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    audit = await get_audit_with_access(db, audit_id, current_user["id"])
     
     if audit.status != AuditStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Audit must be completed first")
