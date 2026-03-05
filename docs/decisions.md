@@ -838,8 +838,8 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 
 ---
 
-**Last Updated**: 2026-03-03
-**Total Decisions**: 45 accepted
+**Last Updated**: 2026-03-05
+**Total Decisions**: 46 accepted
 
 ---
 
@@ -904,3 +904,22 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
   - Logo row alignment is stable for SVG icon + brand text.
   - Footer remains anchored inside the dark cover.
   - Generated and verified with `tmp/audit_demo_20260303_v5.pdf`.
+
+---
+
+## ADR-046: Light-Themed PDF Cover with Deterministic Footer Positioning (2026-03-05)
+
+- **Decision**: Keep PDF cover on a light background with dark typography (aligned with report body), and use deterministic block/absolute layout instead of flex-based footer pushing for WeasyPrint stability.
+- **Rationale**: Dark full-bleed cover still produced visual artifacts and footer drift in real renders (`v5/v6`). A light cover with simpler layout reduces rendering variance and improves client-facing consistency.
+- **Implementation**:
+  - Refactored cover CSS in `backend/app/services/pdf/styles.py`:
+    - light palette,
+    - fixed A4 page box,
+    - `cover-main` block + absolute `cover-footer-note`,
+    - class-based divider and spacing normalization.
+  - Refactored cover template in `backend/templates/pdf/sections/cover.html` with `cover-logo-wrap` and clean hierarchy.
+  - Added two-step logo support in `backend/app/services/pdf/generator.py` via `PDF_COVER_LOGO_SRC` (optional) with safe fallback logo.
+- **Outcome**:
+  - Stable first-page rendering without footer spilling outside cover.
+  - Cover style aligned with the rest of report pages.
+  - Fast follow-up path to final PNG logo without structural rewrites.

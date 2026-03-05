@@ -275,6 +275,8 @@ async def generate_pdf(
     audit_url = audit_data.get("url") or ""
     audit_url_short = _shorten_url(audit_url)
     project_name = audit_data.get("project_name") or ""
+    # Two-step logo rollout: empty by default, later set env PDF_COVER_LOGO_SRC to PNG path/URL.
+    cover_logo_src = (getattr(settings, "PDF_COVER_LOGO_SRC", "") or "").strip()
 
     # ---- Pre-check data availability ----
     senuto = results.get("senuto") or {}
@@ -303,6 +305,7 @@ async def generate_pdf(
         audit_project_name=project_name,
         generated_date=generated_date,
         report_type_label=cfg.label_pl,
+        cover_logo_src=cover_logo_src,
     ))
 
     # TOC

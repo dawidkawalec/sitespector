@@ -1794,3 +1794,40 @@ Replaced all instances of `{% from '../macros.html' import ... %}` with `{% from
 **Verification**:
 - Generated fresh PDF: `tmp/audit_demo_20260303_v5.pdf`
 - Confirmed container has updated styles/template before render.
+
+---
+
+### BUG-049: PDF cover still broke in WeasyPrint despite full-bleed dark layout
+
+**Reported**: 2026-03-05
+
+**Status**: ✅ FIXED (2026-03-05)
+
+**Severity**: CRITICAL
+
+**Description**:
+- Cover page in `v5/v6` still showed footer text outside the main cover block.
+- Visual hierarchy looked unstable (divider rendered like a block, spacing drift).
+- Requirement changed to match full report style: light background + dark text on cover.
+
+**Root cause**:
+- Flex-based vertical push (`margin-top: auto`) remained brittle in WeasyPrint pagination context.
+- Inline divider style was rendered inconsistently.
+- Dark cover approach increased risk of visible page-boundary artifacts.
+
+**Fix**:
+- Switched cover to a light theme (`#f8fafc` background, dark typography), aligned with report pages.
+- Replaced fragile flex footer behavior with deterministic positioning (`position: absolute; bottom: ...`).
+- Introduced stable block structure: `cover-main`, `cover-logo-wrap`, `cover-divider`, `cover-url-box`, `cover-footer-note`.
+- Added two-step logo mechanism in template/generator:
+  - fallback vector/text logo works now,
+  - future PNG can be injected via `PDF_COVER_LOGO_SRC` without layout rewrite.
+
+**Files Changed**:
+- `backend/app/services/pdf/styles.py`
+- `backend/templates/pdf/sections/cover.html`
+- `backend/app/services/pdf/generator.py`
+
+**Verification**:
+- Generated fresh PDF: `tmp/audit_demo_20260305_v7.pdf`
+- Confirmed patched files were copied to running `sitespector-backend` and rendered by production pipeline.

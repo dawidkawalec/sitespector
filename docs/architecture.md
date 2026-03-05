@@ -142,6 +142,7 @@ The authenticated app has a persistent right-side **ChatPanel** (desktop) which 
 - Landing typography and menu rules were normalized to reduce overflow risks (`landing/src/assets/scss/_general.scss`, `_menu.scss`, `_mega-menu.scss`).
 - PDF readability/wrapping was hardened in `backend/app/services/pdf/styles.py` and `backend/templates/pdf/sections/cover.html` (long URLs/tables/project names).
 - PDF cover rendering now uses a full-bleed first-page strategy (`@page :first { margin: 0 }` + A4-sized cover block) to prevent white lower bands and footer spillover on client reports.
+- Cover design direction was shifted to light theme (dark text on bright background) with deterministic footer placement and optional PNG logo source (`PDF_COVER_LOGO_SRC`) for stable client-facing rendering.
 
 ---
-**Last updated**: 2026-03-03
+**Last updated**: 2026-03-05

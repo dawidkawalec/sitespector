@@ -139,81 +139,99 @@ li {
 /* ========== COVER PAGE ========== */
 .cover-page {
     page-break-after: always;
-    background: #0f172a;
-    color: #ffffff;
+    background: #f8fafc;
+    color: #0f172a;
     width: 210mm;
-    min-height: 297mm;
+    height: 297mm;
     margin: 0;
-    padding: 80px 50px 50px 50px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    padding: 26mm 22mm 18mm 22mm;
+    position: relative;
+    overflow: hidden;
     text-align: center;
     font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
-.cover-logo {
+.cover-main {
+    width: 100%;
+    max-width: 140mm;
+    margin: 0 auto;
+    padding-top: 6mm;
+    padding-bottom: 26mm;
+}
+.cover-logo-wrap {
+    margin-bottom: 30px;
+}
+.cover-logo-fallback {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 14px;
-    margin: 0 0 48px 0;
+    gap: 12px;
+}
+.cover-logo-image {
+    width: auto;
+    max-width: 100%;
+    height: 24mm;
 }
 .cover-logo-icon {
-    width: 56px;
-    height: 56px;
+    width: 54px;
+    height: 54px;
     background: #ff8945;
-    border-radius: 14px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px;
+    padding: 9px;
 }
 .cover-logo-text {
     font-size: 24pt;
     font-weight: 800;
-    color: #ffffff;
-    letter-spacing: -0.5px;
+    color: #0f172a;
+    letter-spacing: -0.4px;
     white-space: nowrap;
     line-height: 1;
     font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
 .cover-title {
-    font-size: 14pt;
+    font-size: 16pt;
     font-weight: 400;
-    color: #94a3b8;
-    margin: 0 0 32px 0;
-    letter-spacing: 1px;
+    color: #475569;
+    margin: 0 0 20px 0;
+    letter-spacing: 1.2px;
     text-transform: uppercase;
     font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
+.cover-divider {
+    width: 54px;
+    height: 0;
+    margin: 0 auto 24px auto;
+    border-top: 2px solid #ff8945;
+}
 .cover-url-box {
-    width: 13cm;
-    max-width: calc(100% - 12mm);
-    margin: 0 0 40px 0;
+    width: 100%;
+    max-width: 130mm;
+    margin: 0 auto;
 }
 .cover-url {
     font-size: 20pt;
     font-weight: 700;
-    color: #ffffff;
-    overflow-wrap: break-word;
-    word-break: break-word;
-    line-height: 1.3;
-    margin-bottom: 16px;
+    color: #0f172a;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    line-height: 1.25;
+    margin-bottom: 14px;
     letter-spacing: -0.02em;
     font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
 .cover-date {
     font-size: 9.5pt;
-    color: #64748b;
+    color: #475569;
     line-height: 1.35;
     margin-top: 4px;
     font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
 .cover-report-type {
     display: inline-block;
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
+    background: #e2e8f0;
+    color: #1e3a8a;
     padding: 6px 20px;
     border-radius: 9999px;
     font-size: 8.5pt;
@@ -224,8 +242,10 @@ li {
     font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
 .cover-footer-note {
-    margin-top: auto;
-    padding-top: 40px;
+    position: absolute;
+    left: 22mm;
+    right: 22mm;
+    bottom: 10mm;
     color: #64748b;
     font-size: 8.5pt;
     line-height: 1.4;
