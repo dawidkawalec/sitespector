@@ -1056,6 +1056,16 @@ import { ThemeProvider } from 'next-themes'
 - **Collapsible Sections**: Uses `NavSection` with smooth CSS grid animations for expanding/collapsing.
 - **Visual Indicators**: Active state with a vertical primary-color indicator and subtle background highlights.
 - **Mobile Support**: Integration with `MobileSidebar` using an `onAction` callback to close the drawer on navigation.
+- **System Status Polling Guardrail (Mar 2026)**:
+  - uses `systemAPI.getStatus()` (authenticated API client),
+  - `refetchInterval`: 30s normally, 120s when query is in error state,
+  - `retry: 1` to reduce request floods during backend incidents.
+
+### System Status Widgets (Mar 2026 hardening)
+
+- `frontend/components/SystemStatus.tsx` now uses `systemAPI.getStatus()` (same auth path as app API calls), not raw `fetch`.
+- Dashboard and sidebar share query key `['system-status']` and both apply error backoff (30s -> 120s) with `retry: 1`.
+- Admin system page (`/admin/system`) keeps endpoint `/api/admin/system` active but follows the same polling guardrail.
 
 ---
 

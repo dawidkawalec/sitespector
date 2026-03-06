@@ -70,6 +70,47 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ---
 
+### BUG-056: Cykliczne błędy System Status i spam requestów w UI
+
+**Reported**: 2026-03-06
+
+**Status**: ✅ FIXED (2026-03-06)
+
+**Severity**: HIGH
+
+**Description**:
+- W sidebarze i panelu admina pojawiały się regularne błędy endpointów statusowych (`/api/system/status`, `/api/admin/system`), co powodowało stały spam w konsoli/network.
+- Widget dashboardowy statusu używał osobnego, surowego `fetch`, przez co zachowanie auth było niespójne względem reszty aplikacji.
+
+**Root cause**:
+- Ryzykowna implementacja dual-auth w `verify_admin_or_user` (manualne wywołanie dependency auth) mogła prowadzić do niestabilnego zachowania ścieżki Bearer.
+- Polling statusu był stały (30s) bez sensownego backoffu na błędzie, co przy awarii wzmacniało lawinę requestów.
+- Brak ujednolicenia klienta API dla wszystkich widoków System Status.
+
+**Fix**:
+- Backend:
+  - `backend/app/main.py`: refactor `verify_admin_or_user` na poprawne użycie `HTTPBearer(auto_error=False)` + delegacja do `get_current_user(request, credentials, x_impersonation_token)`.
+  - Dodany bezpieczny fallback do `401` dla nieoczekiwanych wyjątków ścieżki Bearer.
+- Frontend:
+  - `frontend/components/SystemStatus.tsx`: przejście z raw `fetch` na `systemAPI.getStatus()` (wspólny auth path).
+  - `frontend/components/layout/UnifiedSidebar.tsx`: polling backoff `30s -> 120s` przy błędzie, `retry: 1`.
+  - `frontend/app/(app)/admin/system/page.tsx`: polling backoff `30s -> 120s` przy błędzie, `retry: 1`.
+
+**Verification**:
+- Lint frontend (zmienione pliki): ✅ bez błędów.
+- `python3 -m py_compile backend/app/main.py`: ✅.
+- Smoke check produkcji:
+  - `GET /health` -> `200`
+  - `GET /api/system/status` bez auth -> `401` z poprawnym komunikatem.
+
+**Files Changed**:
+- `backend/app/main.py`
+- `frontend/components/SystemStatus.tsx`
+- `frontend/components/layout/UnifiedSidebar.tsx`
+- `frontend/app/(app)/admin/system/page.tsx`
+
+---
+
 ### BUG-053: Niespójny branding logo między UI/PDF/landing (ikona + osobny napis)
 
 **Reported**: 2026-03-06

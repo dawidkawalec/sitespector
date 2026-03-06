@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { systemAPI } from '@/lib/api'
 
 interface ServiceStatus {
   status: 'online' | 'offline' | 'error'
@@ -30,17 +31,13 @@ interface SystemStatus {
   }
 }
 
-async function getSystemStatus(): Promise<SystemStatus> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/system/status`)
-  if (!res.ok) throw new Error('Failed to fetch system status')
-  return res.json()
-}
-
 export function SystemStatus() {
   const { data: status, isLoading, isError, error } = useQuery({
     queryKey: ['system-status'],
-    queryFn: getSystemStatus,
-    refetchInterval: 30000, // Refresh every 30s
+    queryFn: () => systemAPI.getStatus() as Promise<SystemStatus>,
+    // Back off polling when endpoint is failing to avoid request spam.
+    refetchInterval: (query) => (query.state.error ? 120_000 : 30_000),
+    retry: 1,
   })
 
   if (isLoading) {

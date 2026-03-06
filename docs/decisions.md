@@ -1050,3 +1050,24 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
   - Eliminated false-zero KPI regressions in regenerated full PDF.
   - Improved consistency between PDF and UI in visibility/competitor/schema narratives.
   - Added practical Schema JSON-LD implementation guidance in both report and UI.
+
+---
+
+## ADR-048: System Status Stability Hardening (2026-03-06)
+
+- **Decision**:
+  - Refactor `/api/system/status` dual-auth dependency to use canonical Supabase auth flow (`get_current_user`) with proper FastAPI dependency wiring.
+  - Standardize frontend System Status consumers to authenticated `systemAPI.getStatus()` calls.
+  - Add polling backoff for status queries (30s normal, 120s on error) and reduce retries to `1`.
+- **Rationale**:
+  - Status endpoint is rendered in persistent navigation and admin views; failures can generate repeated noisy requests and console/network spam.
+  - Manual dependency invocation in auth path increased risk of runtime drift and hard-to-debug failures.
+- **Implementation**:
+  - Backend: `backend/app/main.py` (`verify_admin_or_user`).
+  - Frontend:
+    - `frontend/components/SystemStatus.tsx`
+    - `frontend/components/layout/UnifiedSidebar.tsx`
+    - `frontend/app/(app)/admin/system/page.tsx`
+- **Outcome**:
+  - Auth failures now degrade predictably to `401` instead of accidental internal errors.
+  - Reduced request flood during incidents while keeping status feature active in UI and admin panel.

@@ -81,6 +81,23 @@ The **Worker** is a background Python process that polls for pending audits and 
 
 ---
 
+## Monitoring Auth Hardening (Mar 2026)
+
+### `/api/system/status` dual-auth flow
+
+- Endpoint dependency `verify_admin_or_user` accepts:
+  - `X-Admin-Token` (external monitoring),
+  - or Supabase Bearer JWT (dashboard/admin UI).
+- Bearer verification now delegates directly to canonical `get_current_user(request, credentials, x_impersonation_token)` flow.
+- This removed the previous risk of manually invoking auth dependency with mismatched arguments.
+
+### Failure-mode expectations
+
+- Invalid/missing auth now returns `401` (no accidental `500` from auth path).
+- Service checks in status endpoint remain per-service (`online|offline|error`) and should degrade gracefully if a single probe fails.
+
+---
+
 ## Worker Architecture
 
 ### Main Loop

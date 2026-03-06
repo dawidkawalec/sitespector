@@ -58,7 +58,8 @@ export default function AdminSystemPage() {
   const { data, isLoading, refetch, isFetching, dataUpdatedAt } = useQuery({
     queryKey: ['admin-system'],
     queryFn: adminAPI.getSystem,
-    refetchInterval: 30_000,
+    refetchInterval: (query) => (query.state.error ? 120_000 : 30_000),
+    retry: 1,
   })
 
   const services = data?.services ?? {}

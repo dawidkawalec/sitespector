@@ -405,7 +405,9 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
       const { systemAPI } = await import('@/lib/api')
       return systemAPI.getStatus()
     },
-    refetchInterval: 30_000,
+    // Avoid hammering backend when status endpoint is degraded.
+    refetchInterval: (query) => (query.state.error ? 120_000 : 30_000),
+    retry: 1,
   })
 
   // ── Route analysis ───────────────────────────────────────────────────────────

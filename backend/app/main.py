@@ -4,6 +4,7 @@ Main FastAPI application for SiteSpector.
 
 from datetime import datetime
 from fastapi import FastAPI, Depends, Header, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -52,9 +53,14 @@ async def verify_admin_token(x_admin_token: str = Header(..., alias="X-Admin-Tok
     return True
 
 
+_optional_bearer = HTTPBearer(auto_error=False)
+
+
 async def verify_admin_or_user(
     request: Request,
     x_admin_token: Optional[str] = Header(None, alias="X-Admin-Token"),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_optional_bearer),
+    x_impersonation_token: Optional[str] = Header(default=None, alias="X-Impersonation-Token"),
 ):
     """
     Accept either X-Admin-Token header OR a valid Supabase Bearer token.
@@ -69,14 +75,23 @@ async def verify_admin_or_user(
         raise HTTPException(status_code=403, detail="Invalid admin token")
 
     # Fall back to Supabase Bearer token
-    auth_header = request.headers.get("Authorization", "")
-    if auth_header.startswith("Bearer "):
-        from fastapi.security import HTTPAuthorizationCredentials
-        creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=auth_header[7:])
-        from app.auth_supabase import get_current_user as _get_user
-        # This will raise 401 if token is invalid
-        user = await _get_user(creds)
-        return user
+    if credentials is not None:
+        try:
+            # Reuse the canonical Supabase auth dependency to avoid auth logic drift.
+            user = await get_current_user(
+                request=request,
+                credentials=credentials,
+                x_impersonation_token=x_impersonation_token,
+            )
+            return user
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.warning(f"Status auth fallback failed: {exc}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid bearer token",
+            )
 
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

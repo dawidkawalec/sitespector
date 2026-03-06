@@ -1139,6 +1139,14 @@ Returns health status of all critical services.
 
 **Service statuses**: `online` | `offline` | `error`
 
+**Auth behavior**:
+- Missing token -> `401` with: `Provide X-Admin-Token header or Bearer token`
+- Invalid bearer token -> `401` (never escalated to `500`)
+
+**Resilience behavior**:
+- Individual service check failures are reported per service (`offline`/`error`).
+- Endpoint should continue returning a status payload instead of failing whole response for single-check errors.
+
 #### `GET /api/logs/worker`
 
 **Auth**: `X-Admin-Token` header only.  
