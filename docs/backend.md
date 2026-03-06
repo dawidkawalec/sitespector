@@ -34,6 +34,16 @@ The **Worker** is a background Python process that polls for pending audits and 
   - `white-space: nowrap` for contact string.
 - Result: footer branding is no longer micro-sized and remains legible in generated PDFs.
 
+### Footer left/right layout hotfix (2026-03-06)
+
+- Reworked running footer layout for deterministic alignment:
+  - logo rendered via `footer-brand` in `@bottom-left`,
+  - contact text rendered via `footer-text` in `@bottom-right`,
+  - page numbering moved to `@bottom-center`.
+- Files:
+  - `backend/templates/pdf/base.html`
+  - `backend/app/services/pdf/styles.py`
+
 ---
 
 ## Audit Access Hardening (Mar 2026)

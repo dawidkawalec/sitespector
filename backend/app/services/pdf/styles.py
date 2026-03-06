@@ -32,14 +32,13 @@ def get_pdf_css() -> str:
         vertical-align: middle;
     }
     @bottom-right {
-        content: "Strona " counter(page) " z " counter(pages);
-        font-size: 7.5pt;
-        color: #94a3b8;
+        content: element(footer-text);
+        vertical-align: middle;
     }
     @bottom-center {
-        content: "";
-        border-top: 1px solid #f1f5f9;
-        width: 100%;
+        content: "Strona " counter(page) " z " counter(pages);
+        font-size: 7.3pt;
+        color: #94a3b8;
     }
 }
 
@@ -60,10 +59,10 @@ def get_pdf_css() -> str:
 }
 #running-footer-brand {
     position: running(footer-brand);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    max-width: 100%;
+}
+#running-footer-text {
+    position: running(footer-text);
+    text-align: right;
 }
 .running-logo-image {
     height: 11px;

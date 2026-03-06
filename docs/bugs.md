@@ -8,6 +8,32 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-055: Footer PDF nie trzymał stałego układu lewo/prawo
+
+**Reported**: 2026-03-06
+
+**Status**: ✅ FIXED (2026-03-06)
+
+**Severity**: MEDIUM
+
+**Description**:
+- W stopce audytu logo i tekst kontaktowy nie były stabilnie rozdzielone (nakładanie/zbicie do lewej strony).
+
+**Root cause**:
+- Jeden wspólny running element (`footer-brand`) oparty o flex nie gwarantował poprawnego rozłożenia we wszystkich renderach WeasyPrint.
+
+**Fix**:
+- Rozdzielono stopkę na osobne running elements:
+  - `footer-brand` -> tylko logo na `@bottom-left`,
+  - `footer-text` -> tylko domena + email na `@bottom-right`.
+- Numerację stron przeniesiono do `@bottom-center`, aby nie konkurowała z blokiem kontaktowym.
+
+**Files Changed**:
+- `backend/templates/pdf/base.html`
+- `backend/app/services/pdf/styles.py`
+
+---
+
 ### BUG-054: Stopka PDF i logo na ciemnym tle były mało czytelne
 
 **Reported**: 2026-03-06
