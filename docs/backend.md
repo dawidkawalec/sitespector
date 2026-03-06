@@ -415,9 +415,31 @@ backend/templates/pdf/
 
 | Type | Pages | Audience | Key additions |
 |------|-------|----------|--------------|
-| `executive` | 15–25 | C-level, presentations | Scores, TOP metrics, TOP 5 QW |
-| `standard` | 50–80 | Marketing teams | Full SEO, Perf, Senuto TOP 50, AI strategy |
-| `full` | 150–250+ | SEO agencies | All raw data, ALL pages, ALL keywords, all new sections, no row limits |
+| `executive` | 15–25 | C-level, presentations | Scores, TOP metrics, TOP 5 QW + Schema Executive + skrót render/no-JS/soft404 |
+| `standard` | 50–90 | Marketing teams | Full SEO, Perf, Senuto TOP 50, AI strategy + Schema Standard + directives/hreflang |
+| `full` | 150–250+ | SEO agencies | All raw data, ALL pages, ALL keywords + Schema Full + render/no-JS + semantyka + soft404 |
+
+### Schema-first Full Program (Mar 2026)
+
+- `structured_data` was expanded to `structured_data_v2` with:
+  - `@graph` and nested JSON-LD parsing,
+  - priority model (`critical/high/medium/low`),
+  - required/recommended fields validation,
+  - AI/SEO readiness score + missing priority types.
+- New crawl-level technical payloads saved in `results.crawl`:
+  - `render_nojs` (content availability without JS),
+  - `soft_404` (status 200 pages with error-like patterns + low-content summary),
+  - `directives_hreflang` (noindex/nofollow/X-Robots/hreflang summary).
+- PDF part II (Technical SEO) now starts with Schema and includes dedicated sections:
+  - `structured_data`,
+  - `render_nojs`,
+  - `semantic_html`,
+  - `soft404_low_content`,
+  - `directives_hreflang`,
+  - `robots_sitemap`.
+- AI contexts were extended:
+  - SEO context now consumes Schema/render/soft404/semantic/directives signals,
+  - visibility context now produces non-technical summary, metric legend, and management next steps.
 
 ### API Endpoint
 
@@ -431,13 +453,17 @@ GET /api/audits/{audit_id}/pdf?report_type=standard
 **PART I** — Executive Summary
 **PART II** — SEO Techniczne
   - Technical Overview (404s, redirects, missing canonicals, HTTPS, crawl depth)
+  - Structured Data v2 (Schema.org priorities, completeness, AI/SEO readiness)
+  - Render without JavaScript (SSR/no-JS accessibility heuristics)
+  - Semantic HTML Structure (header/nav/main/article/etc)
+  - Soft 404 + Low Content Detection
+  - Directives / Hreflang / Nofollow
+  - Robots.txt & Sitemap & Domain Config
   - On-Page SEO (title/description/H1 per-page analysis, thin content, alt text)
   - Heading Hierarchy Analysis (H1/H2 issues, duplicates, H1=Title)
   - URL Structure Analysis (length, non-ASCII, underscores, depth distribution)
   - Redirect Analysis (301/302 breakdown, HTTP downgrades, external redirects)
   - Internal Links (orphan pages, inlinks distribution, redirect chains)
-  - Structured Data (Schema.org types, issues, missing schemas)
-  - Robots.txt & Sitemap & Domain Config
 
 **PART III** — Wydajność (Performance CWV, Lighthouse Detail, Accessibility)
 **PART IV** — Widoczność Organiczna (Visibility, Keywords, Changes, Competitors, Backlinks, AIO)
@@ -451,11 +477,14 @@ GET /api/audits/{audit_id}/pdf?report_type=standard
 ### New Data Collection (technical_seo_extras.py)
 
 Called during worker audit pipeline (step "4a") after Screaming Frog crawl:
-- **Schema.org**: Fetches homepage HTML, extracts JSON-LD, detects types (Organization, Product, LocalBusiness, etc.), checks for issues
+- **Schema.org v2**: Fetches homepage HTML, extracts JSON-LD (`@graph` included), validates required/recommended fields, computes priorities and AI crawler readiness score
 - **Robots.txt**: Downloads and parses robots.txt, identifies blocked paths, crawl-delay, sitemap URLs, full-block detection
 - **Sitemap**: Downloads and parses sitemap XML/index, checks coverage vs crawled URLs, detects stale entries (>6 months)
 - **Domain variants**: Checks www/non-www + http/https redirect behavior, determines preferred canonical URL
 - **HTML semantics**: Analyzes homepage for HTML5 semantic elements (header, nav, main, article, footer)
+- **Render no-JS**: estimates content accessibility when JavaScript is not executed
+- **Soft404/Low-content**: detects likely soft 404 pages (HTTP 200 + error-like patterns) and thin pages
+- **Directives/Hreflang**: aggregates noindex/nofollow/X-Robots/hreflang signals from SF tabs and crawl data
 
 ### Charts (matplotlib SVG embedded)
 

@@ -702,6 +702,50 @@ interface CrawlData {
   images_without_alt: number
   internal_links_count: number
   has_sitemap: boolean
+  structured_data?: Record<string, any>
+  structured_data_v2?: {
+    found: boolean
+    total_items: number
+    types: string[]
+    items: Array<{
+      type: string
+      priority: 'critical' | 'high' | 'medium' | 'low'
+      missing_required: string[]
+      missing_recommended: string[]
+      has_issues: boolean
+    }>
+    missing_priority_types: string[]
+    ai_crawler_readiness: {
+      score: number
+      status: 'good' | 'partial' | 'poor'
+      notes: string[]
+    }
+  }
+  render_nojs?: {
+    score: number
+    status: 'good' | 'partial' | 'poor'
+    issues: string[]
+    recommendations: string[]
+  }
+  soft_404?: {
+    soft_404_count: number
+    low_content_count: number
+    soft_404_samples: Array<Record<string, any>>
+    low_content_samples: Array<Record<string, any>>
+  }
+  directives_hreflang?: {
+    noindex_count: number
+    nofollow_count: number
+    x_robots_count: number
+    hreflang_count: number
+    issues: string[]
+  }
+  semantic_html?: {
+    score: number
+    issues: string[]
+    recommendations: string[]
+    elements: Record<string, number>
+  }
 }
 ```
 

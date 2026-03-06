@@ -3,6 +3,10 @@
     {{ part_header('IV', 'Widoczność Organiczna', 'Analiza Senuto: pozycje, trendy, konkurencja, backlinki') }}
     {{ section_heading(sec_num, 'Widoczność — Przegląd') }}
 
+    <div class="info-box">
+        <p><strong>Jak czytać metryki:</strong> TOP3/TOP10/TOP50 pokazują ile fraz znajduje się w czołowych wynikach Google (im więcej, tym większy potencjał ruchu). Domain Rank pokazuje względną siłę domeny w SEO, a Ads Equivalent przybliża ile kosztowałby podobny ruch z reklam.</p>
+    </div>
+
     <div class="metric-grid">
         {{ metric_card(vis.keywords_count | int, 'Słów kluczowych TOP 50', '#3b82f6') }}
         {{ metric_card(vis.top3_count | int, 'TOP 3', '#16a34a') }}
@@ -43,6 +47,35 @@
         </div>
     </div>
 
+    {% if vis.non_technical_summary %}
+        <h3>Wnioski biznesowe (dla klienta)</h3>
+        <div class="alert alert-ai no-break">
+            <p>{{ vis.non_technical_summary }}</p>
+        </div>
+    {% endif %}
+
+    {% if vis.metrics_legend %}
+        <h3>Legenda metryk (AI)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:24%">Metryka</th>
+                    <th style="width:38%">Co oznacza</th>
+                    <th>Wpływ biznesowy</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in vis.metrics_legend[:6] %}
+                    <tr>
+                        <td class="td-bold">{{ row.metric }}</td>
+                        <td class="text-small">{{ row.meaning }}</td>
+                        <td class="text-small">{{ row.business_impact }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
     {# AI Visibility insights #}
     {% if vis.ai_summary %}
         <h3>Analiza AI — Widoczność</h3>
@@ -67,6 +100,15 @@
                 <li>{{ opp }}</li>
             {% endfor %}
         </ul>
+    {% endif %}
+
+    {% if vis.management_next_steps %}
+        <h4>Rekomendowane kolejne kroki (krok po kroku)</h4>
+        <ol class="text-small">
+            {% for step in vis.management_next_steps[:6] %}
+                <li>{{ step }}</li>
+            {% endfor %}
+        </ol>
     {% endif %}
 
     {# Top sections #}

@@ -29,5 +29,8 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
         "org_comp": {
             "competitors": normalized_competitors[:15],
             "ai_opportunities": vis_ai.get("competitor_gaps") or vis_ai.get("opportunities") or [],
+            "non_technical_summary": vis_ai.get("non_technical_summary") or "",
+            "metrics_legend": vis_ai.get("metrics_legend") or [],
+            "next_steps_for_management": vis_ai.get("next_steps_for_management") or [],
         }
     }

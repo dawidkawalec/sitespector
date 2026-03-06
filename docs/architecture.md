@@ -124,6 +124,35 @@ The authenticated app has a persistent right-side **ChatPanel** (desktop) which 
 
 ---
 
+## Schema-first Reporting Flow (2026-03-06)
+
+- Technical extras layer now enriches crawl payload with:
+  - `structured_data_v2` (priority-based schema validation + AI readiness),
+  - `render_nojs`,
+  - `soft_404`,
+  - `directives_hreflang`,
+  - extended `semantic_html`.
+- Worker persists these fields directly in `audits.results.crawl`.
+- PDF generator consumes those fields in Part II (Technical SEO), with Schema section rendered before classic on-page sections.
+- Frontend exposes schema explicitly via `/audits/[id]/schema` and updated PDF type promises.
+
+```mermaid
+flowchart LR
+  SF[Screaming Frog Tabs] --> CRAWL[crawl_data]
+  HTTP[technical_seo_extras] --> SDV2[structured_data_v2]
+  HTTP --> RNOJS[render_nojs]
+  CRAWL --> S404[soft_404]
+  CRAWL --> DH[directives_hreflang]
+  SDV2 --> RESULTS[audits.results.crawl]
+  RNOJS --> RESULTS
+  S404 --> RESULTS
+  DH --> RESULTS
+  RESULTS --> PDF[PDF Generator]
+  RESULTS --> UI[Schema UI page]
+```
+
+---
+
 ## Known Gotchas
 
 1. **No local Docker** — all containers run on VPS only. SSH tunnel for Dozzle.
@@ -145,4 +174,4 @@ The authenticated app has a persistent right-side **ChatPanel** (desktop) which 
 - Cover design direction was shifted to light theme (dark text on bright background) with deterministic footer placement and optional PNG logo source (`PDF_COVER_LOGO_SRC`) for stable client-facing rendering.
 
 ---
-**Last updated**: 2026-03-05
+**Last updated**: 2026-03-06

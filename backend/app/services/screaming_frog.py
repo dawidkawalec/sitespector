@@ -232,9 +232,57 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
     if not data:
         logger.error("❌ Invalid or empty Screaming Frog data")
         raise ValueError("No URLs found in Screaming Frog data")
-    
+
     logger.info(f"✅ SF parsed {len(data)} rows from internal_all successfully")
-        
+
+    response_codes_tab = tabs.get("response_codes", []) or []
+    titles_tab = tabs.get("page_titles", []) or []
+    meta_tab = tabs.get("meta_descriptions", []) or []
+    h1_tab = tabs.get("h1_all", []) or []
+    h2_tab = tabs.get("h2_all", []) or []
+    canonicals_tab = tabs.get("canonicals", []) or []
+    directives_tab = tabs.get("directives", []) or []
+    hreflang_tab = tabs.get("hreflang", []) or []
+    images_tab = tabs.get("images_all", []) or []
+
+    def _clean_url(value: str) -> str:
+        return (value or "").strip()
+
+    def _to_int(value: Any, default: int = 0) -> int:
+        try:
+            if value is None or value == "":
+                return default
+            return int(float(value))
+        except (TypeError, ValueError):
+            return default
+
+    def _to_float(value: Any, default: float = 0.0) -> float:
+        try:
+            if value is None or value == "":
+                return default
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+
+    response_map: Dict[str, Dict[str, Any]] = {}
+    for row in response_codes_tab:
+        row_url = _clean_url(row.get("Address", ""))
+        if not row_url:
+            continue
+        response_map[row_url] = {
+            "status_code": _to_int(row.get("Status Code")),
+            "content_type": row.get("Content Type", ""),
+            "size_bytes": _to_int(row.get("Size (Bytes)") or row.get("Size (bytes)")),
+        }
+
+    titles_map = {_clean_url(r.get("Address", "")): r for r in titles_tab if _clean_url(r.get("Address", ""))}
+    meta_map = {_clean_url(r.get("Address", "")): r for r in meta_tab if _clean_url(r.get("Address", ""))}
+    h1_map = {_clean_url(r.get("Address", "")): r for r in h1_tab if _clean_url(r.get("Address", ""))}
+    h2_map = {_clean_url(r.get("Address", "")): r for r in h2_tab if _clean_url(r.get("Address", ""))}
+    canonicals_map = {_clean_url(r.get("Address", "")): r for r in canonicals_tab if _clean_url(r.get("Address", ""))}
+    directives_map = {_clean_url(r.get("Address", "")): r for r in directives_tab if _clean_url(r.get("Address", ""))}
+    hreflang_map = {_clean_url(r.get("Address", "")): r for r in hreflang_tab if _clean_url(r.get("Address", ""))}
+
     # Find homepage
     homepage = next((item for item in data if item.get('Address') == url or item.get('Address') == url + '/'), data[0])
     homepage_status = int(homepage.get("Status Code", 0) or 200)
@@ -243,46 +291,84 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
     # Process ALL pages and images
     all_pages = []
     images_data = []
-    
+
+    seen_image_urls = set()
     for row in data:
-        page_url = row.get('Address', '')
-        content_type = row.get('Content Type', '')
-        
+        page_url = _clean_url(row.get("Address", ""))
+        if not page_url:
+            continue
+
+        row_response = response_map.get(page_url, {})
+        content_type = row.get("Content Type", "") or row_response.get("content_type", "")
+
+        title_row = titles_map.get(page_url, {})
+        meta_row = meta_map.get(page_url, {})
+        h1_row = h1_map.get(page_url, {})
+        h2_row = h2_map.get(page_url, {})
+        canonical_row = canonicals_map.get(page_url, {})
+        directives_row = directives_map.get(page_url, {})
+        hreflang_row = hreflang_map.get(page_url, {})
+
         # Classify by content type
         if 'image' in (content_type or '').lower():
+            seen_image_urls.add(page_url)
             images_data.append({
                 'url': page_url,
                 'alt_text': row.get('Alt Text 1', ''),
-                'size_bytes': int(row.get('Size (bytes)', 0) or 0),
+                'size_bytes': _to_int(row.get('Size (bytes)', 0) or row_response.get("size_bytes")),
                 'format': content_type,
             })
         elif 'text/html' in (content_type or '').lower() or not (content_type or '').strip():
             # HTML pages
+            title_value = row.get("Title 1") or title_row.get("Title 1", "")
+            meta_value = row.get("Meta Description 1") or meta_row.get("Meta Description 1", "")
+            h1_value = row.get("H1-1") or h1_row.get("H1-1", "")
+            h2_value = row.get("H2-1") or h2_row.get("H2-1", "")
+            canonical_value = row.get("Canonical Link Element 1") or canonical_row.get("Canonical Link Element 1", "")
+            meta_robots_value = row.get("Meta Robots 1") or directives_row.get("Meta Robots 1", "")
+            x_robots_value = directives_row.get("X-Robots-Tag 1", "")
+            status_code = _to_int(row.get("Status Code", 0) or row_response.get("status_code"), default=200)
+            indexability_value = row.get("Indexability", "") or directives_row.get("Indexability", "")
+
             all_pages.append({
                 'url': page_url,
-                'title': row.get('Title 1', ''),
-                'title_length': int(row.get('Title 1 Length', 0) or 0),
-                'meta_description': row.get('Meta Description 1', ''),
-                'meta_description_length': int(row.get('Meta Description 1 Length', 0) or 0),
-                'h1': row.get('H1-1', ''),
-                'h2': row.get('H2-1', ''),
-                'status_code': int(row.get('Status Code', 0) or 200),
-                'indexability': row.get('Indexability', ''),
+                'title': title_value,
+                'title_length': _to_int(row.get('Title 1 Length', 0) or title_row.get("Title 1 Length")),
+                'meta_description': meta_value,
+                'meta_description_length': _to_int(row.get('Meta Description 1 Length', 0) or meta_row.get("Meta Description 1 Length")),
+                'h1': h1_value,
+                'h2': h2_value,
+                'status_code': status_code,
+                'indexability': indexability_value,
                 'indexability_status': row.get('Indexability Status', ''),
-                'word_count': int(row.get('Word Count', 0) or 0),
-                'size_bytes': int(row.get('Size (bytes)', 0) or 0),
-                'response_time': float(row.get('Response Time', 0) or 0),
-                'flesch_reading_ease': float(row.get('Flesch Reading Ease Score', 0) or 0),
+                'word_count': _to_int(row.get('Word Count', 0)),
+                'size_bytes': _to_int(row.get('Size (bytes)', 0) or row_response.get("size_bytes")),
+                'response_time': _to_float(row.get('Response Time', 0)),
+                'flesch_reading_ease': _to_float(row.get('Flesch Reading Ease Score', 0)),
                 'readability': row.get('Readability', ''),
-                'inlinks': int(row.get('Unique Inlinks', 0) or 0),
-                'outlinks': int(row.get('Unique Outlinks', 0) or 0),
-                'external_outlinks': int(row.get('Unique External Outlinks', 0) or 0),
-                'canonical': row.get('Canonical Link Element 1', ''),
-                'meta_robots': row.get('Meta Robots 1', ''),
+                'inlinks': _to_int(row.get('Unique Inlinks', 0)),
+                'outlinks': _to_int(row.get('Unique Outlinks', 0)),
+                'external_outlinks': _to_int(row.get('Unique External Outlinks', 0)),
+                'canonical': canonical_value,
+                'meta_robots': meta_robots_value,
+                'x_robots_tag': x_robots_value,
+                'hreflang': hreflang_row.get("hreflang 1", ""),
                 'redirect_url': row.get('Redirect URL', ''),
                 'redirect_type': row.get('Redirect Type', ''),
             })
-    
+
+    # Ensure image tab is also included (not all crawls include image rows in internal tab)
+    for row in images_tab:
+        image_url = _clean_url(row.get("Address", ""))
+        if not image_url or image_url in seen_image_urls:
+            continue
+        images_data.append({
+            "url": image_url,
+            "alt_text": row.get("Alt Text 1", ""),
+            "size_bytes": _to_int(row.get("Size (Bytes)") or row.get("Size (bytes)")),
+            "format": row.get("Content Type", ""),
+        })
+
     # ... (rest of analysis logic remains same) ...
     internal_links = sum(max(0, p['outlinks'] - p['external_outlinks']) for p in all_pages)
     external_links = sum(p['external_outlinks'] for p in all_pages)
@@ -291,6 +377,8 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
     
     missing_canonical = len([p for p in all_pages if not p['canonical'] and p['status_code'] == 200])
     noindex_pages = len([p for p in all_pages if 'noindex' in p.get('meta_robots', '').lower()])
+    nofollow_pages = len([p for p in all_pages if 'nofollow' in p.get('meta_robots', '').lower() or 'nofollow' in p.get('x_robots_tag', '').lower()])
+    hreflang_pages = len([p for p in all_pages if p.get("hreflang")])
     
     pages_by_status = {
         "200": len([p for p in all_pages if p['status_code'] == 200]),
@@ -343,8 +431,10 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
         "technical_seo": {
             "missing_canonical": missing_canonical,
             "noindex_pages": noindex_pages,
+            "nofollow_pages": nofollow_pages,
             "redirects": redirects,
             "broken_links": broken_links,
+            "hreflang_pages": hreflang_pages,
         },
         "sf_raw_tabs": tabs # Store all raw tabs for future use
     }

@@ -1,5 +1,30 @@
 # Architectural Decisions Log
 
+## Schema-first Reports + Technical Extras Expansion (2026-03-06)
+
+- **Decision**: Promote Schema.org to first-class technical signal across all PDF report types (`executive`, `standard`, `full`) and expand crawl payload with missing reference-audit diagnostics.
+- **Rationale**:
+  - Existing reports underexposed Schema in executive/standard variants.
+  - Reference audit parity required explicit coverage of render/no-JS, soft404, semantic HTML, and directives/hreflang.
+  - Non-technical recipients needed clearer competition metric legends and business interpretation.
+- **Implementation**:
+  - Backend:
+    - `technical_seo_extras.py` expanded with `structured_data_v2`, `render_nojs`, `soft_404`, `directives_hreflang`.
+    - `worker.py` persists new keys into `results.crawl`.
+    - `ai_analysis.py` contexts expanded (SEO + visibility + AIO) with non-technical output fields.
+  - PDF:
+    - `config.py` enables Schema-related sections for all report types.
+    - `generator.py` reorders technical sections to Schema-first.
+    - Added sections/extractors/templates: `render_nojs`, `semantic_html`, `soft404_low_content`, `directives_hreflang`.
+    - Benchmark moved to explicit `dynamic` vs `estimated_baseline` mode (no pseudo-percentile claim).
+  - Frontend:
+    - Added `/audits/[id]/schema` page.
+    - Added `Schema.org` item to `UnifiedSidebar`.
+    - Updated `/audits/[id]/pdf` feature promises to reflect Schema-first scope.
+- **Outcome**:
+  - Report structure aligns with reference expectations while preserving SiteSpector-specific extensions.
+  - Better readability for non-technical stakeholders and stronger audit explainability.
+
 ## Admin Impersonation (Single Audit, Read+Export, No Chat) (2026-03-05)
 
 - **Decision**: Replace admin-only preview as the primary support flow with a scoped impersonation session that opens standard client audit UI.

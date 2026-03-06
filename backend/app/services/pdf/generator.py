@@ -26,6 +26,10 @@ from .sections import (
     url_structure,
     redirect_analysis,
     structured_data,
+    render_nojs,
+    semantic_html,
+    soft404_low_content,
+    directives_hreflang,
     robots_sitemap,
     internal_links,
     performance,
@@ -97,9 +101,18 @@ TOC_PARTS = [
     {
         "label": "CZĘŚĆ II — SEO TECHNICZNE",
         "sections": [
-            "technical_overview", "on_page_seo", "heading_analysis",
-            "url_structure", "redirect_analysis", "structured_data",
-            "robots_sitemap", "internal_links",
+            "technical_overview",
+            "structured_data",
+            "render_nojs",
+            "semantic_html",
+            "soft404_low_content",
+            "directives_hreflang",
+            "robots_sitemap",
+            "on_page_seo",
+            "heading_analysis",
+            "url_structure",
+            "redirect_analysis",
+            "internal_links",
         ],
     },
     {
@@ -136,6 +149,10 @@ SECTION_LABELS = {
     "url_structure": "Analiza Struktury URL",
     "redirect_analysis": "Analiza Przekierowań",
     "structured_data": "Dane Strukturalne (Schema.org)",
+    "render_nojs": "Render i Funkcjonalność bez JavaScript",
+    "semantic_html": "Struktura Semantyczna HTML",
+    "soft404_low_content": "Soft 404 i Low Content",
+    "directives_hreflang": "Dyrektywy Robots, Nofollow i Hreflang",
     "robots_sitemap": "Robots.txt, Sitemap i Konfiguracja Domeny",
     "internal_links": "Linkowanie Wewnętrzne",
     "performance": "Wydajność & Core Web Vitals",
@@ -353,6 +370,40 @@ async def generate_pdf(
                 **tech_data, "sec_num": next_sec(), "chart_http_status": chart_http,
             }))
 
+    # ---- STRUCTURED DATA ----
+    if cfg.is_enabled("structured_data"):
+        _sec("structured_data", structured_data.extract, audit_data)
+
+    # ---- RENDER / NO-JS ----
+    if cfg.is_enabled("render_nojs"):
+        _sec("render_nojs", render_nojs.extract, audit_data)
+
+    # ---- SEMANTIC HTML ----
+    if cfg.is_enabled("semantic_html"):
+        _sec("semantic_html", semantic_html.extract, audit_data)
+
+    # ---- SOFT 404 / LOW CONTENT ----
+    if cfg.is_enabled("soft404_low_content"):
+        _sec(
+            "soft404_low_content",
+            soft404_low_content.extract,
+            audit_data,
+            max_rows=cfg.get_max_rows("soft404_low_content", 30),
+        )
+
+    # ---- DIRECTIVES / HREFLANG ----
+    if cfg.is_enabled("directives_hreflang"):
+        _sec(
+            "directives_hreflang",
+            directives_hreflang.extract,
+            audit_data,
+            max_rows=cfg.get_max_rows("directives_hreflang", 30),
+        )
+
+    # ---- ROBOTS.TXT & SITEMAP ----
+    if cfg.is_enabled("robots_sitemap"):
+        _sec("robots_sitemap", robots_sitemap.extract, audit_data)
+
     # ---- ON-PAGE SEO ----
     if cfg.is_enabled("on_page_seo"):
         onpage_data = _safe_extract(on_page_seo.extract, audit_data,
@@ -392,14 +443,6 @@ async def generate_pdf(
     # ---- REDIRECT ANALYSIS ----
     if cfg.is_enabled("redirect_analysis"):
         _sec("redirect_analysis", redirect_analysis.extract, audit_data)
-
-    # ---- STRUCTURED DATA ----
-    if cfg.is_enabled("structured_data"):
-        _sec("structured_data", structured_data.extract, audit_data)
-
-    # ---- ROBOTS.TXT & SITEMAP ----
-    if cfg.is_enabled("robots_sitemap"):
-        _sec("robots_sitemap", robots_sitemap.extract, audit_data)
 
     # ---- INTERNAL LINKS ----
     if cfg.is_enabled("internal_links"):

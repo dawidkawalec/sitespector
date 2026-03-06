@@ -107,6 +107,7 @@ import { SiteSpectorLogo } from '@/components/brand/SiteSpectorLogo'
 const auditDataItems = [
   { href: '/audits/[id]', icon: RiFileTextFill, label: 'Podsumowanie', id: 'overview' },
   { href: '/audits/[id]/seo', icon: RiSearchEyeFill, label: 'SEO', id: 'seo' },
+  { href: '/audits/[id]/schema', icon: Code2, label: 'Schema.org', id: 'schema' },
   { href: '/audits/[id]/performance', icon: RiShieldFlashFill, label: 'Wydajność', id: 'performance' },
   { href: '/audits/[id]/visibility', icon: Globe2, label: 'Widoczność', id: 'visibility' },
   { href: '/audits/[id]/ai-overviews', icon: Sparkles, label: 'AI Overviews', id: 'ai-overviews' },

@@ -1,83 +1,92 @@
-{% from 'macros.html' import metric_card, section_heading, kv_row %}
+{% from 'macros.html' import metric_card, section_heading, score_card %}
 <div class="section">
     {{ section_heading(sec_num, 'Dane Strukturalne (Schema.org / JSON-LD)') }}
 
     <div class="info-box">
-        <p>Dane strukturalne (Schema.org / JSON-LD) to sposób na komunikowanie robotom Google informacji o treści strony w ustandaryzowanym formacie. Prawidłowo zaimplementowane dane strukturalne mogą skutkować wyświetlaniem "rich snippets" w wynikach wyszukiwania — gwiazdek ocen, FAQ, breadcrumbs, kalendarzy itp. — co znacząco zwiększa CTR. Implementacja Schema.org jest ważnym sygnałem E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness).</p>
+        <p>Dane strukturalne (Schema.org) przekazują wyszukiwarkom i crawlerom AI precyzyjny opis strony: czym jest firma, jakie oferuje usługi, gdzie są breadcrumbs oraz jakie treści warto pokazać jako rich results. To sekcja o bardzo wysokim wpływie na CTR i widoczność.</p>
     </div>
 
-    {% if not sd.found %}
+    {% set has_schema = sd.v2_found or sd.found %}
+    {% set readiness = sd.v2_readiness or {} %}
+    {% set readiness_score = readiness.get('score', 0) %}
+
+    {% if not has_schema %}
         <div class="alert alert-critical no-break">
-            <span class="alert-title">Brak danych strukturalnych (Schema.org) na stronie głównej</span>
-            <p>Strona nie implementuje żadnych danych strukturalnych w formacie JSON-LD. To szansa na zysk CTR poprzez rich snippets w Google. Priorytetowo wdróż: Organization/LocalBusiness (identyfikacja firmy), BreadcrumbList (nawigacja) i WebSite (wyszukiwarka sitelinks).</p>
+            <span class="alert-title">Brak danych strukturalnych Schema.org</span>
+            <p>Brak Schema to utracona szansa na rich results, niższa czytelność strony dla Google i słabszy sygnał dla narzędzi AI. Priorytet: wdrożenie typu Organization/LocalBusiness, WebSite i BreadcrumbList.</p>
         </div>
 
-        {% if sd.missing_suggestions %}
-            <h3>Rekomendowane typy Schema do wdrożenia</h3>
+        {% if sd.v2_missing_priority_types or sd.missing_suggestions %}
+            <h3>Priorytetowe typy do wdrożenia</h3>
             <table>
-                <thead><tr><th>Typ Schema</th><th>Korzyść SEO</th></tr></thead>
+                <thead><tr><th>Typ Schema</th><th>Korzyść</th></tr></thead>
                 <tbody>
-                    <tr>
-                        <td class="td-bold">Organization / LocalBusiness</td>
-                        <td class="text-small">Identyfikacja firmy, panel Google Knowledge Panel, wiarygodność E-E-A-T</td>
-                    </tr>
-                    <tr>
-                        <td class="td-bold">BreadcrumbList</td>
-                        <td class="text-small">Wyświetlanie ścieżki nawigacji w snippecie Google — zwiększa CTR</td>
-                    </tr>
-                    <tr>
-                        <td class="td-bold">WebSite</td>
-                        <td class="text-small">Aktywuje pole wyszukiwarki Sitelinks w Google dla Twojej marki</td>
-                    </tr>
-                    <tr>
-                        <td class="td-bold">FAQPage</td>
-                        <td class="text-small">Rozwijane pytania i odpowiedzi bezpośrednio w wynikach Google</td>
-                    </tr>
-                    <tr>
-                        <td class="td-bold">Article / BlogPosting</td>
-                        <td class="text-small">Wyświetlanie autora, daty i obrazka w Google News i Top Stories</td>
-                    </tr>
-                    <tr>
-                        <td class="td-bold">Product / Offer</td>
-                        <td class="text-small">Wyświetlanie ceny, dostępności i ocen w wynikach produktów</td>
-                    </tr>
+                    {% for suggestion in (sd.v2_missing_priority_types or sd.missing_suggestions) %}
+                        <tr>
+                            <td class="td-bold">{{ suggestion.split('—')[0] | trim }}</td>
+                            <td class="text-small">{{ suggestion.split('—')[1] | trim if '—' in suggestion else suggestion }}</td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         {% endif %}
 
     {% else %}
-        <div class="metric-grid">
-            {{ metric_card(sd.count, 'Bloków JSON-LD znalezionych', '#16a34a') }}
-            {{ metric_card(sd.types | length, 'Typów Schema.org') }}
-            {{ metric_card(sd.schemas | selectattr('has_issues') | list | length, 'Schematów z błędami', '#dc2626' if sd.has_issues else '#16a34a') }}
+        <div class="scores-grid">
+            {{ score_card(readiness_score, 'Schema AI/SEO Readiness') }}
         </div>
 
-        {# --- Detected schemas --- #}
-        <h3>Wykryte typy Schema.org</h3>
+        <div class="metric-grid">
+            {{ metric_card(sd.v2_total_items or sd.count, 'Wykryte obiekty Schema', '#16a34a') }}
+            {{ metric_card((sd.v2_types or sd.types) | length, 'Wykryte typy') }}
+            {{ metric_card((sd.v2_issues or []) | length, 'Liczba problemów', '#dc2626' if (sd.v2_issues or []) | length > 0 else '#16a34a') }}
+        </div>
+
+        {% if readiness.get('notes') %}
+            <div class="alert alert-info no-break">
+                <ul>
+                    {% for note in readiness.get('notes', []) %}
+                        <li>{{ note }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <h3>Wykryte typy i jakość wdrożenia</h3>
         <table>
             <thead>
                 <tr>
-                    <th style="width:30%">Typ Schema</th>
+                    <th style="width:24%">Typ</th>
                     <th style="width:15%">Status</th>
-                    <th>Problemy / Ocena</th>
+                    <th style="width:15%">Priorytet</th>
+                    <th>Braki / uwagi</th>
                 </tr>
             </thead>
             <tbody>
-                {% for schema in sd.schemas %}
+                {% for schema in (sd.v2_items or sd.schemas) %}
                     <tr>
-                        <td class="td-bold">{{ schema.type }}</td>
+                        <td class="td-bold">{{ schema.type or schema.get('type') }}</td>
                         <td class="td-center">
                             <span class="badge {{ 'badge-danger' if schema.has_issues else 'badge-success' }}">
-                                {{ '⚠ Błędy' if schema.has_issues else '✓ OK' }}
+                                {{ 'Wymaga poprawy' if schema.has_issues else 'OK' }}
+                            </span>
+                        </td>
+                        <td class="td-center">
+                            <span class="badge {{ 'badge-danger' if (schema.priority or 'low') == 'critical' else ('badge-warning' if (schema.priority or 'low') in ['high', 'medium'] else 'badge-info') }}">
+                                {{ schema.priority or ('wysoki' if schema.is_important else 'niski') }}
                             </span>
                         </td>
                         <td class="text-small">
-                            {% if schema.issues %}
+                            {% if schema.missing_required %}
+                                Braki wymagane: {{ schema.missing_required | join(', ') }}.
+                            {% endif %}
+                            {% if schema.missing_recommended %}
+                                Braki rekomendowane: {{ schema.missing_recommended | join(', ') }}.
+                            {% endif %}
+                            {% if schema.issues and not schema.missing_required and not schema.missing_recommended %}
                                 {{ schema.issues | join(', ') }}
-                            {% elif schema.is_important %}
-                                Ważny typ — poprawnie zaimplementowany ✓
                             {% else %}
-                                Brak problemów
+                                {% if not schema.has_issues %}Brak problemów.{% endif %}
                             {% endif %}
                         </td>
                     </tr>
@@ -85,17 +94,16 @@
             </tbody>
         </table>
 
-        {# --- Missing suggestions --- #}
-        {% if sd.missing_suggestions %}
+        {% if sd.v2_missing_priority_types or sd.missing_suggestions %}
             <div class="page-break">
-                <h3>Rekomendowane dodatkowe typy Schema</h3>
+                <h3>Rekomendowane kolejne typy Schema</h3>
                 <div class="info-box-light">
-                    <p>Poniższe typy Schema.org nie zostały znalezione na stronie głównej, ale mogą przynieść korzyści SEO jako rich snippets w wynikach Google.</p>
+                    <p>Ta lista pokazuje brakujące elementy o najwyższym potencjale biznesowym i SEO.</p>
                 </div>
                 <table>
                     <thead><tr><th>Brakujący typ Schema</th><th>Korzyść</th></tr></thead>
                     <tbody>
-                        {% for suggestion in sd.missing_suggestions %}
+                        {% for suggestion in (sd.v2_missing_priority_types or sd.missing_suggestions) %}
                             <tr>
                                 <td class="td-bold">{{ suggestion.split('—')[0] | trim }}</td>
                                 <td class="text-small">{{ suggestion.split('—')[1] | trim if '—' in suggestion else suggestion }}</td>
@@ -107,22 +115,20 @@
         {% endif %}
     {% endif %}
 
-    {# --- Schema.org types reference --- #}
     <div class="page-break">
-        <h3>Najważniejsze typy Schema.org dla stron biznesowych</h3>
+        <h3>Legenda: najwazniejsze typy Schema dla stron biznesowych</h3>
         <table>
             <thead><tr><th>Typ</th><th>Zastosowanie</th><th>Rich Snippet</th></tr></thead>
             <tbody>
                 <tr><td class="td-bold">Organization</td><td class="text-small">Dane firmowe: nazwa, logo, kontakt, social media</td><td class="text-small">Knowledge Panel, logo w wynikach</td></tr>
                 <tr><td class="td-bold">LocalBusiness</td><td class="text-small">Firma lokalna: adres, godziny otwarcia, obszar obsługi</td><td class="text-small">Panel lokalny, mapa, godziny</td></tr>
-                <tr><td class="td-bold">Product + Offer</td><td class="text-small">Produkty z ceną i dostępnością</td><td class="text-small">Cena, ocena, dostępność w SERP</td></tr>
-                <tr><td class="td-bold">Article / BlogPosting</td><td class="text-small">Artykuły blogowe z autorem i datą</td><td class="text-small">Data, autor, miniatura w Google News</td></tr>
+                <tr><td class="td-bold">JobPosting</td><td class="text-small">Oferty pracy z data publikacji i lokalizacja</td><td class="text-small">Lepsza widocznosc ofert pracy</td></tr>
+                <tr><td class="td-bold">Service</td><td class="text-small">Opis uslug i obszaru dzialania</td><td class="text-small">Lepsza klasyfikacja oferty</td></tr>
+                <tr><td class="td-bold">Article / BlogPosting</td><td class="text-small">Artykuly eksperckie z autorem i data</td><td class="text-small">Lepsza prezentacja contentu</td></tr>
                 <tr><td class="td-bold">FAQPage</td><td class="text-small">Lista pytań i odpowiedzi</td><td class="text-small">Rozwijane Q&A bezpośrednio w wynikach</td></tr>
                 <tr><td class="td-bold">BreadcrumbList</td><td class="text-small">Ścieżka nawigacji (np. Home > Usługi > SEO)</td><td class="text-small">Breadcrumbs pod tytułem w wynikach</td></tr>
                 <tr><td class="td-bold">WebSite</td><td class="text-small">Dane strony z polem SearchAction</td><td class="text-small">Wyszukiwarka Sitelinks w Google</td></tr>
-                <tr><td class="td-bold">Service</td><td class="text-small">Usługi z opisem, ceną, obszarem</td><td class="text-small">Wyróżnienie usług w wynikach</td></tr>
-                <tr><td class="td-bold">Review / AggregateRating</td><td class="text-small">Oceny i recenzje produktów/usług</td><td class="text-small">Gwiazdki w wynikach wyszukiwania</td></tr>
-                <tr><td class="td-bold">HowTo</td><td class="text-small">Instrukcje krok po kroku</td><td class="text-small">Kroki procedury w SERP</td></tr>
+                <tr><td class="td-bold">VideoObject</td><td class="text-small">Filmy poradnikowe i demo</td><td class="text-small">Lepsza prezentacja video w wynikach</td></tr>
             </tbody>
         </table>
     </div>

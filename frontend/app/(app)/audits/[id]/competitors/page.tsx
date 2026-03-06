@@ -60,6 +60,9 @@ export default function CompetitorsPage({ params }: { params: { id: string } }) 
   }
 
   const senutoCompetitors = audit.results?.senuto?.visibility?.competitors || []
+  const visibilityAi = audit.results?.ai_contexts?.visibility || {}
+  const metricsLegend = Array.isArray(visibilityAi?.metrics_legend) ? visibilityAi.metrics_legend : []
+  const nextSteps = Array.isArray(visibilityAi?.next_steps_for_management) ? visibilityAi.next_steps_for_management : []
   const rows = (senutoCompetitors || []).map((c: any) => ({
     domain: c.domain,
     common_keywords: c.common_keywords || 0,
@@ -146,6 +149,48 @@ export default function CompetitorsPage({ params }: { params: { id: string } }) 
         </Card>
       ) : (
         <>
+          {visibilityAi?.non_technical_summary && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="text-base">Wnioski biznesowe (AI)</CardTitle>
+                <CardDescription>Wyjaśnienie konkurencji bez technicznego żargonu.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">{visibilityAi.non_technical_summary}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Legenda metryk konkurencji</CardTitle>
+              <CardDescription>Co oznaczają liczby i jak je interpretować biznesowo.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p><strong>Wspólne słowa:</strong> liczba fraz, na które konkurujesz z daną domeną.</p>
+              <p><strong>TOP3/TOP10/TOP50:</strong> skala widoczności konkurenta w wynikach Google.</p>
+              <p><strong>Domain Rank:</strong> orientacyjna siła domeny w SEO (im niżej, tym zwykle mocniejsza pozycja).</p>
+              <p><strong>Ads Equivalent:</strong> przybliżony koszt pozyskania podobnego ruchu w kampaniach płatnych.</p>
+            </CardContent>
+          </Card>
+
+          {metricsLegend.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Legenda metryk (AI)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {metricsLegend.slice(0, 6).map((item: any, idx: number) => (
+                  <div key={`${item.metric || 'metric'}-${idx}`} className="rounded border p-3 text-sm">
+                    <p className="font-semibold">{item.metric}</p>
+                    <p className="text-muted-foreground">{item.meaning}</p>
+                    <p className="text-xs mt-1"><span className="font-medium">Wpływ:</span> {item.business_impact}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Wyniki organiczne</CardTitle>
@@ -165,6 +210,21 @@ export default function CompetitorsPage({ params }: { params: { id: string } }) 
               <DataExplorerTable data={rows} columns={columns} pageSize={20} exportFilename="konkurencja_senuto" />
             </CardContent>
           </Card>
+
+          {nextSteps.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Kolejne kroki (AI)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ol className="list-decimal pl-6 space-y-2 text-sm">
+                  {nextSteps.slice(0, 8).map((step: string, idx: number) => (
+                    <li key={`${step}-${idx}`}>{step}</li>
+                  ))}
+                </ol>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
     </div>

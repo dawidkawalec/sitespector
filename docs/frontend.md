@@ -175,6 +175,21 @@ Each major section contains a **Surowe dane (RAW)** tab providing access to the 
 - Added technology chips section from Senuto domain dashboard payload.
 - Added direct quick-link card to `/audits/[id]/ai-overviews`.
 
+### Mar 2026 additions (Schema-first rollout)
+- Added dedicated route: `app/(app)/audits/[id]/schema/page.tsx`:
+  - executive-style schema summary for non-technical users,
+  - readiness score + priority gaps + detected schema types,
+  - raw tab exposing `structured_data_v2`, `render_nojs`, `soft_404`, `directives_hreflang`, `semantic_html`.
+- `UnifiedSidebar` audit navigation now includes direct `Schema.org` entry (`/audits/[id]/schema`).
+- PDF selector page (`/audits/[id]/pdf`) now explicitly communicates Schema-first scope in all report types:
+  - Executive: Schema summary + critical gaps,
+  - Standard: Schema + render/no-JS + soft404/directives,
+  - Full: complete schema validation and technical appendices.
+- Visibility and competitors pages now show business-oriented AI interpretation blocks:
+  - non-technical summary,
+  - metrics legends,
+  - recommended next steps for management.
+
 ## Visibility Page (`app/(app)/audits/[id]/visibility/page.tsx`)
 
 Expanded from basic 3 tabs to multi-module workflow:

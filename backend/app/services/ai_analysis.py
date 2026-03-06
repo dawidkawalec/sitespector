@@ -942,6 +942,14 @@ async def analyze_seo_context(
     top3 = senuto_vis.get("statistics", {}).get("statistics", {}).get("top3", 0)
     top10 = senuto_vis.get("statistics", {}).get("statistics", {}).get("top10", 0)
     top50 = senuto_vis.get("statistics", {}).get("statistics", {}).get("top50", 0)
+
+    schema_v2 = crawl.get("structured_data_v2", {}) or {}
+    schema_readiness = (schema_v2.get("ai_crawler_readiness") or {}).get("score", 0)
+    schema_missing_priority = schema_v2.get("missing_priority_types", []) or []
+    render_nojs = crawl.get("render_nojs", {}) or {}
+    soft_404 = crawl.get("soft_404", {}) or {}
+    semantic_html = crawl.get("semantic_html", {}) or {}
+    directives_hreflang = crawl.get("directives_hreflang", {}) or {}
     
     system_prompt = """Jesteś ekspertem SEO. Na podstawie danych ze Screaming Frog, Lighthouse i Senuto 
     przygotuj kontekstową analizę SEO. 
@@ -950,13 +958,17 @@ async def analyze_seo_context(
     1. Każda rekomendacja MUSI odwoływać się do konkretnego URL-a lub elementu strony jeśli jest dostępny.
     2. Nie powtarzaj ogólnych stwierdzeń typu "zoptymalizuj obrazy" - napisz które konkretnie.
     3. Nie powtarzaj wniosków z innych sekcji jeśli masz do nich wgląd.
+    4. Dodatkowo przygotuj jeden fragment wyjaśnienia dla klienta nietechnicznego.
     
     Odpowiedz w JSON:
     {
         "key_findings": ["finding1", "finding2", ...],
         "recommendations": ["rec1", "rec2", ...],
         "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
-        "priority_issues": ["issue1", "issue2", ...]
+        "priority_issues": ["issue1", "issue2", ...],
+        "technical_story_for_client": "1-3 zdania bez zargonu",
+        "schema_recommendations": ["..."],
+        "render_recommendations": ["..."]
     }"""
     
     user_prompt = f"""Dane SEO do analizy:
@@ -965,8 +977,14 @@ async def analyze_seo_context(
     - LH SEO Score: {seo_score}
     - Senuto: TOP3={top3}, TOP10={top10}, TOP50={top50}
     - Ma sitemap: {crawl.get('has_sitemap', False)}
+    - Schema.org: found={schema_v2.get('found', False)}, score={schema_readiness}, typy={schema_v2.get('types', [])[:8]}, brakujace priorytetowe={schema_missing_priority[:6]}
+    - Render bez JS: status={render_nojs.get('status')}, score={render_nojs.get('score')}, issues={render_nojs.get('issues', [])[:5]}
+    - Soft 404: count={soft_404.get('soft_404_count', 0)}, low_content={soft_404.get('low_content_count', 0)}
+    - Semantic HTML: score={semantic_html.get('score')}, issues={semantic_html.get('issues', [])[:5]}
+    - Dyrektywy/Hreflang: noindex={directives_hreflang.get('noindex_count', 0)}, nofollow={directives_hreflang.get('nofollow_count', 0)}, hreflang={directives_hreflang.get('hreflang_count', 0)}
     
-    Przygotuj max 5 key_findings, 5 recommendations, 3 quick_wins, 3 priority_issues."""
+    Priorytet: pokaz wpływ biznesowy i ryzyko utraty widocznosci.
+    Przygotuj max 6 key_findings, 6 recommendations, 4 quick_wins, 4 priority_issues."""
     
     result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
@@ -976,6 +994,9 @@ async def analyze_seo_context(
         "recommendations": result.get("recommendations", []),
         "quick_wins": result.get("quick_wins", []),
         "priority_issues": result.get("priority_issues", []),
+        "technical_story_for_client": result.get("technical_story_for_client", ""),
+        "schema_recommendations": result.get("schema_recommendations", []),
+        "render_recommendations": result.get("render_recommendations", []),
     }
 
 
@@ -1088,6 +1109,7 @@ async def analyze_visibility_context(
     ZASADY:
     1. Każda rekomendacja MUSI odwoływać się do konkretnej frazy lub URL-a.
     2. Nie powtarzaj ogólnych wniosków o wydajności (LCP itp.) - skup się na widoczności i słowach kluczowych.
+    3. Komunikuj wyniki prostym językiem dla odbiorcy nietechnicznego.
     
     Odpowiedz w JSON:
     {
@@ -1097,7 +1119,14 @@ async def analyze_visibility_context(
         "priority_issues": ["..."],
         "keyword_opportunities": ["fraza 1 - opis szansy", ...],
         "competitor_gaps": ["gap 1", ...],
-        "seasonality_strategy": "krótki tekst"
+        "seasonality_strategy": "krótki tekst",
+        "non_technical_summary": "2-4 zdania dla klienta/zarzadu",
+        "next_steps_for_management": ["..."],
+        "metrics_legend": [
+            {"metric": "TOP3/TOP10/TOP50", "meaning": "...", "business_impact": "..."},
+            {"metric": "Domain Rank", "meaning": "...", "business_impact": "..."},
+            {"metric": "Ads Equivalent", "meaning": "...", "business_impact": "..."}
+        ]
     }"""
     
     user_prompt = f"""Widoczność:
@@ -1116,7 +1145,7 @@ async def analyze_visibility_context(
     
     Uwzględnij wszystkie nowe metryki i zależności (AIO, difficulty, CPC, intencje, snippets, sekcje).
     WAŻNE: nie wolno Ci stwierdzić "brak AIO" jeśli AIO (canonical) ma cytowania>0 lub słowa>0.
-    Max 6 key_findings, 6 recommendations, 5 quick_wins, 4 keyword_opportunities, 4 competitor_gaps."""
+    Max 6 key_findings, 6 recommendations, 5 quick_wins, 4 keyword_opportunities, 4 competitor_gaps, 4 next_steps_for_management."""
     
     result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
     
@@ -1129,6 +1158,9 @@ async def analyze_visibility_context(
         "keyword_opportunities": result.get("keyword_opportunities", []),
         "competitor_gaps": result.get("competitor_gaps", []),
         "seasonality_strategy": result.get("seasonality_strategy", ""),
+        "non_technical_summary": result.get("non_technical_summary", ""),
+        "next_steps_for_management": result.get("next_steps_for_management", []),
+        "metrics_legend": result.get("metrics_legend", []),
     }
 
 
@@ -1187,7 +1219,8 @@ async def analyze_ai_overviews_context(
         "priority_issues": ["..."],
         "aio_opportunities": ["..."],
         "competitor_gaps": ["..."],
-        "content_rewrite_targets": ["..."]
+        "content_rewrite_targets": ["..."],
+        "non_technical_summary": "2-4 zdania dla klienta nietechnicznego"
     }"""
 
     user_prompt = f"""Dane AI Overviews:
@@ -1215,6 +1248,7 @@ async def analyze_ai_overviews_context(
         "aio_opportunities": result.get("aio_opportunities", []),
         "competitor_gaps": result.get("competitor_gaps", []),
         "content_rewrite_targets": result.get("content_rewrite_targets", []),
+        "non_technical_summary": result.get("non_technical_summary", ""),
     }
 
 

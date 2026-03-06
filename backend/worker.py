@@ -176,12 +176,18 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
                     crawled_urls=all_page_urls,
                     sitemap_url=crawl_data.get("sitemap_url"),
                     user_agent=getattr(audit, "crawler_user_agent", None) or None,
+                    sf_raw_tabs=crawl_data.get("sf_raw_tabs"),
+                    all_pages=crawl_data.get("all_pages"),
                 )
                 crawl_data["structured_data"] = extras.get("structured_data") or {}
+                crawl_data["structured_data_v2"] = extras.get("structured_data_v2") or {}
                 crawl_data["robots_txt"] = extras.get("robots_txt") or {}
                 crawl_data["sitemap_analysis"] = extras.get("sitemap_analysis") or {}
                 crawl_data["domain_config"] = extras.get("domain_config") or {}
                 crawl_data["semantic_html"] = extras.get("semantic_html") or {}
+                crawl_data["render_nojs"] = extras.get("render_nojs") or {}
+                crawl_data["soft_404"] = extras.get("soft_404") or {}
+                crawl_data["directives_hreflang"] = extras.get("directives_hreflang") or {}
                 duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
                 audit.processing_step = "technical_extras:done"
                 await add_audit_log(audit, "technical_extras", "success", "Technical extras collected", duration)

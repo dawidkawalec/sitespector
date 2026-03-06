@@ -193,6 +193,7 @@ function OverviewTab({
   intentData,
   difficultyData,
   audit,
+  aiContext,
 }: {
   vis: any
   stats: any
@@ -200,6 +201,7 @@ function OverviewTab({
   intentData: Array<{ name: string; value: number }>
   difficultyData: Array<{ range: string; count: number }>
   audit: Audit
+  aiContext: any
 }) {
   const aioStats = vis?.ai_overviews?.statistics || {}
   const positions = vis.positions || []
@@ -210,9 +212,41 @@ function OverviewTab({
     }
     return acc
   }, {})
+  const metricsLegend = Array.isArray(aiContext?.metrics_legend) ? aiContext.metrics_legend : []
+  const managementSteps = Array.isArray(aiContext?.next_steps_for_management) ? aiContext.next_steps_for_management : []
 
   return (
     <div className="space-y-8">
+      {aiContext?.non_technical_summary && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-base">Wnioski biznesowe (AI)</CardTitle>
+            <CardDescription>Interpretacja bez technicznego żargonu.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">{aiContext.non_technical_summary}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {metricsLegend.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Legenda metryk widoczności</CardTitle>
+            <CardDescription>Jak czytać TOP3/TOP10/TOP50, Domain Rank i Ads Equivalent.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {metricsLegend.slice(0, 6).map((item: any, idx: number) => (
+              <div key={`${item.metric || 'metric'}-${idx}`} className="rounded border p-3 text-sm">
+                <p className="font-semibold">{item.metric}</p>
+                <p className="text-muted-foreground">{item.meaning}</p>
+                <p className="text-xs mt-1"><span className="font-medium">Wpływ biznesowy:</span> {item.business_impact}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-4 gap-4">
         {[
           { label: 'TOP 3', value: stats.top3?.recent_value, diff: stats.top3?.diff, id: 'senuto_top3' },
@@ -375,6 +409,22 @@ function OverviewTab({
           </CardHeader>
           <CardContent>
             <AIOPositionDistributionChart data={aioPositionDistribution} />
+          </CardContent>
+        </Card>
+      )}
+
+      {managementSteps.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Kolejne kroki (AI)</CardTitle>
+            <CardDescription>Rekomendowana kolejność działań dla zespołu.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ol className="list-decimal pl-6 space-y-2 text-sm">
+              {managementSteps.slice(0, 8).map((step: string, idx: number) => (
+                <li key={`${step}-${idx}`}>{step}</li>
+              ))}
+            </ol>
           </CardContent>
         </Card>
       )}
@@ -790,7 +840,7 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
           </TabsList>
 
           <TabsContent value="overview" className="pt-6">
-            <OverviewTab vis={vis} stats={stats} dash={dash} intentData={intentData} difficultyData={difficultyChartData} audit={audit!} />
+            <OverviewTab vis={vis} stats={stats} dash={dash} intentData={intentData} difficultyData={difficultyChartData} audit={audit!} aiContext={aiContext} />
           </TabsContent>
 
           <TabsContent value="positions" className="pt-6">

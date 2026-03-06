@@ -1,0 +1,59 @@
+{% from 'macros.html' import section_heading, score_card, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'Struktura Semantyczna HTML') }}
+
+    <div class="info-box">
+        <p>Semantyczny HTML pomaga wyszukiwarkom i crawlerom AI zrozumiec, ktora tresc jest glowna, a ktora pomocnicza. Poprawna struktura (<code>header/nav/main/article/section/footer</code>) wspiera SEO, accessibility i jakosc odpowiedzi generowanych przez modele AI.</p>
+    </div>
+
+    {% if semantic.has_data %}
+        <div class="scores-grid">
+            {{ score_card(semantic.score, 'Semantic HTML Score') }}
+        </div>
+
+        <div class="two-col">
+            <div>
+                <table>
+                    <tbody>
+                        {{ kv_row('<header>', semantic.elements.header) }}
+                        {{ kv_row('<nav>', semantic.elements.nav) }}
+                        {{ kv_row('<main>', semantic.elements.main) }}
+                        {{ kv_row('<article>', semantic.elements.article) }}
+                        {{ kv_row('<section>', semantic.elements.section) }}
+                        {{ kv_row('<aside>', semantic.elements.aside) }}
+                        {{ kv_row('<footer>', semantic.elements.footer) }}
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <table>
+                    <tbody>
+                        {{ kv_row('Liczba elementow <div>', semantic.divs_count) }}
+                        {{ kv_row('Liczba semantycznych tagow', semantic.semantic_total) }}
+                        {{ kv_row('Wykryto problemy', 'Tak' if semantic.has_issues else 'Nie') }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if semantic.issues %}
+            <h3>Wykryte problemy</h3>
+            <ul>
+                {% for issue in semantic.issues %}
+                    <li>{{ issue }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if semantic.recommendations %}
+            <h3>Rekomendacje</h3>
+            <ul>
+                {% for rec in semantic.recommendations %}
+                    <li>{{ rec }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% else %}
+        <p class="text-muted text-small">Brak danych semantyki HTML.</p>
+    {% endif %}
+</div>

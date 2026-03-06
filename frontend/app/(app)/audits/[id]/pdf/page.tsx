@@ -51,6 +51,9 @@ const REPORT_TYPES: ReportTypeOption[] = [
     features: [
       'Executive Summary z AI',
       'Kluczowe wyniki (4 scores)',
+      'Schema.org Executive (AI readiness + krytyczne braki)',
+      'Render bez JS + soft404 (skrót)',
+      'Robots/Hreflang/SSL — status techniczny',
       'Widoczność — metryki dashboardu',
       'TOP 5 Quick Wins',
       'Akcje natychmiastowe',
@@ -70,7 +73,10 @@ const REPORT_TYPES: ReportTypeOption[] = [
     audience: 'Zespoły marketingowe, SEO',
     features: [
       'Wszystko z Executive +',
-      'SEO techniczne (on-page, linki)',
+      'Schema.org Standard (typy, priorytety, rekomendacje)',
+      'Render/no-JS + Semantyka HTML + Soft404',
+      'Dyrektywy robots / hreflang / nofollow',
+      'SEO techniczne (on-page, linki, redirecty, URL)',
       'Wydajność + Lighthouse audyts',
       'Widoczność TOP 50 keywords',
       'Backlinks + analiza',
@@ -93,6 +99,7 @@ const REPORT_TYPES: ReportTypeOption[] = [
     audience: 'Agencje SEO, audytorzy techniczni',
     features: [
       'Wszystko ze Standard +',
+      'Schema.org Full (pełna walidacja i checklista)',
       'Surowe dane Screaming Frog',
       'Pełne Lighthouse (opportunities + passed)',
       'TOP 200 keywords + wins/losses',

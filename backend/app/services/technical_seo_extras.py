@@ -7,10 +7,9 @@ Additional technical SEO data collection:
 - HTML semantic structure
 """
 
-import asyncio
 import logging
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 from urllib.parse import urlparse
 
 import httpx
@@ -20,6 +19,99 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_USER_AGENT = "SiteSpector/1.0"
 TIMEOUT = httpx.Timeout(15.0, connect=5.0)
+
+SCHEMA_RULES: Dict[str, Dict[str, List[str]]] = {
+    "Organization": {
+        "required": ["name"],
+        "recommended": ["url", "logo", "sameAs", "contactPoint"],
+    },
+    "LocalBusiness": {
+        "required": ["name", "address", "telephone"],
+        "recommended": ["url", "openingHoursSpecification", "sameAs", "areaServed"],
+    },
+    "WebSite": {
+        "required": ["name", "url"],
+        "recommended": ["potentialAction"],
+    },
+    "BreadcrumbList": {
+        "required": ["itemListElement"],
+        "recommended": [],
+    },
+    "JobPosting": {
+        "required": ["title", "datePosted", "hiringOrganization", "jobLocation"],
+        "recommended": ["validThrough", "baseSalary", "description", "employmentType"],
+    },
+    "Service": {
+        "required": ["name"],
+        "recommended": ["description", "serviceType", "areaServed", "provider"],
+    },
+    "FAQPage": {
+        "required": ["mainEntity"],
+        "recommended": [],
+    },
+    "BlogPosting": {
+        "required": ["headline", "author", "datePublished"],
+        "recommended": ["image", "dateModified", "publisher"],
+    },
+    "Article": {
+        "required": ["headline", "author", "datePublished"],
+        "recommended": ["image", "dateModified", "publisher"],
+    },
+    "VideoObject": {
+        "required": ["name", "thumbnailUrl", "uploadDate"],
+        "recommended": ["description", "duration"],
+    },
+    "Event": {
+        "required": ["name", "startDate", "location"],
+        "recommended": ["eventStatus", "offers"],
+    },
+    "ContactPoint": {
+        "required": ["contactType"],
+        "recommended": ["telephone", "email", "availableLanguage"],
+    },
+    "AggregateRating": {
+        "required": ["ratingValue", "reviewCount"],
+        "recommended": ["bestRating", "worstRating"],
+    },
+    "Review": {
+        "required": ["reviewBody", "author"],
+        "recommended": ["reviewRating", "datePublished"],
+    },
+}
+
+SCHEMA_PRIORITY: Dict[str, str] = {
+    "Organization": "critical",
+    "LocalBusiness": "critical",
+    "WebSite": "high",
+    "BreadcrumbList": "high",
+    "JobPosting": "high",
+    "Service": "high",
+    "FAQPage": "medium",
+    "BlogPosting": "medium",
+    "Article": "medium",
+    "VideoObject": "medium",
+    "Event": "medium",
+    "ContactPoint": "medium",
+    "AggregateRating": "low",
+    "Review": "low",
+}
+
+SCHEMA_RECOMMENDATIONS: Dict[str, str] = {
+    "Organization": "identyfikacja firmy i sygnał wiarygodności",
+    "LocalBusiness": "sygnał lokalny i dane kontaktowe firmy",
+    "WebSite": "lepsza identyfikacja marki oraz SearchAction",
+    "BreadcrumbList": "czytelna struktura informacji w SERP",
+    "JobPosting": "większa widoczność ofert pracy",
+    "Service": "lepsze rozumienie oferty usługowej",
+    "FAQPage": "szansa na rich results Q&A",
+    "BlogPosting": "lepszy kontekst treści eksperckich",
+    "Article": "lepsza klasyfikacja treści informacyjnych",
+    "VideoObject": "lepsza widoczność treści video",
+    "Event": "widoczność wydarzen i webinarow",
+    "ContactPoint": "precyzyjna komunikacja kanałów kontaktu",
+    "AggregateRating": "rozszerzone wyniki z ocenami",
+    "Review": "czytelna warstwa opinii",
+}
 
 
 async def _fetch(client: httpx.AsyncClient, url: str) -> Optional[httpx.Response]:
@@ -35,93 +127,243 @@ async def _fetch(client: httpx.AsyncClient, url: str) -> Optional[httpx.Response
 # Structured Data (Schema.org JSON-LD)
 # ==========================================
 
-def _parse_structured_data(html_content: str) -> List[Dict]:
-    """Extract JSON-LD structured data from HTML."""
+def _normalize_schema_type(value: Any) -> List[str]:
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    if isinstance(value, list):
+        return [str(v).strip() for v in value if str(v).strip()]
+    return []
+
+
+def _flatten_schema_nodes(payload: Any) -> List[Dict[str, Any]]:
+    nodes: List[Dict[str, Any]] = []
+
+    def _walk(node: Any) -> None:
+        if isinstance(node, list):
+            for item in node:
+                _walk(item)
+            return
+        if not isinstance(node, dict):
+            return
+
+        node_types = _normalize_schema_type(node.get("@type"))
+        if node_types:
+            node_copy = dict(node)
+            node_copy["_normalized_types"] = node_types
+            nodes.append(node_copy)
+
+        graph_nodes = node.get("@graph")
+        if isinstance(graph_nodes, list):
+            for graph_node in graph_nodes:
+                _walk(graph_node)
+
+        for key, value in node.items():
+            if key in {"@graph", "@context"}:
+                continue
+            if isinstance(value, (dict, list)):
+                _walk(value)
+
+    _walk(payload)
+    return nodes
+
+
+def _parse_structured_data(html_content: str) -> List[Dict[str, Any]]:
+    """Extract JSON-LD structured data from HTML, including @graph payloads."""
     import json
-    schemas = []
+
+    nodes: List[Dict[str, Any]] = []
     try:
-        # Find all <script type="application/ld+json"> blocks
-        pattern = re.compile(r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>', re.DOTALL | re.IGNORECASE)
-        matches = pattern.findall(html_content)
-        for match in matches:
+        pattern = re.compile(
+            r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
+            re.DOTALL | re.IGNORECASE,
+        )
+        for block in pattern.findall(html_content):
+            raw_block = (block or "").strip()
+            if not raw_block:
+                continue
+            sanitized = re.sub(r"^\s*<!--|-->\s*$", "", raw_block, flags=re.MULTILINE).strip()
+            if not sanitized:
+                continue
             try:
-                data = json.loads(match.strip())
-                if isinstance(data, list):
-                    schemas.extend(data)
-                else:
-                    schemas.append(data)
+                parsed = json.loads(sanitized)
             except json.JSONDecodeError:
-                pass
+                continue
+            nodes.extend(_flatten_schema_nodes(parsed))
     except Exception as e:
         logger.debug("Structured data parse error: %s", e)
-    return schemas
+    return nodes
 
 
-def _analyze_schema(schemas: List[Dict]) -> Dict:
-    """Analyze detected schemas and check completeness."""
-    if not schemas:
-        return {"found": False, "count": 0, "types": [], "schemas": []}
+def _schema_field_missing(node: Dict[str, Any], field: str) -> bool:
+    value = node.get(field)
+    if value is None:
+        return True
+    if isinstance(value, str) and not value.strip():
+        return True
+    if isinstance(value, list) and not value:
+        return True
+    if isinstance(value, dict) and not value:
+        return True
+    return False
 
-    schema_types = []
-    schema_details = []
 
-    # High-value schema types for different site types
-    IMPORTANT_SCHEMAS = {
-        "Organization", "LocalBusiness", "Product", "Article",
-        "BlogPosting", "FAQPage", "BreadcrumbList", "WebSite",
-        "Service", "Person", "Event", "Review", "ItemList",
-        "HowTo", "VideoObject", "Recipe", "JobPosting",
-    }
+def _analyze_schema_v2(nodes: List[Dict[str, Any]]) -> Dict[str, Any]:
+    if not nodes:
+        return {
+            "found": False,
+            "total_items": 0,
+            "types": [],
+            "items": [],
+            "issues": [],
+            "has_issues": False,
+            "missing_priority_types": [
+                "Organization / LocalBusiness — identyfikacja firmy i wiarygodnosc",
+                "WebSite — identyfikacja strony i SearchAction",
+                "BreadcrumbList — lepsza nawigacja i prezentacja w SERP",
+            ],
+            "ai_crawler_readiness": {
+                "score": 0,
+                "status": "poor",
+                "notes": ["Brak danych Schema.org utrudnia rozumienie tresci przez crawlery AI."],
+            },
+        }
 
-    for schema in schemas:
-        stype = schema.get("@type", "Unknown")
-        if isinstance(stype, list):
-            stype = stype[0]
-        schema_types.append(stype)
+    all_types: Set[str] = set()
+    issues: List[Dict[str, Any]] = []
+    items: List[Dict[str, Any]] = []
 
-        # Check completeness
-        issues = []
-        if stype in ("Article", "BlogPosting"):
-            for field in ("headline", "author", "datePublished", "image"):
-                if not schema.get(field):
-                    issues.append(f"Brak pola: {field}")
-        elif stype == "Product":
-            for field in ("name", "image", "description", "offers"):
-                if not schema.get(field):
-                    issues.append(f"Brak pola: {field}")
-        elif stype == "LocalBusiness":
-            for field in ("name", "address", "telephone"):
-                if not schema.get(field):
-                    issues.append(f"Brak pola: {field}")
-        elif stype == "FAQPage":
-            if not schema.get("mainEntity"):
-                issues.append("Brak mainEntity (pytania i odpowiedzi)")
+    for idx, node in enumerate(nodes):
+        types = node.get("_normalized_types") or _normalize_schema_type(node.get("@type"))
+        if not types:
+            continue
+        primary_type = types[0]
+        for t in types:
+            all_types.add(t)
 
-        schema_details.append({
-            "type": stype,
-            "is_important": stype in IMPORTANT_SCHEMAS,
-            "issues": issues,
-            "has_issues": bool(issues),
-        })
+        rule = SCHEMA_RULES.get(primary_type, {"required": [], "recommended": []})
+        missing_required = [f for f in rule["required"] if _schema_field_missing(node, f)]
+        missing_recommended = [f for f in rule["recommended"] if _schema_field_missing(node, f)]
+        severity = SCHEMA_PRIORITY.get(primary_type, "low")
 
-    # Missing important schemas suggestions
-    found_types = set(schema_types)
-    missing_suggestions = []
-    if "Organization" not in found_types and "LocalBusiness" not in found_types:
-        missing_suggestions.append("Organization / LocalBusiness — identyfikacja firmy")
-    if "BreadcrumbList" not in found_types:
-        missing_suggestions.append("BreadcrumbList — nawigacja okruszkowa (breadcrumbs)")
-    if "WebSite" not in found_types:
-        missing_suggestions.append("WebSite — wyszukiwarka sitelinks w Google")
+        node_issues: List[str] = []
+        for field in missing_required:
+            message = f"Brak wymaganego pola: {field}"
+            node_issues.append(message)
+            issues.append(
+                {
+                    "type": primary_type,
+                    "severity": "high" if severity in {"critical", "high"} else "medium",
+                    "message": message,
+                    "item_index": idx,
+                }
+            )
+        for field in missing_recommended:
+            message = f"Brak rekomendowanego pola: {field}"
+            node_issues.append(message)
+            issues.append(
+                {
+                    "type": primary_type,
+                    "severity": "medium" if severity in {"critical", "high"} else "low",
+                    "message": message,
+                    "item_index": idx,
+                }
+            )
+
+        items.append(
+            {
+                "type": primary_type,
+                "types": types,
+                "priority": severity,
+                "is_important": primary_type in SCHEMA_PRIORITY,
+                "missing_required": missing_required,
+                "missing_recommended": missing_recommended,
+                "issues": node_issues,
+                "has_issues": bool(node_issues),
+            }
+        )
+
+    found_types = set(all_types)
+    missing_priority_types: List[str] = []
+    for schema_type, reason in SCHEMA_RECOMMENDATIONS.items():
+        if schema_type not in found_types and SCHEMA_PRIORITY.get(schema_type) in {"critical", "high"}:
+            missing_priority_types.append(f"{schema_type} — {reason}")
+
+    readiness_score = 100
+    if not found_types:
+        readiness_score = 0
+    else:
+        if "Organization" not in found_types and "LocalBusiness" not in found_types:
+            readiness_score -= 25
+        if "WebSite" not in found_types:
+            readiness_score -= 15
+        if "BreadcrumbList" not in found_types:
+            readiness_score -= 10
+        high_issues = sum(1 for issue in issues if issue.get("severity") == "high")
+        medium_issues = sum(1 for issue in issues if issue.get("severity") == "medium")
+        readiness_score -= min(40, high_issues * 8 + medium_issues * 3)
+    readiness_score = max(0, min(100, readiness_score))
+
+    if readiness_score >= 75:
+        readiness_status = "good"
+    elif readiness_score >= 45:
+        readiness_status = "partial"
+    else:
+        readiness_status = "poor"
+
+    readiness_notes = []
+    if readiness_status == "good":
+        readiness_notes.append("Schema.org jest obecne i zapewnia dobry kontekst dla Google oraz crawlerow AI.")
+    elif readiness_status == "partial":
+        readiness_notes.append("Schema.org jest czesciowo wdrozone, ale wystepuja luki ograniczajace potencjal rich results.")
+    else:
+        readiness_notes.append("Schema.org wymaga pilnej rozbudowy, aby poprawic zrozumienie tresci przez wyszukiwarki i modele AI.")
+    if missing_priority_types:
+        readiness_notes.append("Brakuje kluczowych typow: " + ", ".join(s.split(" — ")[0] for s in missing_priority_types[:4]))
 
     return {
-        "found": True,
-        "count": len(schemas),
-        "types": list(set(schema_types)),
-        "schemas": schema_details,
-        "has_issues": any(s["has_issues"] for s in schema_details),
-        "missing_suggestions": missing_suggestions,
+        "found": bool(items),
+        "total_items": len(items),
+        "types": sorted(found_types),
+        "items": items,
+        "issues": issues,
+        "has_issues": bool(issues),
+        "missing_priority_types": missing_priority_types,
+        "ai_crawler_readiness": {
+            "score": readiness_score,
+            "status": readiness_status,
+            "notes": readiness_notes,
+        },
     }
+
+
+def _to_legacy_schema(v2: Dict[str, Any]) -> Dict[str, Any]:
+    if not v2.get("found"):
+        return {"found": False, "count": 0, "types": [], "schemas": [], "has_issues": False, "missing_suggestions": v2.get("missing_priority_types", [])}
+    schemas = []
+    for item in v2.get("items", []):
+        schemas.append(
+            {
+                "type": item.get("type", "Unknown"),
+                "is_important": bool(item.get("is_important")),
+                "issues": item.get("issues", []),
+                "has_issues": bool(item.get("has_issues")),
+                "priority": item.get("priority", "low"),
+            }
+        )
+    return {
+        "found": True,
+        "count": int(v2.get("total_items", 0)),
+        "types": v2.get("types", []),
+        "schemas": schemas,
+        "has_issues": bool(v2.get("has_issues")),
+        "missing_suggestions": v2.get("missing_priority_types", []),
+        "ai_crawler_readiness": v2.get("ai_crawler_readiness", {}),
+    }
+
+
+def _analyze_schema(schemas: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Legacy schema payload kept for backwards compatibility."""
+    return _to_legacy_schema(_analyze_schema_v2(schemas))
 
 
 # ==========================================
@@ -411,6 +653,244 @@ def _analyze_semantic_html(html_content: str) -> Dict:
 
 
 # ==========================================
+# Render without JavaScript
+# ==========================================
+
+def _analyze_render_nojs(html_content: str) -> Dict[str, Any]:
+    """Heuristic assessment of content availability when JavaScript is disabled."""
+    try:
+        soup = BeautifulSoup(html_content or "", "html.parser")
+        scripts = soup.find_all("script")
+        noscript = soup.find_all("noscript")
+        anchors = soup.find_all("a")
+        text_content = " ".join(soup.stripped_strings)
+        text_length = len(text_content)
+
+        main_tag = soup.find("main")
+        body = soup.body
+        body_children = body.find_all(recursive=False) if body else []
+        likely_spa_shell = len(body_children) <= 2 and len(scripts) >= 10 and text_length < 500
+
+        score = 100
+        issues: List[str] = []
+        recommendations: List[str] = []
+
+        if text_length < 400:
+            score -= 35
+            issues.append("Bardzo malo tresci w renderze bez JS")
+            recommendations.append("Zapewnij SSR/SSG lub pre-render kluczowych tresci.")
+        elif text_length < 900:
+            score -= 15
+            issues.append("Niska ilosc tresci dostepnej bez JS")
+
+        if len(anchors) < 5:
+            score -= 15
+            issues.append("Mala liczba linkow nawigacyjnych bez JS")
+            recommendations.append("Zadbaj o semantyczna nawigacje HTML dostepna bez JS.")
+
+        if not main_tag:
+            score -= 10
+            issues.append("Brak elementu <main> w renderze HTML")
+
+        if likely_spa_shell:
+            score -= 25
+            issues.append("Render przypomina shell SPA z silna zaleznoscia od JS")
+            recommendations.append("Wdróz server-side rendering dla sekcji krytycznych SEO.")
+
+        if len(noscript) == 0 and len(scripts) > 12:
+            score -= 8
+            issues.append("Brak komunikatu fallback <noscript> przy wysokiej liczbie skryptow")
+
+        score = max(0, min(100, score))
+        status = "good" if score >= 75 else "partial" if score >= 45 else "poor"
+        if status == "poor":
+            recommendations.append("Przetestuj kluczowe URL-e w trybie bez JS i popraw dostepnosc tresci krytycznych.")
+
+        return {
+            "score": score,
+            "status": status,
+            "text_length": text_length,
+            "scripts_count": len(scripts),
+            "noscript_count": len(noscript),
+            "links_count": len(anchors),
+            "has_main": bool(main_tag),
+            "likely_spa_shell": likely_spa_shell,
+            "issues": issues,
+            "recommendations": recommendations,
+            "has_issues": bool(issues),
+        }
+    except Exception as e:
+        logger.debug("Render no-JS analysis failed: %s", e)
+        return {
+            "score": 50,
+            "status": "partial",
+            "issues": ["Nie udalo sie przeanalizowac renderu bez JavaScript"],
+            "recommendations": [],
+            "has_issues": True,
+        }
+
+
+# ==========================================
+# Soft 404 and low-content pages
+# ==========================================
+
+def _analyze_soft_404(all_pages: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Detect probable soft-404 pages among HTTP 200 responses."""
+    if not all_pages:
+        return {"has_data": False, "soft_404_count": 0, "low_content_count": 0, "samples": []}
+
+    patterns = [
+        "404",
+        "not found",
+        "page not found",
+        "nie znaleziono",
+        "strona nie istnieje",
+        "error 404",
+        "oops",
+    ]
+
+    soft_candidates: List[Dict[str, Any]] = []
+    low_content_pages: List[Dict[str, Any]] = []
+
+    for page in all_pages:
+        if int(page.get("status_code") or 0) != 200:
+            continue
+        title = (page.get("title") or "").strip()
+        h1 = (page.get("h1") or "").strip()
+        text = f"{title} {h1}".lower()
+        word_count = int(page.get("word_count") or 0)
+        url = page.get("url", "")
+
+        matched = any(pattern in text for pattern in patterns)
+        is_low_content = word_count < 120
+        if is_low_content:
+            low_content_pages.append(
+                {
+                    "url": url,
+                    "title": title[:80],
+                    "word_count": word_count,
+                }
+            )
+        if matched and (word_count < 250 or "404" in url):
+            soft_candidates.append(
+                {
+                    "url": url,
+                    "title": title[:100],
+                    "h1": h1[:100],
+                    "word_count": word_count,
+                    "reason": "Wzorzec strony bledu przy statusie 200",
+                }
+            )
+
+    issues: List[str] = []
+    if soft_candidates:
+        issues.append(f"Wykryto prawdopodobne soft 404: {len(soft_candidates)}")
+    if len(low_content_pages) > 20:
+        issues.append(f"Wysoka liczba stron low-content (<120 slow): {len(low_content_pages)}")
+
+    return {
+        "has_data": True,
+        "soft_404_count": len(soft_candidates),
+        "soft_404_samples": soft_candidates[:30],
+        "low_content_count": len(low_content_pages),
+        "low_content_samples": low_content_pages[:30],
+        "has_issues": bool(issues),
+        "issues": issues,
+    }
+
+
+# ==========================================
+# Directives / hreflang / nofollow
+# ==========================================
+
+def _analyze_directives_hreflang(sf_raw_tabs: Optional[Dict[str, Any]], all_pages: Optional[List[Dict[str, Any]]]) -> Dict[str, Any]:
+    directives_rows = []
+    hreflang_rows = []
+    if isinstance(sf_raw_tabs, dict):
+        raw_directives = sf_raw_tabs.get("directives")
+        raw_hreflang = sf_raw_tabs.get("hreflang")
+        if isinstance(raw_directives, list):
+            directives_rows = raw_directives
+        if isinstance(raw_hreflang, list):
+            hreflang_rows = raw_hreflang
+
+    pages = all_pages or []
+    noindex_count = 0
+    nofollow_count = 0
+    x_robots_count = 0
+    sample_directives: List[Dict[str, Any]] = []
+
+    if directives_rows:
+        for row in directives_rows:
+            meta_robots = str(row.get("Meta Robots 1") or "").lower()
+            x_robots = str(row.get("X-Robots-Tag 1") or "").lower()
+            if "noindex" in meta_robots or "noindex" in x_robots:
+                noindex_count += 1
+            if "nofollow" in meta_robots or "nofollow" in x_robots:
+                nofollow_count += 1
+            if x_robots:
+                x_robots_count += 1
+            if meta_robots or x_robots:
+                sample_directives.append(
+                    {
+                        "url": row.get("Address", ""),
+                        "meta_robots": row.get("Meta Robots 1", ""),
+                        "x_robots_tag": row.get("X-Robots-Tag 1", ""),
+                    }
+                )
+    else:
+        for page in pages:
+            meta_robots = str(page.get("meta_robots") or "").lower()
+            x_robots = str(page.get("x_robots_tag") or "").lower()
+            if "noindex" in meta_robots or "noindex" in x_robots:
+                noindex_count += 1
+            if "nofollow" in meta_robots or "nofollow" in x_robots:
+                nofollow_count += 1
+            if x_robots:
+                x_robots_count += 1
+
+    hreflang_count = 0
+    hreflang_empty = 0
+    hreflang_samples: List[Dict[str, Any]] = []
+    if hreflang_rows:
+        for row in hreflang_rows:
+            hreflang_value = ""
+            for key, value in row.items():
+                if key.lower().startswith("hreflang") and str(value or "").strip():
+                    hreflang_value = str(value).strip()
+                    break
+            if hreflang_value:
+                hreflang_count += 1
+                hreflang_samples.append({"url": row.get("Address", ""), "hreflang": hreflang_value})
+            else:
+                hreflang_empty += 1
+    else:
+        for page in pages:
+            hreflang_value = str(page.get("hreflang") or "").strip()
+            if hreflang_value:
+                hreflang_count += 1
+
+    issues: List[str] = []
+    if nofollow_count > 0:
+        issues.append(f"Wykryto {nofollow_count} stron z dyrektywa nofollow.")
+    if hreflang_rows and hreflang_count == 0:
+        issues.append("Tab hreflang jest dostepny, ale brak poprawnych wartosci hreflang.")
+
+    return {
+        "has_data": bool(directives_rows or hreflang_rows or pages),
+        "noindex_count": noindex_count,
+        "nofollow_count": nofollow_count,
+        "x_robots_count": x_robots_count,
+        "directives_samples": sample_directives[:30],
+        "hreflang_count": hreflang_count,
+        "hreflang_empty_count": hreflang_empty,
+        "hreflang_samples": hreflang_samples[:30],
+        "issues": issues,
+        "has_issues": bool(issues),
+    }
+
+
+# ==========================================
 # Main Orchestrator
 # ==========================================
 
@@ -419,16 +899,22 @@ async def collect_technical_extras(
     crawled_urls: Optional[List[str]] = None,
     sitemap_url: Optional[str] = None,
     user_agent: Optional[str] = None,
+    sf_raw_tabs: Optional[Dict[str, Any]] = None,
+    all_pages: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """
     Collect all additional technical SEO data in parallel.
     
     Returns dict with keys:
-    - structured_data: Schema.org analysis
+    - structured_data: Schema.org legacy analysis
+    - structured_data_v2: detailed schema analysis with priorities
     - robots_txt: Robots.txt analysis
     - sitemap_analysis: Sitemap deep analysis
     - domain_config: Domain variant checks
     - semantic_html: HTML semantic structure
+    - render_nojs: no-JS render readiness
+    - soft_404: probable soft 404 pages
+    - directives_hreflang: directives/hreflang/nofollow summary
     """
     ua = (user_agent or "").strip() or DEFAULT_USER_AGENT
     headers = {"User-Agent": ua}
@@ -436,10 +922,14 @@ async def collect_technical_extras(
     origin = _get_origin(url)
     result = {
         "structured_data": None,
+        "structured_data_v2": None,
         "robots_txt": None,
         "sitemap_analysis": None,
         "domain_config": None,
         "semantic_html": None,
+        "render_nojs": None,
+        "soft_404": None,
+        "directives_hreflang": None,
     }
     
     async with httpx.AsyncClient(
@@ -466,8 +956,11 @@ async def collect_technical_extras(
             try:
                 html = homepage_resp.text
                 schemas = _parse_structured_data(html)
-                result["structured_data"] = _analyze_schema(schemas)
+                schema_v2 = _analyze_schema_v2(schemas)
+                result["structured_data_v2"] = schema_v2
+                result["structured_data"] = _to_legacy_schema(schema_v2)
                 result["semantic_html"] = _analyze_semantic_html(html)
+                result["render_nojs"] = _analyze_render_nojs(html)
             except Exception as e:
                 logger.warning("Structured data / semantic HTML analysis failed: %s", e)
         
@@ -500,6 +993,18 @@ async def collect_technical_extras(
             result["domain_config"] = await _check_domain_variants(url, client)
         except Exception as e:
             logger.warning("Domain variant check failed: %s", e)
+
+    # --- Soft 404 / low-content ---
+    try:
+        result["soft_404"] = _analyze_soft_404(all_pages or [])
+    except Exception as e:
+        logger.warning("Soft 404 analysis failed: %s", e)
+
+    # --- Directives / hreflang / nofollow ---
+    try:
+        result["directives_hreflang"] = _analyze_directives_hreflang(sf_raw_tabs, all_pages)
+    except Exception as e:
+        logger.warning("Directives/hreflang analysis failed: %s", e)
     
     return result
 

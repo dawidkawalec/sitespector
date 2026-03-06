@@ -2,9 +2,10 @@
 <div class="section">
     {{ section_heading(sec_num, 'Benchmark Branżowy') }}
 
-    <p class="text-muted text-small mb-16">
-        Porównanie wyników Twojej witryny ze średnią branżową na podstawie danych Lighthouse.
-    </p>
+    <div class="info-box">
+        <p>Porównanie wyników Twojej witryny z benchmarkiem działa w 2 trybach: <strong>dynamicznym</strong> (gdy dostępny jest zewnętrzny payload porównawczy) albo <strong>estymacyjnym</strong> (jawny baseline orientacyjny).</p>
+        <p class="text-small">Tryb: <strong>{{ 'dynamiczny' if bench.mode == 'dynamic' else 'estymacyjny' }}</strong> — {{ bench.mode_description }}</p>
+    </div>
 
     <div class="scores-grid">
         {{ score_card(bench.performance_score, 'Performance') }}
@@ -43,17 +44,17 @@
         </table>
     {% endif %}
 
-    {% if bench.percentile is not none %}
-        <h3>Pozycja percentylowa</h3>
+    {% if bench.relative_index is not none %}
+        <h3>Wskaźnik relatywny (vs benchmark)</h3>
         <div class="alert alert-info no-break">
-            <p>Twoja strona osiąga lepsze wyniki niż <strong>{{ bench.percentile | int }}%</strong> witryn w Twojej kategorii branżowej.</p>
+            <p><strong>{{ bench.relative_index }}%</strong> = średni poziom Twoich metryk względem benchmarku (100% oznacza poziom równy benchmarkowi).</p>
         </div>
         <div class="progress-row">
-            <div class="progress-label">Percentyl</div>
+            <div class="progress-label">Relative index</div>
             <div class="progress-bar-outer">
-                <div class="progress-bar-inner" style="width: {{ bench.percentile | int }}%; background: {{ '#16a34a' if bench.percentile >= 75 else ('#ca8a04' if bench.percentile >= 50 else '#dc2626') }};"></div>
+                <div class="progress-bar-inner" style="width: {{ [bench.relative_index | int, 130] | min }}%; background: {{ '#16a34a' if bench.relative_index >= 100 else ('#ca8a04' if bench.relative_index >= 85 else '#dc2626') }};"></div>
             </div>
-            <div class="progress-value">{{ bench.percentile | int }}%</div>
+            <div class="progress-value">{{ bench.relative_index }}%</div>
         </div>
     {% endif %}
 

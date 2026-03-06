@@ -2,6 +2,16 @@
 <div class="section">
     {{ section_heading(sec_num, 'Konkurencja Organiczna') }}
 
+    <div class="info-box">
+        <p><strong>Legenda:</strong> "Wspólne frazy" pokazują jak bardzo rywalizujesz o ten sam popyt, TOP3/TOP10 pokazują realną przewagę w wynikach Google, a Domain Rank to orientacyjna siła domeny konkurenta.</p>
+    </div>
+
+    {% if org_comp.non_technical_summary %}
+        <div class="alert alert-ai no-break">
+            <p>{{ org_comp.non_technical_summary }}</p>
+        </div>
+    {% endif %}
+
     {% if chart_competitors %}
         {{ chart(chart_competitors, 'Porównanie z organiczną konkurencją', '100%') }}
     {% endif %}
@@ -38,6 +48,28 @@
         <p class="text-muted text-small">Brak danych o konkurencji dla tej domeny.</p>
     {% endif %}
 
+    {% if org_comp.metrics_legend %}
+        <h3>Legenda metryk konkurencji (AI)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:24%">Metryka</th>
+                    <th style="width:38%">Co oznacza</th>
+                    <th>Wpływ biznesowy</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in org_comp.metrics_legend[:6] %}
+                    <tr>
+                        <td class="td-bold">{{ row.metric }}</td>
+                        <td class="text-small">{{ row.meaning }}</td>
+                        <td class="text-small">{{ row.business_impact }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
     {% if org_comp.ai_opportunities %}
         <h3>Szanse wynikające z analizy konkurencji</h3>
         <ul>
@@ -45,5 +77,14 @@
                 <li>{{ opp }}</li>
             {% endfor %}
         </ul>
+    {% endif %}
+
+    {% if org_comp.next_steps_for_management %}
+        <h3>Plan działań krok po kroku</h3>
+        <ol class="text-small">
+            {% for step in org_comp.next_steps_for_management[:6] %}
+                <li>{{ step }}</li>
+            {% endfor %}
+        </ol>
     {% endif %}
 </div>

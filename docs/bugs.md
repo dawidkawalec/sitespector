@@ -8,6 +8,47 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-050: Schema.org i sekcje referencyjne były niepełne w raportach Executive/Standard
+
+**Reported**: 2026-03-06
+
+**Status**: ✅ FIXED (2026-03-06)
+
+**Severity**: HIGH
+
+**Description**:
+- Schema.org było widoczne głównie w raporcie pełnym, bez odpowiedniej ekspozycji w Executive/Standard.
+- Raport techniczny nie pokrywał wprost kilku obszarów referencyjnych: render bez JS, soft404, semantyka HTML, directives/hreflang.
+- Część konkurencyjna zawierała metryki bez legendy i bez wystarczająco prostego kontekstu biznesowego.
+
+**Root cause**:
+- Ograniczona konfiguracja `ReportTypeConfig` (wyłączone sekcje `structured_data` i `robots_sitemap` dla `executive`/`standard`).
+- Zbyt wąska warstwa danych w `technical_seo_extras.py` i brak dedykowanych sekcji PDF dla nowych sygnałów technicznych.
+- Template'y konkurencji skupione na tabelach liczbowych bez explicite "co to znaczy dla klienta".
+
+**Fix**:
+- Wprowadzono model `structured_data_v2` z parsowaniem `@graph`, priorytetami i AI/SEO readiness.
+- Dodano pola crawl: `render_nojs`, `soft_404`, `directives_hreflang` i rozszerzono `semantic_html`.
+- Przebudowano część techniczną PDF do układu Schema-first i dodano sekcje:
+  - Render/no-JS,
+  - Soft404 + low content,
+  - Semantic HTML,
+  - Directives/hreflang/nofollow.
+- Uzupełniono legendy metryk konkurencji i biznesowe kroki "dla laika".
+- Frontend otrzymał stronę `/audits/[id]/schema` + wpis w sidebarze + zaktualizowane opisy typów PDF.
+
+**Files Changed (high level)**:
+- `backend/app/services/technical_seo_extras.py`
+- `backend/app/services/screaming_frog.py`
+- `backend/worker.py`
+- `backend/app/services/pdf/*` + `backend/templates/pdf/sections/*`
+- `backend/app/services/ai_analysis.py`
+- `frontend/app/(app)/audits/[id]/schema/page.tsx`
+- `frontend/app/(app)/audits/[id]/pdf/page.tsx`
+- `frontend/components/layout/UnifiedSidebar.tsx`
+
+---
+
 ### BUG-044: Brak wejścia w audit klienta "jak klient" dla supportu
 
 **Reported**: 2026-03-05

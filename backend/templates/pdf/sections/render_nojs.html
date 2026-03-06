@@ -1,0 +1,45 @@
+{% from 'macros.html' import section_heading, score_card, kv_row %}
+<div class="section">
+    {{ section_heading(sec_num, 'Render i Funkcjonalność bez JavaScript') }}
+
+    <div class="info-box">
+        <p>Google renderuje strony z użyciem mechanizmu podobnego do przeglądarki, ale część crawlerów AI oraz narzędzi technicznych analizuje głównie HTML bez pełnego wykonania JavaScript. Dlatego kluczowe treści, linki i nawigacja powinny być dostępne bez JS.</p>
+    </div>
+
+    {% if render_nojs.has_data %}
+        <div class="scores-grid">
+            {{ score_card(render_nojs.score, 'No-JS Readiness') }}
+        </div>
+
+        <table>
+            <tbody>
+                {{ kv_row('Status oceny', render_nojs.status) }}
+                {{ kv_row('Dlugosc tresci tekstowej', render_nojs.text_length ~ ' znakow') }}
+                {{ kv_row('Liczba skryptow', render_nojs.scripts_count) }}
+                {{ kv_row('Liczba linkow', render_nojs.links_count) }}
+                {{ kv_row('Znacznik <main>', 'Tak' if render_nojs.has_main else 'Brak') }}
+                {{ kv_row('Tryb shell SPA (heurystyka)', 'Tak' if render_nojs.likely_spa_shell else 'Nie') }}
+            </tbody>
+        </table>
+
+        {% if render_nojs.issues %}
+            <h3>Wykryte problemy</h3>
+            <ul>
+                {% for issue in render_nojs.issues %}
+                    <li>{{ issue }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if render_nojs.recommendations %}
+            <h3>Rekomendacje</h3>
+            <ul>
+                {% for rec in render_nojs.recommendations %}
+                    <li>{{ rec }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% else %}
+        <p class="text-muted text-small">Brak danych o renderze bez JavaScript.</p>
+    {% endif %}
+</div>

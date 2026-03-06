@@ -1,0 +1,73 @@
+{% from 'macros.html' import section_heading, metric_card %}
+<div class="section">
+    {{ section_heading(sec_num, 'Soft 404 i Low Content') }}
+
+    <div class="info-box">
+        <p>Soft 404 to strona zwracajaca kod 200, ale wygladajaca dla uzytkownika i robota jak blad (np. "not found"). Takie URL-e marnuja crawl budget i rozmywaja jakosc indeksu. Low content to strony o bardzo malej zawartosci, ktore obnizaja ocene calej domeny.</p>
+    </div>
+
+    {% if soft.has_data %}
+        <div class="metric-grid">
+            {{ metric_card(soft.soft_404_count, 'Soft 404 (prawdopodobne)', '#dc2626' if soft.soft_404_count > 0 else '#16a34a') }}
+            {{ metric_card(soft.low_content_count, 'Low content (<120 slow)', '#ca8a04' if soft.low_content_count > 0 else '#16a34a') }}
+        </div>
+
+        {% if soft.issues %}
+            <div class="alert alert-warning no-break">
+                <ul>
+                    {% for issue in soft.issues %}
+                        <li>{{ issue }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if soft.soft_404_samples %}
+            <h3>Przyklady potencjalnych Soft 404</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:55%">URL</th>
+                        <th>Tytul</th>
+                        <th>Slowa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in soft.soft_404_samples %}
+                        <tr>
+                            <td class="td-url">{{ row.url }}</td>
+                            <td class="text-small">{{ row.title | truncate(50) }}</td>
+                            <td class="td-center">{{ row.word_count }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        {% if soft.low_content_samples %}
+            <div class="page-break">
+                <h3>Przyklady stron low content</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:60%">URL</th>
+                            <th>Tytul</th>
+                            <th>Slowa</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in soft.low_content_samples %}
+                            <tr>
+                                <td class="td-url">{{ row.url }}</td>
+                                <td class="text-small">{{ row.title | truncate(50) }}</td>
+                                <td class="td-center">{{ row.word_count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="text-muted text-small">Brak danych o soft 404/low content.</p>
+    {% endif %}
+</div>

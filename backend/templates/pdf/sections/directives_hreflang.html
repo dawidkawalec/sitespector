@@ -1,0 +1,73 @@
+{% from 'macros.html' import section_heading, metric_card %}
+<div class="section">
+    {{ section_heading(sec_num, 'Dyrektywy Robots, Nofollow i Hreflang') }}
+
+    <div class="info-box">
+        <p>Ta sekcja pokazuje dyrektywy indeksacji (meta robots i X-Robots-Tag), wystapienia nofollow oraz konfiguracje hreflang. To kluczowe elementy komunikacji z robotami wyszukiwarek i kontrolowania indeksowania.</p>
+    </div>
+
+    {% if dh.has_data %}
+        <div class="metric-grid">
+            {{ metric_card(dh.noindex_count, 'Strony noindex', '#ca8a04' if dh.noindex_count > 0 else '#16a34a') }}
+            {{ metric_card(dh.nofollow_count, 'Strony z nofollow', '#ca8a04' if dh.nofollow_count > 0 else '#16a34a') }}
+            {{ metric_card(dh.x_robots_count, 'X-Robots-Tag', '#16a34a' if dh.x_robots_count > 0 else '#64748b') }}
+            {{ metric_card(dh.hreflang_count, 'URL z hreflang', '#16a34a' if dh.hreflang_count > 0 else '#64748b') }}
+        </div>
+
+        {% if dh.issues %}
+            <div class="alert alert-warning no-break">
+                <ul>
+                    {% for issue in dh.issues %}
+                        <li>{{ issue }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if dh.directives_samples %}
+            <h3>Przyklady dyrektyw robots</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:45%">URL</th>
+                        <th style="width:27%">Meta Robots</th>
+                        <th style="width:28%">X-Robots-Tag</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dh.directives_samples %}
+                        <tr>
+                            <td class="td-url">{{ row.url }}</td>
+                            <td class="text-small">{{ row.meta_robots | truncate(40) if row.meta_robots else '—' }}</td>
+                            <td class="text-small">{{ row.x_robots_tag | truncate(40) if row.x_robots_tag else '—' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        {% if dh.hreflang_samples %}
+            <div class="page-break">
+                <h3>Przyklady hreflang</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:70%">URL</th>
+                            <th>Hreflang</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in dh.hreflang_samples %}
+                            <tr>
+                                <td class="td-url">{{ row.url }}</td>
+                                <td class="td-center">{{ row.hreflang }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="text-muted text-small">Brak danych o dyrektywach robots/hreflang.</p>
+    {% endif %}
+</div>
