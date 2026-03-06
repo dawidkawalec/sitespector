@@ -4,7 +4,7 @@ Supabase authentication utilities.
 This module replaces the legacy JWT authentication (auth.py) with Supabase Auth.
 """
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.lib.supabase import (
     supabase,
@@ -14,15 +14,82 @@ from app.lib.supabase import (
 )
 from typing import Optional
 import logging
+import re
+from jose import JWTError, jwt
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 # JWT Bearer token scheme
 security = HTTPBearer()
 
+IMPERSONATION_ALLOWED_PATHS = [
+    re.compile(r"^/api/audits/(?P<audit_id>[0-9a-fA-F-]+)$"),
+    re.compile(r"^/api/audits/(?P<audit_id>[0-9a-fA-F-]+)/status$"),
+    re.compile(r"^/api/audits/(?P<audit_id>[0-9a-fA-F-]+)/pdf$"),
+    re.compile(r"^/api/audits/(?P<audit_id>[0-9a-fA-F-]+)/raw$"),
+]
+
+
+def _normalize_path(path: str) -> str:
+    if path != "/" and path.endswith("/"):
+        return path[:-1]
+    return path
+
+
+def _decode_impersonation_token(token: str) -> dict:
+    try:
+        payload = jwt.decode(
+            token,
+            settings.IMPERSONATION_JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+    except JWTError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired impersonation token",
+        ) from e
+
+    if payload.get("type") != "admin_impersonation":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid impersonation token type",
+        )
+    return payload
+
+
+def _enforce_impersonation_policy(method: str, path: str, payload: dict) -> None:
+    if method.upper() != "GET":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Impersonation session allows read-only requests only",
+        )
+
+    normalized_path = _normalize_path(path)
+    for pattern in IMPERSONATION_ALLOWED_PATHS:
+        match = pattern.fullmatch(normalized_path)
+        if not match:
+            continue
+
+        requested_audit_id = match.group("audit_id")
+        token_audit_id = str(payload.get("audit_id") or "")
+        if requested_audit_id != token_audit_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Impersonation session is scoped to a different audit",
+            )
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Endpoint not allowed in impersonation session",
+    )
+
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    x_impersonation_token: Optional[str] = Header(default=None, alias="X-Impersonation-Token"),
 ) -> dict:
     """
     Get current user from Supabase JWT token.
@@ -52,12 +119,51 @@ async def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
-        return {
+        actor_user = {
             "id": user.id,
             "email": user.email,
-            "user_metadata": user.user_metadata or {}
+            "user_metadata": user.user_metadata or {},
+            "is_impersonating": False,
+            "impersonation": None,
+        }
+
+        if not x_impersonation_token:
+            return actor_user
+
+        payload = _decode_impersonation_token(x_impersonation_token)
+        if payload.get("actor_user_id") != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Impersonation token does not belong to current actor",
+            )
+
+        _enforce_impersonation_policy(request.method, request.url.path, payload)
+
+        subject_user_id = payload.get("subject_user_id")
+        if not subject_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid impersonation subject",
+            )
+
+        return {
+            "id": subject_user_id,
+            "email": user.email,
+            "user_metadata": user.user_metadata or {},
+            "is_impersonating": True,
+            "impersonation": {
+                "actor_user_id": payload.get("actor_user_id"),
+                "subject_user_id": subject_user_id,
+                "audit_id": payload.get("audit_id"),
+                "workspace_id": payload.get("workspace_id"),
+                "project_id": payload.get("project_id"),
+                "scopes": payload.get("scopes", []),
+                "exp": payload.get("exp"),
+            },
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Token verification failed: {str(e)}")
         raise HTTPException(

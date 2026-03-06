@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { adminAPI } from '@/lib/api'
+import { setImpersonationSession } from '@/lib/impersonation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,10 +33,11 @@ import {
   TrendingUp,
   FileDown,
   Filter,
-  Eye,
+  LogIn,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pl } from 'date-fns/locale'
+import { toast } from 'sonner'
 
 const STATUS_BADGE: Record<string, string> = {
   completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
@@ -97,6 +99,26 @@ export default function AdminAuditsPage() {
 
   const totalPages = data ? Math.ceil(data.total / PER_PAGE) : 1
   const agg = data?.aggregate
+
+  const startImpersonationMutation = useMutation({
+    mutationFn: (auditId: string) =>
+      adminAPI.startImpersonationSession({ audit_id: auditId }),
+    onSuccess: (session) => {
+      setImpersonationSession({
+        impersonationToken: session.impersonation_token,
+        auditId: session.audit_id,
+        workspaceId: session.workspace_id,
+        projectId: session.project_id,
+        expiresAt: session.expires_at,
+        startedAt: new Date().toISOString(),
+      })
+      toast.success('Tryb klienta aktywny')
+      router.push(`/audits/${session.audit_id}`)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Nie udało się uruchomić impersonacji')
+    },
+  })
 
   const handleFilter = () => {
     setPage(1)
@@ -336,10 +358,11 @@ export default function AdminAuditsPage() {
                           size="sm"
                           variant="outline"
                           className="h-7 text-xs gap-1"
-                          onClick={() => router.push(`/admin/audits/${a.id}`)}
+                          disabled={startImpersonationMutation.isPending}
+                          onClick={() => startImpersonationMutation.mutate(a.id)}
                         >
-                          <Eye className="h-3 w-3" />
-                          Podejrzyj
+                          <LogIn className="h-3 w-3" />
+                          Wejdz jako klient
                         </Button>
                       </TableCell>
                     </TableRow>

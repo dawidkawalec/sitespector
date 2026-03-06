@@ -1,5 +1,20 @@
 # Architectural Decisions Log
 
+## Admin Impersonation (Single Audit, Read+Export, No Chat) (2026-03-05)
+
+- **Decision**: Replace admin-only preview as the primary support flow with a scoped impersonation session that opens standard client audit UI.
+- **Scope**:
+  - one `audit_id` per session,
+  - read/export only (`GET audit`, `status`, `pdf`, `raw`),
+  - no chat and no mutating operations.
+- **Implementation**:
+  - `POST /api/admin/impersonation/sessions` issues short-lived token claims (`actor_user_id`, `subject_user_id`, `audit_id`, `workspace_id`, `project_id`, `exp`).
+  - `backend/app/auth_supabase.py` validates `X-Impersonation-Token` and applies deny-by-default allowlist.
+  - `frontend/lib/impersonation.ts` stores session in `sessionStorage`.
+  - `frontend/app/(app)/admin/audits/page.tsx` starts impersonation and redirects to `/audits/[id]`.
+  - `frontend/app/(app)/layout.tsx` shows impersonation banner, hides chat and sidebar while session is active.
+- **Security rationale**: avoid tenant breakout and accidental writes while still allowing support operators to inspect the exact client-facing audit route.
+
 ## Admin Read-Only Audit Inspector + Unified Audit ACL (2026-03-05)
 
 - **Decision**: Add a dedicated super-admin read-only audit detail endpoint and unify audit-scoped ACL checks via a shared helper.

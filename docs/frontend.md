@@ -29,7 +29,7 @@ app/
 │   │   │   ├── page.tsx       # User list (search, pagination, inline plan change)
 │   │   │   └── [userId]/page.tsx  # User detail: profile, workspaces, audits, chat stats
 │   │   ├── workspaces/page.tsx    # All workspaces with owner, plan, member/project/audit counts
-│   │   ├── audits/page.tsx        # All audits with filters, aggregate stats + "Podejrzyj" action
+│   │   ├── audits/page.tsx        # All audits with filters + "Wejdz jako klient" (impersonation start)
 │   │   │   └── [auditId]/page.tsx # Read-only admin inspector (single-page audit payload view)
 │   │   └── system/page.tsx        # Service health cards + worker queue
 │   ├── dashboard/page.tsx    # Dashboard + workspace analytics + project cards
@@ -78,7 +78,21 @@ app/
 
 **Data source**:
 - `adminAPI.getAudit(auditId)` -> `GET /api/admin/audits/{audit_id}`
-- Entry point: "Podejrzyj" button in `app/(app)/admin/audits/page.tsx`
+- Optional direct route for diagnostics: `/admin/audits/[auditId]`
+
+---
+
+## Admin Impersonation Flow (Single Audit)
+
+**Start point**: `app/(app)/admin/audits/page.tsx`
+
+- Admin can start impersonation for one audit via `adminAPI.startImpersonationSession(...)`.
+- Frontend stores session in `sessionStorage` (`frontend/lib/impersonation.ts`).
+- App shell (`app/(app)/layout.tsx`) shows a global impersonation banner with "Wyjdz" action.
+- During impersonation:
+  - app opens standard client route `/audits/[id]`,
+  - chat UI (`ChatPanel`, `ChatToggleButton`) is hidden,
+  - desktop/mobile sidebar is hidden to reduce blocked calls outside scoped allowlist.
 
 ---
 

@@ -9,14 +9,18 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from uuid import UUID
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from jose import jwt
+from pydantic import BaseModel, Field
 from sqlalchemy import func, cast, Date, text, case
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app.auth_supabase import get_current_user
+from app.config import settings
 from app.database import get_db
 from app.lib.supabase import supabase
 from app.models import Audit, AuditStatus, ChatMessage, ChatConversation
@@ -24,6 +28,11 @@ from app.models import Audit, AuditStatus, ChatMessage, ChatConversation
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+
+class ImpersonationSessionCreateRequest(BaseModel):
+    audit_id: UUID
+    ttl_minutes: Optional[int] = Field(default=None, ge=1, le=240)
 
 
 # ─── Guard ────────────────────────────────────────────────────────────────────
@@ -842,6 +851,67 @@ async def get_admin_audit_detail(
             }
             for c in (audit.competitors or [])
         ],
+    }
+
+
+@router.post("/impersonation/sessions", dependencies=[Depends(verify_super_admin)])
+async def create_impersonation_session(
+    body: ImpersonationSessionCreateRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Create a short-lived admin impersonation session scoped to a single audit.
+    """
+    result = await db.execute(select(Audit).where(Audit.id == body.audit_id))
+    audit = result.scalar_one_or_none()
+    if not audit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audit not found")
+    if not audit.workspace_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Impersonation supports workspace-scoped audits only",
+        )
+
+    ws_resp = supabase.table("workspaces").select("owner_id").eq(
+        "id", str(audit.workspace_id)
+    ).execute()
+    workspace_data = ws_resp.data or []
+    subject_user_id = workspace_data[0].get("owner_id") if workspace_data else None
+    if not subject_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Workspace owner not found for impersonation scope",
+        )
+
+    ttl_minutes = body.ttl_minutes or settings.IMPERSONATION_TTL_MINUTES
+    now_utc = _now_utc()
+    expires_at = now_utc + timedelta(minutes=ttl_minutes)
+
+    claims = {
+        "type": "admin_impersonation",
+        "jti": str(uuid.uuid4()),
+        "actor_user_id": current_user["id"],
+        "subject_user_id": subject_user_id,
+        "audit_id": str(audit.id),
+        "workspace_id": str(audit.workspace_id),
+        "project_id": str(audit.project_id) if audit.project_id else None,
+        "scopes": ["audits:read", "audits:export"],
+        "iat": int(now_utc.timestamp()),
+        "exp": int(expires_at.timestamp()),
+    }
+    token = jwt.encode(
+        claims,
+        settings.IMPERSONATION_JWT_SECRET,
+        algorithm=settings.JWT_ALGORITHM,
+    )
+
+    return {
+        "impersonation_token": token,
+        "expires_at": expires_at.isoformat(),
+        "audit_id": str(audit.id),
+        "workspace_id": str(audit.workspace_id),
+        "project_id": str(audit.project_id) if audit.project_id else None,
     }
 
 

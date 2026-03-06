@@ -5,6 +5,7 @@
  */
 
 import { supabase } from './supabase'
+import { getImpersonationSession } from './impersonation'
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/api$/, '')
 
@@ -62,6 +63,7 @@ async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = await getSupabaseToken()
+  const impersonationSession = getImpersonationSession()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -69,6 +71,9 @@ async function apiRequest<T>(
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
+  }
+  if (impersonationSession?.impersonationToken) {
+    headers['X-Impersonation-Token'] = impersonationSession.impersonationToken
   }
 
   const response = await fetch(`${API_URL}${endpoint}`, {
@@ -355,10 +360,14 @@ export const auditsAPI = {
 
   downloadPDF: async (id: string, reportType: 'executive' | 'standard' | 'full' = 'standard'): Promise<Blob> => {
     const token = await getSupabaseToken()
+    const impersonationSession = getImpersonationSession()
     const headers: Record<string, string> = {}
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
+    }
+    if (impersonationSession?.impersonationToken) {
+      headers['X-Impersonation-Token'] = impersonationSession.impersonationToken
     }
 
     const response = await fetch(`${API_URL}/api/audits/${id}/pdf?report_type=${reportType}`, {
@@ -374,10 +383,14 @@ export const auditsAPI = {
   
   downloadRaw: async (id: string): Promise<Blob> => {
     const token = await getSupabaseToken()
+    const impersonationSession = getImpersonationSession()
     const headers: Record<string, string> = {}
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
+    }
+    if (impersonationSession?.impersonationToken) {
+      headers['X-Impersonation-Token'] = impersonationSession.impersonationToken
     }
 
     const response = await fetch(`${API_URL}/api/audits/${id}/raw`, {
@@ -627,6 +640,14 @@ export interface AdminAuditDetail {
   }>
 }
 
+export interface AdminImpersonationSessionResponse {
+  impersonation_token: string
+  expires_at: string
+  audit_id: string
+  workspace_id: string | null
+  project_id: string | null
+}
+
 export interface PaginatedResponse<T> {
   total: number
   page: number
@@ -695,6 +716,12 @@ export const adminAPI = {
 
   getAudit: (auditId: string) =>
     apiRequest<AdminAuditDetail>(`/api/admin/audits/${auditId}`),
+
+  startImpersonationSession: (data: { audit_id: string; ttl_minutes?: number }) =>
+    apiRequest<AdminImpersonationSessionResponse>('/api/admin/impersonation/sessions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   getSystem: () => apiRequest<any>('/api/admin/system'),
 

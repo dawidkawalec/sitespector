@@ -31,6 +31,20 @@ The **Worker** is a background Python process that polls for pending audits and 
 - Guard: `verify_super_admin`
 - Purpose: return full audit payload for operational diagnostics (read-only), consumed by admin UI `/admin/audits/[auditId]`.
 
+### Admin impersonation session (single-audit scope)
+
+- Token issuing endpoint: `POST /api/admin/impersonation/sessions` in `backend/app/routers/admin.py`.
+- Auth policy is enforced centrally in `backend/app/auth_supabase.py`:
+  - reads `X-Impersonation-Token`,
+  - verifies signature + expiry,
+  - enforces deny-by-default allowlist for read/export endpoints only.
+- During impersonation, only these audit-scoped GET paths are allowed:
+  - `/api/audits/{audit_id}`
+  - `/api/audits/{audit_id}/status`
+  - `/api/audits/{audit_id}/pdf`
+  - `/api/audits/{audit_id}/raw`
+- `/api/chat/*` and all mutating methods are blocked (`403`) while impersonation token is active.
+
 ---
 
 ## Worker Architecture

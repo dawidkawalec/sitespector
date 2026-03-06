@@ -62,6 +62,14 @@ class Settings(BaseSettings):
 
     # Security
     ADMIN_API_TOKEN: str = Field(default="", description="Admin API token for monitoring endpoints (generate with: openssl rand -hex 32)")
+    IMPERSONATION_JWT_SECRET: str = Field(
+        default="change-this-impersonation-secret-minimum-32-chars",
+        description="Secret key for admin impersonation session tokens",
+    )
+    IMPERSONATION_TTL_MINUTES: int = Field(
+        default=30,
+        description="Default TTL (minutes) for admin impersonation session tokens",
+    )
 
     # Application
     ENVIRONMENT: str = Field(default="development", description="Environment (development/production)")

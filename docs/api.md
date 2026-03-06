@@ -570,6 +570,57 @@ Read-only diagnostic endpoint for super admins. Returns full audit payload (incl
 
 ---
 
+### Admin: Start Impersonation Session (Single Audit)
+
+#### `POST /api/admin/impersonation/sessions`
+
+Create a short-lived admin impersonation token scoped to a single audit.
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Auth**:
+- Requires valid Supabase JWT
+- Requires `profiles.is_super_admin = true`
+
+**Body**:
+```json
+{
+  "audit_id": "85d6ee6f-8c55-4c98-abd8-60dedfafa9df",
+  "ttl_minutes": 30
+}
+```
+
+**Response** (200):
+```json
+{
+  "impersonation_token": "eyJhbGciOiJIUzI1NiIs...",
+  "expires_at": "2026-03-05T12:00:00+00:00",
+  "audit_id": "85d6ee6f-8c55-4c98-abd8-60dedfafa9df",
+  "workspace_id": "11111111-2222-3333-4444-555555555555",
+  "project_id": "66666666-7777-8888-9999-aaaaaaaaaaaa"
+}
+```
+
+**Errors**:
+- `400 Bad Request`: Audit is not workspace-scoped or workspace owner missing
+- `401 Unauthorized`: Not authenticated
+- `403 Forbidden`: Super admin access required
+- `404 Not Found`: Audit not found
+
+---
+
+### Impersonation Policy (Single Audit, Read+Export)
+
+When `X-Impersonation-Token` is present, API access is deny-by-default and limited to:
+- `GET /api/audits/{audit_id}`
+- `GET /api/audits/{audit_id}/status`
+- `GET /api/audits/{audit_id}/pdf`
+- `GET /api/audits/{audit_id}/raw`
+
+All other endpoints during impersonation return `403`, including all `/api/chat/*` and all mutating methods (`POST`, `PATCH`, `DELETE`).
+
+---
+
 ## Data Models
 
 ### User

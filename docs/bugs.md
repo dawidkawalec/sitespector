@@ -8,6 +8,40 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-044: Brak wejścia w audit klienta "jak klient" dla supportu
+
+**Reported**: 2026-03-05
+
+**Status**: ✅ FIXED (2026-03-05)
+
+**Severity**: HIGH
+
+**Description**:
+- Super admin miał globalną listę audytów, ale nie mógł wejść w standardową ścieżkę klienta (`/audits/[id]`) dla cudzego audytu.
+- Utrudniało to diagnostykę problemów zgłaszanych przez klientów.
+
+**Root cause**:
+- ACL audit-scoped endpointów była oparta o membership/workspace/project użytkownika z JWT.
+- Brakowało kontrolowanego mechanizmu impersonacji o ograniczonym zakresie.
+
+**Fix**:
+- Dodano endpoint sesji impersonacji: `POST /api/admin/impersonation/sessions`.
+- Dodano walidację `X-Impersonation-Token` i deny-by-default allowlistę w `auth_supabase.py`.
+- Scope sesji: pojedynczy `audit_id`; dozwolone tylko `GET audit/status/pdf/raw`.
+- Frontend:
+  - start impersonacji z listy admin audytów,
+  - globalny banner aktywnej sesji + akcja wyjścia,
+  - chat i sidebar ukryte podczas impersonacji.
+
+**Verification**:
+- Super admin może wejść w `/audits/[id]` i pobrać PDF/RAW dla scoped audytu.
+- `/api/chat/*` oraz mutacje (`POST/PATCH/DELETE`) zwracają `403` podczas aktywnej sesji.
+- Próba dostępu do innego `audit_id` niż w tokenie zwraca `403`.
+
+**Related**: `backend/app/routers/admin.py`, `backend/app/auth_supabase.py`, `frontend/lib/impersonation.ts`, `frontend/lib/api.ts`, `frontend/app/(app)/admin/audits/page.tsx`, `frontend/app/(app)/layout.tsx`
+
+---
+
 ### BUG-019: Niespójny ACL na endpointach audit-scoped
 
 **Reported**: 2026-03-05
