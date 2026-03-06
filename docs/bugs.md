@@ -49,6 +49,32 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ---
 
+### BUG-051: Full PDF gubił sekcję Appendix Keywords przy zagnieżdżonym payloadzie Senuto
+
+**Reported**: 2026-03-06
+
+**Status**: ✅ FIXED (2026-03-06)
+
+**Severity**: MEDIUM
+
+**Description**:
+- Podczas generowania raportu `full` sekcja `appendix_keywords` potrafiła się nie renderować.
+- W logu generatora pojawiał się błąd: `'dict object' has no attribute 'position'`.
+
+**Root cause**:
+- `appendix_keywords.py` zakładał płaską strukturę danych (`position`, `search_volume`, `intent`) w każdym rekordzie.
+- W praktyce część danych Senuto była zagnieżdżona pod `statistics.*`.
+
+**Fix**:
+- Znormalizowano rekordy słów kluczowych przed sortowaniem/renderem:
+  - fallbacki do `statistics.position/searches/difficulty/cpc/url`,
+  - standaryzacja pól do jednego kontraktu template (`keyword`, `position`, `search_volume`, `intent`, `difficulty`, `cpc`, `url`).
+
+**Files Changed**:
+- `backend/app/services/pdf/sections/appendix_keywords.py`
+
+---
+
 ### BUG-044: Brak wejścia w audit klienta "jak klient" dla supportu
 
 **Reported**: 2026-03-05
