@@ -17,6 +17,57 @@ function priorityBadgeClass(priority: string): string {
   return 'bg-muted text-muted-foreground'
 }
 
+const SCHEMA_SNIPPETS: Array<{ title: string; code: string }> = [
+  {
+    title: 'Organization / LocalBusiness',
+    code: `{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Nazwa Firmy",
+  "url": "https://twojadomena.pl",
+  "logo": "https://twojadomena.pl/logo.png",
+  "sameAs": ["https://www.facebook.com/twojprofil"]
+}`,
+  },
+  {
+    title: 'WebSite + SearchAction',
+    code: `{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "url": "https://twojadomena.pl/",
+  "name": "Nazwa Serwisu",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://twojadomena.pl/szukaj?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}`,
+  },
+  {
+    title: 'BreadcrumbList',
+    code: `{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://twojadomena.pl/"},
+    {"@type":"ListItem","position":2,"name":"Kategoria","item":"https://twojadomena.pl/kategoria/"}
+  ]
+}`,
+  },
+  {
+    title: 'FAQPage',
+    code: `{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "Czy dostawa jest darmowa?",
+    "acceptedAnswer": {"@type":"Answer","text":"Tak, od 199 PLN."}
+  }]
+}`,
+  },
+]
+
 export default function SchemaPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
@@ -269,6 +320,39 @@ export default function SchemaPage({ params }: { params: { id: string } }) {
               </CardContent>
             </Card>
           )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Praktyczne snippet-y JSON-LD</CardTitle>
+              <CardDescription>Wzorce startowe do szybkiego wdrożenia po stronie frontend/backend.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {SCHEMA_SNIPPETS.map((snippet) => (
+                <div key={snippet.title} className="rounded-lg border p-3">
+                  <p className="font-medium mb-2">{snippet.title}</p>
+                  <pre className="text-xs bg-muted p-3 rounded overflow-auto">
+                    {snippet.code}
+                  </pre>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Jak wdrożyć i zweryfikować</CardTitle>
+              <CardDescription>Checklista operacyjna po implementacji Schema.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ol className="list-decimal pl-6 space-y-2 text-sm">
+                <li>Wstaw JSON-LD w `&lt;script type="application/ld+json"&gt;` w finalnym HTML strony.</li>
+                <li>Uzupełnij pola wymagane i rekomendowane dla każdego typu (np. Organization, Breadcrumb, Product).</li>
+                <li>Zweryfikuj kluczowe URL-e w Google Rich Results Test.</li>
+                <li>Sprawdź raporty „Ulepszenia” w Google Search Console po ponownej indeksacji.</li>
+                <li>Monitoruj wpływ na CTR oraz stabilność widoczności TOP10.</li>
+              </ol>
+            </CardContent>
+          </Card>
 
           {(Array.isArray(semantic?.issues) && semantic.issues.length > 0) && (
             <Card>

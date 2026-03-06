@@ -132,4 +132,139 @@
             </tbody>
         </table>
     </div>
+
+    <div class="page-break">
+        <h3>Praktyczne snippet-y JSON-LD (gotowe do adaptacji)</h3>
+        <div class="info-box-light">
+            <p>Przykłady poniżej są wzorcami startowymi. Zastąp domenę, nazwy, adresy, numery telefonów i linki wartościami Twojej firmy. Po wdrożeniu koniecznie wykonaj walidację (Rich Results Test + Search Console).</p>
+        </div>
+
+        <h4>1) Organization / LocalBusiness</h4>
+        <pre class="code-block"><code>{% raw %}
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Nazwa Firmy",
+  "url": "https://twojadomena.pl",
+  "logo": "https://twojadomena.pl/logo.png",
+  "sameAs": [
+    "https://www.facebook.com/twojprofil",
+    "https://www.linkedin.com/company/twojprofil"
+  ],
+  "contactPoint": [{
+    "@type": "ContactPoint",
+    "telephone": "+48-123-456-789",
+    "contactType": "customer service",
+    "areaServed": "PL"
+  }]
+}
+{% endraw %}</code></pre>
+
+        <h4>2) WebSite + SearchAction</h4>
+        <pre class="code-block"><code>{% raw %}
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "url": "https://twojadomena.pl/",
+  "name": "Nazwa Serwisu",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://twojadomena.pl/szukaj?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+{% endraw %}</code></pre>
+
+        <h4>3) BreadcrumbList</h4>
+        <pre class="code-block"><code>{% raw %}
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Strona główna", "item": "https://twojadomena.pl/"},
+    {"@type": "ListItem", "position": 2, "name": "Kategoria", "item": "https://twojadomena.pl/kategoria/"},
+    {"@type": "ListItem", "position": 3, "name": "Podstrona", "item": "https://twojadomena.pl/kategoria/podstrona/"}
+  ]
+}
+{% endraw %}</code></pre>
+
+        <h4>4) Product (e-commerce)</h4>
+        <pre class="code-block"><code>{% raw %}
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Nazwa produktu",
+  "image": ["https://twojadomena.pl/img/produkt.jpg"],
+  "description": "Krótki opis produktu",
+  "brand": {"@type": "Brand", "name": "Marka"},
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "PLN",
+    "price": "199.00",
+    "availability": "https://schema.org/InStock",
+    "url": "https://twojadomena.pl/produkt"
+  }
+}
+{% endraw %}</code></pre>
+
+        <h4>5) FAQPage</h4>
+        <pre class="code-block"><code>{% raw %}
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Czy dostawa jest darmowa?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Tak, od 199 PLN."}
+    },
+    {
+      "@type": "Question",
+      "name": "Jaki jest czas realizacji?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Wysyłka 24-48h."}
+    }
+  ]
+}
+{% endraw %}</code></pre>
+    </div>
+
+    <div class="page-break">
+        <h3>Jak wdrożyć i jak sprawdzić po wdrożeniu</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:26%">Krok</th>
+                    <th style="width:37%">Co zrobić</th>
+                    <th>Jak zweryfikować</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="td-bold">1. Wdrożenie JSON-LD</td>
+                    <td class="text-small">Wstaw JSON-LD w `&lt;script type="application/ld+json"&gt;` w `&lt;head&gt;` lub na końcu `&lt;body&gt;` odpowiednich podstron.</td>
+                    <td class="text-small">Sprawdź source strony i upewnij się, że kod jest renderowany w finalnym HTML.</td>
+                </tr>
+                <tr>
+                    <td class="td-bold">2. Uzupełnienie pól wymaganych</td>
+                    <td class="text-small">Dla każdego typu uzupełnij pola required (name/url/offers itd.) oraz rekomendowane.</td>
+                    <td class="text-small">Usuń wszystkie „Braki wymagane” w tej sekcji raportu.</td>
+                </tr>
+                <tr>
+                    <td class="td-bold">3. Test Rich Results</td>
+                    <td class="text-small">Przetestuj URL-e krytyczne narzędziem Google Rich Results Test.</td>
+                    <td class="text-small">Brak błędów krytycznych i ostrzeżeń wysokiego priorytetu.</td>
+                </tr>
+                <tr>
+                    <td class="td-bold">4. Search Console</td>
+                    <td class="text-small">Po indeksacji monitoruj raporty „Ulepszenia” i „Strony”.</td>
+                    <td class="text-small">Wzrost prawidłowych elementów structured data i brak nowych błędów.</td>
+                </tr>
+                <tr>
+                    <td class="td-bold">5. Monitoring biznesowy</td>
+                    <td class="text-small">Obserwuj CTR, TOP10 i sekcje URL z wdrożonym Schema.</td>
+                    <td class="text-small">Wzrost CTR i większa stabilność widoczności na frazach transakcyjnych.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>

@@ -1068,6 +1068,24 @@ The `GET /api/audits/{id}` endpoint performs on-the-fly normalization for older 
 - **Senuto Backlinks**: Injects `backlinks_count` and `domains_count` into `senuto.backlinks.statistics` if missing.
 - **Sitemap Detection**: Performs best-effort sitemap detection (robots.txt + common endpoints) if the stored crawl results lack sitemap info.
 
+### Metric Value Normalization for Consumers (Mar 2026)
+
+No new API fields were introduced, but consumers (PDF/UI) must treat Senuto aggregate metrics as nested structures where value can be present in:
+- `current`
+- `recent_value`
+- (legacy fallbacks) `value` / `previous`
+
+This is especially important for:
+- `senuto.visibility.statistics.statistics.*`
+- `senuto.visibility.ai_overviews.statistics.*`
+- `senuto.visibility.competitors[].statistics.*`
+- `senuto.backlinks.link_attributes` (domain-keyed object with attribute arrays)
+
+Recommended consumer rule:
+- prefer `current`,
+- fallback to `recent_value`,
+- never assume flat numeric fields at top level.
+
 ---
 
 ## CORS
@@ -1133,6 +1151,6 @@ Returns health status of all critical services.
 
 ---
 
-**Last Updated**: 2026-03-05  
+**Last Updated**: 2026-03-06  
 **API Version**: v1  
 **Base URL**: https://sitespector.app/api

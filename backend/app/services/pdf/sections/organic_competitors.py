@@ -1,7 +1,7 @@
 """Data extractor for Organic Competitors section."""
 
 from typing import Any, Dict
-from ..utils import safe_float, safe_int, as_list
+from ..utils import safe_float, safe_int, as_list, senuto_metric_value, pick_first
 
 
 def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -15,15 +15,45 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     # Normalize competitor fields (Senuto often uses different keys)
     normalized_competitors = []
     for comp in competitors:
-        # Dashboard data might be nested or named differently
+        if comp.get("is_main_domain") is True:
+            continue
+        stats = comp.get("statistics") or {}
         normalized_competitors.append({
             "domain": comp.get("domain") or comp.get("domain_name") or "—",
             "common_keywords": safe_int(comp.get("common_keywords") or comp.get("common_keywords_count")),
-            "visibility": safe_float(comp.get("visibility") or comp.get("visibility_score")),
-            "top3": safe_int(comp.get("top3") or comp.get("top3_count")),
-            "top10": safe_int(comp.get("top10") or comp.get("top10_count")),
-            "domain_rank": safe_int(comp.get("domain_rank") or comp.get("rank")),
+            "visibility": safe_float(
+                pick_first(
+                    comp.get("visibility"),
+                    comp.get("visibility_score"),
+                    senuto_metric_value(stats.get("visibility")),
+                )
+            ),
+            "top3": safe_int(
+                pick_first(
+                    comp.get("top3"),
+                    comp.get("top3_count"),
+                    senuto_metric_value(stats.get("top3")),
+                )
+            ),
+            "top10": safe_int(
+                pick_first(
+                    comp.get("top10"),
+                    comp.get("top10_count"),
+                    senuto_metric_value(stats.get("top10")),
+                )
+            ),
+            "domain_rank": safe_int(
+                pick_first(
+                    comp.get("domain_rank"),
+                    comp.get("rank"),
+                    senuto_metric_value(stats.get("domain_rank")),
+                )
+            ),
         })
+    normalized_competitors = sorted(
+        normalized_competitors,
+        key=lambda c: (-(c.get("common_keywords") or 0), -(c.get("visibility") or 0)),
+    )
 
     return {
         "org_comp": {

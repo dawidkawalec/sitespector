@@ -1,27 +1,61 @@
 """Data extractor for Keywords section."""
 
 from typing import Any, Dict
-from ..utils import safe_int, safe_float, as_list
+from ..utils import safe_int, safe_float, safe_get, as_list, senuto_metric_value, pick_first
 
 
 def extract(audit_data: Dict[str, Any], max_rows: int = 50) -> Dict[str, Any]:
     results = audit_data.get("results") or {}
     senuto = results.get("senuto") or {}
     vis = senuto.get("visibility") or {}
-    positions = as_list(vis.get("positions"))
+    keywords_data = senuto.get("keywords") or {}
+    positions = as_list(vis.get("positions")) or as_list(keywords_data.get("positions"))
 
     # Normalize by volume desc, then position asc
     normalized_positions = []
     for p in positions:
         stats = p.get("statistics") or {}
+        intent = (
+            p.get("intent")
+            or safe_get(stats, "intentions", "main_intent")
+            or stats.get("intent")
+            or "—"
+        )
+        difficulty = safe_int(
+            pick_first(
+                p.get("difficulty"),
+                senuto_metric_value(stats.get("difficulty")),
+            )
+        )
         normalized_positions.append({
             "keyword": p.get("keyword") or "—",
-            "position": safe_int(p.get("position") or stats.get("position")),
-            "search_volume": safe_int(p.get("search_volume") or stats.get("search_volume")),
-            "intent": p.get("intent") or stats.get("intent") or "—",
-            "difficulty": p.get("difficulty") or stats.get("difficulty") or "—",
-            "cpc": safe_float(p.get("cpc") or stats.get("cpc")),
-            "url": p.get("url") or "—",
+            "position": safe_int(
+                pick_first(
+                    p.get("position"),
+                    senuto_metric_value(stats.get("position")),
+                )
+            ),
+            "search_volume": safe_int(
+                pick_first(
+                    p.get("search_volume"),
+                    p.get("searches"),
+                    senuto_metric_value(stats.get("searches")),
+                )
+            ),
+            "intent": intent,
+            "difficulty": difficulty,
+            "cpc": safe_float(
+                pick_first(
+                    p.get("cpc"),
+                    senuto_metric_value(stats.get("cpc")),
+                )
+            ),
+            "url": (
+                p.get("url")
+                or safe_get(stats, "url", "current")
+                or safe_get(stats, "url", "recent_value")
+                or "—"
+            ),
         })
 
     sorted_positions = sorted(

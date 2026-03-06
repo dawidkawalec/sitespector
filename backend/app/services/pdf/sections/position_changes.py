@@ -1,7 +1,7 @@
 """Data extractor for Position Changes section."""
 
 from typing import Any, Dict
-from ..utils import safe_int, as_list
+from ..utils import safe_int, safe_get, as_list, pick_first
 
 
 def extract(audit_data: Dict[str, Any], max_rows: int = 20) -> Dict[str, Any]:
@@ -32,17 +32,39 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 20) -> Dict[str, Any]:
             # Senuto often nests position data in 'statistics'
             stats = item.get("statistics") or {}
             
-            pos_now = safe_int(item.get("position") or item.get("position_after") or stats.get("position"))
-            pos_before = safe_int(item.get("position_before") or stats.get("position_before"))
+            pos_now = safe_int(
+                pick_first(
+                    item.get("position"),
+                    item.get("position_after"),
+                    safe_get(stats, "position", "current"),
+                    safe_get(stats, "position", "recent_value"),
+                )
+            )
+            pos_before = safe_int(
+                pick_first(
+                    item.get("position_before"),
+                    safe_get(stats, "position", "previous"),
+                    safe_get(stats, "position", "older_value"),
+                )
+            )
             
             # If both are 0 or missing, skip
             if not pos_now and not pos_before:
                 continue
                 
             # Change can be explicit or calculated
-            change = safe_int(item.get("change") or item.get("position_change") or stats.get("position_change"))
+            change = safe_int(
+                pick_first(
+                    item.get("change"),
+                    item.get("position_change"),
+                    safe_get(stats, "position", "diff"),
+                    stats.get("position_change"),
+                )
+            )
             if not change and pos_before and pos_now:
                 change = abs(pos_before - pos_now)
+            else:
+                change = abs(change)
                 
             entry = {
                 "keyword": kw,
@@ -63,10 +85,10 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 20) -> Dict[str, Any]:
                     losses_list.append(entry)
                     
         return {
-            "wins": sorted(wins_list, key=lambda x: -safe_int(x["change"]))[:max_rows],
-            "losses": sorted(losses_list, key=lambda x: -safe_int(x["change"]))[:max_rows],
-            "new": sorted(new_list, key=lambda x: safe_int(x["position_after"]))[:max_rows], # Sort new by best position
-            "lost": sorted(lost_list, key=lambda x: safe_int(x["position_before"]))[:max_rows], # Sort lost by best previous position
+            "wins": sorted(wins_list, key=lambda x: -safe_int(x["change"])),
+            "losses": sorted(losses_list, key=lambda x: -safe_int(x["change"])),
+            "new": sorted(new_list, key=lambda x: safe_int(x["position_after"])),  # Sort new by best position
+            "lost": sorted(lost_list, key=lambda x: safe_int(x["position_before"])),  # Sort lost by best previous position
         }
 
     # Process all items together to categorize them properly
@@ -79,10 +101,10 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 20) -> Dict[str, Any]:
             "losses_count": safe_int(meta.get("losses_count") or len(categorized["losses"])),
             "new_keywords_count": len(categorized["new"]),
             "lost_keywords_count": len(categorized["lost"]),
-            "top_wins": categorized["wins"],
-            "top_losses": categorized["losses"],
-            "new_keywords": categorized["new"],
-            "lost_keywords": categorized["lost"],
+            "top_wins": categorized["wins"][:max_rows],
+            "top_losses": categorized["losses"][:max_rows],
+            "new_keywords": categorized["new"][:max_rows],
+            "lost_keywords": categorized["lost"][:max_rows],
             "cannibalization": cannibalization[:20],
         }
     }

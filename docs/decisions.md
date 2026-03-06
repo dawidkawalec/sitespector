@@ -983,3 +983,32 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
   - Stable first-page rendering without footer spilling outside cover.
   - Cover style aligned with the rest of report pages.
   - Fast follow-up path to final PNG logo without structural rewrites.
+
+---
+
+## ADR-047: Senuto Metric Normalization Layer for PDF/UI Consistency (2026-03-06)
+
+- **Decision**: Introduce consistent metric normalization for Senuto nested payloads in PDF/UI consumers, with explicit fallback order (`current` -> `recent_value` -> legacy value fields), plus domain-keyed backlink attributes parsing.
+- **Rationale**: Different Senuto endpoints expose aggregate values in slightly different nested shapes. Direct flat access caused false zero values in reports (visibility, AIO, backlinks), creating business-critical inconsistencies.
+- **Implementation**:
+  - Added shared helpers in `backend/app/services/pdf/utils.py`:
+    - `pick_first()`
+    - `senuto_metric_value()`
+  - Refactored PDF extractors:
+    - `visibility_overview.py`
+    - `executive_summary.py`
+    - `keywords.py`
+    - `position_changes.py`
+    - `organic_competitors.py`
+    - `ai_overviews.py`
+    - `backlinks.py`
+    - `appendix_keywords.py`
+    - `security.py`
+  - Updated critical UI pages for parity:
+    - `frontend/app/(app)/audits/[id]/visibility/page.tsx`
+    - `frontend/app/(app)/audits/[id]/competitors/page.tsx`
+    - `frontend/app/(app)/audits/[id]/schema/page.tsx`
+- **Outcome**:
+  - Eliminated false-zero KPI regressions in regenerated full PDF.
+  - Improved consistency between PDF and UI in visibility/competitor/schema narratives.
+  - Added practical Schema JSON-LD implementation guidance in both report and UI.

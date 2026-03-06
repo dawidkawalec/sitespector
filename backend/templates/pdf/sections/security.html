@@ -27,6 +27,13 @@
         </div>
     {% endif %}
 
+    {% if sec.score_consistency_warning and sec.score_consistency_note %}
+        <div class="alert alert-info no-break">
+            <span class="alert-title">Uwaga interpretacyjna Security Score</span>
+            <p>{{ sec.score_consistency_note }}</p>
+        </div>
+    {% endif %}
+
     {# --- HTTPS Critical Warning --- #}
     {% if not sec.is_https %}
         <div class="alert alert-critical no-break">

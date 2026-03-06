@@ -1,7 +1,7 @@
 """Data extractor for Appendix - Keywords."""
 
 from typing import Any, Dict
-from ..utils import as_list, safe_float, safe_get, safe_int
+from ..utils import as_list, safe_float, safe_get, safe_int, pick_first, senuto_metric_value
 
 
 def extract(audit_data: Dict[str, Any], max_rows: int = 200) -> Dict[str, Any]:
@@ -9,20 +9,30 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 200) -> Dict[str, Any]:
     senuto = results.get("senuto") or {}
     vis = senuto.get("visibility") or {}
     positions = as_list(vis.get("positions"))
+    if not positions:
+        positions = as_list(vis.get("wins")) + as_list(vis.get("losses"))
 
     normalized_keywords = []
     for row in positions:
         keyword = row.get("keyword") or row.get("phrase") or ""
+        stats = row.get("statistics") or {}
         position = safe_int(
-            row.get("position")
-            or safe_get(row, "statistics", "position", "current")
-            or safe_get(row, "statistics", "position", "recent_value")
-            or 999
+            pick_first(
+                row.get("position"),
+                senuto_metric_value(stats.get("position")),
+                safe_get(row, "statistics", "position", "current"),
+                safe_get(row, "statistics", "position", "recent_value"),
+                999,
+            )
         )
         search_volume = safe_int(
-            row.get("search_volume")
-            or safe_get(row, "statistics", "searches", "current")
-            or safe_get(row, "statistics", "searches", "recent_value")
+            pick_first(
+                row.get("search_volume"),
+                row.get("searches"),
+                senuto_metric_value(stats.get("searches")),
+                safe_get(row, "statistics", "searches", "current"),
+                safe_get(row, "statistics", "searches", "recent_value"),
+            )
         )
         intent = (
             row.get("intent")
@@ -31,14 +41,20 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 200) -> Dict[str, Any]:
             or ""
         )
         difficulty = safe_int(
-            row.get("difficulty")
-            or safe_get(row, "statistics", "difficulty", "current")
-            or safe_get(row, "statistics", "difficulty", "recent_value")
+            pick_first(
+                senuto_metric_value(stats.get("difficulty")),
+                row.get("difficulty"),
+                safe_get(row, "statistics", "difficulty", "current"),
+                safe_get(row, "statistics", "difficulty", "recent_value"),
+            )
         )
         cpc = safe_float(
-            row.get("cpc")
-            or safe_get(row, "statistics", "cpc", "current")
-            or safe_get(row, "statistics", "cpc", "recent_value")
+            pick_first(
+                senuto_metric_value(stats.get("cpc")),
+                row.get("cpc"),
+                safe_get(row, "statistics", "cpc", "current"),
+                safe_get(row, "statistics", "cpc", "recent_value"),
+            )
         )
         url = (
             row.get("url")

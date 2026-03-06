@@ -1,7 +1,7 @@
 """Data extractor for Executive Summary section."""
 
 from typing import Any, Dict, Optional
-from ..utils import safe_get, safe_float, safe_int, health_label_pl, health_color, fmt_ms, as_list
+from ..utils import safe_get, safe_float, safe_int, health_label_pl, health_color, fmt_ms, as_list, senuto_metric_value, pick_first
 
 
 def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -9,7 +9,10 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     exec_summary = results.get("executive_summary") or {}
     roadmap = results.get("roadmap") or {}
     senuto = results.get("senuto") or {}
-    vis_dashboard = safe_get(senuto, "visibility", "dashboard") or {}
+    visibility = senuto.get("visibility") or {}
+    vis_dashboard = visibility.get("dashboard") or {}
+    vis_stats = safe_get(visibility, "statistics", "statistics") or {}
+    aio_stats = safe_get(visibility, "ai_overviews", "statistics") or {}
     senuto_meta = senuto.get("_meta") or {}
     crawl = results.get("crawl") or {}
     lh_desktop = safe_get(results, "lighthouse", "desktop") or {}
@@ -35,15 +38,48 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
 
     # Senuto stats
     senuto_stats = None
-    if vis_dashboard or senuto_meta.get("positions_count"):
+    if vis_stats or vis_dashboard or senuto_meta.get("positions_count"):
         senuto_stats = {
-            "keywords_count": safe_int(senuto_meta.get("positions_count") or vis_dashboard.get("keywords_count")),
-            "visibility": safe_float(vis_dashboard.get("visibility")),
+            "keywords_count": safe_int(
+                pick_first(
+                    senuto_meta.get("positions_count"),
+                    vis_dashboard.get("keywords_count"),
+                    senuto_metric_value(vis_stats.get("top50")),
+                )
+            ),
+            "visibility": safe_float(
+                pick_first(
+                    senuto_metric_value(vis_stats.get("visibility")),
+                    vis_dashboard.get("visibility"),
+                )
+            ),
             "backlinks_count": safe_int(senuto_meta.get("backlinks_count")),
-            "domain_rank": safe_int(vis_dashboard.get("domain_rank")),
-            "ads_equivalent": safe_float(vis_dashboard.get("ads_equivalent")),
-            "aio_keywords_count": safe_int(senuto_meta.get("ai_overviews_keywords_count")),
-            "aio_citations": safe_int(senuto_meta.get("ai_overviews_keywords_count")),
+            "domain_rank": safe_int(
+                pick_first(
+                    senuto_metric_value(vis_stats.get("domain_rank")),
+                    vis_dashboard.get("domain_rank"),
+                )
+            ),
+            "ads_equivalent": safe_float(
+                pick_first(
+                    senuto_metric_value(vis_stats.get("ads_equivalent")),
+                    vis_dashboard.get("ads_equivalent"),
+                )
+            ),
+            "aio_keywords_count": safe_int(
+                pick_first(
+                    senuto_meta.get("ai_overviews_keywords_count"),
+                    aio_stats.get("aio_keywords_count"),
+                    aio_stats.get("total_keywords"),
+                )
+            ),
+            "aio_citations": safe_int(
+                pick_first(
+                    aio_stats.get("aio_keywords_with_domain_count"),
+                    aio_stats.get("citations_count"),
+                    senuto_meta.get("ai_overviews_keywords_count"),
+                )
+            ),
         }
 
     # Build executive data
@@ -59,6 +95,17 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
         exec_summary.get("next_steps") or exec_summary.get("recommendations")
     )
     growth_potential = exec_summary.get("growth_potential") or exec_summary.get("estimated_impact") or ""
+
+    if senuto_stats and safe_float(senuto_stats.get("visibility")) > 0:
+        # Remove stale issue text from legacy snapshots once visibility mapping is correct.
+        critical_issues = [
+            issue for issue in critical_issues
+            if not (
+                isinstance(issue, str)
+                and "widoczno" in issue.lower()
+                and ("0.0" in issue or "snapshot" in issue.lower())
+            )
+        ]
 
     # Quick stats
     pages_crawled = safe_int(crawl.get("pages_crawled"))

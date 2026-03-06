@@ -186,6 +186,36 @@ def safe_float(v, default: float = 0.0) -> float:
         return default
 
 
+def pick_first(*values):
+    """Return first non-None/non-empty-string value."""
+    for value in values:
+        if value is None:
+            continue
+        if isinstance(value, str) and value == "":
+            continue
+        return value
+    return None
+
+
+def senuto_metric_value(metric: Any, default: Any = None) -> Any:
+    """
+    Return scalar value from Senuto metric payload.
+
+    Senuto frequently stores numbers in dicts such as:
+    {current, recent_value, previous, older_value, diff, ...}
+    """
+    if isinstance(metric, dict):
+        value = pick_first(
+            metric.get("current"),
+            metric.get("recent_value"),
+            metric.get("value"),
+            metric.get("previous"),
+            metric.get("older_value"),
+        )
+        return default if value is None else value
+    return default if metric is None else metric
+
+
 def impact_color(impact: str) -> str:
     mapping = {
         "high": "#dc2626",

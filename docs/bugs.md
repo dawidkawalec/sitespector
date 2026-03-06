@@ -1963,3 +1963,101 @@ Replaced all instances of `{% from '../macros.html' import ... %}` with `{% from
 **Verification**:
 - Generated fresh PDF: `tmp/audit_demo_20260305_v7.pdf`
 - Confirmed patched files were copied to running `sitespector-backend` and rendered by production pipeline.
+
+---
+
+### BUG-050: False-zero visibility and AIO/backlink metrics in full PDF
+
+**Reported**: 2026-03-06
+
+**Status**: ✅ FIXED (2026-03-06)
+
+**Severity**: CRITICAL
+
+**Description**:
+- Full PDF showed `0` for key business metrics despite non-zero Senuto payload:
+  - visibility / TOP3 / TOP10 / TOP50 / domain rank,
+  - AIO citations / avg position,
+  - backlinks follow/nofollow split.
+
+**Root cause**:
+- Extractors assumed flat or `current`-only fields, while Senuto aggregates often use nested objects with `recent_value`.
+- Backlinks link attributes were parsed as flat object, but payload is domain-keyed (`{ domain: [{attribute,count,percent}] }`).
+
+**Fix**:
+- Added shared normalization helpers in `backend/app/services/pdf/utils.py`:
+  - `pick_first()`
+  - `senuto_metric_value()`
+- Refactored affected extractors:
+  - `visibility_overview.py`
+  - `executive_summary.py`
+  - `keywords.py`
+  - `position_changes.py`
+  - `organic_competitors.py`
+  - `ai_overviews.py`
+  - `backlinks.py`
+  - `appendix_keywords.py`
+
+**Verification**:
+- Regenerated full PDF for audit `de83bfe4-7d32-4349-818c-51866c098225`.
+- Confirmed corrected values:
+  - TOP3 `2569`
+  - TOP10 `5176`
+  - TOP50 `15119`
+  - Visibility `291925.0`
+  - AIO citations `865`
+  - Follow/Nofollow `94% / 6%`
+
+---
+
+### BUG-051: Executive Summary contained stale “visibility 0.0” critical issue
+
+**Reported**: 2026-03-06
+
+**Status**: ✅ FIXED (2026-03-06)
+
+**Severity**: HIGH
+
+**Description**:
+- After fixing Senuto mapping, Executive Summary still displayed a legacy critical issue text mentioning visibility snapshot `0.0`, creating contradiction with corrected metrics.
+
+**Root cause**:
+- Historical `results.executive_summary.critical_issues` text was reused verbatim without consistency filtering against current normalized values.
+
+**Fix**:
+- Added sanitization in `backend/app/services/pdf/sections/executive_summary.py`:
+  - when normalized visibility is non-zero, remove stale issue strings related to snapshot `0.0`/`snapshot` wording.
+
+**Verification**:
+- Regenerated full PDF and confirmed stale issue no longer appears.
+
+---
+
+### BUG-052: PDF tables clipped long URLs and reduced readability
+
+**Reported**: 2026-03-06
+
+**Status**: ✅ FIXED (2026-03-06)
+
+**Severity**: HIGH
+
+**Description**:
+- Several dense tables were visually narrow and aggressively cut content (especially URL columns in keywords/appendix/backlinks/competitors).
+
+**Root cause**:
+- Global `table-layout: fixed` and `word-break: break-all` behavior in PDF styles, plus strong truncation in selected templates.
+
+**Fix**:
+- Updated `backend/app/services/pdf/styles.py`:
+  - `table-layout: auto`
+  - URL wrapping via `overflow-wrap: anywhere` and no `break-all`
+  - appendix table layout tuning
+- Updated templates:
+  - `backend/templates/pdf/sections/keywords.html`
+  - `backend/templates/pdf/sections/appendix_keywords.html`
+  - `backend/templates/pdf/sections/organic_competitors.html`
+  - `backend/templates/pdf/sections/ai_overviews.html`
+  - `backend/templates/pdf/sections/backlinks.html`
+
+**Verification**:
+- Regenerated full PDF and confirmed improved column balance and URL readability.

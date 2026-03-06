@@ -1875,6 +1875,28 @@ All three rendering functions have been implemented:
 
 ---
 
-**Last Updated**: 2026-03-05  
+## PDF ↔ UI Parity Refresh (2026-03-06)
+
+### Scope delivered
+
+- `frontend/app/(app)/audits/[id]/visibility/page.tsx`
+  - Added robust metric helpers for Senuto stats (`current`/`recent_value` fallback).
+  - Aligned KPI cards with PDF mapping (TOP3/TOP10/TOP50/visibility/domain rank/ads equivalent).
+  - Added explicit AIO citations card and corrected AIO position distribution source to `ai_overviews.keywords`.
+- `frontend/app/(app)/audits/[id]/competitors/page.tsx`
+  - Unified metric normalization for competitor statistics.
+  - Excluded `is_main_domain=true` row from competitor chart/table.
+  - Sorted rows by shared keywords for clearer business comparison.
+- `frontend/app/(app)/audits/[id]/schema/page.tsx`
+  - Added practical JSON-LD snippet cards (matching PDF educational layer).
+  - Added implementation and validation checklist for non-technical users.
+
+### Outcome
+
+- UI now mirrors PDF critical metrics more closely.
+- Better consistency for business interpretation between app and report output.
+- Reduced chance of zeroed/empty KPI confusion in visibility and competition views.
+
+**Last Updated**: 2026-03-06  
 **Status**: Core template stabilization delivered; visual unification baseline in place
 

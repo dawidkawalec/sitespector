@@ -20,11 +20,33 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 50) -> Dict[str, Any]:
     link_attrs = bl_data.get("link_attributes") or {}
     follow_count = safe_int(link_attrs.get("follow") or link_attrs.get("dofollow"))
     nofollow_count = safe_int(link_attrs.get("nofollow"))
+    if isinstance(link_attrs, dict) and not (follow_count or nofollow_count):
+        attr_items = []
+        for value in link_attrs.values():
+            if isinstance(value, list):
+                attr_items.extend([item for item in value if isinstance(item, dict)])
+        if attr_items:
+            for item in attr_items:
+                attr_name = str(item.get("attribute") or "").lower()
+                if attr_name in {"follow", "dofollow"}:
+                    follow_count = safe_int(item.get("count"))
+                    if follow_count == 0 and item.get("percent") is not None and total_backlinks:
+                        follow_count = int(round(float(item.get("percent")) * total_backlinks))
+                if attr_name == "nofollow":
+                    nofollow_count = safe_int(item.get("count"))
+                    if nofollow_count == 0 and item.get("percent") is not None and total_backlinks:
+                        nofollow_count = int(round(float(item.get("percent")) * total_backlinks))
     follow_pct = (follow_count / total_backlinks * 100) if total_backlinks else 0
     nofollow_pct = (nofollow_count / total_backlinks * 100) if total_backlinks else 0
 
     # Anchors
     anchors_raw = as_list(bl_data.get("anchors"))
+    if isinstance(bl_data.get("anchors"), dict):
+        domain_anchors = []
+        for value in (bl_data.get("anchors") or {}).values():
+            if isinstance(value, list):
+                domain_anchors.extend(value)
+        anchors_raw = as_list(domain_anchors)
     top_anchors = []
     for a in anchors_raw[:20]:
         if isinstance(a, dict):
@@ -39,9 +61,14 @@ def extract(audit_data: Dict[str, Any], max_rows: int = 50) -> Dict[str, Any]:
     for rd in ref_domains_list:
         normalized_ref_domains.append({
             "domain": rd.get("domain") or rd.get("domain_name") or rd.get("ref_domain") or "—",
-            "backlinks_count": safe_int(rd.get("backlinks_count") or rd.get("count") or 1),
+            "backlinks_count": safe_int(
+                rd.get("backlinks_count")
+                or (rd.get("count") or {}).get("count")
+                or rd.get("count")
+                or 1
+            ),
         })
-    top_ref_domains = normalized_ref_domains[:max_rows]
+    top_ref_domains = sorted(normalized_ref_domains, key=lambda item: -(item.get("backlinks_count") or 0))[:max_rows]
 
     return {
         "bl": {

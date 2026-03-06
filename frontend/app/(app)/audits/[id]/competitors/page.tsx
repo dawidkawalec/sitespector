@@ -22,6 +22,12 @@ import { formatNumber, formatScore } from '@/lib/utils'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
 import { CompetitorsDualBarChart } from '@/components/AuditCharts'
 
+function metricValue(metric: any): number {
+  if (typeof metric === 'number') return Number(metric) || 0
+  if (!metric || typeof metric !== 'object') return 0
+  return Number(metric.current ?? metric.recent_value ?? metric.value ?? 0) || 0
+}
+
 export default function CompetitorsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
@@ -60,23 +66,27 @@ export default function CompetitorsPage({ params }: { params: { id: string } }) 
   }
 
   const senutoCompetitors = audit.results?.senuto?.visibility?.competitors || []
+  const competitorsForChart = (senutoCompetitors || []).filter((c: any) => c?.is_main_domain !== true)
   const visibilityAi = audit.results?.ai_contexts?.visibility || {}
   const metricsLegend = Array.isArray(visibilityAi?.metrics_legend) ? visibilityAi.metrics_legend : []
   const nextSteps = Array.isArray(visibilityAi?.next_steps_for_management) ? visibilityAi.next_steps_for_management : []
-  const rows = (senutoCompetitors || []).map((c: any) => ({
-    domain: c.domain,
-    common_keywords: c.common_keywords || 0,
-    visibility: c.statistics?.visibility?.current || c.statistics?.visibility?.recent_value || 0,
-    ads_equivalent: c.statistics?.ads_equivalent?.current || c.statistics?.ads_equivalent?.recent_value || 0,
-    top3: c.statistics?.top3?.current || c.statistics?.top3?.recent_value || 0,
-    top3_diff: c.statistics?.top3?.diff || 0,
-    top10: c.statistics?.top10?.current || c.statistics?.top10?.recent_value || 0,
-    top10_diff: c.statistics?.top10?.diff || 0,
-    top50: c.statistics?.top50?.current || c.statistics?.top50?.recent_value || 0,
-    top50_diff: c.statistics?.top50?.diff || 0,
-    domain_rank: c.statistics?.domain_rank?.current || c.statistics?.domain_rank?.recent_value || 0,
-    domain_rank_diff: c.statistics?.domain_rank?.diff || 0,
-  }))
+  const rows = (senutoCompetitors || [])
+    .filter((c: any) => c?.is_main_domain !== true)
+    .map((c: any) => ({
+      domain: c.domain,
+      common_keywords: c.common_keywords || 0,
+      visibility: metricValue(c.statistics?.visibility),
+      ads_equivalent: metricValue(c.statistics?.ads_equivalent),
+      top3: metricValue(c.statistics?.top3),
+      top3_diff: c.statistics?.top3?.diff || 0,
+      top10: metricValue(c.statistics?.top10),
+      top10_diff: c.statistics?.top10?.diff || 0,
+      top50: metricValue(c.statistics?.top50),
+      top50_diff: c.statistics?.top50?.diff || 0,
+      domain_rank: metricValue(c.statistics?.domain_rank),
+      domain_rank_diff: c.statistics?.domain_rank?.diff || 0,
+    }))
+    .sort((a: any, b: any) => (b.common_keywords || 0) - (a.common_keywords || 0))
 
   const columns = [
     { key: 'domain', label: 'Domena', className: 'font-medium' },
@@ -197,7 +207,7 @@ export default function CompetitorsPage({ params }: { params: { id: string } }) 
               <CardDescription>Wspólne słowa kluczowe vs wszystkie słowa</CardDescription>
             </CardHeader>
             <CardContent>
-              <CompetitorsDualBarChart competitors={senutoCompetitors} />
+              <CompetitorsDualBarChart competitors={competitorsForChart} />
             </CardContent>
           </Card>
 

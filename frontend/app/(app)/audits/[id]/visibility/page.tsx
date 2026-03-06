@@ -49,6 +49,19 @@ import { KeywordFeaturesTable, type KeywordFeatureRow } from '@/components/Keywo
 
 const MONTHS = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru']
 
+function metricValue(metric: any): number {
+  if (typeof metric === 'number') return Number(metric) || 0
+  if (!metric || typeof metric !== 'object') return 0
+  return Number(metric.current ?? metric.recent_value ?? metric.value ?? 0) || 0
+}
+
+function metricDiff(metric: any): number | undefined {
+  if (!metric || typeof metric !== 'object') return undefined
+  const raw = metric.diff
+  if (typeof raw === 'number') return raw
+  return undefined
+}
+
 function getPosition(row: any): number {
   return row?.statistics?.position?.current ?? 9999
 }
@@ -204,14 +217,17 @@ function OverviewTab({
   aiContext: any
 }) {
   const aioStats = vis?.ai_overviews?.statistics || {}
-  const positions = vis.positions || []
-  const aioPositionDistribution = positions.reduce((acc: Record<string, number>, row: any) => {
-    const pos = row?.best_aio_pos
+  const aioKeywords = Array.isArray(vis?.ai_overviews?.keywords) ? vis.ai_overviews.keywords : []
+  const aioPositionDistribution = aioKeywords.reduce((acc: Record<string, number>, row: any) => {
+    const pos = row?.best_aio_pos ?? row?.best_aio_position
     if (typeof pos === 'number' && pos > 0) {
       acc[String(pos)] = (acc[String(pos)] || 0) + 1
     }
     return acc
   }, {})
+  const aioKeywordsCount = Number(aioStats?.aio_keywords_count ?? aioStats?.total_keywords ?? aioKeywords.length ?? 0)
+  const aioCitationsCount = Number(aioStats?.aio_keywords_with_domain_count ?? aioStats?.citations_count ?? 0)
+  const aioAvgPos = Number(aioStats?.aio_avg_pos ?? aioStats?.avg_position ?? 0)
   const metricsLegend = Array.isArray(aiContext?.metrics_legend) ? aiContext.metrics_legend : []
   const managementSteps = Array.isArray(aiContext?.next_steps_for_management) ? aiContext.next_steps_for_management : []
 
@@ -247,15 +263,15 @@ function OverviewTab({
         </Card>
       )}
 
-      <div className="grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 @md:grid-cols-2 @lg:grid-cols-5 gap-4">
         {[
-          { label: 'TOP 3', value: stats.top3?.recent_value, diff: stats.top3?.diff, id: 'senuto_top3' },
-          { label: 'TOP 10', value: stats.top10?.recent_value, diff: stats.top10?.diff, id: 'senuto_top10' },
-          { label: 'TOP 50', value: stats.top50?.recent_value, diff: stats.top50?.diff, id: 'senuto_top50' },
+          { label: 'TOP 3', value: metricValue(stats.top3), diff: metricDiff(stats.top3), id: 'senuto_top3' },
+          { label: 'TOP 10', value: metricValue(stats.top10), diff: metricDiff(stats.top10), id: 'senuto_top10' },
+          { label: 'TOP 50', value: metricValue(stats.top50), diff: metricDiff(stats.top50), id: 'senuto_top50' },
           { 
             label: 'Widoczność', 
-            value: stats.visibility?.recent_value || dash.statistics?.visibility?.recent_value || 0, 
-            diff: stats.visibility?.diff || dash.statistics?.visibility?.diff, 
+            value: metricValue(stats.visibility) || metricValue(dash?.statistics?.visibility), 
+            diff: metricDiff(stats.visibility) ?? metricDiff(dash?.statistics?.visibility), 
             id: 'senuto_visibility' 
           },
         ].map((card, i) => (
@@ -285,25 +301,31 @@ function OverviewTab({
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Domain Rank</CardDescription>
-            <CardTitle className="text-3xl font-bold">{formatNumber(stats.domain_rank?.recent_value || 0)}</CardTitle>
+            <CardTitle className="text-3xl font-bold">{formatNumber(metricValue(stats.domain_rank))}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Ads Equivalent</CardDescription>
-            <CardTitle className="text-3xl font-bold">{formatNumber(stats.ads_equivalent?.recent_value || 0)} PLN</CardTitle>
+            <CardTitle className="text-3xl font-bold">{formatNumber(metricValue(stats.ads_equivalent))} PLN</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>AIO Keywords</CardDescription>
-            <CardTitle className="text-3xl font-bold">{formatNumber(aioStats.aio_keywords_count || 0)}</CardTitle>
+            <CardTitle className="text-3xl font-bold">{formatNumber(aioKeywordsCount)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Cytowania AIO</CardDescription>
+            <CardTitle className="text-3xl font-bold">{formatNumber(aioCitationsCount)}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Śr. pozycja AIO</CardDescription>
-            <CardTitle className="text-3xl font-bold">{formatScore(aioStats.aio_avg_pos || 0)}</CardTitle>
+            <CardTitle className="text-3xl font-bold">{formatScore(aioAvgPos)}</CardTitle>
           </CardHeader>
         </Card>
       </div>

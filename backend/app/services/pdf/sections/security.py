@@ -90,18 +90,32 @@ def extract(audit_data: Dict[str, Any]) -> Dict[str, Any]:
     missing_medium = [h for h in headers_missing if h["severity"] == "medium"]
 
     # Security score calculation
-    security_score = safe_float(sec_data.get("security_score"))
-    if security_score is None:
-        # Compute approximate score based on headers
-        total = len(SECURITY_HEADERS)
-        present_count = len(headers_present)
-        is_https_bonus = 20 if sec_data.get("is_https") else 0
-        header_score = int((present_count / total) * 70) + is_https_bonus
-        security_score = min(header_score, 100)
+    total = len(SECURITY_HEADERS)
+    present_count = len(headers_present)
+    is_https_bonus = 20 if sec_data.get("is_https") else 0
+    header_based_score = min(int((present_count / total) * 70) + is_https_bonus, 100)
+
+    raw_security_score = sec_data.get("security_score")
+    if raw_security_score is None:
+        security_score = float(header_based_score)
+    else:
+        security_score = safe_float(raw_security_score)
+
+    score_consistency_warning = abs(security_score - header_based_score) >= 25
+    score_consistency_note = (
+        "Wynik Security Score pochodzi ze źródła audytu i różni się od oceny "
+        "nagłówków HTTP. Traktuj ten wynik jako sygnał łączny (HTTPS + konfiguracja), "
+        "a listę nagłówków jako checklistę wdrożeniową."
+        if score_consistency_warning
+        else ""
+    )
 
     return {
         "sec": {
             "security_score": security_score,
+            "header_based_score": header_based_score,
+            "score_consistency_warning": score_consistency_warning,
+            "score_consistency_note": score_consistency_note,
             "is_https": bool(sec_data.get("is_https")),
             "ssl_valid": bool(sec_data.get("ssl_valid", sec_data.get("is_https"))),
             "mixed_content_count": safe_int(sec_data.get("mixed_content_count")),

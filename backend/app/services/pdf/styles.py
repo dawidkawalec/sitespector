@@ -376,7 +376,7 @@ table {
     border-collapse: collapse;
     margin: 16px 0;
     font-size: 8.5pt;
-    table-layout: fixed;
+    table-layout: auto;
     page-break-inside: auto;
 }
 thead { display: table-header-group; }
@@ -396,13 +396,20 @@ td {
     padding: 10px 12px;
     border-bottom: 1px solid #f1f5f9;
     vertical-align: top;
-    word-break: break-word;
+    word-break: normal;
     overflow-wrap: anywhere;
-    hyphens: auto;
+    hyphens: none;
     color: #334155;
 }
 tr:last-child td { border-bottom: none; }
-.td-url { font-size: 7.5pt; font-family: 'DejaVu Sans Mono', monospace; word-break: break-all; overflow-wrap: anywhere; color: #475569; }
+.td-url {
+    font-size: 7.5pt;
+    font-family: 'DejaVu Sans Mono', monospace;
+    word-break: normal;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    color: #475569;
+}
 .td-center { text-align: center; }
 .td-right { text-align: right; }
 .td-bold { font-weight: 600; color: #0f172a; }
@@ -622,6 +629,7 @@ tr:last-child td { border-bottom: none; }
 /* ========== APPENDIX TABLES ========== */
 .appendix-table th { font-size: 7pt; padding: 8px 10px; }
 .appendix-table td { font-size: 7.5pt; padding: 8px 10px; }
+.appendix-table { table-layout: auto; }
 
 /* ========== INFO BOXES ========== */
 .info-box {
@@ -648,5 +656,22 @@ tr:last-child td { border-bottom: none; }
 }
 .info-box-light p { margin: 0; }
 .info-box-light strong { color: #334155; font-weight: 500; }
+
+/* ========== CODE BLOCKS ========== */
+.code-block {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 7.2pt;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    page-break-inside: avoid;
+    margin: 10px 0 16px 0;
+}
+.code-block code {
+    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+}
 
 """

@@ -927,7 +927,46 @@ logger.debug(f"AI output: {ai_response}")
 
 ---
 
-**Last Updated**: 2026-03-05  
+## PDF Data Normalization + Schema Playbooks (2026-03-06)
+
+### Scope delivered
+
+- Unified Senuto metric extraction in PDF backend for nested payloads:
+  - supports `current` and `recent_value` consistently,
+  - handles domain-keyed backlink attributes.
+- Fixed PDF extractor mapping in critical sections:
+  - `visibility_overview.py`
+  - `executive_summary.py`
+  - `keywords.py`
+  - `position_changes.py`
+  - `organic_competitors.py`
+  - `ai_overviews.py`
+  - `backlinks.py`
+  - `appendix_keywords.py`
+  - `security.py`
+- Added shared helpers in `backend/app/services/pdf/utils.py`:
+  - `pick_first()`
+  - `senuto_metric_value()`
+- Extended Schema PDF section with practical JSON-LD snippets and deployment checklist:
+  - `Organization / LocalBusiness`
+  - `WebSite + SearchAction`
+  - `BreadcrumbList`
+  - `Product`
+  - `FAQPage`
+- Added security interpretation note when global score diverges from header-based score.
+
+### Validation (audit: `de83bfe4-7d32-4349-818c-51866c098225`)
+
+- Regenerated full PDF with new backend logic.
+- Confirmed corrected values:
+  - TOP3 `2569`
+  - TOP10 `5176`
+  - TOP50 `15119`
+  - Visibility `291925.0`
+  - AIO citations `865`
+  - Follow/Nofollow `94% / 6%`
+
+**Last Updated**: 2026-03-06  
 **AI Provider**: Google Gemini  
 **Model**: gemini-3-flash  
 **Status**: Rule-based (AI integration ready but disabled)

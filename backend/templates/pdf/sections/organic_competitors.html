@@ -21,19 +21,19 @@
         <table>
             <thead>
                 <tr>
-                    <th>Domena</th>
-                    <th>Wspólne frazy</th>
-                    <th>Widoczność</th>
-                    <th>TOP 3</th>
-                    <th>TOP 10</th>
-                    <th>Domain Rank</th>
+                    <th style="width:30%">Domena</th>
+                    <th style="width:14%">Wspólne frazy</th>
+                    <th style="width:16%">Widoczność</th>
+                    <th style="width:10%">TOP 3</th>
+                    <th style="width:10%">TOP 10</th>
+                    <th style="width:20%">Domain Rank</th>
                 </tr>
             </thead>
             <tbody>
                 {% for comp in org_comp.competitors %}
                     {% if comp.common_keywords or comp.visibility or comp.top3 or comp.top10 or comp.domain_rank %}
                     <tr>
-                        <td class="td-bold">{{ comp.domain | truncate(30) }}</td>
+                        <td class="td-bold td-url">{{ comp.domain }}</td>
                         <td class="td-center">{{ comp.common_keywords | int if comp.common_keywords else '—' }}</td>
                         <td class="td-center">{{ comp.visibility | round(1) if comp.visibility else '—' }}</td>
                         <td class="td-center">{{ comp.top3 | int if comp.top3 is defined and comp.top3 is not none else '—' }}</td>

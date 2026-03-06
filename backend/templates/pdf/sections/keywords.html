@@ -24,19 +24,19 @@
     <table>
         <thead>
             <tr>
-                <th style="width:35%">Słowo kluczowe</th>
-                <th>Poz.</th>
-                <th>Wyszuk./mies.</th>
-                <th>Intencja</th>
-                <th>Trudność</th>
-                <th>CPC</th>
-                <th>URL</th>
+                <th style="width:28%">Słowo kluczowe</th>
+                <th style="width:8%">Poz.</th>
+                <th style="width:11%">Wyszuk./mies.</th>
+                <th style="width:12%">Intencja</th>
+                <th style="width:10%">Trudność</th>
+                <th style="width:9%">CPC</th>
+                <th style="width:22%">URL</th>
             </tr>
         </thead>
         <tbody>
             {% for pos in kw.positions %}
                 <tr>
-                    <td class="td-bold">{{ pos.keyword | truncate(40) }}</td>
+                    <td class="td-bold">{{ pos.keyword | truncate(55) }}</td>
                     <td class="td-center td-bold" style="color: {{ '#16a34a' if pos.position <= 3 else ('#3b82f6' if pos.position <= 10 else '#64748b') }};">
                         {{ pos.position }}
                     </td>
@@ -49,7 +49,7 @@
                     </td>
                     <td class="td-center">{{ pos.difficulty if pos.difficulty else '—' }}</td>
                     <td class="td-center">{{ pos.cpc | round(2) if pos.cpc else '—' }}</td>
-                    <td class="td-url" style="font-size: 7pt;">{{ pos.url | truncate(35) if pos.url else '—' }}</td>
+                    <td class="td-url" style="font-size: 7pt;">{{ pos.url if pos.url else '—' }}</td>
                 </tr>
             {% endfor %}
         </tbody>
