@@ -8,6 +8,24 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ---
 
+## Branding Rollout (SVG) (2026-03-06)
+
+- Replaced legacy `RiSearchEyeFill + SiteSpector` brand rendering with unified full logotype SVG in app/public UI:
+  - `frontend/components/brand/SiteSpectorLogo.tsx`
+  - `frontend/components/layout/PublicNavbar.tsx`
+  - `frontend/components/layout/PublicFooter.tsx`
+  - `frontend/components/layout/UnifiedSidebar.tsx`
+  - `frontend/app/(app)/layout.tsx` (mobile header)
+  - `frontend/app/(public)/login/page.tsx`
+  - `frontend/app/(public)/page.tsx`
+  - `frontend/app/(public)/sitemap/page.tsx`
+  - `frontend/app/(app)/audits/[id]/client-report/page.tsx` (header + footer in printable report)
+- Added shared static asset for frontend runtime: `frontend/public/sitespector_logo_transp.svg`.
+- Kept small icons (`frontend/app/icon.tsx`, `frontend/app/apple-icon.tsx`) as emblem-only by design.
+- Frontend lint still reports pre-existing unrelated errors in admin/schema pages; logo rollout introduced no new lint errors.
+
+---
+
 ## Page Structure
 
 ```

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 
@@ -40,7 +41,14 @@ export default function PublicHomePage() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-24">
       <div className="text-center">
-        <h1 className="mb-4 text-6xl font-bold text-[#0b363d]">SiteSpector</h1>
+        <Image
+          src="/sitespector_logo_transp.svg"
+          alt="SiteSpector"
+          width={3068}
+          height={759}
+          unoptimized
+          className="mx-auto mb-6 h-14 w-auto max-w-full object-contain"
+        />
         <p className="mb-8 text-xl text-[#616c6e]">
           AI-Powered Website Audits
         </p>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Nav } from 'react-bootstrap';
-import { RiSearchEyeFill } from 'react-icons/ri';
 import Topbar from '@/component/layout/Topbar/page';
 import Footer from '@/component/layout/Footer/page';
 import { supabase, getAppUrl } from '@/lib/supabase';
@@ -142,7 +141,11 @@ export default function LoginPage() {
             <Row className="justify-content-center">
               <Col xs={12} md={8} lg={6} className="auth-card text-center">
                 <div className="mb-4">
-                  <RiSearchEyeFill size={48} className="text-orange" />
+                  <img
+                    src="/sitespector_logo_transp.svg"
+                    alt="SiteSpector"
+                    className="mx-auto h-12 w-auto object-contain"
+                  />
                 </div>
                 <h2 className="auth-heading">Sprawdź e-mail</h2>
                 <p className="auth-subheading mt-2">Link do logowania wysłany na <strong>{email}</strong></p>
@@ -166,8 +169,11 @@ export default function LoginPage() {
           <Row className="justify-content-center">
             <Col xs={12} sm={10} md={8} lg={5} className="auth-card">
               <div className="text-center mb-4">
-                <RiSearchEyeFill size={48} className="text-orange" />
-                <h1 className="auth-heading mt-2">SiteSpector</h1>
+                <img
+                  src="/sitespector_logo_transp.svg"
+                  alt="SiteSpector"
+                  className="mx-auto h-12 w-auto object-contain"
+                />
                 <p className="auth-subheading">Zaloguj się lub załóż konto, aby kontynuować.</p>
               </div>
 

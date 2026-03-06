@@ -15,7 +15,7 @@ export function buildOrganizationSchema() {
     url: SITE_URL,
     logo: {
       '@type': 'ImageObject',
-      url: absoluteUrl('/icon-lupa.svg'),
+      url: absoluteUrl('/sitespector_logo_transp.svg'),
     },
     // Add social profiles here when available.
     sameAs: [],
@@ -70,7 +70,7 @@ export function buildArticleSchema(args: BuildArticleSchemaArgs) {
     name: SITE_NAME,
     logo: {
       '@type': 'ImageObject',
-      url: absoluteUrl('/icon-lupa.svg'),
+      url: absoluteUrl('/sitespector_logo_transp.svg'),
     },
   };
 

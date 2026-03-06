@@ -493,9 +493,8 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
           <SiteSpectorLogo
             href="/dashboard"
             onClick={onAction}
-            iconSize={22}
-            className="group text-white"
-            textClassName="text-lg text-white group-hover:text-white"
+            logoHeight={24}
+            className="group"
           />
           <TooltipProvider>
             <Tooltip>

@@ -77,6 +77,7 @@ from .charts import (
 )
 
 logger = logging.getLogger(__name__)
+DEFAULT_BRAND_LOGO_SRC = "assets/sitespector_logo_transp.svg"
 
 # Jinja2 environment
 _TEMPLATE_DIR = Path(__file__).parent.parent.parent.parent / "templates" / "pdf"
@@ -292,8 +293,8 @@ async def generate_pdf(
     audit_url = audit_data.get("url") or ""
     audit_url_short = _shorten_url(audit_url)
     project_name = audit_data.get("project_name") or ""
-    # Two-step logo rollout: empty by default, later set env PDF_COVER_LOGO_SRC to PNG path/URL.
-    cover_logo_src = (getattr(settings, "PDF_COVER_LOGO_SRC", "") or "").strip()
+    configured_logo_src = (getattr(settings, "PDF_COVER_LOGO_SRC", "") or "").strip()
+    cover_logo_src = configured_logo_src or DEFAULT_BRAND_LOGO_SRC
 
     # ---- Pre-check data availability ----
     senuto = results.get("senuto") or {}
@@ -677,6 +678,7 @@ async def generate_pdf(
         audit_url_short=audit_url_short,
         report_label=cfg.label_pl,
         generated_date=generated_date,
+        brand_logo_src=cover_logo_src,
     )
 
     # ---- Convert to PDF ----

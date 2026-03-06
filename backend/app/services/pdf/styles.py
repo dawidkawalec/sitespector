@@ -28,9 +28,8 @@ def get_pdf_css() -> str:
         white-space: nowrap;
     }
     @bottom-left {
-        content: "SiteSpector — Profesjonalny Audyt SEO & AI  |  sitespector.pl  |  kontakt@sitespector.pl";
-        font-size: 7pt;
-        color: #94a3b8;
+        content: element(footer-brand);
+        vertical-align: middle;
     }
     @bottom-right {
         content: "Strona " counter(page) " z " counter(pages);
@@ -58,7 +57,24 @@ def get_pdf_css() -> str:
     position: running(header-logo);
     display: flex;
     align-items: center;
+}
+#running-footer-brand {
+    position: running(footer-brand);
+    display: flex;
+    align-items: center;
     gap: 6px;
+}
+.running-logo-image {
+    height: 11px;
+    width: auto;
+}
+.running-footer-logo-image {
+    height: 10px;
+    width: auto;
+}
+.running-footer-contact {
+    font-size: 7pt;
+    color: #94a3b8;
 }
 #running-header-right {
     position: running(header-right);
@@ -160,35 +176,10 @@ li {
 .cover-logo-wrap {
     margin-bottom: 30px;
 }
-.cover-logo-fallback {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-}
 .cover-logo-image {
     width: auto;
     max-width: 100%;
     height: 24mm;
-}
-.cover-logo-icon {
-    width: 54px;
-    height: 54px;
-    background: #ff8945;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 9px;
-}
-.cover-logo-text {
-    font-size: 24pt;
-    font-weight: 800;
-    color: #0f172a;
-    letter-spacing: -0.4px;
-    white-space: nowrap;
-    line-height: 1;
-    font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
 }
 .cover-title {
     font-size: 16pt;
@@ -250,6 +241,11 @@ li {
     font-size: 8.5pt;
     line-height: 1.4;
     font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
+}
+.cover-footer-logo {
+    height: 8mm;
+    width: auto;
+    margin-bottom: 2mm;
 }
 
 /* ========== TABLE OF CONTENTS ========== */

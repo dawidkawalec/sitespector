@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,7 +12,6 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { RiSearchEyeFill } from 'react-icons/ri'
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -221,13 +221,16 @@ function LoginPageInner() {
       <Card className="public-card w-full max-w-md border shadow-2xl relative z-10 bg-white">
         <CardHeader className="space-y-1 text-center">
           <div className="mb-4 flex justify-center">
-            <div className="rounded-2xl bg-[#0b363d]/10 p-3 text-[#ff8945]">
-              <RiSearchEyeFill size={48} />
-            </div>
+            <Image
+              src="/sitespector_logo_transp.svg"
+              alt="SiteSpector"
+              width={3068}
+              height={759}
+              unoptimized
+              className="h-12 w-auto object-contain"
+            />
           </div>
-          <CardTitle className="text-3xl font-black tracking-tight text-[#0b363d]">
-            SiteSpector
-          </CardTitle>
+          <CardTitle className="sr-only">SiteSpector</CardTitle>
           <CardDescription className="public-card-muted text-base text-[#616c6e]">
             Zaloguj się lub załóż konto, aby kontynuować.
           </CardDescription>

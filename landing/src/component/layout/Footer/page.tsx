@@ -4,7 +4,7 @@ import { currentYear } from '@/component/CurrentYear';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { Col, Container, Row, Form, Spinner } from 'react-bootstrap';
-import { RiSearchEyeFill, RiSendPlane2Line, RiTwitterFill } from 'react-icons/ri';
+import { RiSendPlane2Line, RiTwitterFill } from 'react-icons/ri';
 
 interface FooterColumn {
   heading: string;
@@ -102,8 +102,11 @@ const Footer = () => {
               <div className="footer-about">
                 <div className="logo">
                   <Link className="navbar-caption fs-5 text-light ls-1 fw-bold d-inline-flex align-items-center text-nowrap" href="/">
-                    <RiSearchEyeFill size={29} className="text-orange fs-4 me-1 flex-shrink-0" />
-                    SiteSpector
+                    <img
+                      src="/sitespector_logo_transp.svg"
+                      alt="SiteSpector"
+                      className="h-[32px] w-auto object-contain"
+                    />
                   </Link>
                 </div>
                 <div className="d-flex mt-4">

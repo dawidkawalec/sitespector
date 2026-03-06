@@ -17,6 +17,7 @@ import { clearImpersonationSession, getImpersonationSession, IMPERSONATION_EVENT
 import { Button } from '@/components/ui/button'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { ShieldAlert } from 'lucide-react'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -59,11 +60,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {!isImpersonating ? (
           <header className="md:hidden h-16 border-b border-white/10 flex items-center px-4 bg-[#0b363d] text-white flex-shrink-0">
             <MobileSidebar />
-            <h1 className="ml-4 text-xl font-bold">SiteSpector</h1>
+            <Image
+              src="/sitespector_logo_transp.svg"
+              alt="SiteSpector"
+              width={3068}
+              height={759}
+              unoptimized
+              className="ml-4 h-7 w-auto max-w-[200px] object-contain"
+            />
           </header>
         ) : (
           <header className="md:hidden h-16 border-b border-white/10 flex items-center px-4 bg-[#0b363d] text-white flex-shrink-0">
-            <h1 className="text-xl font-bold">SiteSpector</h1>
+            <Image
+              src="/sitespector_logo_transp.svg"
+              alt="SiteSpector"
+              width={3068}
+              height={759}
+              unoptimized
+              className="h-7 w-auto max-w-[200px] object-contain"
+            />
           </header>
         )}
 

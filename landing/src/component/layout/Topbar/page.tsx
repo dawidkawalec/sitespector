@@ -15,7 +15,6 @@ import {
   RiMagicLine,
   RiMenu5Line,
   RiQuoteText,
-  RiSearchEyeFill,
   RiShieldCheckLine,
   RiTeamLine,
   RiTerminalBoxLine,
@@ -272,7 +271,11 @@ const Topbar = () => {
               href="/"
               onClick={() => closeAll()}
             >
-              <RiSearchEyeFill size={28} className="text-orange fs-4 me-1 flex-shrink-0" /> SiteSpector
+              <img
+                src="/sitespector_logo_transp.svg"
+                alt="SiteSpector"
+                className="h-[30px] w-auto object-contain"
+              />
             </Link>
           </div>
 

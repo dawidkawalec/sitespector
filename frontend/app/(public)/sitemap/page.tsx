@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { RiSearchEyeFill } from 'react-icons/ri'
+import Image from 'next/image'
 import { JsonLd } from '@/components/JsonLd'
 import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema'
 
@@ -70,7 +70,14 @@ export default function SitemapPage() {
         ]}
       />
       <div className="mb-12 flex items-center gap-3">
-        <RiSearchEyeFill size={32} className="text-[#ff8945]" />
+        <Image
+          src="/sitespector_logo_transp.svg"
+          alt="SiteSpector"
+          width={3068}
+          height={759}
+          unoptimized
+          className="h-7 w-auto object-contain"
+        />
         <h1 className="text-3xl font-bold text-[#0b363d]">Mapa strony</h1>
       </div>
       <p className="mb-12 text-[#616c6e]">

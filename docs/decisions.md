@@ -1,5 +1,30 @@
 # Architectural Decisions Log
 
+## Global Logo Rollout — Full SVG Logotype (2026-03-06)
+
+- **Decision**: Use a single full SVG logotype (`sitespector_logo_transp.svg`) across frontend app, landing, and PDF templates, while keeping emblem-only assets for favicon/app-icon.
+- **Rationale**:
+  - Previous branding mixed icon + separate text with multiple ad-hoc implementations.
+  - PDF, app, and landing had inconsistent visual identity and repeated fallback logic.
+  - User requirement: replace all legacy logo renderings with the provided complete logotype.
+- **Implementation**:
+  - Added runtime logo assets:
+    - `frontend/public/sitespector_logo_transp.svg`
+    - `landing/public/sitespector_logo_transp.svg`
+    - `backend/templates/pdf/assets/sitespector_logo_transp.svg`
+  - Frontend app/public:
+    - `SiteSpectorLogo` component now renders full SVG logotype.
+    - Replaced legacy manual brand renderings in app layout/login/home/sitemap/client-report.
+  - Landing:
+    - Replaced topbar/footer/login legacy icon+text rendering with full SVG.
+    - Updated `landing/src/lib/schema.ts` organization/publisher logo URLs to full logotype.
+  - PDF:
+    - Running header/footer and cover now render full logotype from one source.
+    - Removed legacy cover fallback icon+text block.
+- **Outcome**:
+  - Consistent branding across all report and UI surfaces.
+  - Small icon strategy remains unchanged (emblem-only) for readability at tiny sizes.
+
 ## Schema-first Reports + Technical Extras Expansion (2026-03-06)
 
 - **Decision**: Promote Schema.org to first-class technical signal across all PDF report types (`executive`, `standard`, `full`) and expand crawl payload with missing reference-audit diagnostics.

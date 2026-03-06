@@ -12,6 +12,22 @@ The **Worker** is a background Python process that polls for pending audits and 
 
 ---
 
+## PDF Branding Rollout (SVG) (2026-03-06)
+
+- Unified PDF brand source to a single full logotype asset: `backend/templates/pdf/assets/sitespector_logo_transp.svg`.
+- Updated generator defaults:
+  - `backend/app/services/pdf/generator.py` now uses `DEFAULT_BRAND_LOGO_SRC = "assets/sitespector_logo_transp.svg"` when `PDF_COVER_LOGO_SRC` is not configured.
+  - `brand_logo_src` is passed to `base.html` for running header/footer branding.
+- Updated templates:
+  - `backend/templates/pdf/base.html` now renders logo image in running header and running footer elements (instead of icon + separate text).
+  - `backend/templates/pdf/sections/cover.html` now always renders full logotype and removes legacy icon/text fallback.
+- Updated CSS:
+  - `backend/app/services/pdf/styles.py` now uses `element(footer-brand)` in `@bottom-left`.
+  - Added dedicated classes for running header/footer logo sizing and cover footer logo.
+- Python syntax check passed for updated modules (`generator.py`, `styles.py`).
+
+---
+
 ## Audit Access Hardening (Mar 2026)
 
 ### Unified ACL helper for audit-scoped endpoints

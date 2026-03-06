@@ -8,6 +8,45 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-053: Niespójny branding logo między UI/PDF/landing (ikona + osobny napis)
+
+**Reported**: 2026-03-06
+
+**Status**: ✅ FIXED (2026-03-06)
+
+**Severity**: MEDIUM
+
+**Description**:
+- Logo było renderowane różnie w zależności od miejsca:
+  - app/landing używały mieszanki `RiSearchEyeFill + SiteSpector`,
+  - PDF używał osobnych fallbacków (ikona + tekst),
+  - schema.org wskazywało na icon-only asset zamiast pełnego logotypu.
+
+**Root cause**:
+- Brak single source of truth dla assetu brandowego i kilka niezależnych implementacji logo.
+
+**Fix**:
+- Wprowadzono wspólny asset `sitespector_logo_transp.svg` dla frontend, landing i PDF.
+- Podmieniono wszystkie renderowania logo w newralgicznych miejscach UI/PDF na pełny logotyp SVG.
+- W PDF usunięto fallback `ikona + tekst`, zastępując go stałym logotypem.
+- W schema.org (landing) zaktualizowano `Organization.logo`/`publisher.logo` do nowego SVG.
+- Zachowano strategię icon-only dla favicon/app-icon.
+
+**Files Changed (high level)**:
+- `frontend/components/brand/SiteSpectorLogo.tsx`
+- `frontend/components/layout/*`
+- `frontend/app/(public)/*` + `frontend/app/(app)/layout.tsx`
+- `frontend/app/(app)/audits/[id]/client-report/page.tsx`
+- `landing/src/component/layout/*`
+- `landing/src/app/login/page.tsx`
+- `landing/src/lib/schema.ts`
+- `backend/templates/pdf/base.html`
+- `backend/templates/pdf/sections/cover.html`
+- `backend/app/services/pdf/styles.py`
+- `backend/app/services/pdf/generator.py`
+
+---
+
 ### BUG-050: Schema.org i sekcje referencyjne były niepełne w raportach Executive/Standard
 
 **Reported**: 2026-03-06

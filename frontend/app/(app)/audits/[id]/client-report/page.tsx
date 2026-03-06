@@ -9,6 +9,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
@@ -223,6 +224,14 @@ export default function ClientReportPage({ params }: { params: { id: string } })
                 <p className="text-base @md:text-lg @lg:text-xl text-slate-500 break-words">{clientName || audit.url}</p>
               </div>
               <div className="text-left @md:text-right shrink-0">
+                <Image
+                  src="/sitespector_logo_transp.svg"
+                  alt="SiteSpector"
+                  width={3068}
+                  height={759}
+                  unoptimized
+                  className="mb-3 h-8 w-auto max-w-[220px] object-contain @md:ml-auto"
+                />
                 <p className="text-sm font-bold uppercase tracking-wider text-slate-400">Data Raportu</p>
                 <p className="text-base @md:text-lg font-medium">{new Date().toLocaleDateString('pl-PL')}</p>
               </div>
@@ -364,8 +373,15 @@ export default function ClientReportPage({ params }: { params: { id: string } })
             )}
 
             {/* Technical Footer */}
-            <div className="mt-auto pt-12 border-t border-slate-200 flex flex-col @md:flex-row @md:justify-between @md:items-center gap-2 text-slate-400 text-xs">
-              <p className="break-words">Wygenerowano przez SiteSpector AI Platform</p>
+            <div className="mt-auto pt-12 border-t border-slate-200 flex flex-col @md:flex-row @md:justify-between @md:items-center gap-3 text-slate-400 text-xs">
+              <Image
+                src="/sitespector_logo_transp.svg"
+                alt="SiteSpector"
+                width={3068}
+                height={759}
+                unoptimized
+                className="h-6 w-auto max-w-[180px] object-contain"
+              />
               <p className="break-all">https://sitespector.pl</p>
             </div>
           </div>

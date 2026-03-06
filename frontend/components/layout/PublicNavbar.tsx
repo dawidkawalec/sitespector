@@ -225,8 +225,8 @@ export function PublicNavbar() {
         <SiteSpectorLogo
           href="/"
           onClick={() => closeAll()}
-          className="public-navbar-logo text-[#0b363d]"
-          textClassName="text-xl text-[#0b363d]"
+          logoHeight={32}
+          className="public-navbar-logo"
         />
 
         {/* Desktop nav (mega menu) */}
