@@ -24,7 +24,7 @@ import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 export const metadata = buildMetadata({
   title: 'Sprawdź agencję SEO — Czy Twoja agencja naprawdę działa? | SiteSpector',
   description:
-    'Płacisz agencji SEO tysiące miesięcznie, a wyniki stoją w miejscu? Uruchom darmowy audyt SiteSpector i porównaj z raportem agencji. Zobacz, co jest nie tak.',
+    'Wyniki SEO stoją w miejscu? Uruchom audyt SiteSpector i porównaj z raportem agencji. Zobacz, co jest nie tak.',
   keywords: ['sprawdzenie agencji SEO', 'weryfikacja agencji', 'audyt SEO agencji', 'czy agencja SEO działa', 'zweryfikuj agencję'],
   path: '/sprawdz-agencje-seo',
   ogImageType: 'page',
@@ -56,8 +56,8 @@ const painCards = [
 const verifySteps = [
   {
     icon: RiTimerLine,
-    title: 'Załóż darmowe konto SiteSpector',
-    desc: 'Plan Free — 5 audytów miesięcznie, bez karty kredytowej. 30 sekund rejestracji.',
+    title: 'Załóż konto SiteSpector',
+    desc: 'Uruchom pierwszy audyt i szybko sprawdź stan strony.',
   },
   {
     icon: RiSearchEyeLine,
@@ -128,7 +128,7 @@ export default function SprawdzAgencjeSeoPage() {
             path: '/sprawdz-agencje-seo',
             title: 'Sprawdź agencję SEO — Czy Twoja agencja naprawdę działa? | SiteSpector',
             description:
-              'Płacisz agencji SEO tysiące miesięcznie, a wyniki stoją w miejscu? Uruchom darmowy audyt SiteSpector i porównaj z raportem agencji. Zobacz, co jest nie tak.',
+              'Wyniki SEO stoją w miejscu? Uruchom audyt SiteSpector i porównaj z raportem agencji. Zobacz, co jest nie tak.',
           }),
           buildBreadcrumbSchema([
             { name: 'SiteSpector', path: '/' },
@@ -151,8 +151,7 @@ export default function SprawdzAgencjeSeoPage() {
                   </h1>
                 </div>
                 <p className="text-muted mt-4 mb-0">
-                  Tysiące złotych miesięcznie za raporty, które niewiele mówią. Pozycje stoją w miejscu. Nie wiesz, co agencja właściwie robi.
-                  SiteSpector pozwala Ci to zweryfikować — w 3 minuty, za darmo.
+                  Otrzymujesz raporty, które niewiele mówią, a pozycje stoją w miejscu? SiteSpector pozwala to szybko i konkretnie zweryfikować.
                 </p>
                 <div className="mt-4">
                   <Link href="/login" className="btn btn-primary me-2 my-2">
@@ -474,15 +473,15 @@ export default function SprawdzAgencjeSeoPage() {
                 </div>
                 <div className="main-title mt-3">
                   <h2 className="text-primary">
-                    Zweryfikuj za darmo. <span className="text-orange text-line">Bez karty kredytowej</span>.
+                    Zweryfikuj stronę. <span className="text-orange text-line">Bez zgadywania</span>.
                   </h2>
                 </div>
                 <p className="text-muted mt-3">
-                  Plan Free: 5 audytów miesięcznie. Wystarczy, żeby sprawdzić swoją stronę i porównać z raportem agencji. Załóż konto w 30 sekund.
+                  Oferta jest w przygotowaniu. Skontaktuj się z nami, aby poznać aktualne możliwości współpracy.
                 </p>
                 <div className="mt-4">
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
-                    Rozpocznij darmowy audyt
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
+                    Skontaktuj się z nami
                     <RiArrowRightLine className="ms-2" />
                   </Link>
                   <Link href="/dla-ecommerce" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">
@@ -490,7 +489,7 @@ export default function SprawdzAgencjeSeoPage() {
                   </Link>
                 </div>
                 <div className="mt-4 text-muted small">
-                  Jeśli chcesz, możesz też porównać wyniki z konkurencją (do 3 URL) w planie Pro/Enterprise.
+                  Jeśli chcesz, możesz też porównać wyniki z konkurencją dla kluczowych URL-i.
                 </div>
               </div>
             </div>

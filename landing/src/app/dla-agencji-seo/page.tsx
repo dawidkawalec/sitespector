@@ -24,7 +24,7 @@ import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 export const metadata = buildMetadata({
   title: 'Dla Agencji SEO — Jeden panel dla wszystkich klientów | SiteSpector',
   description:
-    'SiteSpector dla agencji: workspace per klient, raporty PDF white-label, harmonogramy audytów, Execution Plan z kodem. Zastąp SF+Ahrefs+PageSpeed za $29/mc zamiast $300+/mc.',
+    'SiteSpector dla agencji: workspace per klient, raporty PDF white-label, harmonogramy audytów i Execution Plan z kodem. Oferta jest aktualizowana.',
   keywords: [
     'agencja SEO',
     'audyt SEO agencja',
@@ -39,15 +39,15 @@ export const metadata = buildMetadata({
 
 const painPoints = [
   { icon: RiErrorWarningLine, title: 'Licencje per użytkownik', desc: 'Oddzielna licencja Screaming Frog na osobę i kolejne koszty per seat.' },
-  { icon: RiLineChartLine, title: 'Subskrypcje SEO $$', desc: 'Ahrefs/Senuto to stałe koszty miesięczne, które rosną wraz z portfolio.' },
+  { icon: RiLineChartLine, title: 'Subskrypcje SEO', desc: 'Koszty narzędzi rosną wraz z portfolio klientów.' },
   { icon: RiTimerLine, title: 'Ręczne raporty PDF', desc: 'Godziny na kopiowanie danych, formatowanie i wysyłkę do klienta.' },
   { icon: RiRobotLine, title: 'Brak konkretów', desc: 'Klient dostaje „popraw meta”, ale bez listy zadań i kodu do wdrożenia.' },
   { icon: RiBarChart2Line, title: 'Brak AI Overviews', desc: 'Monitoring odpowiedzi AI w wyszukiwarce to nowy kanał — większość narzędzi tego nie ma.' },
 ];
 
 const costRows = [
-  { tool: 'Screaming Frog', cost: '259 GBP/rok (~$330)', value: 'Crawling w cenie' },
-  { tool: 'Ahrefs / Senuto', cost: '$129/mc', value: 'Senuto w planie Pro' },
+  { tool: 'Screaming Frog', cost: 'Koszt zewnętrzny', value: 'Crawling w SiteSpector' },
+  { tool: 'Ahrefs / Senuto', cost: 'Koszt zewnętrzny', value: 'Integracje w przygotowaniu' },
   { tool: 'PageSpeed / Lighthouse', cost: 'Ręcznie / osobne', value: 'Desktop + Mobile w audycie' },
   { tool: 'ChatGPT / AI', cost: 'Osobna subskrypcja', value: 'Gemini AI w cenie' },
   { tool: 'Raporty PDF', cost: 'Godziny pracy', value: 'Generacja 1 klik' },
@@ -105,7 +105,7 @@ export default function DlaAgencjiSeoPage() {
             path: '/dla-agencji-seo',
             title: 'Dla Agencji SEO — Jeden panel dla wszystkich klientów | SiteSpector',
             description:
-              'SiteSpector dla agencji: workspace per klient, raporty PDF white-label, harmonogramy audytów, Execution Plan z kodem. Zastąp SF+Ahrefs+PageSpeed za $29/mc zamiast $300+/mc.',
+              'SiteSpector dla agencji: workspace per klient, raporty PDF white-label, harmonogramy audytów i Execution Plan z kodem. Oferta jest aktualizowana.',
           }),
           buildBreadcrumbSchema([
             { name: 'SiteSpector', path: '/' },
@@ -128,12 +128,12 @@ export default function DlaAgencjiSeoPage() {
                   </h1>
                 </div>
                 <p className="text-muted mt-4 mb-0">
-                  Przestań płacić za pięć narzędzi i tracić godziny na raporty. SiteSpector łączy Screaming Frog, Lighthouse, Senuto i AI — jeden
-                  dashboard, 50 audytów miesięcznie, raporty PDF gotowe do wysłania.
+                  Przestań płacić za pięć narzędzi i tracić godziny na raporty. SiteSpector łączy Screaming Frog, Lighthouse, Senuto i AI w jednym dashboardzie.
+                  Szczegóły oferty opublikujemy wkrótce.
                 </p>
                 <div className="mt-4">
-                  <Link href="/login" className="btn btn-primary me-2 my-2">
-                    Rozpocznij darmowy trial
+                  <Link href="/kontakt" className="btn btn-primary me-2 my-2">
+                    Skontaktuj się z nami
                   </Link>
                   <Link href="#koszty" className="btn btn-outline-primary my-2">
                     Zobacz porównanie kosztów
@@ -204,10 +204,10 @@ export default function DlaAgencjiSeoPage() {
                 </div>
                 <div className="main-title mt-3">
                   <h2 className="text-primary">
-                    $300–500+/mc vs SiteSpector <span className="text-orange text-line">$29/mc</span>
+                    Oferta <span className="text-orange text-line">wkrótce</span>
                   </h2>
                 </div>
-                <p className="text-muted mt-3 mb-0">Zsumuj swoje narzędzia. SiteSpector zastępuje je jednym panelem.</p>
+                <p className="text-muted mt-3 mb-0">Finalizujemy pakiety i warunki współpracy dla agencji.</p>
               </div>
             </div>
 
@@ -219,7 +219,7 @@ export default function DlaAgencjiSeoPage() {
                       <thead className="bg-white">
                         <tr>
                           <th className="p-4 border-0">Narzędzie</th>
-                          <th className="p-4 border-0">Typowy koszt</th>
+                          <th className="p-4 border-0">Typowa charakterystyka</th>
                           <th className="p-4 border-0 text-orange">Co daje SiteSpector</th>
                         </tr>
                       </thead>
@@ -233,8 +233,8 @@ export default function DlaAgencjiSeoPage() {
                         ))}
                         <tr>
                           <td className="p-4 border-top fw-bold text-primary">Podsumowanie</td>
-                          <td className="p-4 border-top fw-bold text-muted">$300–500+/mc</td>
-                          <td className="p-4 border-top fw-bold text-orange">$29/mc (Pro)</td>
+                          <td className="p-4 border-top fw-bold text-muted">Zależne od dostawców</td>
+                          <td className="p-4 border-top fw-bold text-orange">Wkrótce — skontaktuj się z nami</td>
                         </tr>
                       </tbody>
                     </table>
@@ -242,13 +242,13 @@ export default function DlaAgencjiSeoPage() {
                 </div>
 
                 <div className="mt-4 text-center">
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
-                    Przetestuj Free — 5 audytów za $0
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
+                    Skontaktuj się z nami
                     <RiArrowRightLine className="ms-2" />
                   </Link>
                 </div>
                 <p className="text-muted small text-center mt-3 mb-0">
-                  Pro: 50 audytów/mc, Senuto, 3 konkurentów, harmonogramy, white-label PDF, Execution Plan.
+                  Szczegóły pakietów i zakresu funkcji opublikujemy wkrótce.
                 </p>
               </div>
             </div>
@@ -316,7 +316,7 @@ export default function DlaAgencjiSeoPage() {
                 </div>
                 <p className="text-muted mt-3 mb-0">
                   Profesjonalny raport PDF z SEO, Performance, Visibility, AI Overviews, Backlinks, Links, Images, AI Strategy i Execution Plan. W planie
-                  Pro i Enterprise — własne logo i branding.
+                  dedykowanym — własne logo i branding. Pełne warunki podamy wkrótce.
                 </p>
               </div>
             </div>
@@ -604,11 +604,11 @@ export default function DlaAgencjiSeoPage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3">
-                  Zacznij od planu Free — 5 audytów miesięcznie, bez karty kredytowej. Przejdź na Pro, gdy będziesz gotowy.
+                  Pakiety są w trakcie finalizacji. Skontaktuj się z nami, aby omówić aktualne możliwości współpracy.
                 </p>
                 <div className="mt-4">
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
-                    Rozpocznij darmowy trial
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
+                    Skontaktuj się z nami
                     <RiArrowRightLine className="ms-2" />
                   </Link>
                   <Link href="/jak-to-dziala" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">

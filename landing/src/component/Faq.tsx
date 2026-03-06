@@ -22,7 +22,7 @@ export const faqData: FaqItem[] = [
     icon: RiNumber2,
     question: 'Czy mogę generować raporty PDF dla klientów?',
     answer:
-      'Tak. Raport PDF jest dostępny po zakończeniu audytu. W planach Pro i Enterprise możesz generować wersje white-label gotowe do wysyłki klientom.',
+      'Tak. Raport PDF jest dostępny po zakończeniu audytu. Szczegóły pakietów i opcji dodatkowych są w przygotowaniu, a po szczegóły zapraszamy do kontaktu.',
   },
   {
     id: 3,

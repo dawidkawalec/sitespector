@@ -1071,3 +1071,63 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 - **Outcome**:
   - Auth failures now degrade predictably to `401` instead of accidental internal errors.
   - Reduced request flood during incidents while keeping status feature active in UI and admin panel.
+
+---
+
+## ADR-049: Temporary Pricing Placeholder on User-Facing UI (2026-03-06)
+
+- **Decision**:
+  - Temporarily replace exposed pricing/plan copy on selected landing and app views with placeholder messaging ("Wkrótce / Skontaktuj się z nami").
+  - Keep existing routes and information architecture (`/cennik`, `/pricing`) active to avoid navigation/SEO breakage.
+  - Keep backend billing implementation unchanged in this iteration.
+- **Rationale**:
+  - Final pricing and packaging are not approved yet.
+  - Showing stale or provisional prices in production UI creates business risk and user confusion.
+  - A UI-first placeholder minimizes implementation risk while preserving current app/landing structure.
+- **Implementation**:
+  - Landing components/pages/nav labels updated:
+    - `landing/src/component/Pricing.tsx`
+    - `landing/src/component/Faq.tsx`
+    - `landing/src/component/Cta.tsx`
+    - `landing/src/app/cennik/page.tsx`
+    - `landing/src/app/page.tsx`
+    - `landing/src/app/o-nas/page.tsx`
+    - `landing/src/app/porownanie/PorownanieClient.tsx`
+    - `landing/src/app/dla-freelancerow/page.tsx`
+    - `landing/src/app/dla-agencji-seo/page.tsx`
+    - `landing/src/component/layout/Topbar/page.tsx`
+    - `landing/src/component/layout/Footer/page.tsx`
+    - `landing/src/app/sitemap/page.tsx`
+  - Frontend app pricing/billing UX updated:
+    - `frontend/app/(app)/pricing/page.tsx`
+    - `frontend/app/(app)/settings/billing/page.tsx`
+    - `frontend/components/NewAuditDialog.tsx`
+- **Outcome**:
+  - Primary user-facing pricing surfaces now show placeholder copy instead of concrete prices/plans.
+  - Billing backend can be reconnected to final UI once pricing is approved.
+
+---
+
+## ADR-050: Marketing-Wide Price Mention Removal (Second Pass) (2026-03-06)
+
+- **Decision**:
+  - Run a second cleanup pass across marketing pages/content to remove remaining direct price mentions and plan-tier references from user-facing copy.
+  - Keep URL structure intact (including `/cennik`) for navigation continuity, while shifting visible labels/copy to "Oferta" wording.
+  - Leave legal terms page content unchanged in this pass.
+- **Rationale**:
+  - First pass removed primary pricing sections but some dispersed mentions remained in auxiliary pages, CTAs, metadata, and selected content markdown.
+  - Requirement changed to stricter "no price mentions on marketing pages".
+- **Implementation**:
+  - Updated additional landing pages/components: case studies index, docs page, how-it-works, contact CTA, comparison metadata/copy, industry pages (`dla-managerow`, `dla-ecommerce`, `sprawdz-agencje-seo`, etc.), integrations/features/blog CTAs, nav/footer/sitemap labels.
+  - Added central copy-token source:
+    - `landing/src/lib/offerPlaceholder.ts` (`id`, `what`, `where`, `how`, shared placeholder labels).
+  - Updated selected rendered markdown marketing content:
+    - `landing/content/case-studies/agencja-webpro.md`
+    - `landing/content/case-studies/freelancer-seo-konsultant.md`
+    - `landing/content/case-studies/sklep-elektromarket.md`
+    - `landing/content/blog/raporty-pdf-dla-klientow.md`
+    - `landing/content/blog/roi-audyt-seo.md`
+    - `landing/content/blog/porownanie-narzedzi-seo-2026.md`
+- **Outcome**:
+  - Marketing-facing copy no longer exposes concrete pricing figures in the cleaned scope.
+  - Billing/backend behavior remains unchanged and ready for reconnect once final commercial policy is approved.

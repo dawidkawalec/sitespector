@@ -1,15 +1,15 @@
 ---
-title: "Freelancer SEO: profesjonalne audyty za $0/mc"
+title: "Freelancer SEO: profesjonalne audyty bez rozproszonego stacku"
 slug: "freelancer-seo-konsultant"
 date: "2026-02-05"
 category: "Freelancer"
 client_type: "Niezależny konsultant SEO"
 challenge_summary: "Drogie narzędzia zjadały marżę, ręczne raporty zajmowały godziny"
-results_summary: "5 klientów obsługiwanych na darmowym planie, upgrade do Pro po 2 miesiącach"
+results_summary: "5 klientów obsługiwanych na starcie, szybkie skalowanie po wdrożeniu workflow"
 key_metrics:
   - label: "Koszt narzędzi"
-    before: "~500 PLN/mc"
-    after: "0 PLN (Free) → $29 (Pro)"
+    before: "Rozproszone narzędzia"
+    after: "Jeden spójny proces"
   - label: "Czas per raport"
     before: "1-2h"
     after: "3 min"
@@ -33,7 +33,7 @@ testimonial:
 
 PLACEHOLDER: Content agent — rozwiń historię freelancera:
 - Niezależny konsultant SEO z 3 klientami
-- Płacił ~500 PLN/mc za narzędzia (uproszczone plany)
+- Korzystał z kilku narzędzi jednocześnie, co utrudniało pracę
 - Raporty klientom robił ręcznie (1-2h per raport)
 - Nie mógł sobie pozwolić na Screaming Frog + Ahrefs + narzędzia AI
 - Marża z klientów była niska po odliczeniu kosztów narzędzi
@@ -41,16 +41,16 @@ PLACEHOLDER: Content agent — rozwiń historię freelancera:
 ## Rozwiązanie
 
 PLACEHOLDER: Content agent — opisz jak freelancer użył SiteSpector:
-- Zaczął na planie Free (5 audytów/mc = wystarczające na 3 klientów)
+- Zaczął od podstawowego workflow audytowego
 - Każdy audyt daje: crawl + Lighthouse + AI recommendations
 - Raporty PDF generowane automatycznie
-- Po 2 miesiącach upgrade do Pro ($29/mc) — więcej klientów, konkurenci, Senuto
+- Po 2 miesiącach rozszerzył workflow o dodatkowe funkcje dla większej liczby klientów
 
 ## Wyniki
 
 PLACEHOLDER: Content agent — opisz efekty:
-- Koszt narzędzi: z ~500 PLN do $29/mc
+- Workflow: z rozproszonego stacku do jednego panelu
 - Czas: z 1-2h na raport do 3 minut
 - Klienci: z 3 do 8 (więcej czasu na pozyskiwanie, mniej na narzędzia)
 - Profesjonalizm: raporty PDF robią wrażenie na klientach
-- ROI: jeden klient pokrywa koszt Pro
+- ROI: szybciej dostarczane raporty i więcej czasu na rozwój biznesu

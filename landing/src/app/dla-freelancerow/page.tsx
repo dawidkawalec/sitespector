@@ -20,27 +20,24 @@ import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 export const metadata = buildMetadata({
   title: 'Dla Freelancerów SEO — Profesjonalne audyty bez drogich narzędzi | SiteSpector',
   description:
-    'Plan Free: 5 audytów miesięcznie, Screaming Frog + Lighthouse + AI. Profesjonalne raporty PDF, Execution Plan z kodem. Zacznij za $0, bez karty kredytowej.',
+    'Oferta SiteSpector dla freelancerów jest aktualizowana. Skontaktuj się z nami, aby poznać aktualne możliwości i zakres współpracy.',
   keywords: ['freelancer SEO', 'audyt SEO freelancer', 'narzędzie SEO za darmo', 'audyt strony darmowy', 'SiteSpector free', 'konsultant SEO'],
   path: '/dla-freelancerow',
   ogImageType: 'page',
 });
 
 const challengeCards = [
-  { icon: RiTimerLine, title: 'Narzędzia zjadają marże', desc: 'Koszty $200–400/mc robią się bolesne, gdy masz 1–2 klientów.' },
+  { icon: RiTimerLine, title: 'Narzędzia zjadają marże', desc: 'Koszty narzędzi szybko rosną, gdy masz 1–2 klientów.' },
   { icon: RiFilePdfLine, title: 'Raporty zabierają godziny', desc: 'Ręczne raporty to 2–4 godziny na klienta: kopiuj/wklej, formatowanie, poprawki.' },
   { icon: RiRobotLine, title: 'Brak jednego stacku', desc: 'SF + coś do wydajności + coś do treści + AI osobno. Dużo narzędzi, mało spójności.' },
   { icon: RiCheckboxCircleLine, title: 'Klient chce konkretów', desc: 'Nie „lista błędów”, tylko plan działania: co zrobić, w jakiej kolejności i jak.' },
 ];
 
 const freePlanBullets = [
-  '5 audytów miesięcznie',
-  'Crawling SEO (Screaming Frog)',
-  'Lighthouse (desktop + mobile)',
-  'Analiza AI (Gemini)',
-  'Raport PDF (9 sekcji, standardowy)',
-  'Bez limitu czasowego',
-  'Bez karty kredytowej',
+  'Szczegóły pakietów opublikujemy wkrótce',
+  'Zakres funkcji będzie dostępny po publikacji oferty',
+  'Skontaktuj się z nami, aby poznać aktualne możliwości',
+  'Oferta będzie dopasowana do potrzeb freelancerów',
 ];
 
 const aiAssistantBullets = [
@@ -65,7 +62,7 @@ export default function DlaFreelancerowPage() {
             path: '/dla-freelancerow',
             title: 'Dla Freelancerów SEO — Profesjonalne audyty bez drogich narzędzi | SiteSpector',
             description:
-              'Plan Free: 5 audytów miesięcznie, Screaming Frog + Lighthouse + AI. Profesjonalne raporty PDF, Execution Plan z kodem. Zacznij za $0, bez karty kredytowej.',
+              'Oferta SiteSpector dla freelancerów jest aktualizowana. Skontaktuj się z nami, aby poznać aktualne możliwości i zakres współpracy.',
           }),
           buildBreadcrumbSchema([
             { name: 'SiteSpector', path: '/' },
@@ -88,19 +85,18 @@ export default function DlaFreelancerowPage() {
                   </h1>
                 </div>
                 <p className="text-muted mt-4 mb-0">
-                  Nie stać Cię na Screaming Frog + Ahrefs? Zacznij za $0 — 5 audytów miesięcznie, crawling, Lighthouse, analiza AI i raport PDF. Bez karty
-                  kredytowej, bez limitów czasowych.
+                  Oferta dla freelancerów jest obecnie aktualizowana. Szczegóły pakietów opublikujemy wkrótce.
                 </p>
                 <div className="mt-4">
-                  <Link href="/login" className="btn btn-primary me-2 my-2">
-                    Rozpocznij za darmo
+                  <Link href="/kontakt" className="btn btn-primary me-2 my-2">
+                    Skontaktuj się z nami
                   </Link>
                   <Link href="#plan-free" className="btn btn-outline-primary my-2">
-                    Zobacz plan Free
+                    Sprawdź szczegóły
                   </Link>
                 </div>
                 <div className="mt-3 text-muted small">
-                  Pro tip: Free wystarczy, żeby dowieźć pierwszy profesjonalny raport klientowi. Potem skalujesz do Pro za $29.
+                  Wkrótce opublikujemy finalne warianty współpracy dla freelancerów.
                 </div>
               </div>
 
@@ -163,16 +159,15 @@ export default function DlaFreelancerowPage() {
             <div className="row justify-content-center text-center mb-5">
               <div className="col-lg-10">
                 <div className="title-sm">
-                  <span>ZACZNIJ ZA $0</span>
+                  <span>OFERTA WKRÓTCE</span>
                 </div>
                 <div className="main-title mt-3">
                   <h2 className="text-primary">
-                    Plan Free — 5 audytów miesięcznie, <span className="text-orange text-line">na zawsze</span>
+                    Szczegóły pakietów dla freelancerów <span className="text-orange text-line">wkrótce</span>
                   </h2>
                 </div>
                 <p className="text-muted mt-3 mb-0">
-                  Żadnej karty kredytowej. Żadnych limitów czasowych. Dostajesz pełny audyt (crawl, Lighthouse, AI) i standardowy raport PDF. Wystarczy,
-                  żeby zaimponować pierwszemu klientowi.
+                  Finalizujemy zakres oferty i warunki współpracy. Po aktualne informacje zapraszamy do kontaktu.
                 </p>
               </div>
             </div>
@@ -184,7 +179,7 @@ export default function DlaFreelancerowPage() {
                     <div className="bg-white rounded-circle d-inline-flex p-3 me-3 shadow-sm">
                       <RiGiftLine size={28} className="text-orange" />
                     </div>
-                    <h3 className="h5 text-primary fw-bold mb-0">Co jest w Free</h3>
+                    <h3 className="h5 text-primary fw-bold mb-0">Co będzie dostępne</h3>
                   </div>
                   <div className="row g-2">
                     {freePlanBullets.map((t, i) => (
@@ -197,8 +192,8 @@ export default function DlaFreelancerowPage() {
                     ))}
                   </div>
                   <div className="mt-4">
-                    <Link href="/login" className="btn btn-primary px-4 py-3 fw-bold">
-                      Załóż konto za darmo
+                    <Link href="/kontakt" className="btn btn-primary px-4 py-3 fw-bold">
+                      Skontaktuj się z nami
                       <RiArrowRightLine className="ms-2" />
                     </Link>
                   </div>
@@ -248,8 +243,7 @@ export default function DlaFreelancerowPage() {
                       <h3 className="h5 text-primary fw-bold mb-0">Raport gotowy do wysyłki</h3>
                     </div>
                     <p className="text-muted mb-0">
-                      Klient widzi dane i rekomendacje, a Ty skupiasz się na konsultingu. W Pro dostajesz dodatkowo white-label, ale Free spokojnie
-                      wystarcza na start.
+                      Klient widzi dane i rekomendacje, a Ty skupiasz się na konsultingu. Szczegóły pakietów i dodatków opublikujemy wkrótce.
                     </p>
                   </div>
                 </div>
@@ -368,12 +362,11 @@ export default function DlaFreelancerowPage() {
                 </div>
                 <div className="main-title mt-3">
                   <h2 className="text-primary">
-                    Free → Pro — gdy masz <span className="text-orange text-line">więcej klientów</span>
+                    Oferta dla rosnących biznesów <span className="text-orange text-line">wkrótce</span>
                   </h2>
                 </div>
                 <p className="text-muted mt-3 mb-0">
-                  Jeden klient Pro ($29/mc) pokrywa koszt SiteSpector. Dwa — masz narzędzie „za darmo”. Pro daje 50 audytów, workspace’y (klienci), Senuto,
-                  3 konkurentów, harmonogramy i white-label PDF.
+                  Przygotowujemy finalne pakiety pod skalowanie pracy z klientami. Skontaktuj się z nami, aby omówić bieżące możliwości.
                 </p>
               </div>
             </div>
@@ -384,16 +377,16 @@ export default function DlaFreelancerowPage() {
                   <div className="row g-4">
                     <div className="col-md-4">
                       <div className="bg-white rounded-4 border p-4 h-100 shadow-sm">
-                        <div className="text-primary fw-bold">Free</div>
-                        <div className="text-muted small mt-2">Start i 1–2 klientów</div>
-                        <div className="text-orange fw-bold mt-3">5 audytów/mc</div>
+                        <div className="text-primary fw-bold">Pakiet startowy</div>
+                        <div className="text-muted small mt-2">W przygotowaniu</div>
+                        <div className="text-orange fw-bold mt-3">Wkrótce</div>
                       </div>
                     </div>
                     <div className="col-md-4">
                       <div className="bg-white rounded-4 border p-4 h-100 shadow-sm">
-                        <div className="text-primary fw-bold">Pro</div>
-                        <div className="text-muted small mt-2">Skalowanie i Senuto</div>
-                        <div className="text-orange fw-bold mt-3">$29/mc</div>
+                        <div className="text-primary fw-bold">Pakiet rozwojowy</div>
+                        <div className="text-muted small mt-2">W przygotowaniu</div>
+                        <div className="text-orange fw-bold mt-3">Wkrótce</div>
                       </div>
                     </div>
                     <div className="col-md-4">
@@ -419,7 +412,7 @@ export default function DlaFreelancerowPage() {
                 </div>
                 <div className="main-title mt-3">
                   <h2 className="text-primary">
-                    Free vs <span className="text-orange text-line">Pro</span>
+                    Szczegóły oferty <span className="text-orange text-line">wkrótce</span>
                   </h2>
                 </div>
               </div>
@@ -433,15 +426,15 @@ export default function DlaFreelancerowPage() {
                       <thead className="bg-light">
                         <tr>
                           <th className="p-4 border-0">Funkcja</th>
-                          <th className="p-4 border-0 text-center">Free</th>
-                          <th className="p-4 border-0 text-center text-orange">Pro ($29/mc)</th>
+                          <th className="p-4 border-0 text-center">Pakiet A</th>
+                          <th className="p-4 border-0 text-center text-orange">Pakiet B</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">Audyty miesięcznie</td>
-                          <td className="p-4 border-top text-center text-muted">5</td>
-                          <td className="p-4 border-top text-center text-muted">50</td>
+                          <td className="p-4 border-top fw-semibold text-primary">Dostępność pakietu</td>
+                          <td className="p-4 border-top text-center text-muted">Wkrótce</td>
+                          <td className="p-4 border-top text-center text-muted">Wkrótce</td>
                         </tr>
                         <tr>
                           <td className="p-4 border-top fw-semibold text-primary">Crawling + Lighthouse + AI</td>
@@ -450,26 +443,26 @@ export default function DlaFreelancerowPage() {
                         </tr>
                         <tr>
                           <td className="p-4 border-top fw-semibold text-primary">Raport PDF</td>
-                          <td className="p-4 border-top text-center text-muted">Standard</td>
-                          <td className="p-4 border-top text-center text-muted">White-label</td>
+                          <td className="p-4 border-top text-center text-muted">Szczegóły wkrótce</td>
+                          <td className="p-4 border-top text-center text-muted">Szczegóły wkrótce</td>
                         </tr>
                         <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">Senuto (widoczność, backlinki)</td>
+                          <td className="p-4 border-top fw-semibold text-primary">Rozszerzenia</td>
                           <td className="p-4 border-top text-center text-muted">✗</td>
                           <td className="p-4 border-top text-center text-muted">✓</td>
                         </tr>
                         <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">Konkurenci (3)</td>
+                          <td className="p-4 border-top fw-semibold text-primary">Dodatkowe opcje</td>
                           <td className="p-4 border-top text-center text-muted">✗</td>
                           <td className="p-4 border-top text-center text-muted">✓</td>
                         </tr>
                         <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">Workspace’y (klienci)</td>
+                          <td className="p-4 border-top fw-semibold text-primary">Workspace’y</td>
                           <td className="p-4 border-top text-center text-muted">✗</td>
                           <td className="p-4 border-top text-center text-muted">✓</td>
                         </tr>
                         <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">Harmonogramy audytów</td>
+                          <td className="p-4 border-top fw-semibold text-primary">Harmonogramy</td>
                           <td className="p-4 border-top text-center text-muted">✗</td>
                           <td className="p-4 border-top text-center text-muted">✓</td>
                         </tr>
@@ -484,8 +477,8 @@ export default function DlaFreelancerowPage() {
                 </div>
 
                 <div className="mt-4 text-center">
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
-                    Zacznij Free — 5 audytów za $0
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
+                    Skontaktuj się z nami
                     <RiArrowRightLine className="ms-2" />
                   </Link>
                 </div>
@@ -507,15 +500,15 @@ export default function DlaFreelancerowPage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3">
-                  Plan Free: 5 audytów miesięcznie. Bez karty, bez zobowiązań. Gdy urośniesz — Pro za $29.
+                  Pakiety i zakres współpracy są obecnie aktualizowane. Skontaktuj się z nami, aby poznać aktualne możliwości.
                 </p>
                 <div className="mt-4">
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
-                    Rozpocznij za darmo
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
+                    Skontaktuj się z nami
                     <RiArrowRightLine className="ms-2" />
                   </Link>
                   <Link href="/porownanie" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">
-                    Zobacz pełny cennik
+                                Zobacz szczegóły oferty
                   </Link>
                 </div>
               </div>

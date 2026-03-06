@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Col, Container, Row } from 'react-bootstrap';
 import { RiCheckboxCircleLine } from 'react-icons/ri';
+import { OFFER_PLACEHOLDER_COPY } from '@/lib/offerPlaceholder';
 
 export interface PricingPlan {
   title: string;
@@ -18,47 +19,52 @@ export interface PricingPlan {
 
 export const pricingPlans: PricingPlan[] = [
   {
-    title: 'Free',
-    description: 'Dla freelancerów i małych stron.',
+    title: 'Wkrótce',
+    description: 'Pracujemy nad nową ofertą dla freelancerów i zespołów.',
     price: 0,
-    period: 'mc',
-    features: ['5 audytów miesięcznie', 'Podstawowa analiza SEO', '1 użytkownik', 'PDF standard'],
+    period: '',
+    features: [
+      'Szczegóły pakietów opublikujemy wkrótce',
+      'Pełna oferta będzie dostępna po publikacji szczegółów',
+      'Skontaktuj się z nami, aby poznać aktualne możliwości',
+      'Dostosujemy zakres do Twoich potrzeb',
+    ],
     button: {
-      label: 'Rozpocznij',
-      link: '/login',
+      label: OFFER_PLACEHOLDER_COPY.cta,
+      link: '/kontakt',
       variant: 'outline-primary',
     },
   },
   {
-    title: 'Pro',
-    description: 'Dla profesjonalistów i małych agencji.',
+    title: 'Wkrótce',
+    description: 'Aktualizujemy szczegóły planu dla agencji i specjalistów.',
     price: 29,
-    period: 'mc',
+    period: '',
     isPopular: true,
     features: [
-      '50 audytów miesięcznie',
-      'Pełna analiza + Senuto',
-      '3 konkurentów na audyt',
-      'Execution Plan z kodem',
-      'Harmonogramy audytów',
-      'White-label PDF',
-      'API',
+      'Wkrótce opublikujemy pełny zakres funkcji',
+      'Nowe limity i możliwości podamy po finalizacji oferty',
+      'W sprawie wdrożenia skontaktuj się z nami',
     ],
     button: {
-      label: 'Rozpocznij',
-      link: '/login',
+      label: OFFER_PLACEHOLDER_COPY.cta,
+      link: '/kontakt',
       variant: 'primary',
     },
   },
   {
-    title: 'Enterprise',
-    description: 'Dla dużych agencji i zespołów.',
+    title: 'Wkrótce',
+    description: 'Oferta dla większych zespołów jest przygotowywana.',
     price: 99,
-    period: 'mc',
-    features: ['Bez limitów', 'Wszystko z Pro', 'Nielimitowani użytkownicy', 'Dedykowane wsparcie', 'SLA'],
+    period: '',
+    features: [
+      'Przygotowujemy finalne warunki współpracy',
+      'Pakiety i zakres wsparcia podamy wkrótce',
+      'Skontaktuj się z nami, aby omówić potrzeby Twojego zespołu',
+    ],
     button: {
-      label: 'Rozpocznij',
-      link: '/login',
+      label: OFFER_PLACEHOLDER_COPY.cta,
+      link: '/kontakt',
       variant: 'outline-primary',
     },
   },
@@ -75,10 +81,7 @@ const Pricing = () => {
                 <span>CENNIK</span>
               </div>
               <div className="price-title main-title mt-3">
-                <h2 className="text-primary">
-                  Wybierz plan idealny dla{' '}
-                  <span className="text-orange text-line">Twojego Biznesu</span>
-                </h2>
+                <h2 className="text-primary">{OFFER_PLACEHOLDER_COPY.title}</h2>
               </div>
             </Col>
           </Row>
@@ -103,11 +106,8 @@ const Pricing = () => {
                       </p>
                     </div>
                     <div className="price-info text-start p-4">
-                      <h1 className="fw-bold text-primary my-3">
-                        ${plan.price}
-                        <span className="fs-6 text-muted"> / {plan.period}</span>
-                      </h1>
-                      <p className="text-dark mb-4">Includes :</p>
+                      <h1 className="fw-bold text-primary my-3">Wkrótce</h1>
+                      <p className="text-dark mb-4">Skontaktuj się z nami, aby otrzymać szczegóły:</p>
                       <ul>
                         {plan.features.map((feature, i) => (
                           <li key={i} className="mt-3 text-muted">

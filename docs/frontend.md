@@ -34,6 +34,55 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ---
 
+## Pricing Placeholder Rollout (UI-only) (2026-03-06)
+
+- Applied temporary pricing placeholder across selected marketing and app UI surfaces:
+  - landing components:
+    - `landing/src/component/Pricing.tsx`
+    - `landing/src/component/Faq.tsx`
+    - `landing/src/component/Cta.tsx`
+  - landing pages:
+    - `landing/src/app/cennik/page.tsx`
+    - `landing/src/app/page.tsx`
+    - `landing/src/app/o-nas/page.tsx`
+    - `landing/src/app/porownanie/PorownanieClient.tsx`
+    - `landing/src/app/dla-freelancerow/page.tsx`
+    - `landing/src/app/dla-agencji-seo/page.tsx`
+  - landing nav/sitemap labels:
+    - `landing/src/component/layout/Topbar/page.tsx`
+    - `landing/src/component/layout/Footer/page.tsx`
+    - `landing/src/app/sitemap/page.tsx`
+  - frontend app:
+    - `frontend/app/(app)/pricing/page.tsx`
+    - `frontend/app/(app)/settings/billing/page.tsx`
+    - `frontend/components/NewAuditDialog.tsx`
+- UX intent:
+  - remove hardcoded prices/plan upsell copy from these views,
+  - keep route structure intact (`/cennik`, `/pricing` stay available),
+  - replace plan/checkout wording with "Wkrótce / Skontaktuj się z nami".
+- Technical note:
+  - This is copy/UI-only; backend billing flows were intentionally left unchanged in this iteration.
+
+---
+
+## Pricing Copy Cleanup — Marketing Second Pass (2026-03-06)
+
+- Performed a second full pass on marketing surfaces to remove remaining price mentions from user-facing copy.
+- Updated additional landing pages/components and content entries to neutral "oferta w przygotowaniu / kontakt" language:
+  - landing app pages and components (e.g. `case-study`, `docs`, `jak-to-dziala`, `sprawdz-agencje-seo`, `dla-managerow`, `dla-ecommerce`, `integracje`, `funkcje`, `blog`, `polityka-cookies`, `porownanie`, nav labels).
+  - selected marketing content markdown used by rendered pages:
+    - `landing/content/case-studies/*.md`
+    - `landing/content/blog/raporty-pdf-dla-klientow.md`
+    - `landing/content/blog/roi-audyt-seo.md`
+    - `landing/content/blog/porownanie-narzedzi-seo-2026.md`
+- Preserved route structure (`/cennik` kept for IA/SEO continuity) but shifted visible labels/copy toward "Oferta".
+- Legal terms page (`landing/src/app/regulamin/page.tsx`) was intentionally left unchanged as legal content scope.
+- Added centralized copy token for placeholder management:
+  - `landing/src/lib/offerPlaceholder.ts`
+  - contains token metadata (`id`, `what`, `where`, `how`) and shared copy labels used by marketing UI.
+
+---
+
 ## Page Structure
 
 ```

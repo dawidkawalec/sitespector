@@ -4,7 +4,7 @@ slug: "sklep-elektromarket"
 date: "2026-02-10"
 category: "E-commerce / Weryfikacja agencji"
 client_type: "Właściciel sklepu z elektroniką"
-challenge_summary: "Płacił agencji 3000 PLN/mc za SEO, nie widział efektów"
+challenge_summary: "Współpracował z agencją SEO, ale nie widział efektów"
 results_summary: "Odkrył zaniedbania agencji, zmienił agencję, +40% ruchu w 3 miesiące"
 key_metrics:
   - label: "Brakujące meta opisy"
@@ -35,7 +35,7 @@ testimonial:
 ## Wyzwanie
 
 PLACEHOLDER: Content agent — rozwiń historię:
-- Właściciel sklepu z elektroniką płacił agencji SEO 3000 PLN/mc
+- Właściciel sklepu z elektroniką współpracował z agencją SEO
 - Po roku współpracy ruch organiczny nie rósł
 - Agencja wysyłała miesięczne raporty z "postępami" w niejasnym formacie
 - Właściciel nie wiedział jak zweryfikować ich pracę
@@ -53,7 +53,7 @@ PLACEHOLDER: Content agent — opisz co audyt ujawnił:
 ## Rozwiązanie
 
 PLACEHOLDER: Content agent — opisz kroki:
-- Właściciel uruchomił darmowy audyt SiteSpector (Plan Free)
+- Właściciel uruchomił audyt SiteSpector
 - Pobrał raport PDF i porównał z raportem agencji
 - Znalazł fundamentalne zaniedbania
 - Podjął decyzję o zmianie agencji

@@ -39,7 +39,7 @@ const categories: DocCategory[] = [
     slug: 'jak-zaczac',
     title: 'Jak zacząć',
     icon: props => <RiBookOpenLine {...props} />,
-    bullets: ['Rejestracja i pierwsze logowanie', 'Pierwszy audyt krok po kroku', 'Konfiguracja Senuto', 'Plan Free vs Pro — co zawiera'],
+    bullets: ['Rejestracja i pierwsze logowanie', 'Pierwszy audyt krok po kroku', 'Konfiguracja Senuto', 'Szczegóły oferty — wkrótce'],
   },
   {
     slug: 'panel-audytu',
@@ -57,7 +57,7 @@ const categories: DocCategory[] = [
     slug: 'raporty-pdf',
     title: 'Raporty PDF',
     icon: props => <RiFilePdfLine {...props} />,
-    bullets: ['9 sekcji raportu', 'White-label (Pro, Enterprise)', 'Eksport surowych danych', 'Wysyłka do klienta'],
+    bullets: ['9 sekcji raportu', 'White-label', 'Eksport surowych danych', 'Wysyłka do klienta'],
   },
   {
     slug: 'zespoly-workspaces',
@@ -75,7 +75,7 @@ const categories: DocCategory[] = [
     slug: 'subskrypcje-platnosci',
     title: 'Subskrypcje i płatności',
     icon: props => <RiWalletLine {...props} />,
-    bullets: ['Plany Free, Pro, Enterprise', 'Stripe — płatność i faktury', 'Customer Portal', 'Limity audytów'],
+    bullets: ['Oferta i pakiety — wkrótce', 'Stripe — płatność i faktury', 'Customer Portal', 'Limity audytów'],
   },
   {
     slug: 'integracje',

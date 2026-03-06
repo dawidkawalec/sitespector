@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import addressIcon from '@/assets/icons/address.json';
 import mailIcon from '@/assets/icons/mail.json';
 import phoneIcon from '@/assets/icons/phone.json';
+import { OFFER_PLACEHOLDER_COPY } from '@/lib/offerPlaceholder';
 import { Col, Container, Row } from 'react-bootstrap';
 import Link from 'next/link';
 
@@ -72,12 +73,12 @@ const Cta = () => {
         </Row>
         <Row className="justify-content-center text-center mt-5">
           <Col lg={8}>
-            <h3 className="text-primary fw-bold mb-3">Chcesz sprawdzić swoją stronę?</h3>
+            <h3 className="text-primary fw-bold mb-3">{OFFER_PLACEHOLDER_COPY.title}</h3>
             <p className="text-muted mb-4">
-              Uruchom darmowy audyt SEO i wydajności w SiteSpector. Wyniki w 1-3 minuty, a potem gotowy Execution Plan do wdrożenia.
+              Wkrótce opublikujemy finalne pakiety. Jeśli chcesz poznać aktualne możliwości SiteSpector, skontaktuj się z nami.
             </p>
-            <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
-              Rozpocznij darmowy audyt
+            <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
+              {OFFER_PLACEHOLDER_COPY.cta}
             </Link>
           </Col>
         </Row>

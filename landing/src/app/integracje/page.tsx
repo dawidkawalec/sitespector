@@ -378,7 +378,7 @@ export default function IntegracjePage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3 mb-0">
-                  Bezpieczne płatności przez Stripe: subskrypcje (Free/Pro/Enterprise), faktury, Customer Portal. PCI DSS — nie przechowujemy danych kart.
+                  Bezpieczne płatności przez Stripe: subskrypcje, faktury, Customer Portal. PCI DSS — nie przechowujemy danych kart.
                 </p>
               </div>
             </div>
@@ -461,8 +461,8 @@ export default function IntegracjePage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3 mb-0">
-                  Docelowo: REST API do integracji z własnymi systemami (uruchamianie audytów, pobieranie wyników, eksport danych). Dostępne w planie Pro
-                  i Enterprise.
+                  Docelowo: REST API do integracji z własnymi systemami (uruchamianie audytów, pobieranie wyników, eksport danych). Szczegóły dostępności
+                  opublikujemy wkrótce.
                 </p>
               </div>
             </div>
@@ -507,10 +507,10 @@ export default function IntegracjePage() {
                     Chcesz zobaczyć, jak to <span className="text-orange text-line">działa w praktyce</span>?
                   </h2>
                 </div>
-                <p className="text-muted mt-3">Rozpocznij darmowy audyt — 5 audytów miesięcznie, bez karty kredytowej.</p>
+                <p className="text-muted mt-3">Oferta jest w przygotowaniu. Skontaktuj się z nami, aby poznać aktualne możliwości.</p>
                 <div className="mt-4">
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
-                    Rozpocznij darmowy audyt
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
+                    Skontaktuj się z nami
                   </Link>
                   <Link href="/jak-to-dziala" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">
                     Zobacz jak to działa

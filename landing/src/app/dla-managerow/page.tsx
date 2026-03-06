@@ -25,7 +25,7 @@ import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 export const metadata = buildMetadata({
   title: 'Dla Managerów — Monitoruj SEO swojej firmy bez wiedzy technicznej | SiteSpector',
   description:
-    'Executive Summary, benchmark branżowy, raporty miesięczne. SiteSpector daje jasność: jeden zdrowy wynik, lista problemów, PDF na prezentację. $29/mc zamiast setek za agencję.',
+    'Executive Summary, benchmark branżowy i raporty cykliczne. SiteSpector daje jasność: jeden zdrowy wynik, lista problemów i PDF na prezentację.',
   keywords: [
     'audyt SEO dla firmy',
     'monitorowanie SEO',
@@ -61,7 +61,7 @@ export default function DlaManagerowPage() {
             path: '/dla-managerow',
             title: 'Dla Managerów — Monitoruj SEO swojej firmy bez wiedzy technicznej | SiteSpector',
             description:
-              'Executive Summary, benchmark branżowy, raporty miesięczne. SiteSpector daje jasność: jeden zdrowy wynik, lista problemów, PDF na prezentację. $29/mc zamiast setek za agencję.',
+              'Executive Summary, benchmark branżowy i raporty cykliczne. SiteSpector daje jasność: jeden zdrowy wynik, lista problemów i PDF na prezentację.',
           }),
           buildBreadcrumbSchema([
             { name: 'SiteSpector', path: '/' },
@@ -124,7 +124,7 @@ export default function DlaManagerowPage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3 mb-0">
-                  Płacisz agencji miesięcznie. Dostajesz raporty pełne skrótów (LCP, CLS, crawl budget). Nie masz czasu na studia techniczne.
+                  Dostajesz raporty pełne skrótów (LCP, CLS, crawl budget). Nie masz czasu na studia techniczne.
                   Chcesz wiedzieć: czy strona jest zdrowa, czy agencja robi dobrą robotę i czy warto inwestować dalej.
                 </p>
               </div>
@@ -624,12 +624,11 @@ export default function DlaManagerowPage() {
                 </div>
                 <div className="main-title mt-3">
                   <h2 className="text-primary">
-                    $29/mc — ułamek tego, co płacisz <span className="text-orange text-line">agencji</span>
+                    Oferta dla managerów <span className="text-orange text-line">wkrótce</span>
                   </h2>
                 </div>
                 <p className="text-muted mt-3 mb-0">
-                  Plan Pro: $29 miesięcznie. Pełna analiza, 50 audytów, Senuto, benchmark, Executive Summary, PDF i harmonogramy. Transparentność za ułamek
-                  kosztu agencji.
+                  Finalizujemy pakiety i warunki współpracy. Skontaktuj się z nami, a pokażemy aktualne możliwości dla Twojego zespołu.
                 </p>
               </div>
             </div>
@@ -638,11 +637,11 @@ export default function DlaManagerowPage() {
               <div className="col-lg-10">
                 <div className="bg-white rounded-4 border p-4 p-lg-5 shadow-sm d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-4">
                   <div>
-                    <div className="text-primary fw-bold">Pro $29/mc</div>
-                    <div className="text-muted mt-1">Wystarczy, żeby mieć stały monitoring i niezależną weryfikację pracy agencji.</div>
+                    <div className="text-primary fw-bold">Oferta w przygotowaniu</div>
+                    <div className="text-muted mt-1">Skontaktuj się z nami, aby omówić potrzeby i aktualny zakres wdrożenia.</div>
                   </div>
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
-                    Zacznij od Free — 5 audytów za $0
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
+                    Skontaktuj się z nami
                     <RiArrowRightLine className="ms-2" />
                   </Link>
                 </div>
@@ -660,15 +659,15 @@ export default function DlaManagerowPage() {
                 </div>
                 <div className="main-title mt-3">
                   <h2 className="text-primary">
-                    Sprawdź kondycję swojej strony — <span className="text-orange text-line">za darmo</span>
+                    Sprawdź kondycję swojej strony — <span className="text-orange text-line">bez zgadywania</span>
                   </h2>
                 </div>
                 <p className="text-muted mt-3">
-                  Plan Free: 5 audytów miesięcznie. Bez karty kredytowej. Executive Summary, benchmark i PDF. Zobacz, jak wygląda Twoja strona w 3 minuty.
+                  Oferta jest w przygotowaniu. Skontaktuj się z nami, aby poznać aktualne możliwości i ścieżkę wdrożenia.
                 </p>
                 <div className="mt-4">
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
-                    Rozpocznij darmowy audyt
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
+                    Skontaktuj się z nami
                     <RiArrowRightLine className="ms-2" />
                   </Link>
                   <Link href="/jak-to-dziala" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">

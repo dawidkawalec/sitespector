@@ -10,8 +10,8 @@ export const DOC_PAGES: DocPage[] = [
   {
     slug: 'jak-zaczac',
     title: 'Jak zacząć',
-    description: 'Pierwszy audyt krok po kroku, konfiguracja Senuto i różnice między planami.',
-    bullets: ['Rejestracja i pierwsze logowanie', 'Uruchomienie pierwszego audytu', 'Konfiguracja Senuto (kraj analizy)', 'Plan Free vs Pro — limity i funkcje'],
+    description: 'Pierwszy audyt krok po kroku, konfiguracja Senuto i omówienie aktualnej oferty.',
+    bullets: ['Rejestracja i pierwsze logowanie', 'Uruchomienie pierwszego audytu', 'Konfiguracja Senuto (kraj analizy)', 'Szczegóły oferty — wkrótce'],
   },
   {
     slug: 'panel-audytu',
@@ -28,7 +28,7 @@ export const DOC_PAGES: DocPage[] = [
   {
     slug: 'raporty-pdf',
     title: 'Raporty PDF',
-    description: 'Generowanie raportu, 9 sekcji i white-label w planach Pro/Enterprise.',
+    description: 'Generowanie raportu, 9 sekcji i white-label.',
     bullets: ['9 sekcji raportu', 'White-label', 'Eksport surowych danych', 'Wysyłka do klienta'],
   },
   {
@@ -46,8 +46,8 @@ export const DOC_PAGES: DocPage[] = [
   {
     slug: 'subskrypcje-platnosci',
     title: 'Subskrypcje i płatności',
-    description: 'Plany, Stripe, faktury oraz zmiana/anulowanie subskrypcji.',
-    bullets: ['Free, Pro, Enterprise', 'Stripe — płatność i faktury', 'Customer Portal', 'Limity audytów'],
+    description: 'Pakiety, Stripe, faktury oraz zmiana/anulowanie subskrypcji.',
+    bullets: ['Pakiety i dostępność', 'Stripe — płatność i faktury', 'Customer Portal', 'Limity audytów'],
   },
   {
     slug: 'integracje',

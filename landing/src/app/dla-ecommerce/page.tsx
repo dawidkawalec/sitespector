@@ -179,7 +179,7 @@ export default function DlaEcommercePage() {
                   </Link>
                 </div>
                 <div className="mt-3 text-muted small">
-                  Plan Free: 5 audytów miesięcznie. Wyniki w 1–3 minuty. Bez karty kredytowej.
+                  Oferta dla e-commerce jest w przygotowaniu. Skontaktuj się z nami, aby poznać aktualne możliwości.
                 </div>
               </div>
 
@@ -465,7 +465,7 @@ export default function DlaEcommercePage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3 mb-0">
-                  Dodaj do audytu do 3 konkurentów (plan Pro). SiteSpector porówna Twoją stronę z ich stronami — meta tagi, wydajność, widoczność i AI
+                  Dodaj do audytu konkurentów. SiteSpector porówna Twoją stronę z ich stronami — meta tagi, wydajność, widoczność i AI
                   Overviews.
                 </p>
               </div>
@@ -493,7 +493,7 @@ export default function DlaEcommercePage() {
                       </div>
                     ))}
                     <div className="mt-4 text-muted small">
-                      Pro tip: jeśli konkurenci mają lepsze meta opisy i lepsze CWV, masz konkretne hipotezy do wdrożenia, nie „ogólne SEO”.
+                      Wskazówka: jeśli konkurenci mają lepsze meta opisy i lepsze CWV, masz konkretne hipotezy do wdrożenia, nie „ogólne SEO”.
                     </div>
                   </div>
                 </div>
@@ -601,11 +601,11 @@ export default function DlaEcommercePage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3">
-                  Plan Free: 5 audytów miesięcznie. Wystarczy, żeby sprawdzić główne strony sklepu. Bez karty kredytowej. Wyniki w 1–3 minuty.
+                  Oferta jest w przygotowaniu. Skontaktuj się z nami, aby poznać aktualne możliwości współpracy dla sklepu.
                 </p>
                 <div className="mt-4">
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
-                    Rozpocznij darmowy audyt
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
+                    Skontaktuj się z nami
                     <RiArrowRightLine className="ms-2" />
                   </Link>
                   <Link href="/jak-to-dziala" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">

@@ -7,7 +7,7 @@ import { RiMailLine, RiMapPinLine, RiPlayCircleLine, RiTimeLine } from 'react-ic
 
 type FormStatus = 'idle' | 'loading' | 'success' | 'error';
 
-const SUBJECT_OPTIONS = ['Pytanie ogólne', 'Wsparcie techniczne', 'Sprzedaż / plany', 'Współpraca', 'Inne'] as const;
+const SUBJECT_OPTIONS = ['Pytanie ogólne', 'Wsparcie techniczne', 'Sprzedaż / oferta', 'Współpraca', 'Inne'] as const;
 type SubjectOption = (typeof SUBJECT_OPTIONS)[number];
 
 export default function KontaktClient() {
@@ -99,7 +99,7 @@ export default function KontaktClient() {
               Skontaktuj się <span className="text-gradient text-line">z nami</span>
             </h1>
             <p className="lead text-muted mb-0">
-              Masz pytania? Potrzebujesz pomocy technicznej lub informacji o planach? Napisz — odpowiemy w ciągu 24 godzin w dni robocze.
+              Masz pytania? Potrzebujesz pomocy technicznej lub informacji o ofercie? Napisz — odpowiemy w ciągu 24 godzin w dni robocze.
             </p>
           </Col>
         </Row>
@@ -278,12 +278,12 @@ export default function KontaktClient() {
               </div>
               <h3 className="text-primary fw-bold mt-2 mb-2">Możesz od razu wypróbować SiteSpector</h3>
               <p className="text-muted mb-4">
-                Plan Free obejmuje 5 audytów miesięcznie bez rejestracji karty. Wystarczy założyć konto i uruchomić pierwszy audyt. Wiele odpowiedzi znajdziesz w naszej dokumentacji.
+                Oferta jest w przygotowaniu. Jeśli chcesz poznać aktualne możliwości SiteSpector, skontaktuj się z nami. Wiele odpowiedzi znajdziesz też w dokumentacji.
               </p>
               <div className="d-flex justify-content-center flex-column flex-sm-row gap-2">
-                <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
+                <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
                   <RiPlayCircleLine className="me-1" />
-                  Rozpocznij darmowy audyt
+                  Skontaktuj się z nami
                 </Link>
                 <Link href="/docs" className="btn btn-outline-primary px-5 py-3 fw-bold">
                   Dokumentacja

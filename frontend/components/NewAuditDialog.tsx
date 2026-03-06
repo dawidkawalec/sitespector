@@ -189,7 +189,7 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, proje
               <AlertDescription>
                 Pozostało Ci {auditsRemaining} {auditsRemaining === 1 ? 'audyt' : 'audyty'} w tym miesiącu.{' '}
                 <Link href="/pricing" className="underline font-bold">
-                  Zwiększ limit
+                  Cennik wkrótce - skontaktuj się z nami
                 </Link>
               </AlertDescription>
             </Alert>
@@ -201,7 +201,7 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, proje
               <AlertDescription>
                 Osiągnięto limit audytów ({subscription.audit_limit}/miesiąc).{' '}
                 <Link href="/pricing" className="underline font-bold">
-                  Zwiększ plan, aby kontynuować
+                  Cennik wkrótce - skontaktuj się z nami
                 </Link>
               </AlertDescription>
             </Alert>

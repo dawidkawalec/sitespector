@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { CreditCard, Download, Loader2 } from 'lucide-react'
+import { Download, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
@@ -54,7 +54,6 @@ function BillingPageInner() {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isManaging, setIsManaging] = useState(false)
   const searchParams = useSearchParams()
   const showSuccess = searchParams?.get('success') === 'true'
 
@@ -105,33 +104,6 @@ function BillingPageInner() {
     }
   }
 
-  const handleManageSubscription = async () => {
-    if (!currentWorkspace || !subscription?.stripe_customer_id) return
-
-    setIsManaging(true)
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('Not authenticated')
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/billing/create-portal-session?workspace_id=${currentWorkspace.id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      })
-
-      if (!response.ok) throw new Error('Failed to create portal session')
-
-      const { portal_url } = await response.json()
-      window.location.href = portal_url
-    } catch (error: any) {
-      alert(error.message || 'Failed to open billing portal')
-    } finally {
-      setIsManaging(false)
-    }
-  }
-
   if (!currentWorkspace) {
     return <div className="p-8">No workspace selected</div>
   }
@@ -160,16 +132,16 @@ function BillingPageInner() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Billing & Subscription</h1>
+        <h1 className="text-3xl font-bold">Cennik i rozliczenia wkrótce</h1>
         <p className="text-muted-foreground mt-1">
-          Manage your subscription for {currentWorkspace.name}
+          Dla workspace: {currentWorkspace.name}
         </p>
       </div>
 
       {showSuccess && (
         <Alert>
           <AlertDescription>
-            Subscription upgraded successfully! Your new limits are now active.
+            Dziękujemy. Sekcja rozliczeń jest tymczasowo w trybie placeholder.
           </AlertDescription>
         </Alert>
       )}
@@ -177,9 +149,9 @@ function BillingPageInner() {
       {/* Current plan */}
       <Card>
         <CardHeader>
-          <CardTitle>Current Plan</CardTitle>
+          <CardTitle>Status oferty</CardTitle>
           <CardDescription>
-            Your active subscription and usage
+            Finalizujemy szczegóły pakietów oraz rozliczeń
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -187,9 +159,9 @@ function BillingPageInner() {
             <div>
               <h3 className="text-2xl font-bold capitalize">{subscription.plan}</h3>
               <p className="text-sm text-muted-foreground">
-                {subscription.status === 'active' ? 'Active' : 'Canceled'} • 
+                {subscription.status === 'active' ? 'Aktywny status konta' : 'Status konta nieaktywny'} •
                 {subscription.current_period_end && (
-                  <> Renews {new Date(subscription.current_period_end).toLocaleDateString()}</>
+                  <> aktualizacja: {new Date(subscription.current_period_end).toLocaleDateString()}</>
                 )}
               </p>
             </div>
@@ -220,38 +192,19 @@ function BillingPageInner() {
             </div>
             {isNearLimit && (
               <p className="text-sm text-orange-600 mt-2">
-                You&apos;re approaching your audit limit. Consider upgrading.
+                Zbliżasz się do limitu audytów dla bieżącego cyklu.
               </p>
             )}
           </div>
 
           {/* Action buttons */}
           <div className="flex gap-2 pt-4">
-            {subscription.plan === 'free' ? (
-              <Link href="/pricing" className="flex-1">
-                <Button className="w-full">
-                  Upgrade to Pro
-                </Button>
-              </Link>
-            ) : (
-              <Button 
-                variant="outline"
-                onClick={handleManageSubscription}
-                disabled={isManaging}
-                className="flex-1"
-              >
-                <CreditCard className="mr-2 h-4 w-4" />
-                {isManaging ? 'Loading...' : 'Manage Subscription'}
-              </Button>
-            )}
-            
-            {subscription.plan !== 'free' && (
-              <Link href="/pricing">
-                <Button variant="outline">
-                  Change Plan
-                </Button>
-              </Link>
-            )}
+            <Link href="/pricing" className="flex-1">
+              <Button className="w-full">Zobacz placeholder cennika</Button>
+            </Link>
+            <Button variant="outline" asChild>
+              <Link href="/kontakt">Skontaktuj się z nami</Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -259,15 +212,15 @@ function BillingPageInner() {
       {/* Invoices */}
       <Card>
         <CardHeader>
-          <CardTitle>Invoice History</CardTitle>
+          <CardTitle>Historia dokumentów</CardTitle>
           <CardDescription>
-            Download your past invoices and receipts
+            Widok dokumentów jest tymczasowo ograniczony
           </CardDescription>
         </CardHeader>
         <CardContent>
           {invoices.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
-              No invoices yet
+              Brak dokumentów
             </p>
           ) : (
             <div className="space-y-3">
@@ -275,7 +228,7 @@ function BillingPageInner() {
                 <div key={invoice.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium">
-                      ${(invoice.amount_paid / 100).toFixed(2)} {invoice.currency.toUpperCase()}
+                      Szczegóły kwoty wkrótce
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {new Date(invoice.created_at).toLocaleDateString()} • 
@@ -289,7 +242,7 @@ function BillingPageInner() {
                       onClick={() => window.open(invoice.invoice_pdf!, '_blank')}
                     >
                       <Download className="mr-2 h-4 w-4" />
-                      Download
+                      Pobierz
                     </Button>
                   )}
                 </div>
@@ -302,25 +255,25 @@ function BillingPageInner() {
       {/* FAQ or Help */}
       <Card>
         <CardHeader>
-          <CardTitle>Need Help?</CardTitle>
+          <CardTitle>Masz pytania?</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h4 className="font-medium mb-1">How do audit limits work?</h4>
+            <h4 className="font-medium mb-1">Kiedy pojawi się finalny cennik?</h4>
             <p className="text-sm text-muted-foreground">
-              Audit limits reset on the 1st of each month. Unused audits don&apos;t roll over.
+              Finalizujemy pakiety i warunki. Do tego czasu sekcja rozliczeń działa w trybie placeholder.
             </p>
           </div>
           <div>
-            <h4 className="font-medium mb-1">Can I cancel anytime?</h4>
+            <h4 className="font-medium mb-1">Jak uzyskać aktualną ofertę?</h4>
             <p className="text-sm text-muted-foreground">
-              Yes, you can cancel your subscription at any time. You&apos;ll keep access until the end of your billing period.
+              Skontaktuj się z nami przez stronę kontaktową, a przekażemy bieżące informacje.
             </p>
           </div>
           <div>
-            <h4 className="font-medium mb-1">What payment methods do you accept?</h4>
+            <h4 className="font-medium mb-1">Czy mogę zarządzać subskrypcją z panelu?</h4>
             <p className="text-sm text-muted-foreground">
-              We accept all major credit cards via Stripe. Enterprise customers can request invoice billing.
+              Nie, panel rozliczeń jest tymczasowo ograniczony do czasu publikacji finalnego cennika.
             </p>
           </div>
         </CardContent>

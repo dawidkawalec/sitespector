@@ -106,8 +106,7 @@ export default function ONasPage() {
                       <h3 className="text-primary fw-bold mt-2 mb-2">Demokratyzujemy profesjonalną analitykę SEO</h3>
                       <p className="text-muted mb-0">
                         Chcemy, aby każda agencja, freelancer i właściciel sklepu mógł przeprowadzać audyty na poziomie enterprise — bez budżetów na dziesiątki narzędzi.
-                        SiteSpector oferuje plan Free ($0), Pro ($29) i Enterprise ($99), z pełną funkcjonalnością od planu Pro: Senuto, konkurenci, harmonogramy,
-                        white-label PDF i Execution Plan z kodem.
+                        Szczegóły pakietów SiteSpector są obecnie aktualizowane. Zakres oferty opublikujemy wkrótce, a po bieżące informacje zapraszamy do kontaktu.
                       </p>
                     </div>
                   </div>
@@ -147,7 +146,7 @@ export default function ONasPage() {
                 {
                   icon: RiFilePdfLine,
                   title: 'Raporty PDF gotowe dla klienta',
-                  desc: '9 sekcji, white-label w Pro i Enterprise. Wysyłasz jeden plik zamiast prezentacji.',
+                  desc: '9 sekcji, white-label. Wysyłasz jeden plik zamiast prezentacji.',
                 },
                 {
                   icon: RiTeamLine,
@@ -288,14 +287,14 @@ export default function ONasPage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3">
-                  Plan Free — 5 audytów miesięcznie, bez karty kredytowej. Zobacz, jak 3-fazowy audyt zmienia Twoją pracę.
+                  Szczegóły oferty są w przygotowaniu. Skontaktuj się z nami, aby poznać aktualne możliwości współpracy.
                 </p>
                 <div className="mt-4">
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
-                    Rozpocznij Darmowy Audyt
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
+                    Skontaktuj się z nami
                   </Link>
                   <Link href="/cennik" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">
-                    Zobacz cennik
+                    Zobacz stronę oferty
                   </Link>
                 </div>
               </div>

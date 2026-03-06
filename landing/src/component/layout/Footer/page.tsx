@@ -1,6 +1,7 @@
 'use client';
 
 import { currentYear } from '@/component/CurrentYear';
+import { OFFER_PLACEHOLDER_COPY } from '@/lib/offerPlaceholder';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { Col, Container, Row, Form, Spinner } from 'react-bootstrap';
@@ -22,7 +23,7 @@ const footerData: FooterColumn[] = [
       { label: 'Jak to działa', link: '/jak-to-dziala' },
       { label: 'Integracje', link: '/integracje' },
       { label: 'Porównanie', link: '/porownanie' },
-      { label: 'Cennik', link: '/cennik' },
+      { label: OFFER_PLACEHOLDER_COPY.navLabel, link: '/cennik' },
     ],
   },
   {

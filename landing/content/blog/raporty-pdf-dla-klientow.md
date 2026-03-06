@@ -29,4 +29,4 @@ Nasz PDF składa się z 9 kluczowych sekcji:
 7. **Action Plan** – Priorytetyzowana lista kroków do wykonania.
 
 ## White-label dla Agencji
-W planach Pro i Enterprise możesz generować raporty bez brandingu SiteSpector, gotowe do wysłania klientowi jako Twój własny produkt. Oszczędzaj czas i buduj profesjonalny wizerunek swojej agencji.
+W ofercie white-label możesz generować raporty bez brandingu SiteSpector, gotowe do wysłania klientowi jako Twój własny produkt. Oszczędzaj czas i buduj profesjonalny wizerunek swojej agencji.

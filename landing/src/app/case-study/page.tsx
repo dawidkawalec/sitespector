@@ -243,10 +243,10 @@ export default async function CaseStudyPage({
               </div>
               <h3 className="text-primary fw-bold mt-2 mb-2">Zacznij swoją transformację z SiteSpector</h3>
               <p className="text-muted mb-4">
-                Wypróbuj darmowy plan. 5 audytów miesięcznie. Zobacz, czy SiteSpector pasuje do Twojego workflow — tak jak pasuje do setek agencji i sklepów.
+                Oferta jest w przygotowaniu. Skontaktuj się z nami, aby poznać aktualne możliwości SiteSpector dla Twojego workflow.
               </p>
-              <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
-                Rozpocznij darmowy audyt
+              <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
+                Skontaktuj się z nami
               </Link>
             </div>
           </div>

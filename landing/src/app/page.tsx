@@ -21,7 +21,7 @@ import { buildFAQSchema, buildSoftwareApplicationSchema, buildWebPageSchema } fr
 export const metadata = buildMetadata({
   title: 'SiteSpector — Kompleksowe audyty SEO z AI i planem wykonania',
   description:
-    'Audyt SEO, wydajności i widoczności w jednym narzędziu. Screaming Frog + Lighthouse + Senuto + AI. Plan wykonania z kodem, 3 fazy, od $0. Dane w UE.',
+    'Audyt SEO, wydajności i widoczności w jednym narzędziu. Screaming Frog + Lighthouse + Senuto + AI. Plan wykonania z kodem, 3 fazy. Oferta wkrótce. Dane w UE.',
   path: '/',
   ogImageType: 'page',
 });
@@ -35,7 +35,7 @@ const Page = () => {
             path: '/',
             title: 'SiteSpector — Kompleksowe audyty SEO z AI i planem wykonania',
             description:
-              'Audyt SEO, wydajności i widoczności w jednym narzędziu. Screaming Frog + Lighthouse + Senuto + AI. Plan wykonania z kodem, 3 fazy, od $0. Dane w UE.',
+              'Audyt SEO, wydajności i widoczności w jednym narzędziu. Screaming Frog + Lighthouse + Senuto + AI. Plan wykonania z kodem, 3 fazy. Oferta wkrótce. Dane w UE.',
           }),
           buildSoftwareApplicationSchema({
             path: '/',

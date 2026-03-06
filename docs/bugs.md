@@ -8,6 +8,53 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-057: Niespójne i nieaktualne ceny w UI (landing + app)
+
+**Reported**: 2026-03-06
+
+**Status**: ✅ FIXED (2026-03-06)
+
+**Severity**: HIGH
+
+**Description**:
+- W warstwie user-facing były rozproszone ceny i nazwy planów (landing + app), mimo braku finalnie zatwierdzonego cennika.
+- Użytkownicy mogli trafić na nieaktualne kwoty i komunikaty upsellowe.
+
+**Root cause**:
+- Ceny były hardkodowane w wielu komponentach i podstronach marketingowych/aplikacyjnych.
+- Brak jednolitego trybu "placeholder pricing" przed publikacją finalnej oferty.
+
+**Fix**:
+- Wdrożono UI-only placeholder "Wkrótce / Skontaktuj się z nami" dla głównych powierzchni cennikowych:
+  - landing komponenty i podstrony cennikowe,
+  - etykiety cennika w topbar/footer/sitemap page,
+  - app: `/pricing`, `/settings/billing`, komunikaty limitów w `NewAuditDialog`.
+- Pozostawiono backend billing bez zmian (świadoma decyzja zakresu).
+
+**Files Changed (high level)**:
+- `landing/src/component/Pricing.tsx`
+- `landing/src/component/Faq.tsx`
+- `landing/src/component/Cta.tsx`
+- `landing/src/app/cennik/page.tsx`
+- `landing/src/app/page.tsx`
+- `landing/src/app/o-nas/page.tsx`
+- `landing/src/app/porownanie/PorownanieClient.tsx`
+- `landing/src/app/dla-freelancerow/page.tsx`
+- `landing/src/app/dla-agencji-seo/page.tsx`
+- `landing/src/component/layout/Topbar/page.tsx`
+- `landing/src/component/layout/Footer/page.tsx`
+- `landing/src/app/sitemap/page.tsx`
+- `frontend/app/(app)/pricing/page.tsx`
+- `frontend/app/(app)/settings/billing/page.tsx`
+- `frontend/components/NewAuditDialog.tsx`
+
+**Follow-up (second pass, 2026-03-06):**
+- Rozszerzono cleanup na pozostałe powierzchnie marketingowe (dodatkowe podstrony/CTA/meta + wybrane treści markdown renderowane na stronach).
+- Ujednolicono komunikaty do wariantu "oferta w przygotowaniu / kontakt", bez ekspozycji konkretnych kwot.
+- Dodano centralny token copy dla placeholdera: `landing/src/lib/offerPlaceholder.ts`.
+
+---
+
 ### BUG-055: Footer PDF nie trzymał stałego układu lewo/prawo
 
 **Reported**: 2026-03-06

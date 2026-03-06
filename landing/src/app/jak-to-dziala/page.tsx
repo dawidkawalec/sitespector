@@ -52,7 +52,7 @@ const steps: Step[] = [
     number: '1',
     title: 'Wpisz URL i skonfiguruj audyt',
     description:
-      'Podaj adres strony, którą chcesz zaudytować. Opcjonalnie dodaj do 3 konkurentów (plan Pro/Enterprise) — porównamy wyniki. Wybierz kraj analizy Senuto (np. Polska), aby dopasować dane widoczności do rynku.',
+      'Podaj adres strony, którą chcesz zaudytować. Opcjonalnie dodaj konkurentów — porównamy wyniki. Wybierz kraj analizy Senuto (np. Polska), aby dopasować dane widoczności do rynku.',
     bulletsTitle: 'Co konfigurujesz:',
     bullets: ['URL strony docelowej', 'Konkurenci (opcjonalnie, do 3)', 'Kraj Senuto (Polska, Niemcy, UK, itd.)', 'Opcje zaawansowane (limit stron crawla, jeśli dostępne)'],
     icon: RiSettings3Line,
@@ -126,9 +126,9 @@ const steps: Step[] = [
     number: '6',
     title: 'Pobierz raport PDF i eksportuj dane',
     description:
-      'Wygeneruj profesjonalny raport PDF z 9 sekcjami. W planach Pro i Enterprise — white-label z własnym logo. Dane możesz też eksportować (API w Pro/Enterprise) lub udostępnić klientowi przez widok Client Report.',
+      'Wygeneruj profesjonalny raport PDF z 9 sekcjami. Dane możesz też eksportować i udostępnić klientowi przez widok Client Report. Szczegóły oferty dodatkowej opublikujemy wkrótce.',
     bulletsTitle: 'Opcje:',
-    bullets: ['Raport PDF (9 sekcji, white-label w Pro+)', 'Client Report — widok uproszczony dla klienta', 'Raw Data — surowe dane crawla i Lighthouse', 'API — programatyczny dostęp (Pro, Enterprise)'],
+    bullets: ['Raport PDF (9 sekcji)', 'Client Report — widok uproszczony dla klienta', 'Raw Data — surowe dane crawla i Lighthouse', 'API — programatyczny dostęp'],
     icon: RiFilePdfLine,
     image: { src: DashboardMetrics, alt: 'Raport PDF / eksport danych (placeholder)' },
     bgClass: 'bg-light',
@@ -359,11 +359,11 @@ export default function JakToDzialaPage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3">
-                  Załóż konto w 30 sekund. Plan Free — 5 audytów miesięcznie, bez karty kredytowej.
+                  Oferta jest w przygotowaniu. Skontaktuj się z nami, aby poznać aktualne możliwości wdrożenia.
                 </p>
                 <div className="mt-4">
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
-                    Rozpocznij darmowy audyt
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
+                    Skontaktuj się z nami
                   </Link>
                   <Link href="/funkcje" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">
                     Zobacz pełną listę funkcji

@@ -120,9 +120,9 @@ export default function PolitykaCookiesPage() {
                     <span>GOTOWY NA AUDYT?</span>
                   </div>
                   <h3 className="text-primary fw-bold mt-2 mb-2">Sprawdź SiteSpector na własnej stronie</h3>
-                  <p className="text-muted mb-4">Plan Free: 5 audytów miesięcznie, bez karty kredytowej.</p>
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
-                    Rozpocznij darmowy audyt
+                  <p className="text-muted mb-4">Oferta i szczegóły pakietów są w przygotowaniu.</p>
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
+                    Skontaktuj się z nami
                   </Link>
                 </div>
               </div>

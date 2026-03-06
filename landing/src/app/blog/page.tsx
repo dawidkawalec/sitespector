@@ -259,10 +259,10 @@ export default async function BlogPage({
                   </div>
                   <h3 className="text-primary fw-bold mt-2 mb-2">Nie tylko czytaj — wypróbuj SiteSpector</h3>
                   <p className="text-muted mb-4">
-                    Wiele porad z naszego bloga możesz od razu wdrożyć w audycie. Plan Free — 5 audytów miesięcznie.
+                    Wiele porad z naszego bloga możesz od razu wdrożyć w audycie. Oferta i szczegóły pakietów są w przygotowaniu.
                   </p>
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
-                    Rozpocznij darmowy audyt
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
+                    Skontaktuj się z nami
                   </Link>
                 </div>
               </div>

@@ -18,7 +18,7 @@ const testimonialsData = [
     name: 'Anna K.',
     role: 'Właścicielka',
     company: 'Studio Graficzne Pixel',
-    quote: 'Darmowy plan dał mi szybki audyt mojej strony. Teraz wiem, co naprawić. Za $29 mam pełny dostęp — warto.',
+    quote: 'SiteSpector dał mi szybki audyt mojej strony. Teraz wiem, co naprawić i jak ustawić priorytety wdrożeń.',
     avatar: 'https://i.pravatar.cc/150?u=anna'
   },
   {
@@ -26,7 +26,7 @@ const testimonialsData = [
     name: 'Paweł D.',
     role: 'Właściciel sklepu',
     company: 'ModaOnline.pl',
-    quote: 'Płaciłem agencji 3k miesięcznie. SiteSpector pokazał, że meta tagi produktów są puste i strona wolna. Zweryfikowałem agencję — zmieniłem na lepszą.',
+    quote: 'SiteSpector pokazał, że meta tagi produktów są puste i strona wolna. Zweryfikowałem agencję — zmieniłem na lepszą.',
     avatar: 'https://i.pravatar.cc/150?u=pawel'
   },
   {

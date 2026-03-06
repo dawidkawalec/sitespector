@@ -5,6 +5,7 @@ import type { ElementType } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Collapse, Container } from 'react-bootstrap';
 import { getAppUrl, supabase } from '@/lib/supabase';
+import { OFFER_PLACEHOLDER_COPY } from '@/lib/offerPlaceholder';
 import {
   RiAddCircleLine,
   RiBankCardLine,
@@ -319,7 +320,7 @@ const Topbar = () => {
 
                 <li className="nav-item">
                   <Link className={`nav-link ${isActivePath('/cennik') ? 'active' : ''}`} href="/cennik" onClick={() => closeAll()}>
-                    Cennik
+                    {OFFER_PLACEHOLDER_COPY.navLabel}
                   </Link>
                 </li>
               </ul>
@@ -332,7 +333,7 @@ const Topbar = () => {
                   </Link>
 
                   <Link className={`nav-link px-3 ${isActivePath('/cennik') ? 'active' : ''}`} href="/cennik" onClick={() => closeAll()}>
-                    Cennik
+                    {OFFER_PLACEHOLDER_COPY.navLabel}
                   </Link>
 
                   {panels.map(panel => (

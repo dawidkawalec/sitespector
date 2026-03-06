@@ -192,13 +192,13 @@ const modules: Module[] = [
     label: 'MODUŁ 8',
     title: 'Raporty PDF',
     description:
-      'Profesjonalny raport PDF z 9 sekcjami. Gotowy do wysłania klientowi. White-label w planach Pro i Enterprise — własne logo i branding.',
+      'Profesjonalny raport PDF z 9 sekcjami. Gotowy do wysłania klientowi. White-label z własnym logo i brandingiem.',
     tool: 'Własna generacja (backend)',
     icon: RiFilePdfLine,
     features: [
       '9 sekcji — SEO, Performance, Visibility, AI Overviews, Backlinks, Links, Images, AI Strategy, Execution Plan (skrócony)',
-      'White-label — własne logo i kolory (Pro, Enterprise)',
-      'Custom branding — Enterprise',
+      'White-label — własne logo i kolory',
+      'Custom branding',
       'Export — jeden plik PDF pobierany z dashboardu',
     ],
     image: { src: DashboardMetrics, alt: 'Podgląd raportu PDF (placeholder)' },
@@ -234,7 +234,7 @@ const modules: Module[] = [
       'Planowanie — dziennie, tygodniowo, miesięcznie',
       'Powiadomienia — e-mail po zakończeniu audytu',
       'Historia — porównanie z poprzednimi audytami',
-      'Limit — zależny od planu (Pro: 50 audytów/mc)',
+      'Limit — zależny od wybranego pakietu',
     ],
     image: { src: DashboardWide, alt: 'Podgląd harmonogramów (placeholder)' },
     bgClass: 'bg-light',
@@ -374,12 +374,11 @@ export default function FunkcjePage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3">
-                  Zacznij od planu Free — 5 audytów miesięcznie, bez karty kredytowej. Jeśli potrzebujesz pełnej analizy (Senuto, AI Overviews,
-                  Execution Plan, white-label PDF) przejdź na Pro.
+                  Oferta i szczegóły pakietów są w przygotowaniu. Skontaktuj się z nami, aby dobrać zakres do potrzeb Twojego zespołu.
                 </p>
                 <div className="mt-4">
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
-                    Rozpocznij darmowy audyt
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
+                    Skontaktuj się z nami
                     <RiArrowRightLine className="ms-2" />
                   </Link>
                   <Link href="/jak-to-dziala" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">

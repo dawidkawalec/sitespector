@@ -99,7 +99,7 @@ const months: MonthBlock[] = [
       {
         type: 'improvement',
         title: '[Improvement] Ulepszony eksport PDF',
-        description: '9 sekcji raportu, lepsze formatowanie, white-label w Pro i Enterprise.',
+        description: '9 sekcji raportu, lepsze formatowanie i dopracowany tryb white-label.',
       },
     ],
   },
@@ -114,7 +114,7 @@ const months: MonthBlock[] = [
       {
         type: 'feature',
         title: '[Feature] Konkurenci w audycie',
-        description: 'Dodaj do 3 domen konkurencyjnych (Pro). Porównanie widoczności i backlinków.',
+        description: 'Dodaj domeny konkurencyjne i porównaj widoczność oraz backlinki.',
       },
       {
         type: 'improvement',
@@ -139,7 +139,7 @@ const months: MonthBlock[] = [
       {
         type: 'feature',
         title: '[Feature] Integracja Stripe',
-        description: 'Subskrypcje, Customer Portal, zarządzanie planami.',
+        description: 'Obsługa płatności i Customer Portal.',
       },
       {
         type: 'improvement',
@@ -227,9 +227,9 @@ export default function ChangelogPage() {
                     <span>CHCESZ WIĘCEJ?</span>
                   </div>
                   <h3 className="fw-bold text-primary mt-2 mb-2">Wypróbuj nowe funkcje na własnych stronach</h3>
-                  <p className="text-muted mb-4">Włącz darmowy plan i od razu zobacz Execution Plan, AI Overviews i 3-fazowy audyt.</p>
-                  <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
-                    Rozpocznij darmowy audyt
+                  <p className="text-muted mb-4">Oferta jest aktualizowana. Skontaktuj się z nami, aby poznać aktualne możliwości.</p>
+                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
+                    Skontaktuj się z nami
                   </Link>
                 </div>
               </div>

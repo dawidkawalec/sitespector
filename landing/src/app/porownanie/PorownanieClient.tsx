@@ -16,7 +16,7 @@ type ComparisonRow = {
 };
 
 const comparisonData: ComparisonRow[] = [
-  { feature: 'Cena', sitespector: '$29/mc (Pro)', sf: '~259 GBP/rok', ahrefs: '$129/mc', semrush: '$139/mc' },
+  { feature: 'Oferta', sitespector: 'Wkrótce — skontaktuj się z nami', sf: 'Zależnie od dostawcy', ahrefs: 'Zależnie od dostawcy', semrush: 'Zależnie od dostawcy' },
   { feature: 'Crawling SEO', sitespector: '✓ (SF engine)', sf: true, ahrefs: true, semrush: true },
   { feature: 'Core Web Vitals (Lighthouse)', sitespector: '✓ desktop + mobile', sf: false, ahrefs: false, semrush: false },
   { feature: 'Widoczność (Senuto)', sitespector: true, sf: false, ahrefs: '✓ (własne)', semrush: '✓ (własne)' },
@@ -25,11 +25,11 @@ const comparisonData: ComparisonRow[] = [
   { feature: '3-fazowy audyt (technika → AI → plan)', sitespector: true, sf: false, ahrefs: false, semrush: false },
   { feature: 'Analiza AI (treść, UX, bezpieczeństwo)', sitespector: '✓ (Gemini)', sf: false, ahrefs: false, semrush: false },
   { feature: 'Zaplanowane audyty', sitespector: true, sf: false, ahrefs: true, semrush: true },
-  { feature: 'Konkurenci w audycie', sitespector: '✓ (3 w Pro)', sf: false, ahrefs: true, semrush: true },
+  { feature: 'Konkurenci w audycie', sitespector: '✓ (szczegóły wkrótce)', sf: false, ahrefs: true, semrush: true },
   { feature: 'Raporty PDF', sitespector: '✓ (9 sekcji, white-label)', sf: '✓ (podstawowe)', ahrefs: true, semrush: true },
   { feature: 'Zespoły / Workspace', sitespector: true, sf: false, ahrefs: true, semrush: true },
   { feature: 'Dane w UE', sitespector: true, sf: true, ahrefs: false, semrush: false },
-  { feature: 'Plan Free', sitespector: '✓ (5 audytów)', sf: 'trial', ahrefs: false, semrush: 'trial' },
+  { feature: 'Dostępność', sitespector: 'Wkrótce', sf: 'Zależnie od planu', ahrefs: false, semrush: 'Zależnie od planu' },
 ];
 
 function Cell({ value, highlighted }: { value: CellValue; highlighted?: boolean }) {
@@ -56,10 +56,10 @@ export default function PorownanieClient() {
               SiteSpector vs <span className="text-gradient text-line">konkurencja</span>
             </h1>
             <p className="lead text-muted mb-4">
-              Jedno narzędzie zamiast pięciu. Execution Plan z kodem, AI Overviews, integracja Senuto i 3-fazowy audyt — w cenie jednej licencji Screaming Frog.
+              Jedno narzędzie zamiast pięciu. Execution Plan z kodem, AI Overviews, integracja Senuto i 3-fazowy audyt. Oferta jest aktualizowana.
             </p>
-            <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
-              Wypróbuj za darmo
+            <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
+              Skontaktuj się z nami
             </Link>
           </Col>
         </Row>
@@ -81,7 +81,7 @@ export default function PorownanieClient() {
                   <tr>
                     <th className="p-4 border-0">Funkcja</th>
                     <th className="p-4 border-0 text-center text-orange fw-bold" style={{ width: '20%' }}>
-                      SiteSpector Pro
+                      SiteSpector
                     </th>
                     <th className="p-4 border-0 text-center" style={{ width: '20%' }}>
                       Screaming Frog
@@ -109,7 +109,7 @@ export default function PorownanieClient() {
             </div>
 
             <div className="mt-4 text-center text-muted">
-              Aby uzyskać funkcje SiteSpector (crawl + Lighthouse + Senuto + AI + Execution Plan), musiałbyś łączyć kilka narzędzi — łącznie ponad $300 miesięcznie.
+              Finalny zakres oferty jest w przygotowaniu. Skontaktuj się z nami, aby otrzymać aktualne informacje.
             </div>
           </Col>
         </Row>
@@ -117,25 +117,25 @@ export default function PorownanieClient() {
         <Row className="justify-content-center mt-5">
           <Col lg={12}>
             <div className="title-sm">
-              <span>CENY</span>
+              <span>OFERTA</span>
             </div>
             <div className="main-title mt-3 mb-4">
               <h2 className="text-primary">
-                Ile <span className="text-orange text-line">naprawdę</span> płacisz?
+                Oferta <span className="text-orange text-line">wkrótce</span>
               </h2>
             </div>
 
             <div className="row g-4">
               {[
                 {
-                  title: 'SiteSpector Pro',
-                  price: '$29/mc',
-                  points: ['50 audytów', 'Senuto', '3 konkurentów', 'Execution Plan', 'Harmonogramy', 'White-label PDF', 'API'],
+                  title: 'SiteSpector',
+                  price: 'Wkrótce',
+                  points: ['Szczegóły pakietów opublikujemy wkrótce', 'Skontaktuj się z nami po ofertę'],
                   highlight: true,
                 },
-                { title: 'Screaming Frog', price: '~259 GBP/rok (~$330)', points: ['Tylko crawling', 'Bez Lighthouse', 'Bez Senuto', 'Bez AI', 'Bez Execution Plan', 'Desktop app'] },
-                { title: 'Ahrefs', price: 'od $129/mc', points: ['Pełne narzędzie', 'Bez Execution Plan', 'Bez 3-fazowego audytu', 'Dane w USA'] },
-                { title: 'SEMrush', price: 'od $139/mc', points: ['Pełne narzędzie', 'Bez Execution Plan', 'Bez AI Overviews z Senuto', 'Dane w USA'] },
+                { title: 'Screaming Frog', price: 'Ceny zewnętrzne', points: ['Szczegóły po stronie dostawcy'] },
+                { title: 'Ahrefs', price: 'Ceny zewnętrzne', points: ['Szczegóły po stronie dostawcy'] },
+                { title: 'SEMrush', price: 'Ceny zewnętrzne', points: ['Szczegóły po stronie dostawcy'] },
               ].map((c, idx) => (
                 <div className="col-md-6 col-lg-3" key={idx}>
                   <div className={`card h-100 rounded-4 shadow-sm ${c.highlight ? 'border border-orange' : 'border-0'}`}>
@@ -186,8 +186,8 @@ export default function PorownanieClient() {
                 },
                 {
                   icon: RiCheckLine,
-                  title: 'Jedna cena, wszystko w pakiecie',
-                  desc: '$29/mc vs $300+ za zestaw narzędzi. Bez ukrytych kosztów.',
+                  title: 'Oferta w przygotowaniu',
+                  desc: 'Aktualizujemy zakres i warunki pakietów. Po szczegóły zapraszamy do kontaktu.',
                 },
                 {
                   icon: RiShieldCheckLine,
@@ -219,17 +219,17 @@ export default function PorownanieClient() {
                 <span>PRZEKONAJ SIĘ SAM</span>
               </div>
               <h3 className="text-primary fw-bold mt-2 mb-2">
-                Wypróbuj SiteSpector <span className="text-orange text-line">za darmo</span>
+                Oferta SiteSpector <span className="text-orange text-line">wkrótce</span>
               </h3>
               <p className="text-muted mb-4">
-                5 audytów miesięcznie, plan Free. Zobacz Execution Plan, AI Overviews i pełny 3-fazowy audyt na własnych stronach.
+                Aktualizujemy zakres pakietów. Skontaktuj się z nami, aby poznać aktualne możliwości.
               </p>
               <div className="d-flex justify-content-center flex-column flex-sm-row gap-2">
-                <Link href="/login" className="btn btn-primary px-5 py-3 fw-bold">
-                  Rozpocznij darmowy audyt
+                <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
+                  Skontaktuj się z nami
                 </Link>
                 <Link href="/cennik" className="btn btn-outline-primary px-5 py-3 fw-bold">
-                  Zobacz cennik
+                  Zobacz stronę oferty
                 </Link>
               </div>
             </div>

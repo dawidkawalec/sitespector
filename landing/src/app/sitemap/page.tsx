@@ -5,6 +5,7 @@ import { Col, Container, Row } from 'react-bootstrap';
 import { buildMetadata } from '@/lib/seo';
 import { JsonLd } from '@/components/JsonLd';
 import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
+import { OFFER_PLACEHOLDER_COPY } from '@/lib/offerPlaceholder';
 
 export const metadata = buildMetadata({
   title: 'Mapa strony | SiteSpector',
@@ -20,7 +21,7 @@ const sitemapSections = [
       { label: 'Strona główna', href: '/' },
       { label: 'Zaloguj się / Załóż konto', href: '/login' },
       { label: 'Dashboard', href: '/dashboard' },
-      { label: 'Cennik', href: '/cennik' },
+      { label: OFFER_PLACEHOLDER_COPY.navLabel, href: '/cennik' },
     ],
   },
   {
@@ -30,7 +31,7 @@ const sitemapSections = [
       { label: 'Jak to działa', href: '/jak-to-dziala' },
       { label: 'Integracje', href: '/integracje' },
       { label: 'Porównanie', href: '/porownanie' },
-      { label: 'Cennik', href: '/cennik' },
+      { label: OFFER_PLACEHOLDER_COPY.navLabel, href: '/cennik' },
     ],
   },
   {

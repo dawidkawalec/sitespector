@@ -23,11 +23,11 @@ PLACEHOLDER: Content agent — Podziel na 3-4 kategorie: (1) poprawki techniczne
 
 ## Koszt audytu vs koszt zaniedbania
 
-PLACEHOLDER: Content agent — Porównaj: cena audytu (np. 500-2000 zł lub narzędzie) vs utracony ruch z błędów (np. strony niewidoczne, wolne ładowanie). Ilustracyjne liczby lub formuła. Przekonaj że „nie stać mnie” jest błędem.
+PLACEHOLDER: Content agent — Porównaj: wysiłek wdrożenia audytu vs utracony ruch z błędów (np. strony niewidoczne, wolne ładowanie). Ilustracyjne liczby lub formuła. Przekonaj, że odkładanie audytu to błąd.
 
 ## Jak policzyć ROI: prosta formuła
 
-PLACEHOLDER: Content agent — Podaj formułę ROI = (zysk - koszt) / koszt × 100%. Przykład: audyt 1000 zł, wzrost konwersji o 20%, wartość leadów 5000 zł → ROI 400%. Możliwa wzmianka o kalkulatorze (jeśli jest w produkcie) lub zachęta do samodzielnego policzenia.
+PLACEHOLDER: Content agent — Podaj formułę ROI = (zysk - koszt) / koszt × 100%. Użyj przykładu bez konkretnych kwot. Możliwa wzmianka o kalkulatorze (jeśli jest w produkcie) lub zachęta do samodzielnego policzenia.
 
 ## Case study lub przykładowy scenariusz
 
