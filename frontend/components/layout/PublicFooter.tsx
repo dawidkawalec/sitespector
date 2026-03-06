@@ -88,8 +88,8 @@ export function PublicFooter() {
           <div className="lg:col-span-1">
             <SiteSpectorLogo
               href="/"
-              logoHeight={34}
-              className="mb-4"
+              logoHeight={30}
+              className="mb-4 inline-flex rounded-xl bg-white px-3 py-2"
             />
             <p className="mt-4 text-sm text-white/80">
               Profesjonalna platforma do audytów SEO i optymalizacji stron

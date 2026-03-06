@@ -1,5 +1,18 @@
 # Architectural Decisions Log
 
+## Branding Contrast Policy on Dark Surfaces (2026-03-06)
+
+- **Decision**: Keep the full SVG logotype as the canonical mark, but render it on a light rounded container when placed on dark UI backgrounds.
+- **Rationale**:
+  - The delivered logotype uses dark text, which loses readability on dark nav/footer/sidebar surfaces.
+  - Reverting to icon-only or split icon+text would break the global branding requirement.
+- **Implementation**:
+  - Added light background wrappers in app sidebar/mobile header and public/landing footers.
+  - Tuned PDF running footer brand sizing for better print/readability.
+- **Outcome**:
+  - Brand consistency preserved (single full logotype),
+  - readability restored on mobile and dark surfaces.
+
 ## Global Logo Rollout — Full SVG Logotype (2026-03-06)
 
 - **Decision**: Use a single full SVG logotype (`sitespector_logo_transp.svg`) across frontend app, landing, and PDF templates, while keeping emblem-only assets for favicon/app-icon.

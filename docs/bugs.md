@@ -8,6 +8,42 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-054: Stopka PDF i logo na ciemnym tle były mało czytelne
+
+**Reported**: 2026-03-06
+
+**Status**: ✅ FIXED (2026-03-06)
+
+**Severity**: MEDIUM
+
+**Description**:
+- Po rolloutcie nowego logotypu SVG stopka PDF renderowała brand zbyt mało (mikro rozmiar).
+- W UI mobilnym/logo na ciemnych tłach (sidebar, mobile header, stopki) wyglądało nieczytelnie.
+
+**Root cause**:
+- Zbyt agresywne rozmiary klas `running-footer-logo-image` w CSS PDF.
+- Brak kontrastowego kontenera dla pełnego logotypu (czarna typografia) na ciemnych tłach.
+
+**Fix**:
+- PDF:
+  - zwiększono rozmiar logotypu w running footer,
+  - poprawiono spacing i `white-space` dla tekstu kontaktowego.
+- UI:
+  - dodano jasne, zaokrąglone tło pod logotypem w newralgicznych miejscach na ciemnym tle:
+    - `frontend/components/layout/PublicFooter.tsx`
+    - `frontend/components/layout/UnifiedSidebar.tsx`
+    - `frontend/app/(app)/layout.tsx` (mobile header)
+    - `landing/src/component/layout/Footer/page.tsx`
+
+**Files Changed**:
+- `backend/app/services/pdf/styles.py`
+- `frontend/components/layout/PublicFooter.tsx`
+- `frontend/components/layout/UnifiedSidebar.tsx`
+- `frontend/app/(app)/layout.tsx`
+- `landing/src/component/layout/Footer/page.tsx`
+
+---
+
 ### BUG-053: Niespójny branding logo między UI/PDF/landing (ikona + osobny napis)
 
 **Reported**: 2026-03-06

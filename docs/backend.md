@@ -26,6 +26,14 @@ The **Worker** is a background Python process that polls for pending audits and 
   - Added dedicated classes for running header/footer logo sizing and cover footer logo.
 - Python syntax check passed for updated modules (`generator.py`, `styles.py`).
 
+### Footer readability hotfix (2026-03-06)
+
+- Adjusted running footer brand sizing in `backend/app/services/pdf/styles.py`:
+  - larger `running-footer-logo-image`,
+  - improved spacing in `#running-footer-brand`,
+  - `white-space: nowrap` for contact string.
+- Result: footer branding is no longer micro-sized and remains legible in generated PDFs.
+
 ---
 
 ## Audit Access Hardening (Mar 2026)

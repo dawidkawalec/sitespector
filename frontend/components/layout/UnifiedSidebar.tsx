@@ -494,7 +494,7 @@ export function UnifiedSidebar({ onAction }: { onAction?: () => void }) {
             href="/dashboard"
             onClick={onAction}
             logoHeight={24}
-            className="group"
+            className="group rounded-lg bg-white px-2 py-1"
           />
           <TooltipProvider>
             <Tooltip>

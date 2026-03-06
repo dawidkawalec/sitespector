@@ -66,7 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               width={3068}
               height={759}
               unoptimized
-              className="ml-4 h-7 w-auto max-w-[200px] object-contain"
+              className="ml-4 h-7 w-auto max-w-[200px] rounded-lg bg-white px-2 py-1 object-contain"
             />
           </header>
         ) : (
@@ -77,7 +77,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               width={3068}
               height={759}
               unoptimized
-              className="h-7 w-auto max-w-[200px] object-contain"
+              className="h-7 w-auto max-w-[200px] rounded-lg bg-white px-2 py-1 object-contain"
             />
           </header>
         )}

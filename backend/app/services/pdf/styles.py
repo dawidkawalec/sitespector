@@ -62,19 +62,22 @@ def get_pdf_css() -> str:
     position: running(footer-brand);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    max-width: 100%;
 }
 .running-logo-image {
     height: 11px;
     width: auto;
 }
 .running-footer-logo-image {
-    height: 10px;
+    height: 14px;
     width: auto;
+    flex-shrink: 0;
 }
 .running-footer-contact {
-    font-size: 7pt;
+    font-size: 7.4pt;
     color: #94a3b8;
+    white-space: nowrap;
 }
 #running-header-right {
     position: running(header-right);

@@ -24,6 +24,14 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 - Kept small icons (`frontend/app/icon.tsx`, `frontend/app/apple-icon.tsx`) as emblem-only by design.
 - Frontend lint still reports pre-existing unrelated errors in admin/schema pages; logo rollout introduced no new lint errors.
 
+### Contrast hotfix (2026-03-06)
+
+- Improved readability of the full SVG logotype on dark surfaces (especially mobile):
+  - `frontend/components/layout/PublicFooter.tsx` -> logo wrapped in light rounded background.
+  - `frontend/components/layout/UnifiedSidebar.tsx` -> logo wrapped in light rounded background.
+  - `frontend/app/(app)/layout.tsx` -> mobile header logo now has light rounded background.
+- Goal: keep full logotype everywhere while preserving visual contrast on dark UI blocks.
+
 ---
 
 ## Page Structure

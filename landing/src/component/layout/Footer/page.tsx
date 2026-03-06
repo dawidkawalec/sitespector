@@ -102,11 +102,13 @@ const Footer = () => {
               <div className="footer-about">
                 <div className="logo">
                   <Link className="navbar-caption fs-5 text-light ls-1 fw-bold d-inline-flex align-items-center text-nowrap" href="/">
-                    <img
-                      src="/sitespector_logo_transp.svg"
-                      alt="SiteSpector"
-                      className="h-[32px] w-auto object-contain"
-                    />
+                    <span className="rounded-3 bg-white px-3 py-2 d-inline-flex">
+                      <img
+                        src="/sitespector_logo_transp.svg"
+                        alt="SiteSpector"
+                        className="h-[24px] w-auto object-contain"
+                      />
+                    </span>
                   </Link>
                 </div>
                 <div className="d-flex mt-4">
