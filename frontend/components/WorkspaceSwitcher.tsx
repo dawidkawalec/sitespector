@@ -67,13 +67,13 @@ export function WorkspaceSwitcher() {
                         switchWorkspace(workspace.id)
                         setOpen(false)
                       }}
-                      className="gap-2"
+                      className="gap-2 rounded-md aria-selected:bg-muted/80 aria-selected:text-foreground"
                     >
                       <span className="truncate">{workspace.name}</span>
                       <Check
                         className={
                           currentWorkspace?.id === workspace.id
-                            ? "ml-auto h-4 w-4 text-primary"
+                            ? "ml-auto h-4 w-4 text-accent"
                             : "ml-auto h-4 w-4 opacity-0"
                         }
                       />
@@ -93,13 +93,13 @@ export function WorkspaceSwitcher() {
                           switchWorkspace(workspace.id)
                           setOpen(false)
                         }}
-                        className="gap-2"
+                        className="gap-2 rounded-md aria-selected:bg-muted/80 aria-selected:text-foreground"
                       >
                         <span className="truncate">{workspace.name}</span>
                         <Check
                           className={
                             currentWorkspace?.id === workspace.id
-                              ? "ml-auto h-4 w-4 text-primary"
+                              ? "ml-auto h-4 w-4 text-accent"
                               : "ml-auto h-4 w-4 opacity-0"
                           }
                         />
@@ -117,7 +117,7 @@ export function WorkspaceSwitcher() {
                       setOpen(false)
                       setShowCreateTeam(true)
                     }}
-                    className="text-primary"
+                    className="text-accent rounded-md aria-selected:bg-accent/10 aria-selected:text-accent"
                   >
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Stwórz Zespół

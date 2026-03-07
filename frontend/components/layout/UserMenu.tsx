@@ -80,7 +80,7 @@ export function UserMenu({ className }: { className?: string }) {
           )}
           aria-label="Menu uzytkownika"
         >
-          <span className={cn('flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary shadow-sm ring-1 ring-primary/15 transition-transform duration-200', open && 'scale-[1.03]')}>
+          <span className={cn('flex h-7 w-7 items-center justify-center rounded-full bg-accent/15 text-xs font-semibold text-accent shadow-sm ring-1 ring-accent/20 transition-transform duration-200', open && 'scale-[1.03]')}>
             {initials}
           </span>
           <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform duration-200', open && 'rotate-180')} />
@@ -100,7 +100,7 @@ export function UserMenu({ className }: { className?: string }) {
             className={cn(
               'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-all duration-150',
               pathname === '/settings/profile'
-                ? 'bg-primary/10 text-primary'
+                ? 'bg-accent/12 text-accent'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             )}
           >
@@ -116,7 +116,7 @@ export function UserMenu({ className }: { className?: string }) {
               className={cn(
                 'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-all duration-150',
                 pathname === item.href
-                  ? 'bg-primary/10 text-primary'
+                  ? 'bg-accent/12 text-accent'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               )}
             >
@@ -132,7 +132,7 @@ export function UserMenu({ className }: { className?: string }) {
               className={cn(
                 'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-all duration-150',
                 pathname.startsWith('/admin')
-                  ? 'bg-primary/10 text-primary'
+                  ? 'bg-accent/12 text-accent'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               )}
             >

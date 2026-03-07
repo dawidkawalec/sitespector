@@ -57,6 +57,28 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
   - `frontend/app/(app)/layout.tsx`
   - `frontend/app/(app)/settings/layout.tsx`
 
+### Navigation Visual Consistency Pass (Colors + Settings parity) (2026-03-07)
+
+- Removed green/teal-heavy visual tone from context sidebars and unified them with a neutral dark palette:
+  - `frontend/components/layout/AuditSidebar.tsx`
+  - `frontend/components/layout/ProjectSidebar.tsx`
+  - `frontend/components/layout/MobileMenu.tsx`
+- Top bar and user menu active states now use the shared accent language instead of primary/teal emphasis.
+- Workspace switcher hover/selected states were refined to eliminate harsh/ugly row feedback in the dropdown:
+  - smoother selected row contrast,
+  - accent checkmark consistency,
+  - clearer top-bar matching control style.
+- Settings sidebar now uses the same visual system as project/audit sidebars (dark shell + consistent active/hover states):
+  - `frontend/app/(app)/settings/layout.tsx`
+
+### Navigation Contrast Hotfix (Workspace hover + Audit select) (2026-03-07)
+
+- Fixed workspace dropdown contrast issue where selected/hovered rows could render white text on a light gray background:
+  - switched row state styling to explicit `aria-selected` overrides in:
+    - `frontend/components/WorkspaceSwitcher.tsx`
+- Removed remaining green-toned surface from audit switcher dropdown:
+  - `frontend/components/layout/AuditSidebar.tsx` select content now uses neutral dark surface.
+
 ---
 
 ## Branding Rollout (SVG) (2026-03-06)

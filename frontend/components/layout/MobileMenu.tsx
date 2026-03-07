@@ -29,7 +29,7 @@ export function MobileMenu({ auditId, projectId }: MobileMenuProps) {
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-[92vw] max-w-[360px] p-0 border-white/10 bg-[#0b363d]">
+      <SheetContent side="left" className="w-[92vw] max-w-[360px] p-0 border-white/10 bg-slate-950">
         <div className="flex h-full flex-col">
           <div className="border-b border-white/10 px-4 py-3">
             <SiteSpectorLogo

@@ -29,7 +29,7 @@ export function ProjectSidebar({ projectId, onNavigate, className }: ProjectSide
     <>
       <aside
         className={cn(
-          'flex h-full w-[292px] flex-col border-r border-white/10 bg-gradient-to-b from-[#0b363d] to-[#001113] text-white',
+          'flex h-full w-[292px] flex-col border-r border-white/10 bg-gradient-to-b from-slate-900 via-slate-950 to-black text-white',
           className
         )}
       >

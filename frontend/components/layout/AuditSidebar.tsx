@@ -146,7 +146,7 @@ export function AuditSidebar({ auditId, onNavigate, className }: AuditSidebarPro
   return (
     <aside
       className={cn(
-        'flex h-full w-[292px] flex-col border-r border-white/10 bg-gradient-to-b from-[#0b363d] to-[#001113] text-white',
+        'flex h-full w-[292px] flex-col border-r border-white/10 bg-gradient-to-b from-slate-900 via-slate-950 to-black text-white',
         className
       )}
     >
@@ -182,14 +182,18 @@ export function AuditSidebar({ auditId, onNavigate, className }: AuditSidebarPro
           <SelectTrigger className="h-9 border-white/15 bg-white/5 text-xs text-white transition-colors hover:bg-white/10 focus:ring-accent/40">
             <SelectValue placeholder="Wybierz audyt..." />
           </SelectTrigger>
-          <SelectContent className="border-white/10 bg-[#0b363d] text-white">
+          <SelectContent className="border-white/10 bg-slate-900 text-white">
             {availableAudits.length === 0 ? (
               <SelectItem value="empty" disabled>
                 Brak audytow
               </SelectItem>
             ) : (
               availableAudits.map((audit) => (
-                <SelectItem key={audit.id} value={audit.id} className="focus:bg-white/10 focus:text-white">
+                <SelectItem
+                  key={audit.id}
+                  value={audit.id}
+                  className="focus:bg-white/10 focus:text-white data-[state=checked]:text-accent"
+                >
                   {new Date(audit.created_at).toLocaleDateString('pl-PL')}
                 </SelectItem>
               ))

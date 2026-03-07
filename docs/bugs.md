@@ -8,6 +8,79 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-061: Workspace dropdown miał błędny kontrast hover/selected
+
+**Reported**: 2026-03-07
+
+**Status**: ✅ FIXED (2026-03-07)
+
+**Severity**: MEDIUM
+
+**Description**:
+- W menu wyboru workspace pojawiał się stan z jasnym tłem i białym tekstem, przez co opcje były słabo czytelne.
+- Dodatkowo audytowy select utrzymywał inny (zielonkawy) kolor tła niż reszta nowej nawigacji.
+
+**Root cause**:
+- Stylowanie opierało się na niestandardowym selektorze `data-[selected]`, podczas gdy faktyczny stan w `cmdk` jest sterowany przez `aria-selected`.
+- Audit select content nie został jeszcze podciągnięty do wspólnej palety po redesignie.
+
+**Fix**:
+- `frontend/components/WorkspaceSwitcher.tsx`:
+  - przejście na klasy `aria-selected:*` dla itemów,
+  - zachowanie spójnego accent checkmarka.
+- `frontend/components/layout/AuditSidebar.tsx`:
+  - tło dropdownu selecta zmienione na neutralne ciemne (`bg-slate-900`),
+  - dopasowanie stanu zaznaczenia do accent.
+
+**Verification**:
+- `next lint --file components/WorkspaceSwitcher.tsx --file components/layout/AuditSidebar.tsx`: ✅.
+- `ReadLints`: ✅ brak błędów.
+
+**Related**:
+- `frontend/components/WorkspaceSwitcher.tsx`
+- `frontend/components/layout/AuditSidebar.tsx`
+
+---
+
+### BUG-060: Niespójna kolorystyka nawigacji i brzydki hover w switcherze workspace
+
+**Reported**: 2026-03-07
+
+**Status**: ✅ FIXED (2026-03-07)
+
+**Severity**: MEDIUM
+
+**Description**:
+- Po wdrożeniu nowej nawigacji część elementów miała zbyt zielony ton względem reszty UI.
+- Hover/selected state w dropdownie workspace wyglądał agresywnie i niespójnie.
+- Sidebar ustawień wizualnie odbiegał od sidebarów projektu/audytu.
+
+**Root cause**:
+- Redesign struktury nawigacji został dostarczony wcześniej niż finalna unifikacja kolorów i stanów interakcji dla wszystkich kontekstów.
+
+**Fix**:
+- Ujednolicono paletę:
+  - sidebary kontekstowe + mobile sheet -> neutralny ciemny gradient (bez zielonego tonu),
+  - aktywne stany topbara/user menu -> accent-first.
+- Poprawiono workspace switcher:
+  - łagodniejsze `hover` i `selected`,
+  - spójne kolory checkmarków i item states.
+- Przebudowano wygląd settings sidebar do tego samego systemu, co project/audit sidebar.
+
+**Verification**:
+- `next lint --file ...` dla zmienionych komponentów: ✅ bez warningów i błędów.
+- `ReadLints`: ✅ brak błędów.
+
+**Related**:
+- `frontend/components/WorkspaceSwitcher.tsx`
+- `frontend/components/layout/TopBar.tsx`
+- `frontend/components/layout/AuditSidebar.tsx`
+- `frontend/components/layout/ProjectSidebar.tsx`
+- `frontend/components/layout/MobileMenu.tsx`
+- `frontend/app/(app)/settings/layout.tsx`
+
+---
+
 ### BUG-059: Nawigacja po redesignie miala nierowne mikrointerakcje i niespojna gestosc
 
 **Reported**: 2026-03-07

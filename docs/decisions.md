@@ -1191,3 +1191,44 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 - **Outcome**:
   - Navigation feels faster and clearer without changing route architecture.
   - Better UX consistency across desktop/mobile and across global vs contextual nav layers.
+
+---
+
+## ADR-053: Navigation Color Unification and Settings Sidebar Parity (2026-03-07)
+
+- **Decision**:
+  - Remove green/teal-heavy emphasis from the new navigation shell and align color behavior with the rest of the app.
+  - Make settings navigation visually consistent with project/audit sidebars.
+- **Rationale**:
+  - After the structural redesign, users still perceived visual inconsistency:
+    - context sidebars felt too green compared to main app surfaces,
+    - workspace switcher hover looked harsh,
+    - settings sidebar looked like a different subsystem.
+- **Implementation**:
+  - Context sidebars (`AuditSidebar`, `ProjectSidebar`, mobile sheet) moved to a neutral dark gradient palette.
+  - Top bar and user menu active states aligned to accent-first semantics.
+  - Workspace switcher dropdown selected/hover states refined for cleaner contrast.
+  - `settings/layout.tsx` updated to the same dark navigation language as other context sidebars.
+- **Outcome**:
+  - Navigation now reads as one coherent system across dashboard/projects/audit/settings/mobile.
+
+---
+
+## ADR-054: Command Menu State Contrast Contract (2026-03-07)
+
+- **Decision**:
+  - Standardize workspace switcher command rows to explicit `aria-selected` styling rather than custom `data-[selected]` overrides.
+  - Keep audit selector dropdown surface in the same neutral dark palette as context sidebars.
+- **Rationale**:
+  - Runtime selection states in `cmdk` are driven by `aria-selected`; mismatched selectors caused poor contrast (white text on light gray hover/selected row).
+  - Audit dropdown still had a green-toned background that broke visual parity with settings and project/audit sidebars.
+- **Implementation**:
+  - `frontend/components/WorkspaceSwitcher.tsx`:
+    - replaced row state classes with `aria-selected:*`,
+    - preserved accent checkmark color and readable selected contrast.
+  - `frontend/components/layout/AuditSidebar.tsx`:
+    - switched select content background to neutral dark (`bg-slate-900`),
+    - aligned checked row highlight with accent semantics.
+- **Outcome**:
+  - Workspace dropdown is readable in both light and dark mode.
+  - Settings and audits now remain color-consistent across navigation surfaces.

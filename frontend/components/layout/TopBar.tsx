@@ -42,7 +42,7 @@ export function TopBar({ mobileMenu, isImpersonating = false }: TopBarProps) {
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35',
                 isDashboard
-                  ? 'bg-primary/12 text-primary shadow-sm'
+                  ? 'bg-accent/15 text-accent shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:-translate-y-[1px]'
               )}
             >
@@ -54,7 +54,7 @@ export function TopBar({ mobileMenu, isImpersonating = false }: TopBarProps) {
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35',
                 isProjectsArea
-                  ? 'bg-primary/12 text-primary shadow-sm'
+                  ? 'bg-accent/15 text-accent shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:-translate-y-[1px]'
               )}
             >
