@@ -9,19 +9,21 @@
  * - Main content area
  */
 
-import { UnifiedSidebar } from '@/components/layout/UnifiedSidebar'
-import { MobileSidebar } from '@/components/layout/MobileSidebar'
 import { ChatPanel } from '@/components/chat/ChatPanel'
 import { ChatToggleButton } from '@/components/chat/ChatToggleButton'
 import { clearImpersonationSession, getImpersonationSession, IMPERSONATION_EVENT } from '@/lib/impersonation'
 import { Button } from '@/components/ui/button'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+import { usePathname, useRouter } from 'next/navigation'
 import { ShieldAlert } from 'lucide-react'
+import { TopBar } from '@/components/layout/TopBar'
+import { MobileMenu } from '@/components/layout/MobileMenu'
+import { AuditSidebar } from '@/components/layout/AuditSidebar'
+import { ProjectSidebar } from '@/components/layout/ProjectSidebar'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [impersonationAuditId, setImpersonationAuditId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -40,6 +42,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [])
 
   const isImpersonating = !!impersonationAuditId
+  const isAdminRoute = pathname.startsWith('/admin')
+  const auditMatch = pathname.match(/^\/audits\/([^/]+)/)
+  const auditId = auditMatch?.[1] ?? null
+  const projectMatch = pathname.match(/^\/projects\/([^/]+)/)
+  const projectId = projectMatch?.[1] ?? null
+  const showAuditSidebar = !!auditId
+  const showProjectSidebar = !showAuditSidebar && !!projectId
 
   const handleExitImpersonation = () => {
     clearImpersonationSession()
@@ -47,39 +56,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {!isImpersonating && (
-        <div className="hidden md:block">
-          <UnifiedSidebar />
-        </div>
-      )}
-
-      {/* Main content area */}
+    <div className="flex h-screen overflow-hidden bg-background">
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile header with menu */}
-        {!isImpersonating ? (
-          <header className="md:hidden h-16 border-b border-white/10 flex items-center px-4 bg-[#0b363d] text-white flex-shrink-0">
-            <MobileSidebar />
-            <Image
-              src="/sitespector_logo_transp.svg"
-              alt="SiteSpector"
-              width={3068}
-              height={759}
-              unoptimized
-              className="ml-4 h-7 w-auto max-w-[200px] rounded-lg bg-white px-2 py-1 object-contain"
-            />
-          </header>
-        ) : (
-          <header className="md:hidden h-16 border-b border-white/10 flex items-center px-4 bg-[#0b363d] text-white flex-shrink-0">
-            <Image
-              src="/sitespector_logo_transp.svg"
-              alt="SiteSpector"
-              width={3068}
-              height={759}
-              unoptimized
-              className="h-7 w-auto max-w-[200px] rounded-lg bg-white px-2 py-1 object-contain"
-            />
-          </header>
+        {!isAdminRoute && (
+          <TopBar
+            isImpersonating={isImpersonating}
+            mobileMenu={<MobileMenu auditId={auditId} projectId={projectId} />}
+          />
         )}
 
         {isImpersonating && (
@@ -94,13 +77,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         )}
 
-        {/* Scrollable content */}
-        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto relative @container">
-          {children}
-        </main>
+        <div className="flex min-h-0 flex-1">
+          {!isImpersonating && !isAdminRoute && showAuditSidebar && auditId && (
+            <div className="hidden md:block animate-in slide-in-from-left-2 fade-in duration-200">
+              <AuditSidebar auditId={auditId} />
+            </div>
+          )}
+          {!isImpersonating && !isAdminRoute && showProjectSidebar && projectId && (
+            <div className="hidden md:block animate-in slide-in-from-left-2 fade-in duration-200">
+              <ProjectSidebar projectId={projectId} />
+            </div>
+          )}
+
+          <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto relative @container">
+            {children}
+          </main>
+        </div>
       </div>
 
-      {!isImpersonating && (
+      {!isImpersonating && !isAdminRoute && (
         <>
           <ChatPanel />
           <ChatToggleButton />

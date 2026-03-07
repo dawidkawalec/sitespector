@@ -40,26 +40,26 @@ export function WorkspaceSwitcher() {
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
-            variant="ghost"
+            variant="outline"
             role="combobox"
             aria-expanded={open}
             aria-label="Select workspace"
-            className="w-full justify-between bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:text-white"
+            className="h-9 w-full justify-between gap-2 border-border/70 bg-background/80 text-foreground shadow-sm transition-all duration-200 hover:bg-muted/70 hover:border-border hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/35"
           >
-            <span className="truncate font-semibold">
+            <span className="truncate text-sm font-medium">
               {currentWorkspace ? currentWorkspace.name : 'Select workspace'}
             </span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[250px] p-0 bg-[#0b363d] border-white/10 text-white">
-          <Command className="bg-transparent text-white">
-            <CommandInput placeholder="Szukaj workspace..." className="text-white" />
-            <CommandList className="text-white">
+        <PopoverContent align="end" className="w-[280px] p-0">
+          <Command className="bg-popover text-popover-foreground">
+            <CommandInput placeholder="Szukaj workspace..." />
+            <CommandList>
               <CommandEmpty>Nie znaleziono.</CommandEmpty>
               
               {personalWorkspaces.length > 0 && (
-                <CommandGroup heading="Osobiste" className="text-white/50">
+                <CommandGroup heading="Osobiste">
                   {personalWorkspaces.map((workspace) => (
                     <CommandItem
                       key={workspace.id}
@@ -67,13 +67,13 @@ export function WorkspaceSwitcher() {
                         switchWorkspace(workspace.id)
                         setOpen(false)
                       }}
-                      className="text-white focus:bg-white/10 focus:text-white"
+                      className="gap-2"
                     >
                       <span className="truncate">{workspace.name}</span>
                       <Check
                         className={
                           currentWorkspace?.id === workspace.id
-                            ? "ml-auto h-4 w-4 text-accent"
+                            ? "ml-auto h-4 w-4 text-primary"
                             : "ml-auto h-4 w-4 opacity-0"
                         }
                       />
@@ -84,8 +84,8 @@ export function WorkspaceSwitcher() {
               
               {teamWorkspaces.length > 0 && (
                 <>
-                  <CommandSeparator className="bg-white/10" />
-                  <CommandGroup heading="Zespoły" className="text-white/50">
+                  <CommandSeparator />
+                  <CommandGroup heading="Zespoły">
                     {teamWorkspaces.map((workspace) => (
                       <CommandItem
                         key={workspace.id}
@@ -93,13 +93,13 @@ export function WorkspaceSwitcher() {
                           switchWorkspace(workspace.id)
                           setOpen(false)
                         }}
-                        className="text-white focus:bg-white/10 focus:text-white"
+                        className="gap-2"
                       >
                         <span className="truncate">{workspace.name}</span>
                         <Check
                           className={
                             currentWorkspace?.id === workspace.id
-                              ? "ml-auto h-4 w-4 text-accent"
+                              ? "ml-auto h-4 w-4 text-primary"
                               : "ml-auto h-4 w-4 opacity-0"
                           }
                         />
@@ -109,7 +109,7 @@ export function WorkspaceSwitcher() {
                 </>
               )}
 
-              <CommandSeparator className="bg-white/10" />
+              <CommandSeparator />
               <CommandList>
                 <CommandGroup>
                   <CommandItem
@@ -117,7 +117,7 @@ export function WorkspaceSwitcher() {
                       setOpen(false)
                       setShowCreateTeam(true)
                     }}
-                    className="text-accent focus:bg-white/10 focus:text-accent"
+                    className="text-primary"
                   >
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Stwórz Zespół

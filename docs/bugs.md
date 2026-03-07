@@ -8,6 +8,84 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-059: Nawigacja po redesignie miala nierowne mikrointerakcje i niespojna gestosc
+
+**Reported**: 2026-03-07
+
+**Status**: ✅ FIXED (2026-03-07)
+
+**Severity**: MEDIUM
+
+**Description**:
+- Po przejsciu na TopBar + context sidebars glowne flow dzialalo poprawnie, ale interakcje byly nierowne:
+  - top bar mial zbyt luzna gestosc,
+  - workspace switcher zachowal ciemny styl pochodzacy ze starego sidebara,
+  - aktywne/hover/focus stany nie byly w pelni spojne miedzy desktop i mobile.
+
+**Root cause**:
+- Redesign IA skupil sie najpierw na strukturze nawigacji; mikrointerakcje i finalny polish nie byly jeszcze ujednolicone.
+
+**Fix**:
+- Dopracowano:
+  - top bar density, sticky behavior i stany aktywne,
+  - nav primitives (`NavItem`, `NavSection`) pod katem animacji i focus states,
+  - sidebary projektu/audytu i settings nav pod katem spacingu i feedbacku,
+  - mobile menu pod katem route-aware aktywnych stanow,
+  - workspace switcher do lekkiego stylu top bara.
+
+**Verification**:
+- `next lint --file ...` dla zmienionych plikow nawigacji: ✅ bez warningow i bledow.
+- `ReadLints` dla tych samych plikow: ✅ brak bledow.
+
+**Related**:
+- `frontend/components/layout/TopBar.tsx`
+- `frontend/components/WorkspaceSwitcher.tsx`
+- `frontend/components/layout/NavItem.tsx`
+- `frontend/components/layout/NavSection.tsx`
+- `frontend/components/layout/MobileMenu.tsx`
+
+---
+
+### BUG-058: Monolityczna nawigacja byla przeciazona i nieintuicyjna
+
+**Reported**: 2026-03-07
+
+**Status**: ✅ FIXED (2026-03-07)
+
+**Severity**: HIGH
+
+**Description**:
+- Jedna kolumna nawigacyjna laczyla globalne i lokalne konteksty (workspace, projekty, audyty, ustawienia, konto), co powodowalo przeciazenie.
+- Dla tras audytu menu zawieralo bardzo duza liczbe pozycji i zagniezdzen, przez co znalezienie sekcji bylo wolne i mylace.
+
+**Root cause**:
+- Architektura oparta o `UnifiedSidebar` agregowala wszystkie potrzeby IA w jeden komponent zamiast rozdzielic globalna i kontekstowa nawigacje.
+
+**Fix**:
+- Wprowadzono nowy model:
+  - globalny `TopBar` (dashboard/projekty, breadcrumbs, workspace switcher, user menu),
+  - kontekstowy `ProjectSidebar` dla `/projects/[projectId]/*`,
+  - kontekstowy `AuditSidebar` dla `/audits/[id]/*`,
+  - `MobileMenu` z sekcjami zaleznymi od aktualnej trasy.
+- Ustawienia otrzymaly osobny lokalny sidebar w `settings/layout.tsx`.
+- Usunieto legacy komponenty:
+  - `frontend/components/layout/UnifiedSidebar.tsx`
+  - `frontend/components/layout/MobileSidebar.tsx`
+
+**Verification**:
+- `next lint --file ...` dla zmienionych plikow nawigacji: ✅ bez warningow i bledow.
+- `ReadLints` dla zmienionych plikow: ✅ brak bledow.
+
+**Related**:
+- `frontend/app/(app)/layout.tsx`
+- `frontend/components/layout/TopBar.tsx`
+- `frontend/components/layout/AuditSidebar.tsx`
+- `frontend/components/layout/ProjectSidebar.tsx`
+- `frontend/components/layout/MobileMenu.tsx`
+- `frontend/app/(app)/settings/layout.tsx`
+
+---
+
 ### BUG-057: Niespójne i nieaktualne ceny w UI (landing + app)
 
 **Reported**: 2026-03-06

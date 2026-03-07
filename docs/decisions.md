@@ -1131,3 +1131,63 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 - **Outcome**:
   - Marketing-facing copy no longer exposes concrete pricing figures in the cleaned scope.
   - Billing/backend behavior remains unchanged and ready for reconnect once final commercial policy is approved.
+
+---
+
+## ADR-051: App Navigation Split into TopBar + Context Sidebars (2026-03-07)
+
+- **Decision**:
+  - Replace `UnifiedSidebar`/`MobileSidebar` with a two-level navigation model:
+    - global `TopBar` for primary app destinations and account/workspace controls,
+    - route-context sidebars (`ProjectSidebar`, `AuditSidebar`) rendered only where needed.
+  - Keep `/admin/*` on its own dedicated layout (no new app TopBar wrapper there).
+  - Move settings entry points to user menu and keep settings-local navigation in `settings/layout.tsx`.
+- **Rationale**:
+  - Previous sidebar mixed too many contexts (workspace, projects tree, audit sections, settings, system, account) in one column.
+  - Users spend most time in audit pages; context-switching in one mega menu reduced discoverability and increased cognitive load.
+  - Separating global navigation from page-context navigation improves orientation and scales better with additional audit modules.
+- **Implementation**:
+  - Added:
+    - `frontend/components/layout/TopBar.tsx`
+    - `frontend/components/layout/Breadcrumbs.tsx`
+    - `frontend/components/layout/UserMenu.tsx`
+    - `frontend/components/layout/AuditSidebar.tsx`
+    - `frontend/components/layout/ProjectSidebar.tsx`
+    - `frontend/components/layout/MobileMenu.tsx`
+  - Updated:
+    - `frontend/app/(app)/layout.tsx`
+    - `frontend/app/(app)/settings/layout.tsx`
+  - Removed:
+    - `frontend/components/layout/UnifiedSidebar.tsx`
+    - `frontend/components/layout/MobileSidebar.tsx`
+- **Outcome**:
+  - Navigation is now split by intent:
+    - global movement in top bar,
+    - deep workflow navigation in context sidebars.
+  - Cleaner audit UX with grouped audit sections and dedicated audit switcher.
+  - Better mobile parity via contextual sheet menu.
+
+---
+
+## ADR-052: Navigation Interaction Quality Baseline (2026-03-07)
+
+- **Decision**:
+  - Establish a microinteraction baseline for all navigation components introduced in ADR-051:
+    - consistent hover/active transitions,
+    - keyboard-visible focus rings,
+    - compact top-bar density,
+    - route-aware active feedback on mobile.
+- **Rationale**:
+  - Structural IA improvements alone were not enough; interaction polish strongly affects perceived intuitiveness in a complex SaaS workflow.
+  - Existing controls reused dark-sidebar styling and looked visually inconsistent in the new top-bar context.
+- **Implementation**:
+  - Top bar: sticky `52px`, compact spacing, improved active/hover states.
+  - Workspace switcher: moved to light top-bar visual style, refined popover interactions.
+  - Nav primitives:
+    - `NavItem` got smoother motion, icon scaling, stronger active indicator, optional prefix matching mode.
+    - `NavSection` got improved toggle animations and focus states.
+  - Context sidebars (audit/project) and settings local nav: spacing rhythm + CTA/state consistency.
+  - Mobile sheet: active state highlighting for global routes.
+- **Outcome**:
+  - Navigation feels faster and clearer without changing route architecture.
+  - Better UX consistency across desktop/mobile and across global vs contextual nav layers.

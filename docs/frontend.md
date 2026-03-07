@@ -8,6 +8,57 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ---
 
+## Navigation Redesign (TopBar + Context Sidebars) (2026-03-07)
+
+- Replaced monolithic app navigation (`UnifiedSidebar` + `MobileSidebar`) with a context-driven shell:
+  - global `TopBar` for primary navigation and account/workspace actions,
+  - dedicated `ProjectSidebar` only on `/projects/[projectId]/*`,
+  - dedicated `AuditSidebar` only on `/audits/[id]/*`,
+  - `MobileMenu` with route-context sections in a sheet.
+- New components:
+  - `frontend/components/layout/TopBar.tsx`
+  - `frontend/components/layout/Breadcrumbs.tsx`
+  - `frontend/components/layout/UserMenu.tsx`
+  - `frontend/components/layout/ProjectSidebar.tsx`
+  - `frontend/components/layout/AuditSidebar.tsx`
+  - `frontend/components/layout/MobileMenu.tsx`
+- Removed legacy components:
+  - `frontend/components/layout/UnifiedSidebar.tsx`
+  - `frontend/components/layout/MobileSidebar.tsx`
+- App shell changes:
+  - `frontend/app/(app)/layout.tsx` now composes TopBar + contextual sidebar + content + ChatPanel.
+  - Admin routes (`/admin/*`) keep their own layout and are not wrapped with the new top bar.
+  - Impersonation mode still hides sidebars/chat and keeps an explicit warning banner.
+- Settings navigation:
+  - `frontend/app/(app)/settings/layout.tsx` now has its own local settings sidebar.
+- Verification:
+  - `next lint --file ...` run for changed navigation files — no warnings/errors.
+
+### Navigation UX Polish (Microinteractions + Density) (2026-03-07)
+
+- Refined interaction quality across all new navigation surfaces:
+  - tighter top bar density (`52px`) with sticky behavior and smoother active/hover states,
+  - improved icon/text motion feedback in `NavItem` / `NavSection`,
+  - stronger focus-visible rings for keyboard navigation,
+  - better spacing rhythm in project/audit sidebars and settings local nav.
+- Workspace switcher was adapted from dark-sidebar styling to top-bar styling:
+  - lighter control, improved popover readability, smoother hover/focus.
+- Mobile sheet got route-aware active states for global links (`Dashboard`, `Projekty`) to keep parity with desktop feedback.
+- Updated files:
+  - `frontend/components/WorkspaceSwitcher.tsx`
+  - `frontend/components/layout/TopBar.tsx`
+  - `frontend/components/layout/Breadcrumbs.tsx`
+  - `frontend/components/layout/UserMenu.tsx`
+  - `frontend/components/layout/NavItem.tsx`
+  - `frontend/components/layout/NavSection.tsx`
+  - `frontend/components/layout/AuditSidebar.tsx`
+  - `frontend/components/layout/ProjectSidebar.tsx`
+  - `frontend/components/layout/MobileMenu.tsx`
+  - `frontend/app/(app)/layout.tsx`
+  - `frontend/app/(app)/settings/layout.tsx`
+
+---
+
 ## Branding Rollout (SVG) (2026-03-06)
 
 - Replaced legacy `RiSearchEyeFill + SiteSpector` brand rendering with unified full logotype SVG in app/public UI:
