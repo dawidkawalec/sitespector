@@ -8,6 +8,40 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-065: Hardcoded warm hover shade i brak ikonki powrotu przy logo
+
+**Reported**: 2026-03-07
+
+**Status**: ✅ FIXED (2026-03-07)
+
+**Severity**: LOW
+
+**Description**:
+- Navigation hover/open states opierały się na ręcznie dobranym odcieniu, co utrudniało utrzymanie spójności systemowej.
+- W topbarze zniknęła ikonka szybkiego powrotu na stronę główną marketingową obok logo.
+
+**Root cause**:
+- Kolor był ustawiony utility-level zamiast przez semantyczne tokeny.
+- W trakcie iteracji topbara usunięto dodatkową akcję powrotu przy logo.
+
+**Fix**:
+- `frontend/components/layout/NavItem.tsx`
+- `frontend/components/layout/NavSection.tsx`
+  - przejście z hardcoded warm shade na token-based `bg-muted/*` w light mode.
+- `frontend/components/layout/TopBar.tsx`
+  - dodana ikonka `ArrowUpLeft` obok logo prowadząca do `/` z tooltipem `Strona glowna`.
+
+**Verification**:
+- `next lint -- --file "components/layout/NavItem.tsx" --file "components/layout/NavSection.tsx" --file "components/layout/TopBar.tsx" --file "components/layout/Breadcrumbs.tsx" --file "components/layout/UserMenu.tsx"`: ✅.
+- `ReadLints` dla tych plikow: ✅ brak bledow.
+
+**Related**:
+- `frontend/components/layout/NavItem.tsx`
+- `frontend/components/layout/NavSection.tsx`
+- `frontend/components/layout/TopBar.tsx`
+
+---
+
 ### BUG-064: Niespójna czytelność breadcrumbs i brak nazwy użytkownika w triggerze
 
 **Reported**: 2026-03-07

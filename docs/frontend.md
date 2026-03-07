@@ -118,6 +118,16 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
   - displays `full_name` fallbacking to `email` when profile name is missing.
 - Existing popover profile block remains unchanged; this pass only improves trigger readability/context.
 
+### Navigation Polish Follow-up (Tokenized warm hover + home-return icon) (2026-03-07)
+
+- Replaced hardcoded warm hover shade usage in nav primitives with semantic theme tokens:
+  - `frontend/components/layout/NavItem.tsx`
+  - `frontend/components/layout/NavSection.tsx`
+  - hover/open states now use `bg-muted/*` in light mode for maintainable, system-based theming.
+- Restored top-bar "return to marketing home" affordance near the logo:
+  - `frontend/components/layout/TopBar.tsx`
+  - added icon button linking to `/` with tooltip (`Strona glowna`) and keyboard focus styling.
+
 ---
 
 ## Branding Rollout (SVG) (2026-03-06)

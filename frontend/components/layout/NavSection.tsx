@@ -65,8 +65,8 @@ export function NavSection({
         disabled={disabled}
         className={cn(
           'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
-          'text-stone-600 hover:bg-amber-100/45 hover:text-stone-900 hover:translate-x-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white',
-          isOpen && !disabled && 'bg-amber-100/45 text-stone-900 shadow-sm dark:bg-white/10 dark:text-white',
+          'text-stone-600 hover:bg-muted/80 hover:text-stone-900 hover:translate-x-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white',
+          isOpen && !disabled && 'bg-muted/80 text-stone-900 shadow-sm dark:bg-white/10 dark:text-white',
           disabled &&
             'cursor-not-allowed text-stone-300 hover:bg-transparent hover:text-stone-300 dark:text-white/40 dark:hover:text-white/40'
         )}

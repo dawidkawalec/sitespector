@@ -45,7 +45,7 @@ export function NavItem({
         'group relative flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ease-out',
         isActive
           ? activeClass
-          : 'text-stone-600 hover:bg-amber-100/45 hover:text-stone-900 hover:translate-x-[1px] dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white',
+          : 'text-stone-600 hover:bg-muted/80 hover:text-stone-900 hover:translate-x-[1px] dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white',
         disabled &&
           'cursor-not-allowed text-stone-300 hover:bg-transparent hover:text-stone-300 hover:translate-x-0 dark:text-white/30 dark:hover:text-white/30'
       )}

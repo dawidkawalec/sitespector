@@ -47,6 +47,19 @@
   - Better immediate context recognition in top bar,
   - clearer identity signal with no extra click.
 
+## ADR-058: Navigation Tokens over Hardcoded Warm Shades (2026-03-07)
+
+- **Decision**: Replace ad-hoc warm utility shades in navigation hover/open states with semantic design tokens.
+- **Rationale**:
+  - Hardcoded shade tuning (e.g. utility-level amber overrides) is brittle and harder to maintain across theme evolution.
+  - Navigation should consume the same token system as the rest of the app (`muted`, `foreground`, `accent`).
+- **Implementation**:
+  - `frontend/components/layout/NavItem.tsx`: light-mode hover state moved to `bg-muted/*`.
+  - `frontend/components/layout/NavSection.tsx`: trigger hover/open state moved to `bg-muted/*`.
+  - `frontend/components/layout/TopBar.tsx`: restored explicit home-return icon near logo (route `/`) with tooltip for navigation affordance parity.
+- **Outcome**:
+  - Warm appearance preserved while styling remains token-driven and easier to iterate safely.
+
 ## Branding Contrast Policy on Dark Surfaces (2026-03-06)
 
 - **Decision**: Keep the full SVG logotype as the canonical mark, but render it on a light rounded container when placed on dark UI backgrounds.
