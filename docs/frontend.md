@@ -79,6 +79,24 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 - Removed remaining green-toned surface from audit switcher dropdown:
   - `frontend/components/layout/AuditSidebar.tsx` select content now uses neutral dark surface.
 
+### Sidebar Parity + Theme Split (Light/Dark) (2026-03-07)
+
+- Unified visual structure of all contextual sidebars so they look and behave identically:
+  - `ProjectSidebar`
+  - `AuditSidebar`
+  - `settings/layout` local sidebar
+- Settings sidebar now uses the same left-attached shell model as project/audit:
+  - no floating card layout,
+  - fixed 292px rail on desktop,
+  - shared nav item/section styling primitives.
+- Added explicit light/dark variants for sidebar surfaces:
+  - light mode: light gradient + slate text + soft borders,
+  - dark mode: existing dark gradient preserved.
+- Updated nav primitives to be theme-aware:
+  - `frontend/components/layout/NavItem.tsx`
+  - `frontend/components/layout/NavSection.tsx`
+- Updated select styling in audit sidebar to support both themes without contrast regressions.
+
 ---
 
 ## Branding Rollout (SVG) (2026-03-06)

@@ -29,13 +29,13 @@ export function ProjectSidebar({ projectId, onNavigate, className }: ProjectSide
     <>
       <aside
         className={cn(
-          'flex h-full w-[292px] flex-col border-r border-white/10 bg-gradient-to-b from-slate-900 via-slate-950 to-black text-white',
+          'flex h-full w-[292px] flex-col border-r border-slate-200/80 bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900 dark:border-white/10 dark:from-slate-900 dark:via-slate-950 dark:to-black dark:text-white',
           className
         )}
       >
-        <div className="border-b border-white/10 px-3 py-3.5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">Projekt</p>
-          <p className="mt-1 truncate text-sm font-medium text-white">{project?.name ?? 'Projekt'}</p>
+        <div className="border-b border-slate-200/80 px-3 py-3.5 dark:border-white/10">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-white/45">Projekt</p>
+          <p className="mt-1 truncate text-sm font-medium text-slate-900 dark:text-white">{project?.name ?? 'Projekt'}</p>
         </div>
 
         <nav className="flex-1 space-y-1.5 overflow-y-auto px-3 py-3.5">
@@ -56,7 +56,7 @@ export function ProjectSidebar({ projectId, onNavigate, className }: ProjectSide
           <NavItem href={`/projects/${projectId}/team`} icon={Users} label="Zespol" onClick={onNavigate} />
         </nav>
 
-        <div className="border-t border-white/10 px-3 py-3.5 bg-black/10">
+        <div className="border-t border-slate-200/80 bg-slate-100/60 px-3 py-3.5 dark:border-white/10 dark:bg-black/10">
           <Button
             type="button"
             onClick={() => setNewAuditOpen(true)}

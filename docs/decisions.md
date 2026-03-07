@@ -1,5 +1,21 @@
 # Architectural Decisions Log
 
+## ADR-055: Context Sidebar Parity + Theme Split (2026-03-07)
+
+- **Decision**: Enforce one shared visual contract for all contextual left rails (audit, project, settings) and split their surfaces into explicit light/dark theme variants.
+- **Rationale**:
+  - Settings nav looked like a floating rounded card, while audit/project navs were edge-attached rails.
+  - Users perceived this as inconsistent IA even though routes were already context-driven.
+  - Existing dark styling was preferred, but should apply only in dark mode.
+- **Implementation**:
+  - `frontend/app/(app)/settings/layout.tsx` switched to the same 292px edge-attached rail model as audit/project pages.
+  - `frontend/components/layout/AuditSidebar.tsx` and `frontend/components/layout/ProjectSidebar.tsx` gained light-mode rail styling while preserving current dark gradient for dark mode.
+  - `frontend/components/layout/NavItem.tsx` and `frontend/components/layout/NavSection.tsx` were made theme-aware (inactive/hover/disabled/icon/border states).
+  - Audit rail select surface was aligned to the same light/dark system.
+- **Outcome**:
+  - Navigation feels like one coherent system across settings, projects, and audits.
+  - Theme behavior is now deterministic: light in light mode, dark in dark mode, with preserved interaction quality.
+
 ## Branding Contrast Policy on Dark Surfaces (2026-03-06)
 
 - **Decision**: Keep the full SVG logotype as the canonical mark, but render it on a light rounded container when placed on dark UI backgrounds.

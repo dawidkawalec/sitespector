@@ -8,6 +8,46 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-062: Sidebar ustawien nie byl spojny z sidebarami audytu/projektu
+
+**Reported**: 2026-03-07
+
+**Status**: ✅ FIXED (2026-03-07)
+
+**Severity**: MEDIUM
+
+**Description**:
+- Settings navigation renderowala sie jako zaokraglona karta z odstepem od lewej krawedzi.
+- Audit/Project navigation byly przyklejone do lewej jako pelne rails.
+- W efekcie dwa glówne konteksty nawigacji wygladaly jak dwa rózne systemy.
+
+**Root cause**:
+- Settings layout uzyl lokalnego "card-style" kontenera zamiast wspólnego shella sidebara.
+- Sidebary kontekstowe mialy twardo zakodowany ciemny wyglad bez parytetu light mode.
+
+**Fix**:
+- `frontend/app/(app)/settings/layout.tsx`:
+  - przebudowa na ten sam model raila 292px, przyklejony do lewej.
+- `frontend/components/layout/AuditSidebar.tsx`
+- `frontend/components/layout/ProjectSidebar.tsx`
+- `frontend/components/layout/NavItem.tsx`
+- `frontend/components/layout/NavSection.tsx`
+  - ujednolicenie styli i mikrointerakcji,
+  - dodanie jawnego splitu light/dark (jasny rail dla light mode, obecny ciemny rail dla dark mode).
+
+**Verification**:
+- `next lint -- --file "app/(app)/settings/layout.tsx" --file "components/layout/AuditSidebar.tsx" --file "components/layout/ProjectSidebar.tsx" --file "components/layout/NavItem.tsx" --file "components/layout/NavSection.tsx"`: ✅.
+- `ReadLints` dla tych plikow: ✅ brak bledow.
+
+**Related**:
+- `frontend/app/(app)/settings/layout.tsx`
+- `frontend/components/layout/AuditSidebar.tsx`
+- `frontend/components/layout/ProjectSidebar.tsx`
+- `frontend/components/layout/NavItem.tsx`
+- `frontend/components/layout/NavSection.tsx`
+
+---
+
 ### BUG-061: Workspace dropdown miał błędny kontrast hover/selected
 
 **Reported**: 2026-03-07

@@ -146,12 +146,12 @@ export function AuditSidebar({ auditId, onNavigate, className }: AuditSidebarPro
   return (
     <aside
       className={cn(
-        'flex h-full w-[292px] flex-col border-r border-white/10 bg-gradient-to-b from-slate-900 via-slate-950 to-black text-white',
+        'flex h-full w-[292px] flex-col border-r border-slate-200/80 bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900 dark:border-white/10 dark:from-slate-900 dark:via-slate-950 dark:to-black dark:text-white',
         className
       )}
     >
-      <div className="border-b border-white/10 px-3 py-3.5">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">Aktualny audyt</p>
+      <div className="border-b border-slate-200/80 px-3 py-3.5 dark:border-white/10">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-white/45">Aktualny audyt</p>
         <div className="mt-2.5">
           <NavItem href={`/audits/${auditId}`} icon={FileText} label="Podsumowanie" onClick={onNavigate} />
         </div>
@@ -172,17 +172,17 @@ export function AuditSidebar({ auditId, onNavigate, className }: AuditSidebarPro
         ))}
       </nav>
 
-      <div className="border-t border-white/10 px-3 py-3.5 space-y-2.5 bg-black/10">
+      <div className="space-y-2.5 border-t border-slate-200/80 bg-slate-100/60 px-3 py-3.5 dark:border-white/10 dark:bg-black/10">
         {project && (
-          <p className="text-xs text-white/60 truncate">
-            Projekt: <span className="text-white">{project.name}</span>
+          <p className="truncate text-xs text-slate-600 dark:text-white/60">
+            Projekt: <span className="text-slate-900 dark:text-white">{project.name}</span>
           </p>
         )}
         <Select value={auditId} onValueChange={handleAuditChange}>
-          <SelectTrigger className="h-9 border-white/15 bg-white/5 text-xs text-white transition-colors hover:bg-white/10 focus:ring-accent/40">
+          <SelectTrigger className="h-9 border-slate-200 bg-white text-xs text-slate-800 transition-colors hover:bg-slate-50 focus:ring-accent/40 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
             <SelectValue placeholder="Wybierz audyt..." />
           </SelectTrigger>
-          <SelectContent className="border-white/10 bg-slate-900 text-white">
+          <SelectContent className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white">
             {availableAudits.length === 0 ? (
               <SelectItem value="empty" disabled>
                 Brak audytow
@@ -192,7 +192,7 @@ export function AuditSidebar({ auditId, onNavigate, className }: AuditSidebarPro
                 <SelectItem
                   key={audit.id}
                   value={audit.id}
-                  className="focus:bg-white/10 focus:text-white data-[state=checked]:text-accent"
+                  className="focus:bg-slate-100 focus:text-slate-900 data-[state=checked]:text-accent dark:focus:bg-white/10 dark:focus:text-white"
                 >
                   {new Date(audit.created_at).toLocaleDateString('pl-PL')}
                 </SelectItem>

@@ -45,18 +45,23 @@ export function NavItem({
         'group relative flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ease-out',
         isActive
           ? activeClass
-          : 'text-white/70 hover:bg-white/10 hover:text-white hover:translate-x-[1px]',
-        disabled && 'text-white/30 cursor-not-allowed hover:bg-transparent hover:text-white/30 hover:translate-x-0'
+          : 'text-slate-600 hover:bg-slate-900/5 hover:text-slate-900 hover:translate-x-[1px] dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white',
+        disabled &&
+          'cursor-not-allowed text-slate-300 hover:bg-transparent hover:text-slate-300 hover:translate-x-0 dark:text-white/30 dark:hover:text-white/30'
       )}
     >
       {isActive && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-accent rounded-r-full shadow-[0_0_0_1px_rgba(255,255,255,0.08)]" />
+        <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-accent shadow-[0_0_0_1px_rgba(15,23,42,0.12)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]" />
       )}
-      <Icon className={cn(
-        "h-4 w-4 flex-shrink-0 transition-all duration-200",
-        isActive ? "text-accent scale-[1.03]" : "text-white/40 group-hover:text-white group-hover:scale-[1.03]",
-        disabled && "text-white/20 group-hover:text-white/20 group-hover:scale-100"
-      )} />
+      <Icon
+        className={cn(
+          'h-4 w-4 flex-shrink-0 transition-all duration-200',
+          isActive
+            ? 'scale-[1.03] text-accent'
+            : 'text-slate-400 group-hover:scale-[1.03] group-hover:text-slate-700 dark:text-white/40 dark:group-hover:text-white',
+          disabled && 'text-slate-300 group-hover:scale-100 group-hover:text-slate-300 dark:text-white/20 dark:group-hover:text-white/20'
+        )}
+      />
       <span className="flex-1 truncate">{label}</span>
       {badge && (
         <span className="text-[10px] font-bold bg-accent/20 text-accent px-1.5 py-0.5 rounded-full uppercase tracking-wider">
