@@ -53,6 +53,11 @@ export function UserMenu({ className }: { className?: string }) {
   }, [])
 
   const initials = useMemo(() => getInitials(profile.fullName, profile.email), [profile.fullName, profile.email])
+  const displayName = useMemo(() => {
+    if (profile.fullName?.trim()) return profile.fullName
+    if (profile.email) return profile.email
+    return 'Uzytkownik'
+  }, [profile.fullName, profile.email])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -80,8 +85,16 @@ export function UserMenu({ className }: { className?: string }) {
           )}
           aria-label="Menu uzytkownika"
         >
-          <span className={cn('flex h-7 w-7 items-center justify-center rounded-full bg-accent/15 text-xs font-semibold text-accent shadow-sm ring-1 ring-accent/20 transition-transform duration-200', open && 'scale-[1.03]')}>
+          <span
+            className={cn(
+              'flex h-7 w-7 items-center justify-center rounded-full bg-accent/15 text-xs font-semibold text-accent shadow-sm ring-1 ring-accent/20 transition-transform duration-200',
+              open && 'scale-[1.03]'
+            )}
+          >
             {initials}
+          </span>
+          <span className="hidden max-w-[180px] truncate text-sm font-medium text-foreground lg:block">
+            {displayName}
           </span>
           <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform duration-200', open && 'rotate-180')} />
         </Button>

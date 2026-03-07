@@ -156,7 +156,7 @@ export function Breadcrumbs({ className }: { className?: string }) {
     <nav
       aria-label="Breadcrumbs"
       className={cn(
-        'flex items-center gap-1.5 overflow-x-auto whitespace-nowrap [mask-image:linear-gradient(to_right,transparent,black_12px,black_calc(100%-12px),transparent)] px-2 py-1',
+        'flex items-center gap-1.5 overflow-x-auto whitespace-nowrap [mask-image:linear-gradient(to_right,transparent,black_12px,black_calc(100%-12px),transparent)] px-2 py-1 text-sm',
         className
       )}
     >
@@ -168,14 +168,14 @@ export function Breadcrumbs({ className }: { className?: string }) {
             {crumb.href && !isLast ? (
               <Link
                 href={crumb.href}
-                className="truncate rounded px-1.5 py-0.5 text-xs font-medium text-muted-foreground transition-all duration-150 hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
+                className="truncate rounded px-1.5 py-0.5 font-medium text-muted-foreground transition-all duration-150 hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
               >
                 {crumb.label}
               </Link>
             ) : (
               <span
                 className={cn(
-                  'truncate rounded px-1.5 py-0.5 text-xs',
+                  'truncate rounded px-1.5 py-0.5',
                   isLast ? 'font-semibold text-foreground bg-muted/55' : 'font-medium text-muted-foreground'
                 )}
               >

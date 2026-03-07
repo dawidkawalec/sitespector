@@ -65,10 +65,10 @@ export function NavSection({
         disabled={disabled}
         className={cn(
           'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
-          'text-slate-600 hover:bg-slate-900/5 hover:text-slate-900 hover:translate-x-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white',
-          isOpen && !disabled && 'bg-slate-900/5 text-slate-900 shadow-sm dark:bg-white/10 dark:text-white',
+          'text-stone-600 hover:bg-amber-100/45 hover:text-stone-900 hover:translate-x-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white',
+          isOpen && !disabled && 'bg-amber-100/45 text-stone-900 shadow-sm dark:bg-white/10 dark:text-white',
           disabled &&
-            'cursor-not-allowed text-slate-300 hover:bg-transparent hover:text-slate-300 dark:text-white/40 dark:hover:text-white/40'
+            'cursor-not-allowed text-stone-300 hover:bg-transparent hover:text-stone-300 dark:text-white/40 dark:hover:text-white/40'
         )}
       >
         <Icon className={cn('h-4 w-4 flex-shrink-0 transition-transform duration-200', isOpen && 'scale-[1.03]')} />
@@ -82,7 +82,7 @@ export function NavSection({
       </button>
 
       {isOpen && (
-        <div className="mt-1 ml-4 space-y-0.5 border-l-2 border-slate-200 pl-2.5 animate-in slide-in-from-top-2 fade-in duration-200 dark:border-white/10">
+        <div className="mt-1 ml-4 space-y-0.5 border-l-2 border-stone-200 pl-2.5 animate-in slide-in-from-top-2 fade-in duration-200 dark:border-white/10">
           {items.map((item, index) => (
             <NavItem
               key={item.id || `${value}-${index}`}

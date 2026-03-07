@@ -16,6 +16,37 @@
   - Navigation feels like one coherent system across settings, projects, and audits.
   - Theme behavior is now deterministic: light in light mode, dark in dark mode, with preserved interaction quality.
 
+## ADR-056: Warm-Light Navigation Palette Alignment (2026-03-07)
+
+- **Decision**: Shift light-mode contextual navigation from cool slate tones to a warm neutral palette consistent with the global app background.
+- **Rationale**:
+  - Product background uses warm off-white (`#fff9f5`), while sidebar rails used colder slate shades.
+  - This created a visual temperature mismatch despite structural parity.
+- **Implementation**:
+  - Updated light-mode rail gradients, borders, hover states, and select surfaces in:
+    - `frontend/components/layout/AuditSidebar.tsx`
+    - `frontend/components/layout/ProjectSidebar.tsx`
+    - `frontend/app/(app)/settings/layout.tsx`
+    - `frontend/components/layout/NavItem.tsx`
+    - `frontend/components/layout/NavSection.tsx`
+    - `frontend/components/layout/MobileMenu.tsx`
+  - Kept dark-mode rail styling unchanged.
+- **Outcome**:
+  - Navigation now blends with the warm base canvas in light mode while preserving the approved dark-mode identity.
+
+## ADR-057: TopBar Context Clarity (2026-03-07)
+
+- **Decision**: Increase breadcrumb text prominence and surface user full-name directly in the top bar trigger on desktop.
+- **Rationale**:
+  - Breadcrumb labels in project paths appeared optically smaller and less readable during navigation.
+  - Header had enough horizontal space to show user identity without opening the menu, improving orientation in multi-account/workspace usage.
+- **Implementation**:
+  - `frontend/components/layout/Breadcrumbs.tsx`: unified breadcrumb typography to one consistent text-size baseline.
+  - `frontend/components/layout/UserMenu.tsx`: added desktop-only `displayName` label next to avatar (`full_name` -> fallback `email` -> fallback `Uzytkownik`).
+- **Outcome**:
+  - Better immediate context recognition in top bar,
+  - clearer identity signal with no extra click.
+
 ## Branding Contrast Policy on Dark Surfaces (2026-03-06)
 
 - **Decision**: Keep the full SVG logotype as the canonical mark, but render it on a light rounded container when placed on dark UI backgrounds.

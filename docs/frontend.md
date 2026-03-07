@@ -97,6 +97,27 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
   - `frontend/components/layout/NavSection.tsx`
 - Updated select styling in audit sidebar to support both themes without contrast regressions.
 
+### Warm Light Navigation Palette (2026-03-07)
+
+- Aligned light-mode sidebar/navigation surfaces with app-wide warm background (`--background: #fff9f5`) to remove cold-looking rail contrast.
+- Updated light palette tokens in contextual nav components:
+  - `frontend/components/layout/AuditSidebar.tsx`
+  - `frontend/components/layout/ProjectSidebar.tsx`
+  - `frontend/app/(app)/settings/layout.tsx`
+  - `frontend/components/layout/NavItem.tsx`
+  - `frontend/components/layout/NavSection.tsx`
+  - `frontend/components/layout/MobileMenu.tsx`
+- Dark mode kept unchanged (existing dark gradient remains the default dark rail visual).
+
+### TopBar Readability Pass (Breadcrumb size + user identity) (2026-03-07)
+
+- Unified breadcrumb typography so route labels keep consistent visual weight/size across project and audit contexts:
+  - `frontend/components/layout/Breadcrumbs.tsx` now uses one shared text size baseline.
+- Added explicit user identity label next to avatar trigger in top bar (desktop) to better use available header space:
+  - `frontend/components/layout/UserMenu.tsx`
+  - displays `full_name` fallbacking to `email` when profile name is missing.
+- Existing popover profile block remains unchanged; this pass only improves trigger readability/context.
+
 ---
 
 ## Branding Rollout (SVG) (2026-03-06)

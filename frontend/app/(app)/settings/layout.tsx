@@ -21,9 +21,9 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
   return (
     <div className="flex min-h-full flex-col md:flex-row">
-      <aside className="hidden w-[292px] shrink-0 flex-col border-r border-slate-200/80 bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900 md:flex dark:border-white/10 dark:from-slate-900 dark:via-slate-950 dark:to-black dark:text-white">
-        <div className="border-b border-slate-200/80 px-3 py-3.5 dark:border-white/10">
-          <p className="px-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-white/45">
+      <aside className="hidden w-[292px] shrink-0 flex-col border-r border-stone-200/85 bg-gradient-to-b from-[#fff9f3] via-[#fffaf5] to-[#f8f1e8] text-stone-900 md:flex dark:border-white/10 dark:from-slate-900 dark:via-slate-950 dark:to-black dark:text-white">
+        <div className="border-b border-stone-200/85 px-3 py-3.5 dark:border-white/10">
+          <p className="px-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-white/45">
             Ustawienia
           </p>
         </div>
@@ -56,7 +56,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                   'inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors',
                   active
                     ? 'border-accent/40 bg-accent/10 text-accent'
-                    : 'border-border bg-background text-foreground/80 hover:bg-muted/60 hover:text-foreground'
+                    : 'border-stone-200 bg-amber-50/40 text-stone-700 hover:bg-amber-100/60 hover:text-stone-900 dark:border-border dark:bg-background dark:text-foreground/80 dark:hover:bg-muted/60 dark:hover:text-foreground'
                 )}
               >
                 <item.icon className="h-4 w-4" />

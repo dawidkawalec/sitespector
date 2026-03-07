@@ -8,6 +8,78 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-064: Niespójna czytelność breadcrumbs i brak nazwy użytkownika w triggerze
+
+**Reported**: 2026-03-07
+
+**Status**: ✅ FIXED (2026-03-07)
+
+**Severity**: LOW
+
+**Description**:
+- W breadcrumbs etykiety (szczególnie w kontekście projektów) były optycznie za małe i niespójne.
+- W prawym górnym triggerze menu użytkownika był sam avatar, mimo dostępnego miejsca na nazwę.
+
+**Root cause**:
+- Breadcrumb links/spans miały zbyt małą i bardzo subtelną typografię.
+- Trigger `UserMenu` nie wykorzystywał `full_name` poza zawartością popovera.
+
+**Fix**:
+- `frontend/components/layout/Breadcrumbs.tsx`:
+  - ujednolicony `font-size` dla wszystkich crumbów.
+- `frontend/components/layout/UserMenu.tsx`:
+  - dodany desktopowy label z nazwą użytkownika obok avatara,
+  - fallback: `full_name` -> `email` -> `Uzytkownik`.
+
+**Verification**:
+- `next lint -- --file "components/layout/Breadcrumbs.tsx" --file "components/layout/UserMenu.tsx"`: ✅.
+- `ReadLints` dla tych plikow: ✅ brak bledow.
+
+**Related**:
+- `frontend/components/layout/Breadcrumbs.tsx`
+- `frontend/components/layout/UserMenu.tsx`
+
+---
+
+### BUG-063: Light mode sidebary miały zbyt chłodną tonację względem tła aplikacji
+
+**Reported**: 2026-03-07
+
+**Status**: ✅ FIXED (2026-03-07)
+
+**Severity**: LOW
+
+**Description**:
+- Nawigacja w light mode miała wyraźnie chłodne odcienie (slate), które nie pasowały do ciepłego złamanego białego tła aplikacji.
+- Efekt był szczególnie widoczny przy porównaniu sekcji ustawień i audytów.
+
+**Root cause**:
+- Po unifikacji struktury sidebara pozostała jeszcze stara, chłodna paleta dla light mode.
+
+**Fix**:
+- Przestawiono light-mode palette na ciepłe neutralne odcienie (warm off-white / stone / amber accents) w:
+  - `frontend/components/layout/AuditSidebar.tsx`
+  - `frontend/components/layout/ProjectSidebar.tsx`
+  - `frontend/app/(app)/settings/layout.tsx`
+  - `frontend/components/layout/NavItem.tsx`
+  - `frontend/components/layout/NavSection.tsx`
+  - `frontend/components/layout/MobileMenu.tsx`
+- Dark mode pozostawiono bez zmian.
+
+**Verification**:
+- `next lint -- --file "app/(app)/settings/layout.tsx" --file "components/layout/AuditSidebar.tsx" --file "components/layout/ProjectSidebar.tsx" --file "components/layout/NavItem.tsx" --file "components/layout/NavSection.tsx" --file "components/layout/MobileMenu.tsx"`: ✅.
+- `ReadLints` dla tych plikow: ✅ brak bledow.
+
+**Related**:
+- `frontend/app/(app)/settings/layout.tsx`
+- `frontend/components/layout/AuditSidebar.tsx`
+- `frontend/components/layout/ProjectSidebar.tsx`
+- `frontend/components/layout/NavItem.tsx`
+- `frontend/components/layout/NavSection.tsx`
+- `frontend/components/layout/MobileMenu.tsx`
+
+---
+
 ### BUG-062: Sidebar ustawien nie byl spojny z sidebarami audytu/projektu
 
 **Reported**: 2026-03-07

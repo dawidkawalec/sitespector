@@ -29,9 +29,9 @@ export function MobileMenu({ auditId, projectId }: MobileMenuProps) {
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-[92vw] max-w-[360px] p-0 border-white/10 bg-slate-950">
+      <SheetContent side="left" className="w-[92vw] max-w-[360px] border-stone-200/80 bg-gradient-to-b from-[#fff9f3] via-[#fffaf5] to-[#f8f1e8] p-0 dark:border-white/10 dark:bg-slate-950">
         <div className="flex h-full flex-col">
-          <div className="border-b border-white/10 px-4 py-3">
+          <div className="border-b border-stone-200/85 px-4 py-3 dark:border-white/10">
             <SiteSpectorLogo
               href="/dashboard"
               onClick={() => setOpen(false)}
@@ -40,14 +40,14 @@ export function MobileMenu({ auditId, projectId }: MobileMenuProps) {
             />
           </div>
 
-          <div className="border-b border-white/10 p-3 space-y-1">
+          <div className="space-y-1 border-b border-stone-200/85 p-3 dark:border-white/10">
             <Link href="/dashboard" onClick={() => setOpen(false)}>
               <span
                 className={cn(
                   'flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-all duration-150',
                   pathname === '/dashboard'
-                    ? 'bg-accent/20 text-white shadow-sm'
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                    ? 'bg-accent/12 text-accent shadow-sm dark:bg-accent/20 dark:text-white'
+                    : 'text-stone-700 hover:bg-amber-100/60 hover:text-stone-900 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white'
                 )}
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -59,8 +59,8 @@ export function MobileMenu({ auditId, projectId }: MobileMenuProps) {
                 className={cn(
                   'flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-all duration-150',
                   pathname.startsWith('/projects') || pathname.startsWith('/audits')
-                    ? 'bg-accent/20 text-white shadow-sm'
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                    ? 'bg-accent/12 text-accent shadow-sm dark:bg-accent/20 dark:text-white'
+                    : 'text-stone-700 hover:bg-amber-100/60 hover:text-stone-900 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white'
                 )}
               >
                 <FolderKanban className="h-4 w-4" />
@@ -83,7 +83,7 @@ export function MobileMenu({ auditId, projectId }: MobileMenuProps) {
                 className="h-full w-full border-r-0"
               />
             ) : (
-              <div className="p-4 text-sm text-white/60">
+              <div className="p-4 text-sm text-stone-600 dark:text-white/60">
                 Wybierz projekt lub audyt, aby zobaczyc menu kontekstowe.
               </div>
             )}
