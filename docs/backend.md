@@ -12,6 +12,42 @@ The **Worker** is a background Python process that polls for pending audits and 
 
 ---
 
+## Gap Analysis — Faza 2 Data Enrichment (2026-03-08)
+
+### Screaming Frog: transform + eksport tabow
+
+- `backend/app/services/screaming_frog.py`
+  - rozszerzono per-page transform o:
+    - `crawl_depth`, `text_ratio`, `link_score`,
+    - `title_pixel_width`, `meta_desc_pixel_width`,
+    - `title_2`, `h1_2`, `meta_desc_2`,
+    - `has_multiple_titles`, `has_multiple_h1`, `has_multiple_meta_desc`,
+    - `title_occurrences`, `meta_desc_occurrences`, `h1_occurrences`.
+  - dodano agregaty crawl-level:
+    - `avg_crawl_depth`, `max_crawl_depth`, `pages_deep`,
+    - `pages_with_multiple_titles`, `pages_with_multiple_h1`, `pages_with_multiple_meta_desc`,
+    - `pages_with_duplicate_titles`, `pages_with_duplicate_meta`, `pages_with_duplicate_h1`.
+  - dodano transformacje dla nowych tabow:
+    - `external_all` -> `external_links` (`total`, `broken`, `by_domain`),
+    - `links_all` -> `link_graph` (internal source->target, anchor, follow, type),
+    - rozszerzono `links` o `broken_outbound` i `graph_edges`.
+  - dodano normalizacje nazw tabow, aby mapowanie CSV dzialalo stabilnie mimo roznych formatow nazw.
+
+- `docker/screaming-frog/crawl.sh`
+  - `--export-tabs` rozszerzone o `External:All` i `Links:All`.
+
+### Lighthouse: named fields do trendow
+
+- `backend/app/services/lighthouse.py`
+  - dodano metryki:
+    - `interactive`,
+    - `total_byte_weight`,
+    - `dom_size`,
+    - `bootup_time`.
+  - rozszerzono `categories_detail.*` o `audit_refs`, co wspiera frontendowe grupowanie audytow per kategoria.
+
+---
+
 ## PDF Branding Rollout (SVG) (2026-03-06)
 
 - Unified PDF brand source to a single full logotype asset: `backend/templates/pdf/assets/sitespector_logo_transp.svg`.

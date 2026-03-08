@@ -566,6 +566,35 @@ function SectionsTab({ vis }: { vis: any }) {
 
 function CannibalizationTab({ vis }: { vis: any }) {
   const data = vis?.cannibalization?.keywords || []
+  const pairGroups = Array.from(
+    data.reduce((acc: Map<string, any>, row: any) => {
+      const currentUrl = row?.statistics?.url?.current || '—'
+      const previousUrl = row?.statistics?.url?.previous || '—'
+      const pairKey = [currentUrl, previousUrl].sort().join(' || ')
+      const searches = Number(row?.statistics?.searches?.current || 0)
+
+      if (!acc.has(pairKey)) {
+        acc.set(pairKey, {
+          pairKey,
+          currentUrl,
+          previousUrl,
+          keywords: [],
+          keywordCount: 0,
+          totalSearches: 0,
+        })
+      }
+      const group = acc.get(pairKey)
+      group.keywords.push(row)
+      group.keywordCount += 1
+      group.totalSearches += searches
+      return acc
+    }, new Map<string, any>())
+    .values()
+  ).sort((a: any, b: any) => b.totalSearches - a.totalSearches)
+
+  const totalCannibalizedKeywords = data.length
+  const totalUrlPairs = pairGroups.length
+
   const columns = [
     { key: 'keyword', label: 'Słowo kluczowe', className: 'font-medium max-w-[280px]', maxWidth: '280px' },
     {
@@ -623,7 +652,67 @@ function CannibalizationTab({ vis }: { vis: any }) {
     },
   ]
 
-  return <DataExplorerTable data={data} columns={columns} pageSize={20} exportFilename="widocznosc_kanibalizacja" />
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 @md:grid-cols-3 gap-4">
+        <Card className="@md:col-span-2">
+          <CardHeader className="pb-2">
+            <CardDescription>Podsumowanie kanibalizacji</CardDescription>
+            <CardTitle className="text-2xl font-bold">
+              {formatNumber(totalCannibalizedKeywords)} fraz kanibalizowanych na {formatNumber(totalUrlPairs)} parach URL
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Największa para (SV)</CardDescription>
+            <CardTitle className="text-2xl font-bold">
+              {formatNumber(pairGroups[0]?.totalSearches || 0)}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">Łączny search volume top pary URL.</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pary URL najczęściej zamieniające się rankingiem</CardTitle>
+          <CardDescription>Posortowane po łącznym search volume.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {pairGroups.length > 0 ? (
+            pairGroups.slice(0, 12).map((group: any) => (
+              <div key={group.pairKey} className="rounded-lg border p-3 bg-accent/10">
+                <div className="flex flex-col @md:flex-row @md:items-center @md:justify-between gap-2 mb-2">
+                  <div className="text-xs space-y-1">
+                    <p className="font-semibold truncate">{group.currentUrl}</p>
+                    <p className="text-muted-foreground truncate">{group.previousUrl}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{formatNumber(group.keywordCount)} fraz</Badge>
+                    <Badge>{formatNumber(group.totalSearches)} SV</Badge>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {group.keywords.slice(0, 6).map((row: any, idx: number) => (
+                    <Badge key={`${group.pairKey}-${idx}`} variant="secondary" className="text-[10px]">
+                      {row?.keyword || '—'}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">Brak par URL do pokazania.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <DataExplorerTable data={data} columns={columns} pageSize={20} exportFilename="widocznosc_kanibalizacja" />
+    </div>
+  )
 }
 
 export default function VisibilityPage({ params }: { params: { id: string } }) {

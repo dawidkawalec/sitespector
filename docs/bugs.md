@@ -8,6 +8,48 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-066: Tier 2 insights byly nieosiagalne (brak danych i brak wizualizacji)
+
+**Reported**: 2026-03-08
+
+**Status**: ✅ FIXED (2026-03-08)
+
+**Severity**: HIGH
+
+**Description**:
+- Gap analysis Tier 2 wskazal brak kluczowych insights mimo dostepnych lub latwo dostepnych danych:
+  - brak `crawl_depth`, `text_ratio`, pixel widths, multi-tag i `Occurrences` w payloadzie crawla,
+  - brak `interactive`, `total-byte-weight`, `dom-size`, `bootup-time` jako named fields Lighthouse,
+  - brak frontendowych analiz: quick wins, orphan pages, inlink/depth distribution, cannibalization URL pairs, TLD/anchor types, CWV gap.
+
+**Root cause**:
+- Backend transformacje SF/LH nie mapowaly wszystkich dostepnych pol i tabow.
+- Frontend nie mial warstwy agregacji derived insights nad pelnym `audits.results`.
+
+**Fix**:
+- Backend:
+  - `backend/app/services/screaming_frog.py` (nowe kolumny, multi-tag flags, occurrences, external links, link_graph, agregaty depth/duplicates),
+  - `docker/screaming-frog/crawl.sh` (`External:All`, `Links:All`),
+  - `backend/app/services/lighthouse.py` (named fields + `audit_refs` per kategoria).
+- Frontend:
+  - `performance/page.tsx`: grouped opportunities/diagnostics + `CWVGapAnalysis`,
+  - `seo/page.tsx`: tab `Quick Wins`,
+  - `links/page.tsx`: taby `Orphan Pages` i `Dystrybucja`, TLD + anchor type classification,
+  - `visibility/page.tsx`: summary + URL-pair grouping dla kanibalizacji,
+  - `AuditCharts.tsx`: `InternalLinkDistributionChart`, `CrawlDepthDistributionChart`.
+
+**Verification**:
+- `ReadLints` dla wszystkich zmienionych plikow: ✅ brak bledow.
+- Wszystkie to-do Fazy 2 (`t1`-`t12`) oznaczone jako `completed`.
+
+**Related**:
+- `docs/gap-analysis-report.md`
+- `frontend/app/(app)/audits/[id]/*`
+- `backend/app/services/screaming_frog.py`
+- `backend/app/services/lighthouse.py`
+
+---
+
 ### BUG-065: Hardcoded warm hover shade i brak ikonki powrotu przy logo
 
 **Reported**: 2026-03-07

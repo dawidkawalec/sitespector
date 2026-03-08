@@ -8,6 +8,46 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ---
 
+## Gap Analysis — Faza 2 wdrozona (2026-03-08)
+
+### Zmiany w stronach audytu
+
+- `frontend/app/(app)/audits/[id]/performance/page.tsx`
+  - opportunities/diagnostics sa teraz grupowane po kategoriach Lighthouse:
+    - Performance, Accessibility, Best Practices, SEO (+ badge count).
+  - dodano rozszerzony komponent `CWVGapAnalysis`:
+    - porownanie Desktop vs Mobile dla LCP/CLS/TBT/FCP/SI/TTFB/TTI/Bootup/ByteWeight/DOM,
+    - sortowanie po najwiekszej luce metryki,
+    - status `good / needs-improvement / poor` dla mobile.
+
+- `frontend/app/(app)/audits/[id]/seo/page.tsx`
+  - dodano tab `Quick Wins`:
+    - filtr Senuto positions: pozycje 11-20, `searches >= 100`, `difficulty <= 40`,
+    - tabela z `estimated_traffic_gain` (model CTR), sort malejaco po potencjale.
+
+- `frontend/app/(app)/audits/[id]/links/page.tsx`
+  - dodano taby:
+    - `Orphan Pages` (inlinks == 0, filtr indexable/all, high-value badge),
+    - `Dystrybucja` (histogram inlinkow + crawl depth chart + deep pages > 3).
+  - w `Przychodzace` dodano:
+    - TLD distribution pie (`.pl/.com/.org/.edu/.gov/other`),
+    - anchor type classification (`brand`, `exact-match`, `naked-url`, `generic`) z tabela przykladow.
+
+- `frontend/app/(app)/audits/[id]/visibility/page.tsx`
+  - `Kanibalizacja` rozszerzona o:
+    - summary card: liczba fraz kanibalizowanych i liczba par URL,
+    - grupowanie po parach URL z sortowaniem po lacznym search volume.
+
+### Reuzywalne komponenty wykresow
+
+- `frontend/components/AuditCharts.tsx`
+  - dodano:
+    - `InternalLinkDistributionChart`,
+    - `CrawlDepthDistributionChart`.
+  - oba wykresy uzywaja wspolnego stylu dashboardowego (`GradientLineAreaChart`).
+
+---
+
 ## Navigation Redesign (TopBar + Context Sidebars) (2026-03-07)
 
 - Replaced monolithic app navigation (`UnifiedSidebar` + `MobileSidebar`) with a context-driven shell:

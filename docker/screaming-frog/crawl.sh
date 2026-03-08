@@ -42,7 +42,7 @@ fi
 echo "Starting Screaming Frog crawl for $URL..." >&2
 
 # Optional custom User-Agent (whitelist in Cloudflare/WAF)
-CRAWL_ARGS=("--crawl" "$URL" "--headless" "--output-folder" "/tmp/crawls" "--export-tabs" "Internal:All,Response Codes:All,Page Titles:All,Meta Description:All,H1:All,H2:All,Images:All,Canonicals:All,Directives:All,Hreflang:All" "--export-format" "csv" "--overwrite")
+CRAWL_ARGS=("--crawl" "$URL" "--headless" "--output-folder" "/tmp/crawls" "--export-tabs" "Internal:All,Response Codes:All,Page Titles:All,Meta Description:All,H1:All,H2:All,Images:All,Canonicals:All,Directives:All,Hreflang:All,External:All,Links:All" "--export-format" "csv" "--overwrite")
 if [ -n "$USER_AGENT" ]; then
     UA_CONFIG="/tmp/sitespector-ua-$$.config"
     printf '%s\n' "spider.http.userAgent=$USER_AGENT" > "$UA_CONFIG"

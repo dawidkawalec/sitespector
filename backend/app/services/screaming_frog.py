@@ -235,16 +235,6 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
 
     logger.info(f"✅ SF parsed {len(data)} rows from internal_all successfully")
 
-    response_codes_tab = tabs.get("response_codes", []) or []
-    titles_tab = tabs.get("page_titles", []) or []
-    meta_tab = tabs.get("meta_descriptions", []) or []
-    h1_tab = tabs.get("h1_all", []) or []
-    h2_tab = tabs.get("h2_all", []) or []
-    canonicals_tab = tabs.get("canonicals", []) or []
-    directives_tab = tabs.get("directives", []) or []
-    hreflang_tab = tabs.get("hreflang", []) or []
-    images_tab = tabs.get("images_all", []) or []
-
     def _clean_url(value: str) -> str:
         return (value or "").strip()
 
@@ -263,6 +253,42 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
             return float(value)
         except (TypeError, ValueError):
             return default
+
+    def _normalize_tab_name(name: str) -> str:
+        raw = (name or "").strip().lower()
+        normalized = "".join(ch if ch.isalnum() else "_" for ch in raw)
+        while "__" in normalized:
+            normalized = normalized.replace("__", "_")
+        return normalized.strip("_")
+
+    normalized_tabs = {
+        _normalize_tab_name(tab_name): tab_rows
+        for tab_name, tab_rows in tabs.items()
+        if isinstance(tab_rows, list)
+    }
+
+    def _get_tab(*names: str) -> list:
+        for name in names:
+            direct = tabs.get(name)
+            if isinstance(direct, list):
+                return direct or []
+        for name in names:
+            normalized = normalized_tabs.get(_normalize_tab_name(name))
+            if isinstance(normalized, list):
+                return normalized or []
+        return []
+
+    response_codes_tab = _get_tab("response_codes", "Response Codes - All")
+    titles_tab = _get_tab("page_titles", "Page Titles - All")
+    meta_tab = _get_tab("meta_descriptions", "Meta Description - All")
+    h1_tab = _get_tab("h1_all", "H1 - All")
+    h2_tab = _get_tab("h2_all", "H2 - All")
+    canonicals_tab = _get_tab("canonicals", "Canonicals - All")
+    directives_tab = _get_tab("directives", "Directives - All")
+    hreflang_tab = _get_tab("hreflang", "Hreflang - All")
+    images_tab = _get_tab("images_all", "Images - All")
+    external_tab = _get_tab("external_all", "External - All")
+    links_tab = _get_tab("links_all", "Links - All")
 
     response_map: Dict[str, Dict[str, Any]] = {}
     for row in response_codes_tab:
@@ -324,6 +350,9 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
             meta_value = row.get("Meta Description 1") or meta_row.get("Meta Description 1", "")
             h1_value = row.get("H1-1") or h1_row.get("H1-1", "")
             h2_value = row.get("H2-1") or h2_row.get("H2-1", "")
+            title_2_value = row.get("Title 2") or title_row.get("Title 2", "")
+            h1_2_value = row.get("H1-2") or h1_row.get("H1-2", "")
+            meta_desc_2_value = row.get("Meta Description 2") or meta_row.get("Meta Description 2", "")
             canonical_value = row.get("Canonical Link Element 1") or canonical_row.get("Canonical Link Element 1", "")
             meta_robots_value = row.get("Meta Robots 1") or directives_row.get("Meta Robots 1", "")
             x_robots_value = directives_row.get("X-Robots-Tag 1", "")
@@ -334,10 +363,23 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
                 'url': page_url,
                 'title': title_value,
                 'title_length': _to_int(row.get('Title 1 Length', 0) or title_row.get("Title 1 Length")),
+                'title_pixel_width': _to_int(row.get("Title 1 Pixel Width") or title_row.get("Title 1 Pixel Width")),
                 'meta_description': meta_value,
                 'meta_description_length': _to_int(row.get('Meta Description 1 Length', 0) or meta_row.get("Meta Description 1 Length")),
+                'meta_desc_pixel_width': _to_int(
+                    row.get("Meta Description 1 Pixel Width") or meta_row.get("Meta Description 1 Pixel Width")
+                ),
                 'h1': h1_value,
                 'h2': h2_value,
+                'title_2': title_2_value,
+                'h1_2': h1_2_value,
+                'meta_desc_2': meta_desc_2_value,
+                'has_multiple_titles': bool(title_2_value),
+                'has_multiple_h1': bool(h1_2_value),
+                'has_multiple_meta_desc': bool(meta_desc_2_value),
+                'title_occurrences': _to_int(title_row.get("Occurrences"), default=1),
+                'meta_desc_occurrences': _to_int(meta_row.get("Occurrences"), default=1),
+                'h1_occurrences': _to_int(h1_row.get("Occurrences"), default=1),
                 'status_code': status_code,
                 'indexability': indexability_value,
                 'indexability_status': row.get('Indexability Status', ''),
@@ -346,6 +388,9 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
                 'response_time': _to_float(row.get('Response Time', 0)),
                 'flesch_reading_ease': _to_float(row.get('Flesch Reading Ease Score', 0)),
                 'readability': row.get('Readability', ''),
+                'crawl_depth': _to_int(row.get("Crawl Depth")),
+                'text_ratio': _to_float(row.get("Text Ratio")),
+                'link_score': _to_float(row.get("Link Score")),
                 'inlinks': _to_int(row.get('Unique Inlinks', 0)),
                 'outlinks': _to_int(row.get('Unique Outlinks', 0)),
                 'external_outlinks': _to_int(row.get('Unique External Outlinks', 0)),
@@ -374,6 +419,66 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
     external_links = sum(p['external_outlinks'] for p in all_pages)
     broken_links = len([p for p in all_pages if p['status_code'] >= 400])
     redirects = len([p for p in all_pages if 300 <= p['status_code'] < 400])
+
+    target_domain = (urlparse(url).netloc or "").lower().replace("www.", "")
+
+    def _is_internal_url(link_url: str) -> bool:
+        parsed = urlparse(link_url or "")
+        if not parsed.netloc:
+            return True
+        return parsed.netloc.lower().replace("www.", "") == target_domain
+
+    def _is_follow_link(value: Any) -> bool:
+        raw = str(value or "").strip().lower()
+        if not raw:
+            return True
+        if "nofollow" in raw or raw in {"false", "no", "0"}:
+            return False
+        return True
+
+    external_by_domain: Dict[str, int] = {}
+    external_broken_links = []
+    for row in external_tab:
+        external_url = _clean_url(
+            row.get("Address")
+            or row.get("Destination")
+            or row.get("URL")
+            or row.get("External URL")
+            or ""
+        )
+        if not external_url:
+            continue
+        domain = (urlparse(external_url).netloc or "").lower().replace("www.", "")
+        if domain:
+            external_by_domain[domain] = external_by_domain.get(domain, 0) + 1
+
+        external_status = _to_int(
+            row.get("Status Code")
+            or row.get("Destination Status Code")
+            or row.get("Response Code")
+        )
+        if external_status >= 400:
+            external_broken_links.append({
+                "url": external_url,
+                "status_code": external_status,
+                "source_page": _clean_url(row.get("Source") or row.get("From") or row.get("Origin") or ""),
+            })
+
+    link_graph = []
+    for row in links_tab:
+        source_url = _clean_url(row.get("Source") or row.get("From") or row.get("Address") or "")
+        target_url = _clean_url(row.get("Destination") or row.get("To") or row.get("Target") or "")
+        if not source_url or not target_url:
+            continue
+        if not (_is_internal_url(source_url) and _is_internal_url(target_url)):
+            continue
+        link_graph.append({
+            "source": source_url,
+            "target": target_url,
+            "anchor": row.get("Anchor") or row.get("Anchor Text") or row.get("Alt Text") or "",
+            "follow": _is_follow_link(row.get("Follow") or row.get("Rel")),
+            "type": row.get("Type") or row.get("Link Type") or "Hyperlink",
+        })
     
     missing_canonical = len([p for p in all_pages if not p['canonical'] and p['status_code'] == 200])
     noindex_pages = len([p for p in all_pages if 'noindex' in p.get('meta_robots', '').lower()])
@@ -391,6 +496,16 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
     images_with_alt = len([i for i in images_data if i['alt_text']])
     images_without_alt = len([i for i in images_data if not i['alt_text']])
     total_images_size = sum(i['size_bytes'] for i in images_data)
+    pages_with_multiple_titles = len([p for p in all_pages if p.get("has_multiple_titles")])
+    pages_with_multiple_h1 = len([p for p in all_pages if p.get("has_multiple_h1")])
+    pages_with_multiple_meta_desc = len([p for p in all_pages if p.get("has_multiple_meta_desc")])
+    pages_with_duplicate_titles = len([p for p in all_pages if p.get("title_occurrences", 1) > 1])
+    pages_with_duplicate_meta = len([p for p in all_pages if p.get("meta_desc_occurrences", 1) > 1])
+    pages_with_duplicate_h1 = len([p for p in all_pages if p.get("h1_occurrences", 1) > 1])
+    crawl_depth_values = [p.get("crawl_depth", 0) for p in all_pages if p.get("crawl_depth", 0) > 0]
+    avg_crawl_depth = round(sum(crawl_depth_values) / len(crawl_depth_values), 2) if crawl_depth_values else 0.0
+    max_crawl_depth = max(crawl_depth_values) if crawl_depth_values else 0
+    pages_deep = len([p for p in all_pages if p.get("crawl_depth", 0) > 3])
     
     return {
         "url": url,
@@ -410,6 +525,15 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
         "total_images": len(images_data),
         "images_without_alt": images_without_alt,
         "pages_crawled": len(all_pages),
+        "avg_crawl_depth": avg_crawl_depth,
+        "max_crawl_depth": max_crawl_depth,
+        "pages_deep": pages_deep,
+        "pages_with_multiple_titles": pages_with_multiple_titles,
+        "pages_with_multiple_h1": pages_with_multiple_h1,
+        "pages_with_multiple_meta_desc": pages_with_multiple_meta_desc,
+        "pages_with_duplicate_titles": pages_with_duplicate_titles,
+        "pages_with_duplicate_meta": pages_with_duplicate_meta,
+        "pages_with_duplicate_h1": pages_with_duplicate_h1,
         # Determined after crawl via `_detect_sitemaps()`.
         "has_sitemap": False,
         "flesch_reading_ease": float(homepage.get('Flesch Reading Ease Score', 0) or 0),
@@ -427,7 +551,15 @@ def _transform_sf_data(tabs: Dict[str, list], url: str) -> Dict[str, Any]:
             "external": external_links,
             "broken": broken_links,
             "redirects": redirects,
+            "broken_outbound": len(external_broken_links),
+            "graph_edges": len(link_graph),
         },
+        "external_links": {
+            "total": len(external_tab),
+            "broken": external_broken_links,
+            "by_domain": external_by_domain,
+        },
+        "link_graph": link_graph,
         "technical_seo": {
             "missing_canonical": missing_canonical,
             "noindex_pages": noindex_pages,

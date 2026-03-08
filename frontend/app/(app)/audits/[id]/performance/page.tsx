@@ -34,6 +34,174 @@ import { TaskListView } from '@/components/audit/TaskListView'
 import { toast } from 'sonner'
 import type { Audit } from '@/lib/api'
 
+const AUDIT_CATEGORY_ORDER = ['performance', 'accessibility', 'best_practices', 'seo', 'other'] as const
+type AuditCategoryKey = typeof AUDIT_CATEGORY_ORDER[number]
+
+const AUDIT_CATEGORY_LABELS: Record<AuditCategoryKey, string> = {
+  performance: 'Performance',
+  accessibility: 'Accessibility',
+  best_practices: 'Best Practices',
+  seo: 'SEO',
+  other: 'Inne',
+}
+
+function buildAuditCategoryMap(lhData: any): Record<string, AuditCategoryKey> {
+  const map: Record<string, AuditCategoryKey> = {}
+  const categoriesDetail = lhData?.categories_detail || {}
+  const rawCategories = lhData?.raw?.categories || {}
+  const sourceByCategory = [
+    { key: 'performance', detail: categoriesDetail.performance, raw: rawCategories.performance },
+    { key: 'accessibility', detail: categoriesDetail.accessibility, raw: rawCategories.accessibility },
+    { key: 'best_practices', detail: categoriesDetail.best_practices, raw: rawCategories['best-practices'] },
+    { key: 'seo', detail: categoriesDetail.seo, raw: rawCategories.seo },
+  ] as const
+
+  sourceByCategory.forEach(({ key, detail, raw }) => {
+    const detailRefs = Array.isArray(detail?.audit_refs) ? detail.audit_refs : []
+    const rawRefs = Array.isArray(raw?.auditRefs) ? raw.auditRefs.map((ref: any) => ref?.id) : []
+    const mergedRefs = [...detailRefs, ...rawRefs].filter(Boolean)
+    mergedRefs.forEach((auditId: string) => {
+      map[auditId] = key
+    })
+  })
+
+  return map
+}
+
+function groupAuditsByCategory(items: any[], categoryMap: Record<string, AuditCategoryKey>) {
+  const grouped: Record<AuditCategoryKey, any[]> = {
+    performance: [],
+    accessibility: [],
+    best_practices: [],
+    seo: [],
+    other: [],
+  }
+
+  items.forEach((item) => {
+    const category = categoryMap[item?.id] || 'other'
+    grouped[category].push(item)
+  })
+
+  return grouped
+}
+
+function firstNonEmptyCategory(grouped: Record<AuditCategoryKey, any[]>) {
+  return AUDIT_CATEGORY_ORDER.find((key) => grouped[key].length > 0) || 'performance'
+}
+
+type CwvMetricDef = {
+  id: string
+  label: string
+  key: string
+  unit: 'ms' | 'cls' | 'kb' | 'count'
+  good: number
+  needsImprovement: number
+}
+
+const CWV_METRICS: CwvMetricDef[] = [
+  { id: 'lcp', label: 'LCP', key: 'lcp', unit: 'ms', good: 2500, needsImprovement: 4000 },
+  { id: 'cls', label: 'CLS', key: 'cls', unit: 'cls', good: 0.1, needsImprovement: 0.25 },
+  { id: 'tbt', label: 'TBT', key: 'total_blocking_time', unit: 'ms', good: 200, needsImprovement: 600 },
+  { id: 'fcp', label: 'FCP', key: 'fcp', unit: 'ms', good: 1800, needsImprovement: 3000 },
+  { id: 'speedIndex', label: 'Speed Index', key: 'speed_index', unit: 'ms', good: 3400, needsImprovement: 5800 },
+  { id: 'ttfb', label: 'TTFB', key: 'ttfb', unit: 'ms', good: 800, needsImprovement: 1800 },
+  { id: 'interactive', label: 'TTI', key: 'interactive', unit: 'ms', good: 3800, needsImprovement: 7300 },
+  { id: 'bootupTime', label: 'Bootup Time', key: 'bootup_time', unit: 'ms', good: 2000, needsImprovement: 3500 },
+  { id: 'totalByteWeight', label: 'Total Byte Weight', key: 'total_byte_weight', unit: 'kb', good: 1600, needsImprovement: 2500 },
+  { id: 'domSize', label: 'DOM Size', key: 'dom_size', unit: 'count', good: 1500, needsImprovement: 3000 },
+]
+
+function cwvStatus(metric: CwvMetricDef, value: number): 'good' | 'needs-improvement' | 'poor' {
+  const comparableValue = metric.unit === 'kb' ? value / 1024 : value
+  if (comparableValue <= metric.good) return 'good'
+  if (comparableValue <= metric.needsImprovement) return 'needs-improvement'
+  return 'poor'
+}
+
+function formatCwvValue(metric: CwvMetricDef, value: number): string {
+  if (metric.unit === 'cls') return value.toFixed(3)
+  if (metric.unit === 'kb') return `${Math.round(value / 1024)} KB`
+  if (metric.unit === 'count') return `${Math.round(value)}`
+  return `${Math.round(value)} ms`
+}
+
+function statusBadgeVariant(status: 'good' | 'needs-improvement' | 'poor'): 'default' | 'secondary' | 'destructive' {
+  if (status === 'good') return 'default'
+  if (status === 'needs-improvement') return 'secondary'
+  return 'destructive'
+}
+
+function CWVGapAnalysis({ desktop, mobile }: { desktop: any; mobile: any }) {
+  if (!desktop || !mobile) return null
+
+  const rows = CWV_METRICS.map((metric) => {
+    const desktopValue = Number(desktop?.[metric.key] ?? 0)
+    const mobileValue = Number(mobile?.[metric.key] ?? 0)
+    const delta = mobileValue - desktopValue
+    return {
+      metric,
+      desktopValue,
+      mobileValue,
+      delta,
+      absDelta: Math.abs(delta),
+      mobileStatus: cwvStatus(metric, mobileValue),
+    }
+  }).sort((a, b) => b.absDelta - a.absDelta)
+
+  const topGap = rows[0]
+  const scoreDelta = Number(desktop?.performance_score || 0) - Number(mobile?.performance_score || 0)
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>CWV Desktop vs Mobile — Gap Analysis</CardTitle>
+        <CardDescription>Porównanie metryk i największych różnic między urządzeniami.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={scoreDelta >= 0 ? 'default' : 'destructive'}>
+            Delta Performance Score: {scoreDelta >= 0 ? '+' : ''}{Math.round(scoreDelta)}
+          </Badge>
+          {topGap ? (
+            <Badge variant="outline">
+              Największa luka: {topGap.metric.label} ({formatCwvValue(topGap.metric, topGap.absDelta)})
+            </Badge>
+          ) : null}
+        </div>
+
+        <div className="rounded-md border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-muted/50 border-b">
+                <th className="text-left p-3 font-medium">Metryka</th>
+                <th className="text-center p-3 font-medium">Desktop</th>
+                <th className="text-center p-3 font-medium">Mobile</th>
+                <th className="text-center p-3 font-medium">Delta (M-D)</th>
+                <th className="text-center p-3 font-medium">Status Mobile</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {rows.map((row) => (
+                <tr key={row.metric.id} className={topGap?.metric.id === row.metric.id ? 'bg-amber-50/60 dark:bg-amber-950/10' : ''}>
+                  <td className="p-3 font-medium">{row.metric.label}</td>
+                  <td className="text-center p-3">{formatCwvValue(row.metric, row.desktopValue)}</td>
+                  <td className="text-center p-3">{formatCwvValue(row.metric, row.mobileValue)}</td>
+                  <td className="text-center p-3">
+                    {row.delta >= 0 ? '+' : ''}{formatCwvValue(row.metric, row.delta)}
+                  </td>
+                  <td className="text-center p-3">
+                    <Badge variant={statusBadgeVariant(row.mobileStatus)}>{row.mobileStatus}</Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 function DeviceTab({ lhData, device, audit }: { lhData: any; device: string; audit: Audit }) {
   if (!lhData) {
     return <p className="text-sm text-muted-foreground py-4">Brak danych Lighthouse dla: {device}</p>
@@ -51,6 +219,11 @@ function DeviceTab({ lhData, device, audit }: { lhData: any; device: string; aud
   const opportunities = lhData.audits?.opportunities || []
   const diagnostics = lhData.audits?.diagnostics || []
   const passed = lhData.audits?.passed || []
+  const auditCategoryMap = buildAuditCategoryMap(lhData)
+  const groupedOpportunities = groupAuditsByCategory(opportunities, auditCategoryMap)
+  const groupedDiagnostics = groupAuditsByCategory(diagnostics, auditCategoryMap)
+  const defaultOpportunityCategory = firstNonEmptyCategory(groupedOpportunities)
+  const defaultDiagnosticsCategory = firstNonEmptyCategory(groupedDiagnostics)
   const crawl = audit.results?.crawl
 
   return (
@@ -185,42 +358,60 @@ function DeviceTab({ lhData, device, audit }: { lhData: any; device: string; aud
         <TabsContent value="opportunities" className="pt-4">
           <Card>
             <CardContent className="pt-6">
-              <Accordion type="single" collapsible className="w-full">
-                {opportunities.length > 0 ? (
-                  opportunities.map((opt: any, idx: number) => (
-                    <AccordionItem key={idx} value={`opt-${idx}`}>
-                      <AccordionTrigger className="hover:no-underline py-3">
-                        <div className="flex items-center justify-between w-full pr-4">
-                          <div className="flex flex-col items-start gap-1">
-                            <span className="text-sm font-semibold text-left">{opt.title}</span>
-                            <div className="flex items-center gap-2">
-                              <Badge variant={opt.score === 0 ? 'destructive' : 'default'} className="h-4 text-[8px] uppercase">
-                                {opt.score === 0 ? 'High Priority' : 'Medium Priority'}
-                              </Badge>
-                              <span className="text-[10px] text-muted-foreground">Oszczędność: {opt.displayValue}</span>
-                            </div>
-                          </div>
+              <Tabs defaultValue={defaultOpportunityCategory} className="w-full">
+                <TabsList className="flex flex-wrap h-auto">
+                  {AUDIT_CATEGORY_ORDER.map((category) => (
+                    <TabsTrigger key={`opp-cat-${category}`} value={category} className="gap-2">
+                      {AUDIT_CATEGORY_LABELS[category]}
+                      <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
+                        {groupedOpportunities[category].length}
+                      </Badge>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {AUDIT_CATEGORY_ORDER.map((category) => (
+                  <TabsContent key={`opp-content-${category}`} value={category} className="pt-4">
+                    <Accordion type="single" collapsible className="w-full">
+                      {groupedOpportunities[category].length > 0 ? (
+                        groupedOpportunities[category].map((opt: any, idx: number) => (
+                          <AccordionItem key={`${category}-opt-${idx}`} value={`${category}-opt-${idx}`}>
+                            <AccordionTrigger className="hover:no-underline py-3">
+                              <div className="flex items-center justify-between w-full pr-4">
+                                <div className="flex flex-col items-start gap-1">
+                                  <span className="text-sm font-semibold text-left">{opt.title}</span>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant={opt.score === 0 ? 'destructive' : 'default'} className="h-4 text-[8px] uppercase">
+                                      {opt.score === 0 ? 'High Priority' : 'Medium Priority'}
+                                    </Badge>
+                                    <span className="text-[10px] text-muted-foreground">Oszczędność: {opt.displayValue || '—'}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="text-xs text-muted-foreground leading-relaxed space-y-3">
+                              <p>{opt.description}</p>
+                              <div className="flex items-center gap-2 pt-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 text-[10px]"
+                                  onClick={() => window.open('https://web.dev/learn/performance/', '_blank')}
+                                >
+                                  <ExternalLink className="mr-1 h-3 w-3" /> Dokumentacja Google
+                                </Button>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          Brak możliwości w kategorii {AUDIT_CATEGORY_LABELS[category]}.
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="text-xs text-muted-foreground leading-relaxed space-y-3">
-                        <p>{opt.description}</p>
-                        <div className="flex items-center gap-2 pt-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-7 text-[10px]"
-                            onClick={() => window.open('https://web.dev/learn/performance/', '_blank')}
-                          >
-                            <ExternalLink className="mr-1 h-3 w-3" /> Dokumentacja Google
-                          </Button>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">Brak zidentyfikowanych możliwości.</div>
-                )}
-              </Accordion>
+                      )}
+                    </Accordion>
+                  </TabsContent>
+                ))}
+              </Tabs>
             </CardContent>
           </Card>
         </TabsContent>
@@ -228,29 +419,47 @@ function DeviceTab({ lhData, device, audit }: { lhData: any; device: string; aud
         <TabsContent value="diagnostics" className="pt-4">
           <Card>
             <CardContent className="pt-6">
-              <Accordion type="single" collapsible className="w-full">
-                {diagnostics.length > 0 ? (
-                  diagnostics.map((diag: any, idx: number) => (
-                    <AccordionItem key={idx} value={`diag-${idx}`}>
-                      <AccordionTrigger className="hover:no-underline py-3">
-                        <div className="flex items-center justify-between w-full pr-4">
-                          <span className="text-sm font-semibold text-left">{diag.title}</span>
+              <Tabs defaultValue={defaultDiagnosticsCategory} className="w-full">
+                <TabsList className="flex flex-wrap h-auto">
+                  {AUDIT_CATEGORY_ORDER.map((category) => (
+                    <TabsTrigger key={`diag-cat-${category}`} value={category} className="gap-2">
+                      {AUDIT_CATEGORY_LABELS[category]}
+                      <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
+                        {groupedDiagnostics[category].length}
+                      </Badge>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {AUDIT_CATEGORY_ORDER.map((category) => (
+                  <TabsContent key={`diag-content-${category}`} value={category} className="pt-4">
+                    <Accordion type="single" collapsible className="w-full">
+                      {groupedDiagnostics[category].length > 0 ? (
+                        groupedDiagnostics[category].map((diag: any, idx: number) => (
+                          <AccordionItem key={`${category}-diag-${idx}`} value={`${category}-diag-${idx}`}>
+                            <AccordionTrigger className="hover:no-underline py-3">
+                              <div className="flex items-center justify-between w-full pr-4">
+                                <span className="text-sm font-semibold text-left">{diag.title}</span>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="text-xs text-muted-foreground leading-relaxed">
+                              {diag.description}
+                              {diag.displayValue && (
+                                <div className="mt-2 font-mono bg-accent/30 p-2 rounded text-foreground">
+                                  {diag.displayValue}
+                                </div>
+                              )}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          Brak diagnostyki w kategorii {AUDIT_CATEGORY_LABELS[category]}.
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="text-xs text-muted-foreground leading-relaxed">
-                        {diag.description}
-                        {diag.displayValue && (
-                          <div className="mt-2 font-mono bg-accent/30 p-2 rounded text-foreground">
-                            {diag.displayValue}
-                          </div>
-                        )}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">Brak danych diagnostycznych.</div>
-                )}
-              </Accordion>
+                      )}
+                    </Accordion>
+                  </TabsContent>
+                ))}
+              </Tabs>
             </CardContent>
           </Card>
         </TabsContent>
@@ -477,49 +686,7 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
               </TabsContent>
             </Tabs>
 
-            {/* Comparison Table */}
-            {lhDesktop && lhMobile && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Porównanie Desktop vs Mobile</CardTitle>
-                  <CardDescription>Różnice w wydajności między urządzeniami</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-md border overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-muted/50 border-b">
-                          <th className="text-left p-3 font-medium">Metryka</th>
-                          <th className="text-center p-3 font-medium">Desktop</th>
-                          <th className="text-center p-3 font-medium">Mobile</th>
-                          <th className="text-center p-3 font-medium">Różnica</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        <tr>
-                          <td className="p-3 font-medium">Performance Score</td>
-                          <td className={`text-center p-3 font-bold ${getScoreColor(lhDesktop.performance_score)}`}>{formatScore(lhDesktop.performance_score)}</td>
-                          <td className={`text-center p-3 font-bold ${getScoreColor(lhMobile.performance_score)}`}>{formatScore(lhMobile.performance_score)}</td>
-                          <td className="text-center p-3">{formatScore(lhDesktop.performance_score - lhMobile.performance_score)}</td>
-                        </tr>
-                        <tr>
-                          <td className="p-3 font-medium">LCP (ms)</td>
-                          <td className="text-center p-3">{lhDesktop.lcp}</td>
-                          <td className="text-center p-3">{lhMobile.lcp}</td>
-                          <td className="text-center p-3">{lhMobile.lcp - lhDesktop.lcp}</td>
-                        </tr>
-                        <tr>
-                          <td className="p-3 font-medium">CLS</td>
-                          <td className="text-center p-3">{lhDesktop.cls?.toFixed(2)}</td>
-                          <td className="text-center p-3">{lhMobile.cls?.toFixed(2)}</td>
-                          <td className="text-center p-3">{(lhMobile.cls - lhDesktop.cls).toFixed(2)}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <CWVGapAnalysis desktop={lhDesktop} mobile={lhMobile} />
           </TabsContent>
 
           <TabsContent value="raw">

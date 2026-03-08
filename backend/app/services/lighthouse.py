@@ -104,6 +104,10 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
         
         # Additional metrics
         ttfb = audits.get("server-response-time", {}).get("numericValue", 0)
+        interactive = audits.get("interactive", {}).get("numericValue", 0)
+        total_byte_weight = audits.get("total-byte-weight", {}).get("numericValue", 0)
+        dom_size = audits.get("dom-size", {}).get("numericValue", 0)
+        bootup_time = audits.get("bootup-time", {}).get("numericValue", 0)
         
         # NEW: Categorize ALL audits (176 total)
         diagnostics = []  # Failed audits (score < 0.5)
@@ -156,6 +160,10 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
             "cls": round(cls, 3),
             "total_blocking_time": round(tbt),
             "speed_index": round(si),
+            "interactive": round(interactive),
+            "total_byte_weight": round(total_byte_weight),
+            "dom_size": round(dom_size),
+            "bootup_time": round(bootup_time),
             "total_time": round(lcp),
             "status_code": 200,
             
@@ -169,18 +177,38 @@ async def audit_url(url: str, device: str = "desktop") -> Dict[str, Any]:
                 "performance": {
                     "score": round(performance_score),
                     "title": categories.get("performance", {}).get("title", ""),
+                    "audit_refs": [
+                        ref.get("id")
+                        for ref in categories.get("performance", {}).get("auditRefs", [])
+                        if ref.get("id")
+                    ],
                 },
                 "accessibility": {
                     "score": round(accessibility_score),
                     "title": categories.get("accessibility", {}).get("title", ""),
+                    "audit_refs": [
+                        ref.get("id")
+                        for ref in categories.get("accessibility", {}).get("auditRefs", [])
+                        if ref.get("id")
+                    ],
                 },
                 "best_practices": {
                     "score": round(best_practices_score),
                     "title": categories.get("best-practices", {}).get("title", ""),
+                    "audit_refs": [
+                        ref.get("id")
+                        for ref in categories.get("best-practices", {}).get("auditRefs", [])
+                        if ref.get("id")
+                    ],
                 },
                 "seo": {
                     "score": round(seo_score),
                     "title": categories.get("seo", {}).get("title", ""),
+                    "audit_refs": [
+                        ref.get("id")
+                        for ref in categories.get("seo", {}).get("auditRefs", [])
+                        if ref.get("id")
+                    ],
                 },
             },
             "raw": raw_result,  # Full Lighthouse JSON (without screenshot)

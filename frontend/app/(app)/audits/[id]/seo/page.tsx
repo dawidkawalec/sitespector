@@ -48,6 +48,136 @@ import { AnalysisView } from '@/components/audit/AnalysisView'
 import { TaskListView } from '@/components/audit/TaskListView'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Audit } from '@/lib/api'
+import { formatNumber } from '@/lib/utils'
+
+const QUICK_WIN_CTR_CURVE: Record<number, number> = {
+  1: 0.28,
+  2: 0.15,
+  3: 0.11,
+  4: 0.08,
+  5: 0.06,
+  6: 0.05,
+  7: 0.04,
+  8: 0.03,
+  9: 0.025,
+  10: 0.02,
+  11: 0.015,
+  12: 0.014,
+  13: 0.013,
+  14: 0.012,
+  15: 0.011,
+  16: 0.01,
+  17: 0.009,
+  18: 0.008,
+  19: 0.007,
+  20: 0.006,
+}
+
+function quickWinPosition(row: any): number {
+  return Number(row?.statistics?.position?.current ?? 9999)
+}
+
+function quickWinSearches(row: any): number {
+  return Number(row?.statistics?.searches?.current ?? 0)
+}
+
+function quickWinDifficulty(row: any): number {
+  return Number(row?.statistics?.difficulty?.current ?? 0)
+}
+
+function ctrAt(position: number): number {
+  return QUICK_WIN_CTR_CURVE[position] ?? 0.005
+}
+
+function estimateQuickWinGain(searches: number, currentPosition: number): number {
+  return Math.max(0, Math.round(searches * (ctrAt(3) - ctrAt(currentPosition))))
+}
+
+function isQuickWinKeyword(row: any): boolean {
+  const position = quickWinPosition(row)
+  const searches = quickWinSearches(row)
+  const difficulty = quickWinDifficulty(row)
+  return position >= 11 && position <= 20 && searches >= 100 && difficulty <= 40
+}
+
+function QuickWinKeywordsTab({ positions }: { positions: any[] }) {
+  const quickWins = (positions || [])
+    .filter(isQuickWinKeyword)
+    .map((row: any) => {
+      const position = quickWinPosition(row)
+      const searches = quickWinSearches(row)
+      const estimatedTrafficGain = estimateQuickWinGain(searches, position)
+      return {
+        keyword: row?.keyword || '—',
+        position,
+        searches,
+        difficulty: quickWinDifficulty(row),
+        url: row?.statistics?.url?.current || '—',
+        estimated_traffic_gain: estimatedTrafficGain,
+      }
+    })
+    .sort((a, b) => b.estimated_traffic_gain - a.estimated_traffic_gain)
+
+  const totalTrafficGain = quickWins.reduce((sum, row) => sum + row.estimated_traffic_gain, 0)
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 @md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Quick Win Keywords</CardDescription>
+            <CardTitle className="text-3xl font-bold">{formatNumber(quickWins.length)}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">Frazy na pozycjach 11-20 z niską trudnością.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Szacowany gain ruchu</CardDescription>
+            <CardTitle className="text-3xl font-bold">{formatNumber(totalTrafficGain)}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">Miesięcznie przy awansie z 11-20 do TOP3.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Kryteria</CardDescription>
+            <CardTitle className="text-sm font-semibold">Pozycja 11-20, SV &gt;= 100, Difficulty &lt;= 40</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Frazy z największym potencjałem szybkiego wzrostu</CardTitle>
+          <CardDescription>
+            {quickWins.length > 0
+              ? `${formatNumber(quickWins.length)} fraz na stronie 2 z potencjałem wejścia na stronę 1.`
+              : 'Brak fraz spełniających kryteria quick wins.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataExplorerTable
+            data={quickWins}
+            columns={[
+              { key: 'keyword', label: 'Fraza', className: 'font-medium max-w-[260px]', maxWidth: '260px' },
+              { key: 'position', label: 'Pozycja' },
+              { key: 'searches', label: 'Search Volume', render: (v: any) => formatNumber(v) },
+              { key: 'difficulty', label: 'Difficulty' },
+              { key: 'estimated_traffic_gain', label: 'Szac. gain', render: (v: any) => formatNumber(v) },
+              { key: 'url', label: 'URL', className: 'max-w-[300px]', maxWidth: '300px' },
+            ]}
+            pageSize={20}
+            exportFilename="seo_quick_win_keywords"
+            searchPlaceholder="Szukaj frazy lub URL..."
+          />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
 
 function OverviewTab({ crawl, allPages, params, renderFixSuggestion, exportToCSV }: { crawl: any; allPages: any[]; params: any; renderFixSuggestion: any; exportToCSV: any }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -305,6 +435,8 @@ export default function SeoPage({ params }: { params: { id: string } }) {
 
   const tasks = tasksResponse?.items || []
   const crawl = audit?.results?.crawl
+  const positions = audit?.results?.senuto?.visibility?.positions || []
+  const quickWinsCount = positions.filter(isQuickWinKeyword).length
   const aiContext = audit?.results?.ai_contexts?.seo
 
   const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
@@ -404,6 +536,12 @@ export default function SeoPage({ params }: { params: { id: string } }) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList>
             <TabsTrigger value="overview">Przegląd</TabsTrigger>
+            <TabsTrigger value="quickwins">
+              Quick Wins
+              <Badge variant="secondary" className="ml-2 text-[9px] h-4 px-1">
+                {formatNumber(quickWinsCount)}
+              </Badge>
+            </TabsTrigger>
             <TabsTrigger value="raw">Surowe dane (RAW)</TabsTrigger>
           </TabsList>
 
@@ -435,6 +573,10 @@ export default function SeoPage({ params }: { params: { id: string } }) {
 
           <TabsContent value="raw" className="pt-6">
             <RawDataTab crawl={crawl} audit={audit} />
+          </TabsContent>
+
+          <TabsContent value="quickwins" className="pt-6">
+            <QuickWinKeywordsTab positions={positions} />
           </TabsContent>
         </Tabs>
       )}

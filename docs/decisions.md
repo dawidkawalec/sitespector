@@ -1336,3 +1336,37 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
   - Tier 1 z raportu został zamknięty na froncie.
   - Użytkownik otrzymał table-stakes KPI (Health Score + Issue Severity) oraz pełny wgląd w technical extras i backlink depth.
   - Architektura pozostała kompatybilna z aktualnym backendem i gotowa pod Tier 2 (gdzie potrzebne będą już zmiany transformacji danych).
+
+---
+
+## ADR-061: Gap Analysis Faza 2 — Backend enrichment + Frontend derived insights (2026-03-08)
+
+- **Decision**:
+  - Rozszerzyc backendowe transformacje SF/Lighthouse o brakujace named fields i nowe taby eksportu (`External:All`, `Links:All`).
+  - Wdrozyc frontendowe analizy Tier 2 jako warstwe derived insights na bazie `audits.results`, z fallbackiem dla starych audytow bez nowych pol.
+  - Utrzymac pelna kompatybilnosc wsteczna istniejacych struktur (`links`, `all_pages`, `categories_detail`) i dopisywac nowe pola bez breaking changes.
+
+- **Rationale**:
+  - Tier 2 wymaga jednoczesnie:
+    - wzbogacenia surowych danych (bez tego czesc analiz nie istnieje),
+    - szybkiego time-to-value przez frontendowe agregacje z juz zebranych payloadow.
+  - Stopniowe rozszerzanie JSON payload minimalizuje ryzyko regresji w workerze i API.
+
+- **Implementation**:
+  - Backend:
+    - `backend/app/services/screaming_frog.py`
+    - `backend/app/services/lighthouse.py`
+    - `docker/screaming-frog/crawl.sh`
+  - Frontend:
+    - `frontend/app/(app)/audits/[id]/performance/page.tsx`
+    - `frontend/app/(app)/audits/[id]/seo/page.tsx`
+    - `frontend/app/(app)/audits/[id]/links/page.tsx`
+    - `frontend/app/(app)/audits/[id]/visibility/page.tsx`
+    - `frontend/components/AuditCharts.tsx`
+
+- **Outcome**:
+  - Domknieto 12 taskow Fazy 2 (`t1`-`t12`):
+    - SF enrichment (kolumny, multi-tags, occurrences, external/link graph),
+    - LH named fields + grouped diagnostics/opportunities,
+    - Quick Wins / Orphans / Link Distribution / Crawl Depth / Cannibalization grouping / Backlinks TLD+anchor types / CWV gap analysis.
+  - Nowe audyty zawieraja rozszerzone dane backendowe; stare audyty pozostaja obslugiwane przez fallbacki UI.

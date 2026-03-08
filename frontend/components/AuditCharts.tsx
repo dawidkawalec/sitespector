@@ -105,6 +105,67 @@ export function ResponseTimeChart({ pages }: ResponseTimeChartProps) {
   )
 }
 
+export function InternalLinkDistributionChart({
+  pages,
+}: {
+  pages: Array<{ inlinks?: number }>
+}) {
+  if (!pages || pages.length === 0) {
+    return <div className="text-muted-foreground text-center py-8">Brak danych</div>
+  }
+
+  const buckets = {
+    '0': 0,
+    '1-3': 0,
+    '4-10': 0,
+    '11-50': 0,
+    '50+': 0,
+  }
+
+  pages.forEach((page) => {
+    const inlinks = Number(page?.inlinks || 0)
+    if (inlinks === 0) buckets['0']++
+    else if (inlinks <= 3) buckets['1-3']++
+    else if (inlinks <= 10) buckets['4-10']++
+    else if (inlinks <= 50) buckets['11-50']++
+    else buckets['50+']++
+  })
+
+  const data = Object.entries(buckets).map(([range, count]) => ({ range, count }))
+  return <GradientLineAreaChart data={data} dataKey="count" color="#4f46e5" xAxisDataKey="range" />
+}
+
+export function CrawlDepthDistributionChart({
+  pages,
+}: {
+  pages: Array<{ crawl_depth?: number }>
+}) {
+  if (!pages || pages.length === 0) {
+    return <div className="text-muted-foreground text-center py-8">Brak danych</div>
+  }
+
+  const buckets = {
+    '1': 0,
+    '2': 0,
+    '3': 0,
+    '4': 0,
+    '5+': 0,
+  }
+
+  pages.forEach((page) => {
+    const depth = Number(page?.crawl_depth || 0)
+    if (depth <= 0) return
+    if (depth === 1) buckets['1']++
+    else if (depth === 2) buckets['2']++
+    else if (depth === 3) buckets['3']++
+    else if (depth === 4) buckets['4']++
+    else buckets['5+']++
+  })
+
+  const data = Object.entries(buckets).map(([depth, count]) => ({ depth, count }))
+  return <GradientLineAreaChart data={data} dataKey="count" color="#0b363d" xAxisDataKey="depth" />
+}
+
 interface WordCountChartProps {
   pages: Array<{
     word_count: number
