@@ -34,6 +34,8 @@ docker exec sitespector-backend alembic upgrade head  # DB migrations
 - [docs/operations.md](docs/operations.md) — runbooks, testing, history
 - [docs/decisions.md](docs/decisions.md) — architectural decision records (ADRs)
 - [docs/bugs.md](docs/bugs.md) — bug log and fixes
+- [marketing/](marketing/) — 17-file marketing knowledge base (GTM, personas, ads, social, brandbook)
+- [docs/gap-analysis-report.md](docs/gap-analysis-report.md) — data utilization gap analysis (LH, SF, Senuto, extras vs frontend)
 
 ## Critical Rules
 
@@ -45,4 +47,4 @@ docker exec sitespector-backend alembic upgrade head  # DB migrations
 - All API calls go through `frontend/lib/api.ts` (workspace-scoped)
 
 ---
-**Last updated**: 2026-03-07
+**Last updated**: 2026-03-08

@@ -1292,3 +1292,17 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 - **Outcome**:
   - Workspace dropdown is readable in both light and dark mode.
   - Settings and audits now remain color-consistent across navigation surfaces.
+
+## ADR-058: Marketing Knowledge Base in `marketing/` (2026-03-08)
+
+- **Decision**: Utworzono folder `marketing/` z 17 plikami Markdown jako kompletną bazą wiedzy do budowania strategii go-to-market w zewnętrznych narzędziach AI.
+- **Rationale**: Materiały marketingowe (personas, GTM, ads copy, LinkedIn posts, brandbook) wymagają stałego kontekstu produktowego; umieszczenie ich w repo zapewnia aktualność i dostęp dla agentów AI.
+- **Zawartość**: `00-index.md` (mapa), `01–04` (produkt i tech), `05–07` (rynek i ceny), `08–09` (GTM i content), `10–15` (messaging, social, ads, sales), `16` (visual identity brandbook).
+- **Trade-off**: Materiały marketingowe nie są kodem — wymagają ręcznej aktualizacji gdy zmienia się produkt lub cennik.
+
+## ADR-059: Gap Analysis — Data Utilization Audit (2026-03-08)
+
+- **Decision**: Przeprowadzono pełną analizę luk między surowymi danymi (Lighthouse, SF, Senuto, Technical SEO Extras) a tym, co wyświetlamy w UI. Wynik: `docs/gap-analysis-report.md`.
+- **Rationale**: Szacunkowe wykorzystanie zebranych danych to ~40-50%. Kluczowe: 6/8 modułów Technical SEO Extras nie ma UI, backlinks pokazują 6 z 2000 ref domains, brak Health Score i Issue severity (table stakes w branży).
+- **Zakres analizy**: Lighthouse (150+ audytów, kategoryzacja), SF (kolumna-po-kolumnie 10 tabów CSV), Senuto (17 endpointów), Technical SEO Extras (8 modułów), benchmark rynkowy (Ahrefs/SEMrush/Sitebulb/SE Ranking/SF UI), 30+ nowych analiz z istniejących danych.
+- **Output**: 3-tierowy roadmap (Tier 1: ~12 dni, Tier 2: ~20 dni, Tier 3: ~50 dni), 30+ zidentyfikowanych luk z priorytetami.
