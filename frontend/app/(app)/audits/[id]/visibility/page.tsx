@@ -41,6 +41,7 @@ import { AnalysisView } from '@/components/audit/AnalysisView'
 import { TaskListView } from '@/components/audit/TaskListView'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatNumber, formatScore } from '@/lib/utils'
 import { IntentBadge } from '@/components/ui/intent-badge'
 import { DifficultyBadge } from '@/components/ui/difficulty-badge'
@@ -701,6 +702,10 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
   const stats = vis.statistics?.statistics || {}
   const dash = vis.dashboard || {}
   const positions = vis.positions || []
+  const positionsCount = Number(senuto?._meta?.positions_count || positions.length || 0)
+  const positionsTotal = Number(senuto?._meta?.positions_total || positionsCount || 0)
+  const samplingPct = positionsTotal > 0 ? (positionsCount / positionsTotal) * 100 : 100
+  const isSampled = positionsTotal > positionsCount
   const wins = vis.wins || []
   const losses = vis.losses || []
 
@@ -866,6 +871,20 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
           </TabsContent>
 
           <TabsContent value="positions" className="pt-6">
+            {positionsTotal > 0 && (
+              <Alert
+                className={
+                  isSampled
+                    ? 'mb-4 border-amber-300 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/20'
+                    : 'mb-4 border-green-300 bg-green-50 dark:border-green-900/60 dark:bg-green-950/20'
+                }
+              >
+                <AlertDescription className="text-sm">
+                  Pokazujesz <strong>{formatNumber(positionsCount)}</strong> z{' '}
+                  <strong>{formatNumber(positionsTotal)}</strong> fraz ({samplingPct.toFixed(1)}%).
+                </AlertDescription>
+              </Alert>
+            )}
             <PositionsTab data={positions} title="Pozycje słów kluczowych" filename="widocznosc_pozycje" />
           </TabsContent>
 

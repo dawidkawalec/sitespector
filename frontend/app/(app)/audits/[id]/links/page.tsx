@@ -8,7 +8,7 @@
  * Plan: Actionable link tasks
  */
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
@@ -207,6 +207,20 @@ function IncomingLinksTab({ senuto, audit }: { senuto: any; audit: Audit }) {
   const stats = bl.statistics || {}
   const attrs = bl.link_attributes?.[audit.url.replace(/https?:\/\/(www\.)?/, '').replace(/\/$/, '')] || []
   const allLinks = bl.list || []
+  const refDomains = bl.ref_domains || []
+  const anchorsMerged = useMemo(() => {
+    const merged = new Map<string, number>()
+    const allAnchors = Object.values(bl.anchors || {}).flat() as any[]
+    allAnchors.forEach((item: any) => {
+      const anchorText = (item?.anchor || 'Brak tekstu').trim() || 'Brak tekstu'
+      const count = Number(item?.count || 0)
+      merged.set(anchorText, (merged.get(anchorText) || 0) + count)
+    })
+    return Array.from(merged.entries())
+      .map(([anchor, count]) => ({ anchor, count }))
+      .sort((a, b) => b.count - a.count)
+  }, [bl.anchors])
+  const maxAnchorCount = anchorsMerged[0]?.count || 1
   const filteredLinks = allLinks.filter((l: any) => 
     l.ref_url.toLowerCase().includes(searchTerm.toLowerCase()) ||
     l.anchor?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -243,6 +257,14 @@ function IncomingLinksTab({ senuto, audit }: { senuto: any; audit: Audit }) {
     },
     { key: 'first_seen', label: 'Wykryto', className: 'text-right text-xs text-muted-foreground' },
   ]
+  const refDomainColumns = [
+    { key: 'ref_domain', label: 'Domena referujaca', className: 'max-w-[320px]' },
+    { key: 'backlinks_count', label: 'Liczba backlinkow' },
+  ]
+  const anchorColumns = [
+    { key: 'anchor', label: 'Anchor', className: 'max-w-[360px]' },
+    { key: 'count', label: 'Wystapienia' },
+  ]
 
   return (
     <div className="space-y-6">
@@ -265,44 +287,53 @@ function IncomingLinksTab({ senuto, audit }: { senuto: any; audit: Audit }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader><CardTitle className="text-sm">Atrybuty Linków</CardTitle></CardHeader>
           <CardContent><LinkAttributesPieChart attributes={attrs} /></CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm">Najsilniejsze Domeny</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {(bl.ref_domains || []).slice(0, 6).map((d: any, i: number) => (
-                <div key={i} className="flex items-center justify-between text-xs p-2 rounded border bg-accent/5">
-                  <span className="truncate font-medium">{d.ref_domain}</span>
-                  <span className="text-muted-foreground">{d.backlinks_count} linków</span>
-                </div>
+          <CardHeader>
+            <CardTitle className="text-sm">Anchor Cloud (pełny)</CardTitle>
+            <CardDescription>Top {Math.min(120, anchorsMerged.length)} z {formatNumber(anchorsMerged.length)} anchorow</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2 max-h-[240px] overflow-y-auto pr-1">
+              {anchorsMerged.slice(0, 120).map((anchor) => (
+                <span
+                  key={`${anchor.anchor}-${anchor.count}`}
+                  className="inline-flex items-center rounded-md border bg-accent/5 px-2 py-1 leading-none"
+                  style={{ fontSize: `${Math.max(11, Math.min(24, 10 + (anchor.count / maxAnchorCount) * 14))}px` }}
+                  title={`${anchor.anchor} (${anchor.count})`}
+                >
+                  {anchor.anchor}
+                </span>
               ))}
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Najczęstsze Anchory</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {(() => {
-                const domainKey = Object.keys(bl.anchors || {})[0];
-                const anchors = domainKey ? bl.anchors[domainKey] : [];
-                return (anchors || []).slice(0, 6).map((a: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between text-xs p-2 rounded border bg-accent/5">
-                    <span className="truncate font-medium italic">
-                      &quot;{a.anchor || 'Brak tekstu'}&quot;
-                    </span>
-                    <Badge variant="secondary">{a.count}</Badge>
-                  </div>
-                ));
-              })()}
-            </div>
+            <DataExplorerTable
+              data={anchorsMerged}
+              columns={anchorColumns}
+              pageSize={10}
+              exportFilename="linki_anchory_pelne"
+            />
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Domeny Referujace (pełna tabela)</CardTitle>
+          <CardDescription>Wszystkie rekordy `senuto.backlinks.ref_domains`</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataExplorerTable
+            data={refDomains}
+            columns={refDomainColumns}
+            pageSize={20}
+            exportFilename="linki_ref_domains_pelne"
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

@@ -46,6 +46,145 @@ import {
 } from "@/components/ui/alert"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
+type SeverityLevel = 'error' | 'warning' | 'notice'
+
+interface SeverityIssue {
+  key: string
+  label: string
+  severity: SeverityLevel
+  count: number
+  href: string
+  description: string
+}
+
+function clampScore(value: number): number {
+  return Math.max(0, Math.min(100, value))
+}
+
+function severityWeight(level: SeverityLevel): number {
+  if (level === 'error') return 3
+  if (level === 'warning') return 1.2
+  return 0.6
+}
+
+function buildSeverityIssues(crawl: any, lh: any): SeverityIssue[] {
+  const pagesByStatus = crawl?.pages_by_status || {}
+  const status404 = Number(pagesByStatus?.['404'] || 0)
+  const status500 = Number(pagesByStatus?.['500'] || 0)
+  const statusOther = Number(pagesByStatus?.other || 0)
+  const brokenLinks = Number(crawl?.links?.broken || 0)
+  const missingCanonical = Number(crawl?.technical_seo?.missing_canonical || 0)
+  const noindexPages = Number(crawl?.technical_seo?.noindex_pages || 0)
+  const missingAlt = Number(crawl?.images?.without_alt || 0)
+  const redirects = Number(crawl?.technical_seo?.redirects || crawl?.links?.redirects || 0)
+  const nofollowPages = Number(crawl?.technical_seo?.nofollow_pages || 0)
+  const hreflangIssues = Number(crawl?.technical_seo?.hreflang_pages || 0)
+  const lhDiagnostics = Number(lh?.audits?.diagnostics?.length || 0)
+  const lhOpportunities = Number(lh?.audits?.opportunities?.length || 0)
+  const missingSitemap = crawl?.has_sitemap ? 0 : 1
+
+  const issues: SeverityIssue[] = [
+    {
+      key: 'broken_links',
+      label: 'Niedzialajace linki (404)',
+      severity: 'error',
+      count: brokenLinks,
+      href: 'links?filter=broken',
+      description: 'Linki prowadza do nieistniejacych zasobow i pogarszaja crawlability.',
+    },
+    {
+      key: 'http_errors',
+      label: 'Strony 4xx/5xx',
+      severity: 'error',
+      count: status404 + status500 + statusOther,
+      href: 'seo',
+      description: 'Bledy odpowiedzi HTTP obcinaja indeksacje i sygnal jakosci.',
+    },
+    {
+      key: 'missing_canonical',
+      label: 'Brakujace canonicale',
+      severity: 'error',
+      count: missingCanonical,
+      href: 'seo',
+      description: 'Brak canonical utrudnia konsolidacje sygnalow rankingowych.',
+    },
+    {
+      key: 'noindex',
+      label: 'Strony z noindex',
+      severity: 'error',
+      count: noindexPages,
+      href: 'seo',
+      description: 'Noindex moze blokowac indeksacje istotnych URL-i.',
+    },
+    {
+      key: 'lh_diagnostics',
+      label: 'Lighthouse diagnostics',
+      severity: 'error',
+      count: lhDiagnostics,
+      href: 'performance',
+      description: 'Krytyczne sygnaly z Lighthouse wymagajace szybkiej reakcji.',
+    },
+    {
+      key: 'missing_alt',
+      label: 'Obrazy bez ALT',
+      severity: 'warning',
+      count: missingAlt,
+      href: 'images?filter=no-alt',
+      description: 'Brak ALT oslabia SEO i dostepnosc.',
+    },
+    {
+      key: 'redirects',
+      label: 'Przekierowania',
+      severity: 'warning',
+      count: redirects,
+      href: 'links',
+      description: 'Nadmierne przekierowania spowalniaja crawl i UX.',
+    },
+    {
+      key: 'nofollow_pages',
+      label: 'Strony z nofollow',
+      severity: 'warning',
+      count: nofollowPages,
+      href: 'seo',
+      description: 'Nofollow moze blokowac przeplyw link equity.',
+    },
+    {
+      key: 'lh_opportunities',
+      label: 'Lighthouse opportunities',
+      severity: 'warning',
+      count: lhOpportunities,
+      href: 'performance',
+      description: 'Szanse optymalizacyjne z realnym wplywem na wydajnosc.',
+    },
+    {
+      key: 'hreflang_issues',
+      label: 'Problemy hreflang',
+      severity: 'notice',
+      count: hreflangIssues,
+      href: 'seo',
+      description: 'Niespojne hreflang moga zaburzac targeting jezykowy.',
+    },
+    {
+      key: 'missing_sitemap',
+      label: 'Brak sitemap.xml',
+      severity: 'notice',
+      count: missingSitemap,
+      href: 'seo',
+      description: 'Brak sitemap utrudnia szybsze odkrywanie URL-i.',
+    },
+  ]
+
+  return issues
+    .filter((issue) => issue.count > 0)
+    .sort((a, b) => {
+      const levelOrder: Record<SeverityLevel, number> = { error: 0, warning: 1, notice: 2 }
+      if (levelOrder[a.severity] !== levelOrder[b.severity]) {
+        return levelOrder[a.severity] - levelOrder[b.severity]
+      }
+      return b.count - a.count
+    })
+}
+
 export default function AuditDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -187,6 +326,31 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   const crawl = audit.results?.crawl
   const senuto = audit.results?.senuto
   const ai = audit.results?.content_analysis
+  const severityIssues = buildSeverityIssues(crawl, lh)
+  const severityCounts = severityIssues.reduce(
+    (acc, issue) => {
+      acc[issue.severity] += issue.count
+      return acc
+    },
+    { error: 0, warning: 0, notice: 0 }
+  )
+  const topCriticalIssues = severityIssues
+    .filter((issue) => issue.severity !== 'notice')
+    .slice(0, 5)
+  const lhScores = [
+    Number(lh?.performance_score || 0),
+    Number(lh?.accessibility_score || 0),
+    Number(lh?.best_practices_score || 0),
+    Number(lh?.seo_score || 0),
+  ].filter((score) => !Number.isNaN(score))
+  const lhAverage = lhScores.length ? lhScores.reduce((sum, score) => sum + score, 0) / lhScores.length : 0
+  const severityPenalty = severityIssues.reduce((sum, issue) => {
+    return sum + issue.count * severityWeight(issue.severity)
+  }, 0)
+  const issueQualityScore = clampScore(100 - Math.min(85, severityPenalty))
+  const healthScore = clampScore(Math.round(lhAverage * 0.4 + issueQualityScore * 0.6))
+  const healthColor = healthScore >= 80 ? '#16a34a' : healthScore >= 60 ? '#ca8a04' : '#dc2626'
+  const healthLabel = healthScore >= 80 ? 'Dobry' : healthScore >= 60 ? 'Umiarkowany' : 'Krytyczny'
 
   // Calculate duration
   const duration = audit.started_at && audit.completed_at 
@@ -481,6 +645,106 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
           </div>
 
           <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Health Score
+                </CardTitle>
+                <CardDescription>Agregacja problemow SF + Lighthouse (0-100)</CardDescription>
+              </CardHeader>
+              <CardContent className="flex items-center gap-6">
+                <div
+                  className="h-28 w-28 rounded-full p-2 shrink-0"
+                  style={{
+                    background: `conic-gradient(${healthColor} ${Math.round(healthScore * 3.6)}deg, hsl(var(--muted)) 0deg)`,
+                  }}
+                >
+                  <div className="h-full w-full rounded-full bg-background flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{healthScore}%</div>
+                      <div className="text-[10px] uppercase text-muted-foreground">Health</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={healthScore >= 80 ? 'default' : healthScore >= 60 ? 'secondary' : 'destructive'}
+                      className="text-[10px]"
+                    >
+                      {healthLabel}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Lighthouse avg: <strong>{Math.round(lhAverage)}%</strong>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Score jakosci problemow: <strong>{Math.round(issueQualityScore)}%</strong>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="@lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-lg">Issue Severity Dashboard</CardTitle>
+                <CardDescription>Klasyfikacja: Error / Warning / Notice + top 5 krytycznych</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="grid grid-cols-1 @md:grid-cols-3 gap-3">
+                  <div className="rounded-lg border border-red-200 bg-red-50/70 dark:border-red-900/50 dark:bg-red-950/20 p-3">
+                    <p className="text-[11px] uppercase font-bold text-red-700 dark:text-red-300">Errors</p>
+                    <p className="text-2xl font-bold text-red-700 dark:text-red-300">{formatNumber(severityCounts.error)}</p>
+                  </div>
+                  <div className="rounded-lg border border-amber-200 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20 p-3">
+                    <p className="text-[11px] uppercase font-bold text-amber-700 dark:text-amber-300">Warnings</p>
+                    <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{formatNumber(severityCounts.warning)}</p>
+                  </div>
+                  <div className="rounded-lg border border-blue-200 bg-blue-50/70 dark:border-blue-900/50 dark:bg-blue-950/20 p-3">
+                    <p className="text-[11px] uppercase font-bold text-blue-700 dark:text-blue-300">Notices</p>
+                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{formatNumber(severityCounts.notice)}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold">Top 5 krytycznych problemow</p>
+                  {topCriticalIssues.length > 0 ? (
+                    <div className="space-y-2">
+                      {topCriticalIssues.map((issue) => (
+                        <div key={issue.key} className="flex items-start justify-between gap-3 p-3 rounded-lg border bg-accent/5">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Badge variant={issue.severity === 'error' ? 'destructive' : 'secondary'} className="text-[10px] uppercase">
+                                {issue.severity}
+                              </Badge>
+                              <span className="text-sm font-semibold">{issue.label}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">{issue.description}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge variant="outline">{formatNumber(issue.count)}</Badge>
+                            <Link href={`/audits/${params.id}/${issue.href}`}>
+                              <Button variant="outline" size="sm" className="h-7 text-[10px]">
+                                Szczegoly <ChevronRight className="ml-1 h-3 w-3" />
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50/70 p-3">
+                      <CheckCircle className="h-4 w-4 text-green-700" />
+                      <p className="text-sm text-green-800">Brak krytycznych problemow w tej chwili.</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
             {/* Quick Stats & Navigation */}
             <div className="@lg:col-span-2 space-y-6">
               <div className="grid grid-cols-2 @md:grid-cols-4 gap-4">
@@ -618,98 +882,41 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                 </Card>
               )}
 
-              {/* Top Priority Issues */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Krytyczne Problemy</CardTitle>
+                  <CardTitle className="text-lg">Lista problemow wg severity</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <Accordion type="single" collapsible className="w-full space-y-3">
-                    {(crawl?.links?.broken || 0) > 0 && (
-                      <AccordionItem value="broken-links" className="border-none">
-                        <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-100">
-                          <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm">Wykryto <strong>{crawl.links.broken}</strong> niedziałających linków.</p>
-                              <AccordionTrigger className="py-0 h-auto hover:no-underline" />
+                <CardContent>
+                  {severityIssues.length > 0 ? (
+                    <Accordion type="single" collapsible className="w-full">
+                      {severityIssues.slice(0, 8).map((issue) => (
+                        <AccordionItem key={issue.key} value={issue.key}>
+                          <AccordionTrigger className="text-sm">
+                            <div className="flex items-center gap-2 text-left">
+                              <Badge variant={issue.severity === 'error' ? 'destructive' : issue.severity === 'warning' ? 'secondary' : 'outline'}>
+                                {issue.severity}
+                              </Badge>
+                              <span>{issue.label}</span>
+                              <Badge variant="outline">{formatNumber(issue.count)}</Badge>
                             </div>
-                            <AccordionContent className="pt-3 space-y-3">
-                              <p className="text-xs text-muted-foreground">
-                                Uszkodzone linki (404) negatywnie wpływają na doświadczenie użytkownika i indeksowanie strony przez roboty.
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                <Link href={`/audits/${params.id}/links?filter=broken`}>
-                                  <Button size="sm" variant="outline" className="h-7 text-[10px]">
-                                    Zobacz wszystkie <ChevronRight className="ml-1 h-3 w-3" />
-                                  </Button>
-                                </Link>
-                              </div>
-                            </AccordionContent>
-                          </div>
-                        </div>
-                      </AccordionItem>
-                    )}
-                    
-                    {lh?.performance_score < 50 && (
-                      <AccordionItem value="low-perf" className="border-none">
-                        <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-100">
-                          <Gauge className="h-5 w-5 text-red-600 mt-0.5" />
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm">Bardzo niska wydajność (<strong>{lh.performance_score}/100</strong>).</p>
-                              <AccordionTrigger className="py-0 h-auto hover:no-underline" />
-                            </div>
-                            <AccordionContent className="pt-3 space-y-3">
-                              <p className="text-xs text-muted-foreground">
-                                Strona ładuje się zbyt wolno, co może powodować wysoki współczynnik odrzuceń i spadek pozycji w Google.
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                <Link href={`/audits/${params.id}/performance`}>
-                                  <Button size="sm" variant="outline" className="h-7 text-[10px]">
-                                    Analiza wydajności <ChevronRight className="ml-1 h-3 w-3" />
-                                  </Button>
-                                </Link>
-                              </div>
-                            </AccordionContent>
-                          </div>
-                        </div>
-                      </AccordionItem>
-                    )}
-
-                    {crawl?.images?.without_alt > 0 && (
-                      <AccordionItem value="missing-alt" className="border-none">
-                        <div className="flex items-start gap-3 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-100">
-                          <ImageIcon className="h-5 w-5 text-yellow-600 mt-0.5" />
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm"><strong>{crawl.images.without_alt}</strong> obrazów bez tekstu ALT.</p>
-                              <AccordionTrigger className="py-0 h-auto hover:no-underline" />
-                            </div>
-                            <AccordionContent className="pt-3 space-y-3">
-                              <p className="text-xs text-muted-foreground">
-                                Brak opisów ALT utrudnia dostępność strony dla osób niedowidzących i pozbawia stronę dodatkowych sygnałów SEO.
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                <Link href={`/audits/${params.id}/images?filter=no-alt`}>
-                                  <Button size="sm" variant="outline" className="h-7 text-[10px]">
-                                    Napraw obrazy <ChevronRight className="ml-1 h-3 w-3" />
-                                  </Button>
-                                </Link>
-                              </div>
-                            </AccordionContent>
-                          </div>
-                        </div>
-                      </AccordionItem>
-                    )}
-
-                    {(!crawl?.links?.broken && lh?.performance_score >= 50 && !crawl?.images?.without_alt) && (
-                      <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100">
-                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                        <p className="text-sm font-medium text-green-800 dark:text-green-400">Brak krytycznych problemów technicznych. Dobra robota!</p>
-                      </div>
-                    )}
-                  </Accordion>
+                          </AccordionTrigger>
+                          <AccordionContent className="space-y-2">
+                            <p className="text-xs text-muted-foreground">{issue.description}</p>
+                            <Link href={`/audits/${params.id}/${issue.href}`}>
+                              <Button size="sm" variant="outline" className="h-7 text-[10px]">
+                                Otworz modul <ChevronRight className="ml-1 h-3 w-3" />
+                              </Button>
+                            </Link>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  ) : (
+                    <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50/70 p-3">
+                      <CheckCircle className="h-4 w-4 text-green-700 mt-0.5" />
+                      <p className="text-sm text-green-800">Brak wykrytych problemow po klasyfikacji severity.</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

@@ -2107,3 +2107,44 @@ All three rendering functions have been implemented:
 **Last Updated**: 2026-03-06  
 **Status**: Core template stabilization delivered; visual unification baseline in place
 
+---
+
+## Gap Analysis — Faza 1 wdrożona (2026-03-08)
+
+### Zakres dostarczony
+
+- `frontend/app/(app)/audits/[id]/page.tsx`
+  - Dodano **Health Score widget** (single 0-100%) oparty o agregację Lighthouse + klasyfikację problemów z crawla.
+  - Dodano **Issue Severity Dashboard**: Error/Warning/Notice counts + top 5 krytycznych problemów z deeplinkami do modułów.
+  - Sekcja problemów została przebudowana z prostych hardcoded bloków do klasyfikacji severity.
+
+- `frontend/app/(app)/audits/[id]/technical/page.tsx` (NOWA STRONA)
+  - Dodano nowy route `/audits/[id]/technical` z 3-phase pattern (`Dane/Analiza/Plan`).
+  - W trybie `Dane` wdrożono 6 paneli z istniejących danych `results.crawl`:
+    - Robots.txt
+    - Sitemap analysis
+    - Domain config
+    - Render without JS
+    - Soft 404 / Low content
+    - Directives / Hreflang
+  - Każdy panel ma KPI + listę problemów i/lub tabelę próbek (DataExplorerTable).
+
+- `frontend/components/layout/AuditSidebar.tsx`
+  - Dodano link nawigacyjny do nowego modułu: `Technical SEO` (`/audits/[id]/technical`) w grupie `Technikalia`.
+
+- `frontend/app/(app)/audits/[id]/links/page.tsx`
+  - Rozbudowano backlinks:
+    - `ref_domains`: z top 6 do pełnej tabeli paginowanej (`DataExplorerTable`).
+    - `anchors`: z top 6 do pełnej wizualizacji (word cloud) + tabela pełnych anchorów.
+
+- `frontend/app/(app)/audits/[id]/visibility/page.tsx`
+  - Dodano **positions sampling indicator** na zakładce `Pozycje`:
+    - komunikat: „Pokazujesz X z Y fraz (Z%)”
+    - oparty o `senuto._meta.positions_count` oraz `senuto._meta.positions_total`.
+
+### Efekt biznesowy
+
+- Domknięto wszystkie 6 braków z Tier 1/Faza 1 wskazanych w `docs/gap-analysis-report.md`.
+- Użytkownik widzi dane, które wcześniej były tylko w backendzie/raw (technical extras, pełne backlinks, metadata samplingu).
+- Audit overview ma teraz table-stakes KPI (`Health Score` + severity breakdown) zgodne z oczekiwaniami rynku SEO tools.
+

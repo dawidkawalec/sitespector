@@ -2547,3 +2547,47 @@ Replaced all instances of `{% from '../macros.html' import ... %}` with `{% from
 
 **Verification**:
 - Regenerated full PDF and confirmed improved column balance and URL readability.
+
+---
+
+### BUG-053: Tier 1 gap-analysis data existed in backend but was invisible in audit UI
+
+**Reported**: 2026-03-08
+
+**Status**: ✅ FIXED (2026-03-08)
+
+**Severity**: HIGH
+
+**Description**:
+- Audit frontend did not expose multiple high-value datasets already present in `audits.results`:
+  - missing single Health Score on overview,
+  - no Error/Warning/Notice severity dashboard,
+  - no dedicated technical page for `results.crawl` extras,
+  - backlinks `ref_domains` and `anchors` truncated to top 6,
+  - no visibility sampling indicator (`positions_count` vs `positions_total`).
+
+**Root cause**:
+- UI implementation covered only a subset of collected backend payloads.
+- Technical SEO extras and full Senuto backlink/sampling metadata remained available only in raw payloads/PDF/backend logic.
+
+**Fix**:
+- Added Health Score + Issue Severity dashboard in:
+  - `frontend/app/(app)/audits/[id]/page.tsx`
+- Added new route:
+  - `frontend/app/(app)/audits/[id]/technical/page.tsx`
+  - with 6 panels: robots, sitemap, domain config, render no-JS, soft 404, directives/hreflang.
+- Added audit sidebar navigation entry:
+  - `frontend/components/layout/AuditSidebar.tsx`
+- Expanded backlinks UI:
+  - `frontend/app/(app)/audits/[id]/links/page.tsx`
+  - full ref domains table + full anchor cloud visualization + anchor table.
+- Added positions sampling indicator:
+  - `frontend/app/(app)/audits/[id]/visibility/page.tsx`
+  - based on `senuto._meta.positions_count` and `senuto._meta.positions_total`.
+
+**Verification**:
+- Lints for changed files: no errors.
+- Confirmed new route `/audits/[id]/technical` renders with 3-phase mode switcher and 6 data panels.
+- Confirmed overview contains Health Score + severity counts + top 5 critical issues.
+- Confirmed backlinks incoming tab now surfaces full domains/anchors datasets.
+- Confirmed visibility positions tab shows `X z Y` sampling message.

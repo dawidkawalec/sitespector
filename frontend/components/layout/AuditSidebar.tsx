@@ -13,6 +13,7 @@ import {
   Globe2,
   Sparkles,
   Gauge,
+  Wrench,
   MousePointer,
   Shield,
   Network,
@@ -105,6 +106,7 @@ export function AuditSidebar({ auditId, onNavigate, className }: AuditSidebarPro
         icon: Gauge,
         value: 'technical',
         items: [
+          { href: `/audits/${auditId}/technical`, icon: Wrench, label: 'Technical SEO' },
           { href: `/audits/${auditId}/performance`, icon: Gauge, label: 'Wydajnosc' },
           { href: `/audits/${auditId}/ux-check`, icon: MousePointer, label: 'Uzytecznosc' },
           { href: `/audits/${auditId}/security`, icon: Shield, label: 'Bezpieczenstwo' },

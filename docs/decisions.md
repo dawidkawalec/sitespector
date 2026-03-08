@@ -1306,3 +1306,33 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 - **Rationale**: Szacunkowe wykorzystanie zebranych danych to ~40-50%. Kluczowe: 6/8 modułów Technical SEO Extras nie ma UI, backlinks pokazują 6 z 2000 ref domains, brak Health Score i Issue severity (table stakes w branży).
 - **Zakres analizy**: Lighthouse (150+ audytów, kategoryzacja), SF (kolumna-po-kolumnie 10 tabów CSV), Senuto (17 endpointów), Technical SEO Extras (8 modułów), benchmark rynkowy (Ahrefs/SEMrush/Sitebulb/SE Ranking/SF UI), 30+ nowych analiz z istniejących danych.
 - **Output**: 3-tierowy roadmap (Tier 1: ~12 dni, Tier 2: ~20 dni, Tier 3: ~50 dni), 30+ zidentyfikowanych luk z priorytetami.
+
+---
+
+## ADR-060: Gap Analysis Faza 1 jako frontend-first rollout (2026-03-08)
+
+- **Decision**:
+  - Wdrożyć cały Tier 1/Faza 1 bez zmian kontraktów backendu, wykorzystując istniejące pola w `audits.results`:
+    - `results.crawl.*` (6 paneli technical),
+    - `results.senuto.backlinks.*` (pełne ref domains + anchors),
+    - `results.senuto._meta.positions_total` (sampling indicator),
+    - `results.lighthouse.desktop` + `results.crawl` (Health Score + severity).
+  - Dodać nową stronę `/audits/[id]/technical` z istniejącym wzorcem 3-fazowym (`Dane/Analiza/Plan`) zamiast dopisywania paneli do obecnej strony SEO.
+  - Utrzymać klasyfikację severity po stronie frontendu jako szybki etap przejściowy (Error/Warning/Notice), bez dodatkowej normalizacji backendowej.
+
+- **Rationale**:
+  - Gap analysis wykazał, że największa luka to brak wizualizacji danych już zbieranych; najszybszy ROI daje warstwa prezentacji.
+  - Frontend-first rollout minimalizuje ryzyko regresji pipeline’u audytowego i skraca time-to-value.
+  - Osobny route `technical` porządkuje IA audytu i pozwala skalować kolejne panele bez przeciążania `seo/page.tsx`.
+
+- **Implementation**:
+  - `frontend/app/(app)/audits/[id]/page.tsx`
+  - `frontend/app/(app)/audits/[id]/technical/page.tsx`
+  - `frontend/app/(app)/audits/[id]/links/page.tsx`
+  - `frontend/app/(app)/audits/[id]/visibility/page.tsx`
+  - `frontend/components/layout/AuditSidebar.tsx`
+
+- **Outcome**:
+  - Tier 1 z raportu został zamknięty na froncie.
+  - Użytkownik otrzymał table-stakes KPI (Health Score + Issue Severity) oraz pełny wgląd w technical extras i backlink depth.
+  - Architektura pozostała kompatybilna z aktualnym backendem i gotowa pod Tier 2 (gdzie potrzebne będą już zmiany transformacji danych).

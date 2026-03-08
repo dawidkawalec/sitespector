@@ -337,11 +337,13 @@ AI analysis (Gemini) **używa** tych danych do generowania insights, ale użytko
 ### Faza 1: "Complete the Foundation" (2 tygodnie)
 Cel: Przestać marnować dane, które już zbieramy.
 
-- [ ] Zbuduj stronę `/audits/[id]/technical` z 6 panelami (1.3-1.8)
-- [ ] Dodaj Health Score widget (1.1)
-- [ ] Dodaj Issue severity dashboard (1.2)
-- [ ] Rozbuduj backlinks: pełne tabele ref domains + anchors (1.9-1.10)
-- [ ] Dodaj positions sampling indicator (1.11)
+- [x] Zbuduj stronę `/audits/[id]/technical` z 6 panelami (1.3-1.8)
+- [x] Dodaj Health Score widget (1.1)
+- [x] Dodaj Issue severity dashboard (1.2)
+- [x] Rozbuduj backlinks: pełne tabele ref domains + anchors (1.9-1.10)
+- [x] Dodaj positions sampling indicator (1.11)
+
+**Status wdrożenia**: Faza 1 ukończona na froncie (2026-03-08).
 
 ### Faza 2: "Deeper Insights" (3-4 tygodnie)
 Cel: Wyciągnąć więcej z danych, które mamy.
