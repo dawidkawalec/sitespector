@@ -514,6 +514,9 @@ app/
 │   │   ├── visibility/page.tsx  # Visibility Analysis (6+ tabs, features distributions, sections, cannibalization)
 │   │   ├── ai-overviews/page.tsx # AI Overviews module (KPI, keywords, competitors)
 │   │   ├── links/page.tsx       # Links Analysis (Internal + Incoming + RAW, large-data friendly)
+│   │   ├── technical/page.tsx   # Technical SEO (6 panels: robots, sitemap, domain config, render no-JS, soft 404, directives)
+│   │   ├── ai-readiness/page.tsx # AI Search readiness (llms.txt, bots policy, checklist)
+│   │   ├── content-quality/page.tsx # Content Quality Index + Duplikaty (title/meta/h1) + CSV export
 │   │   ├── images/page.tsx      # Images Analysis (Overview + RAW)
 │   │   ├── ux-check/page.tsx    # UX Analysis
 │   │   ├── security/page.tsx    # Security Analysis

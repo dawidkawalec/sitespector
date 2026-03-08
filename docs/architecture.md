@@ -114,13 +114,14 @@ The authenticated app has a persistent right-side **ChatPanel** (desktop) which 
 
 | Module | Location | Notes |
 |--------|----------|-------|
-| Sidebar | `frontend/components/layout/UnifiedSidebar.tsx` | Projects tree + audit nav + search + audit tools (`crawl-data`, `debug`) |
+| TopBar + Nav | `frontend/components/layout/TopBar.tsx`, `Breadcrumbs.tsx`, `UserMenu.tsx` | Global app navigation |
+| Context sidebars | `frontend/components/layout/AuditSidebar.tsx`, `ProjectSidebar.tsx` | Audit/project nav; audit tools (crawl-data, debug) |
 | Dashboard | `frontend/app/(app)/dashboard/page.tsx` | Workspace trends only |
 | Projects | `frontend/app/(app)/projects/` | CRUD, audits, compare, schedule, team |
-| Audit detail | `frontend/app/(app)/audits/[id]/` | 15+ subpages |
+| Audit detail | `frontend/app/(app)/audits/[id]/` | 15+ subpages (technical, ai-readiness, content-quality, architecture graph, etc.) |
 | Chat (RAG) | `frontend/components/chat/ChatPanel.tsx` | SSE streaming, Zustand store |
 | Backend API | `backend/app/routers/` | audits, projects, chat, schedules |
-| Worker | `backend/app/worker.py` | Screaming Frog + Lighthouse + Gemini |
+| Worker | `backend/worker.py` | Screaming Frog + Lighthouse + Gemini + health_index (THI, momentum, traffic, CQI) |
 
 ---
 
