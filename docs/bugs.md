@@ -8,6 +8,48 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-067: Brak szybkich differentiatorow Fazy 3A w produkcie
+
+**Reported**: 2026-03-08
+
+**Status**: ✅ FIXED (2026-03-08)
+
+**Severity**: HIGH
+
+**Description**:
+- Faza 3A z gap analysis byla zaplanowana, ale brakowalo wdrozenia:
+  - composite technical index (THI),
+  - visibility momentum (wins/losses),
+  - AI readiness checks (robots AI policy + llms.txt),
+  - radar performance vs realni konkurenci DB.
+
+**Root cause**:
+- Brak warstwy backendowych metryk pochodnych zapisanych w `audits.results`.
+- Brak dedykowanego UI dla sygnalow AI search readiness i porownania Lighthouse z konkurentami DB.
+
+**Fix**:
+- Backend:
+  - `backend/app/services/health_index.py` (new): THI + visibility momentum,
+  - `backend/app/services/technical_seo_extras.py`: AI readiness + llms.txt + bot policy checks,
+  - `backend/worker.py`: persistence `results.technical_health_index`, `results.visibility_momentum`, `results.crawl.ai_readiness`.
+- Frontend:
+  - `frontend/app/(app)/audits/[id]/page.tsx`: THI card + momentum card + AI readiness summary card,
+  - `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx` (new),
+  - `frontend/app/(app)/audits/[id]/competitors/page.tsx`: competitive Lighthouse radar,
+  - `frontend/components/layout/AuditSidebar.tsx` + `Breadcrumbs.tsx`: route exposure.
+
+**Verification**:
+- `ReadLints` for changed backend/frontend files: ✅ no lint errors.
+- `python3 -m py_compile backend/app/services/health_index.py backend/app/services/technical_seo_extras.py backend/worker.py`: ✅.
+
+**Related**:
+- `docs/gap-analysis-report.md`
+- `backend/app/services/health_index.py`
+- `backend/app/services/technical_seo_extras.py`
+- `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx`
+
+---
+
 ### BUG-066: Tier 2 insights byly nieosiagalne (brak danych i brak wizualizacji)
 
 **Reported**: 2026-03-08

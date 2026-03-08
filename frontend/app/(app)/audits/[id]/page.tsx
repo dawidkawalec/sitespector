@@ -16,7 +16,7 @@ import {
   ArrowLeft, Download, Loader2, RefreshCw, Trash, AlertCircle, 
   FileJson, CheckCircle, Search, Gauge, Sparkles, ImageIcon, 
   Link as LinkIcon, Users, Clock, ShieldCheck, Zap, ChevronDown, ChevronRight, ExternalLink,
-  Terminal, Activity, Check, CheckCheck, Timer, Globe2, TrendingUp, AlertTriangle
+  Terminal, Activity, Check, CheckCheck, Timer, Globe2, TrendingUp, TrendingDown, Bot, AlertTriangle
 } from 'lucide-react'
 import Link from 'next/link'
 import { PageStatusChart } from '@/components/AuditCharts'
@@ -326,6 +326,9 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   const crawl = audit.results?.crawl
   const senuto = audit.results?.senuto
   const ai = audit.results?.content_analysis
+  const technicalHealth = audit.results?.technical_health_index
+  const visibilityMomentum = audit.results?.visibility_momentum
+  const aiReadiness = crawl?.ai_readiness
   const severityIssues = buildSeverityIssues(crawl, lh)
   const severityCounts = severityIssues.reduce(
     (acc, issue) => {
@@ -348,9 +351,58 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     return sum + issue.count * severityWeight(issue.severity)
   }, 0)
   const issueQualityScore = clampScore(100 - Math.min(85, severityPenalty))
-  const healthScore = clampScore(Math.round(lhAverage * 0.4 + issueQualityScore * 0.6))
+  const fallbackHealthScore = clampScore(Math.round(lhAverage * 0.4 + issueQualityScore * 0.6))
+  const healthScore = clampScore(Math.round(Number(technicalHealth?.score ?? fallbackHealthScore)))
   const healthColor = healthScore >= 80 ? '#16a34a' : healthScore >= 60 ? '#ca8a04' : '#dc2626'
-  const healthLabel = healthScore >= 80 ? 'Dobry' : healthScore >= 60 ? 'Umiarkowany' : 'Krytyczny'
+  const healthLabel =
+    technicalHealth?.status === 'good'
+      ? 'Dobry'
+      : technicalHealth?.status === 'moderate'
+        ? 'Umiarkowany'
+        : healthScore >= 80
+          ? 'Dobry'
+          : healthScore >= 60
+            ? 'Umiarkowany'
+            : 'Krytyczny'
+
+  const healthBreakdown = technicalHealth?.breakdown
+  const healthBreakdownItems = healthBreakdown
+    ? [
+        { key: 'lighthouse_pillar', label: 'Lighthouse', value: Number(healthBreakdown.lighthouse_pillar || 0) },
+        { key: 'crawl_health_pillar', label: 'Crawl', value: Number(healthBreakdown.crawl_health_pillar || 0) },
+        { key: 'tech_extras_pillar', label: 'Tech Extras', value: Number(healthBreakdown.tech_extras_pillar || 0) },
+        { key: 'content_pillar', label: 'Content', value: Number(healthBreakdown.content_pillar || 0) },
+        { key: 'security_pillar', label: 'Security', value: Number(healthBreakdown.security_pillar || 0) },
+      ]
+    : []
+
+  const momentumScore = Number(visibilityMomentum?.score || 0)
+  const momentumLabel =
+    visibilityMomentum?.status === 'strong_growth'
+      ? 'Silny wzrost'
+      : visibilityMomentum?.status === 'growing'
+        ? 'Wzrost'
+        : visibilityMomentum?.status === 'declining'
+          ? 'Spadek'
+          : visibilityMomentum?.status === 'critical'
+            ? 'Silny spadek'
+            : 'Stabilnie'
+  const momentumColor = momentumScore >= 10 ? '#16a34a' : momentumScore <= -10 ? '#dc2626' : '#ca8a04'
+  const momentumGauge = clampScore(Math.round(((momentumScore + 100) / 200) * 100))
+  const topMomentumWins = (visibilityMomentum?.top_wins || []).slice(0, 3)
+  const topMomentumLosses = (visibilityMomentum?.top_losses || []).slice(0, 3)
+
+  const aiReadinessScore = Number(aiReadiness?.score || 0)
+  const aiReadinessLabel =
+    aiReadiness?.status === 'ready'
+      ? 'Ready'
+      : aiReadiness?.status === 'partial'
+        ? 'Partial'
+        : 'Not ready'
+  const aiReadinessChecks = Array.isArray(aiReadiness?.checks) ? aiReadiness.checks : []
+  const aiReadinessPass = aiReadinessChecks.filter((check: any) => check?.status === 'pass').length
+  const aiReadinessWarn = aiReadinessChecks.filter((check: any) => check?.status === 'warning').length
+  const aiReadinessFail = aiReadinessChecks.filter((check: any) => check?.status === 'fail').length
 
   // Calculate duration
   const duration = audit.started_at && audit.completed_at 
@@ -649,40 +701,61 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Activity className="h-5 w-5 text-primary" />
-                  Health Score
+                  Technical Health Index
                 </CardTitle>
-                <CardDescription>Agregacja problemow SF + Lighthouse (0-100)</CardDescription>
+                <CardDescription>
+                  {technicalHealth ? 'Kompozyt 5 filarow (Lighthouse, Crawl, Extras, Content, Security)' : 'Agregacja problemow SF + Lighthouse (0-100)'}
+                </CardDescription>
               </CardHeader>
-              <CardContent className="flex items-center gap-6">
-                <div
-                  className="h-28 w-28 rounded-full p-2 shrink-0"
-                  style={{
-                    background: `conic-gradient(${healthColor} ${Math.round(healthScore * 3.6)}deg, hsl(var(--muted)) 0deg)`,
-                  }}
-                >
-                  <div className="h-full w-full rounded-full bg-background flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold">{healthScore}%</div>
-                      <div className="text-[10px] uppercase text-muted-foreground">Health</div>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-6">
+                  <div
+                    className="h-28 w-28 rounded-full p-2 shrink-0"
+                    style={{
+                      background: `conic-gradient(${healthColor} ${Math.round(healthScore * 3.6)}deg, hsl(var(--muted)) 0deg)`,
+                    }}
+                  >
+                    <div className="h-full w-full rounded-full bg-background flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold">{healthScore}%</div>
+                        <div className="text-[10px] uppercase text-muted-foreground">THI</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant={healthScore >= 80 ? 'default' : healthScore >= 60 ? 'secondary' : 'destructive'}
-                      className="text-[10px]"
-                    >
-                      {healthLabel}
-                    </Badge>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={healthScore >= 80 ? 'default' : healthScore >= 60 ? 'secondary' : 'destructive'}
+                        className="text-[10px]"
+                      >
+                        {healthLabel}
+                      </Badge>
+                      {technicalHealth?.grade && <Badge variant="outline">Grade {technicalHealth.grade}</Badge>}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Lighthouse avg: <strong>{Math.round(lhAverage)}%</strong>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Score jakosci problemow: <strong>{Math.round(issueQualityScore)}%</strong>
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Lighthouse avg: <strong>{Math.round(lhAverage)}%</strong>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Score jakosci problemow: <strong>{Math.round(issueQualityScore)}%</strong>
-                  </p>
                 </div>
+
+                {healthBreakdownItems.length > 0 && (
+                  <div className="space-y-2">
+                    {healthBreakdownItems.map((item) => (
+                      <div key={item.key} className="space-y-1">
+                        <div className="flex items-center justify-between text-[11px] uppercase text-muted-foreground">
+                          <span>{item.label}</span>
+                          <span>{Math.round(item.value)}%</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(0, Math.min(100, item.value))}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -740,6 +813,131 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  {momentumScore >= 0 ? <TrendingUp className="h-5 w-5 text-primary" /> : <TrendingDown className="h-5 w-5 text-primary" />}
+                  Visibility Momentum
+                </CardTitle>
+                <CardDescription>Senuto wins vs losses wazone search volume (-100 do +100)</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">Momentum</div>
+                    <div className="text-lg font-bold" style={{ color: momentumColor }}>
+                      {momentumScore > 0 ? '+' : ''}{momentumScore.toFixed(1)}
+                    </div>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${momentumGauge}%`, backgroundColor: momentumColor }} />
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] uppercase text-muted-foreground">
+                    <span>-100</span>
+                    <Badge variant={momentumScore >= 10 ? 'default' : momentumScore <= -10 ? 'destructive' : 'secondary'}>{momentumLabel}</Badge>
+                    <span>+100</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded border bg-accent/5 p-2">
+                    <p className="text-[10px] uppercase text-muted-foreground">Wins</p>
+                    <p className="font-bold">{formatNumber(visibilityMomentum?.wins_count || 0)}</p>
+                  </div>
+                  <div className="rounded border bg-accent/5 p-2">
+                    <p className="text-[10px] uppercase text-muted-foreground">Losses</p>
+                    <p className="font-bold">{formatNumber(visibilityMomentum?.losses_count || 0)}</p>
+                  </div>
+                  <div className="rounded border bg-accent/5 p-2">
+                    <p className="text-[10px] uppercase text-muted-foreground">Net</p>
+                    <p className="font-bold">{formatNumber(visibilityMomentum?.net_keywords || 0)}</p>
+                  </div>
+                </div>
+
+                {(topMomentumWins.length > 0 || topMomentumLosses.length > 0) && (
+                  <div className="grid grid-cols-1 @md:grid-cols-2 gap-3">
+                    <div className="rounded border p-3 space-y-1">
+                      <p className="text-[11px] uppercase font-semibold text-green-700 dark:text-green-300">Top wins</p>
+                      {topMomentumWins.length > 0 ? (
+                        topMomentumWins.map((row: any, idx: number) => (
+                          <p key={`${row.keyword}-${idx}`} className="text-xs truncate">
+                            {row.keyword} <span className="text-muted-foreground">({formatNumber(row.search_volume || 0)} SV)</span>
+                          </p>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Brak danych</p>
+                      )}
+                    </div>
+                    <div className="rounded border p-3 space-y-1">
+                      <p className="text-[11px] uppercase font-semibold text-red-700 dark:text-red-300">Top losses</p>
+                      {topMomentumLosses.length > 0 ? (
+                        topMomentumLosses.map((row: any, idx: number) => (
+                          <p key={`${row.keyword}-${idx}`} className="text-xs truncate">
+                            {row.keyword} <span className="text-muted-foreground">({formatNumber(row.search_volume || 0)} SV)</span>
+                          </p>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Brak danych</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-primary" />
+                  AI Search Readiness
+                </CardTitle>
+                <CardDescription>Gotowosc domeny na widocznosc w ChatGPT, Perplexity i AI Overviews</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold">{Math.round(aiReadinessScore)}%</div>
+                    <div className="text-xs text-muted-foreground uppercase">{aiReadinessLabel}</div>
+                  </div>
+                  <Badge variant={aiReadinessScore >= 75 ? 'default' : aiReadinessScore >= 45 ? 'secondary' : 'destructive'}>
+                    {aiReadinessLabel}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded border bg-accent/5 p-2">
+                    <p className="text-[10px] uppercase text-muted-foreground">Pass</p>
+                    <p className="font-bold text-green-700 dark:text-green-300">{formatNumber(aiReadinessPass)}</p>
+                  </div>
+                  <div className="rounded border bg-accent/5 p-2">
+                    <p className="text-[10px] uppercase text-muted-foreground">Warn</p>
+                    <p className="font-bold text-amber-700 dark:text-amber-300">{formatNumber(aiReadinessWarn)}</p>
+                  </div>
+                  <div className="rounded border bg-accent/5 p-2">
+                    <p className="text-[10px] uppercase text-muted-foreground">Fail</p>
+                    <p className="font-bold text-red-700 dark:text-red-300">{formatNumber(aiReadinessFail)}</p>
+                  </div>
+                </div>
+
+                <div className="rounded border p-3 bg-accent/5">
+                  <p className="text-xs text-muted-foreground">
+                    Citation bots blocked: <strong>{formatNumber(aiReadiness?.citation_bots?.blocked?.length || 0)}</strong>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    llms.txt: <strong>{aiReadiness?.llms_txt?.exists ? 'wykryty' : 'brak'}</strong>
+                  </p>
+                </div>
+
+                <Link href={`/audits/${params.id}/ai-readiness`}>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Zobacz szczegoly AI Readiness <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>

@@ -48,6 +48,40 @@ The **Worker** is a background Python process that polls for pending audits and 
 
 ---
 
+## Gap Analysis — Faza 3A Quick Win Differentiators (2026-03-08)
+
+### Composite scoring
+
+- `backend/app/services/health_index.py` (new):
+  - `compute_technical_health_index(results)`:
+    - nowy 5-filarowy composite score 0-100 (Lighthouse, Crawl Health, Tech Extras, Content, Security),
+    - zwraca `score`, `grade`, `status`, `breakdown`, `components`, `issues_summary`.
+  - `compute_visibility_momentum(senuto_data)`:
+    - momentum -100..100 na bazie Senuto wins/losses wazonych `search_volume`,
+    - zwraca m.in. `wins_count`, `losses_count`, `top_wins`, `top_losses`.
+
+### AI Search readiness checks
+
+- `backend/app/services/technical_seo_extras.py`:
+  - robots parser rozszerzony o `user_agent_rules` (full map disallow/allow per UA),
+  - dodano analize `/llms.txt` (`_analyze_llms_txt`) z walidacja struktury (H1, blockquote, H2, linki),
+  - dodano `_analyze_ai_readiness(...)`:
+    - scoring 0-100 oparty o schema readiness, robots AI policy, llms.txt, semantic HTML, no-JS render i sygnaly techniczne,
+    - klasyfikuje boty `training` i `citation` na `allowed / blocked / unknown`,
+    - zwraca `checks`, `recommendations`, `components`, `llms_txt`.
+  - `collect_technical_extras(...)` zwraca teraz dodatkowo `ai_readiness`.
+
+### Worker persistence
+
+- `backend/worker.py`:
+  - po zebraniu danych technicznych worker zapisuje:
+    - `results.technical_health_index`,
+    - `results.visibility_momentum`,
+    - `results.crawl.ai_readiness`.
+  - `run_technical_analysis(...)` zwraca nowe bloki w payloadzie technicznym.
+
+---
+
 ## PDF Branding Rollout (SVG) (2026-03-06)
 
 - Unified PDF brand source to a single full logotype asset: `backend/templates/pdf/assets/sitespector_logo_transp.svg`.

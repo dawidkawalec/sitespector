@@ -11,6 +11,7 @@ import {
   Link as LinkIcon,
   Image as ImageIcon,
   Globe2,
+  Bot,
   Sparkles,
   Gauge,
   Wrench,
@@ -99,6 +100,7 @@ export function AuditSidebar({ auditId, onNavigate, className }: AuditSidebarPro
         items: [
           { href: `/audits/${auditId}/visibility`, icon: Globe2, label: 'Widocznosc' },
           { href: `/audits/${auditId}/ai-overviews`, icon: Sparkles, label: 'AI Overviews' },
+          { href: `/audits/${auditId}/ai-readiness`, icon: Bot, label: 'AI Readiness' },
         ],
       },
       {

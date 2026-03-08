@@ -358,13 +358,17 @@ Cel: Wyciągnąć więcej z danych, które mamy.
 ### Faza 3: "Differentiate" (1-2 miesiące)
 Cel: Zbudować features, których konkurencja nie ma.
 
-- [ ] Composite indices (THI, Visibility Momentum, CQI) (3.1-3.2, 3.6)
+- [x] Composite indices (THI, Visibility Momentum) (3.1-3.2)
 - [ ] Historical audit comparison (3.3)
 - [ ] Traffic Impact Estimation (3.4)
-- [ ] AI Search readiness checks (3.5)
+- [x] AI Search readiness checks (3.5)
+- [x] Competitive Performance Radar (3.7)
+- [ ] Composite index: Content Quality Index (3.6)
 - [ ] Site architecture visualization (3.8)
 - [ ] Content Optimization Briefs (3.11)
 - [ ] Auto Monthly Reports (3.12)
+
+**Status wdrożenia**: Faza 3A ukończona (2026-03-08): THI, Visibility Momentum, AI Readiness, Competitive Performance Radar.
 
 ---
 

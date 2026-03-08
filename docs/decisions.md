@@ -1,5 +1,29 @@
 # Architectural Decisions Log
 
+## ADR-059: Phase 3A Composite Scores + AI Readiness Surface (2026-03-08)
+
+- **Decision**: Introduce three new first-class derived signals in audit results and expose them directly in the audit UI:
+  - `results.technical_health_index` (5-pillar composite),
+  - `results.visibility_momentum` (Senuto wins/losses SV-weighted trend),
+  - `results.crawl.ai_readiness` (AI Search readiness checks including robots AI policy + llms.txt).
+- **Rationale**:
+  - Existing UI showed mostly raw metrics; users lacked a single "state of health" and trend-oriented summary.
+  - AI-related recommendations were partially black-boxed; users needed transparent checks and bot policy visibility.
+  - Competitive differentiation required visible, actionable features beyond baseline crawl/perf outputs.
+- **Implementation**:
+  - Backend:
+    - new `backend/app/services/health_index.py`,
+    - `technical_seo_extras.py` extended with `llms.txt` and AI bot policy analysis,
+    - worker persists new payload blocks in `audits.results`.
+  - Frontend:
+    - overview cards for THI, momentum and AI readiness summary,
+    - new `/audits/[id]/ai-readiness` page,
+    - competitors page extended with Lighthouse radar for DB competitors.
+- **Outcome**:
+  - Faster executive interpretation of audit state (score + trend + AI readiness),
+  - better explainability for AI visibility recommendations,
+  - stronger product differentiation with low implementation overhead.
+
 ## ADR-055: Context Sidebar Parity + Theme Split (2026-03-07)
 
 - **Decision**: Enforce one shared visual contract for all contextual left rails (audit, project, settings) and split their surfaces into explicit light/dark theme variants.

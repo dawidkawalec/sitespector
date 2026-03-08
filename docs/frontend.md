@@ -48,6 +48,51 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ---
 
+## Gap Analysis — Faza 3A wdrozona (2026-03-08)
+
+### Overview (`/audits/[id]`)
+
+- `frontend/app/(app)/audits/[id]/page.tsx`:
+  - Health card przebudowany do **Technical Health Index**:
+    - preferuje `results.technical_health_index.score`,
+    - fallback do starej kalkulacji (LH avg + issue quality) dla starszych audytow,
+    - pokazuje `grade` i breakdown 5 filarow.
+  - dodano card **Visibility Momentum**:
+    - score -100..100 z `results.visibility_momentum`,
+    - status (`Silny wzrost/Wzrost/Stabilnie/Spadek/Silny spadek`),
+    - top wins/losses (SV-weighted).
+  - dodano summary card **AI Search Readiness**:
+    - score + status + pass/warn/fail counters,
+    - skrót: blocked citation bots + llms.txt presence,
+    - CTA do pelnej strony `/ai-readiness`.
+
+### New page: AI readiness
+
+- `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx` (new):
+  - dedykowany dashboard gotowosci pod AI search:
+    - score/status cards,
+    - checklist pass/warn/fail,
+    - tabela botow (training/citation),
+    - llms.txt preview + issues,
+    - recommendations i breakdown komponentow score.
+
+### Competitors radar
+
+- `frontend/app/(app)/audits/[id]/competitors/page.tsx`:
+  - dodano **Competitive Performance Radar** (Recharts) dla danych z `audit.competitors[*].results.lighthouse`,
+  - porownanie: Twoja strona vs konkurenci DB na osiach:
+    - Performance, SEO, Accessibility, Best Practices,
+  - dodano tabele porownawcza score'ow pod wykresem radar.
+
+### Navigation and IA
+
+- `frontend/components/layout/AuditSidebar.tsx`:
+  - dodano link `AI Readiness` w grupie "Widocznosc i AI".
+- `frontend/components/layout/Breadcrumbs.tsx`:
+  - dodano etykiete breadcrumb dla `ai-readiness`.
+
+---
+
 ## Navigation Redesign (TopBar + Context Sidebars) (2026-03-07)
 
 - Replaced monolithic app navigation (`UnifiedSidebar` + `MobileSidebar`) with a context-driven shell:

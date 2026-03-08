@@ -20,6 +20,7 @@ const AUDIT_SECTION_LABELS: Record<string, string> = {
   performance: 'Wydajnosc',
   visibility: 'Widocznosc',
   'ai-overviews': 'AI Overviews',
+  'ai-readiness': 'AI Readiness',
   links: 'Linki',
   images: 'Obrazy',
   'ux-check': 'Uzytecznosc',

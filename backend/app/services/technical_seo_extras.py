@@ -9,7 +9,7 @@ Additional technical SEO data collection:
 
 import logging
 import re
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
 import httpx
@@ -112,6 +112,23 @@ SCHEMA_RECOMMENDATIONS: Dict[str, str] = {
     "AggregateRating": "rozszerzone wyniki z ocenami",
     "Review": "czytelna warstwa opinii",
 }
+
+AI_TRAINING_BOTS = [
+    "GPTBot",
+    "ClaudeBot",
+    "Google-Extended",
+    "Bytespider",
+    "CCBot",
+    "Meta-ExternalAgent",
+]
+
+AI_CITATION_BOTS = [
+    "OAI-SearchBot",
+    "ChatGPT-User",
+    "PerplexityBot",
+    "Claude-SearchBot",
+    "Applebot-Extended",
+]
 
 
 async def _fetch(client: httpx.AsyncClient, url: str) -> Optional[httpx.Response]:
@@ -428,6 +445,7 @@ def _parse_robots_txt(content: str, url: str) -> Dict:
         "content": content[:5000],  # Store first 5000 chars
         "content_lines": len(lines),
         "user_agents": list(user_agents.keys()),
+        "user_agent_rules": user_agents,
         "sitemap_urls": sitemap_urls,
         "crawl_delay": crawl_delay,
         "full_block": full_block,
@@ -891,6 +909,345 @@ def _analyze_directives_hreflang(sf_raw_tabs: Optional[Dict[str, Any]], all_page
 
 
 # ==========================================
+# AI Search Readiness
+# ==========================================
+
+def _get_ua_rules(
+    user_agent_rules: Dict[str, Dict[str, List[str]]],
+    user_agent: str,
+) -> Tuple[Optional[Dict[str, List[str]]], str]:
+    if not isinstance(user_agent_rules, dict):
+        return None, "none"
+
+    normalized = {str(k).lower(): v for k, v in user_agent_rules.items()}
+    exact = normalized.get(user_agent.lower())
+    if isinstance(exact, dict):
+        return exact, "exact"
+
+    wildcard = normalized.get("*")
+    if isinstance(wildcard, dict):
+        return wildcard, "wildcard"
+
+    return None, "none"
+
+
+def _is_ua_blocked(rules: Optional[Dict[str, List[str]]]) -> bool:
+    if not isinstance(rules, dict):
+        return False
+    disallow = [str(path).strip() for path in (rules.get("disallow") or []) if str(path).strip()]
+    allow = [str(path).strip() for path in (rules.get("allow") or []) if str(path).strip()]
+    if "/" in allow:
+        return False
+    return "/" in disallow or "/*" in disallow
+
+
+def _analyze_llms_txt(resp: Optional[httpx.Response], llms_url: str) -> Dict[str, Any]:
+    result = {
+        "url": llms_url,
+        "exists": False,
+        "status_code": None,
+        "content_type": None,
+        "valid": False,
+        "has_h1": False,
+        "has_blockquote": False,
+        "sections": 0,
+        "links": 0,
+        "size_chars": 0,
+        "preview": "",
+        "issues": [],
+    }
+
+    if not resp:
+        result["issues"].append("Nie udalo sie pobrac /llms.txt")
+        return result
+
+    result["status_code"] = resp.status_code
+    result["content_type"] = resp.headers.get("content-type")
+
+    if resp.status_code != 200:
+        result["issues"].append(f"/llms.txt zwrocil status HTTP {resp.status_code}")
+        return result
+
+    content = (resp.text or "").strip()
+    result["exists"] = True
+    result["size_chars"] = len(content)
+    result["preview"] = "\n".join(content.splitlines()[:25])[:2500]
+
+    if not content:
+        result["issues"].append("Plik /llms.txt jest pusty.")
+        return result
+
+    lines = [line.strip() for line in content.splitlines() if line.strip()]
+    has_h1 = any(line.startswith("# ") for line in lines)
+    has_blockquote = any(line.startswith(">") for line in lines)
+    sections = sum(1 for line in lines if line.startswith("## "))
+    links = len(re.findall(r"\[[^\]]+\]\((?:https?://|/)[^)]+\)", content))
+
+    result["has_h1"] = has_h1
+    result["has_blockquote"] = has_blockquote
+    result["sections"] = sections
+    result["links"] = links
+
+    if not has_h1:
+        result["issues"].append("Brak naglowka H1 w /llms.txt.")
+    if not has_blockquote:
+        result["issues"].append("Brak krotkiego opisu w blockquote (> ...) w /llms.txt.")
+    if sections < 1:
+        result["issues"].append("Brak sekcji H2 w /llms.txt.")
+    if links < 1:
+        result["issues"].append("Brak linkow do kluczowych zasobow w /llms.txt.")
+    if result["size_chars"] > 80000:
+        result["issues"].append("/llms.txt jest bardzo duzy; warto skrocic do najwazniejszych tresci.")
+
+    result["valid"] = has_h1 and has_blockquote and sections >= 1 and links >= 1 and result["size_chars"] <= 80000
+    return result
+
+
+def _analyze_ai_readiness(
+    robots_txt: Dict[str, Any],
+    llms_txt: Dict[str, Any],
+    schema_v2: Dict[str, Any],
+    semantic_html: Dict[str, Any],
+    render_nojs: Dict[str, Any],
+    domain_config: Dict[str, Any],
+    sitemap_analysis: Dict[str, Any],
+) -> Dict[str, Any]:
+    checks: List[Dict[str, Any]] = []
+    recommendations: List[str] = []
+
+    user_agent_rules = robots_txt.get("user_agent_rules", {}) if isinstance(robots_txt, dict) else {}
+    citation_allowed: List[str] = []
+    citation_blocked: List[str] = []
+    citation_unknown: List[str] = []
+    training_allowed: List[str] = []
+    training_blocked: List[str] = []
+    training_unknown: List[str] = []
+    training_explicit: List[str] = []
+
+    for bot in AI_CITATION_BOTS:
+        rules, source = _get_ua_rules(user_agent_rules, bot)
+        if source == "none":
+            citation_unknown.append(bot)
+            continue
+        if _is_ua_blocked(rules):
+            citation_blocked.append(bot)
+        else:
+            citation_allowed.append(bot)
+
+    for bot in AI_TRAINING_BOTS:
+        rules, source = _get_ua_rules(user_agent_rules, bot)
+        if source == "none":
+            training_unknown.append(bot)
+            continue
+        if source == "exact":
+            training_explicit.append(bot)
+        if _is_ua_blocked(rules):
+            training_blocked.append(bot)
+        else:
+            training_allowed.append(bot)
+
+    robots_score = 100.0
+    if robots_txt.get("full_block"):
+        robots_score -= 40.0
+    robots_score -= min(70.0, len(citation_blocked) * 18.0)
+    if len(citation_unknown) == len(AI_CITATION_BOTS):
+        robots_score -= 20.0
+    if not training_explicit:
+        robots_score -= 10.0
+    robots_score = max(0.0, min(100.0, robots_score))
+
+    if citation_blocked:
+        checks.append(
+            {
+                "name": "AI citation bots allowed",
+                "status": "fail",
+                "detail": f"Zablokowane boty cytujace: {', '.join(citation_blocked)}.",
+            }
+        )
+        recommendations.append("Odblokuj boty cytujace (np. OAI-SearchBot, PerplexityBot), aby utrzymac widocznosc w AI.")
+    elif citation_unknown:
+        checks.append(
+            {
+                "name": "AI citation bots allowed",
+                "status": "warning",
+                "detail": "Brak jawnych regul dla botow cytujacych. Rozwaz explicit allow/disallow per bot.",
+            }
+        )
+    else:
+        checks.append(
+            {
+                "name": "AI citation bots allowed",
+                "status": "pass",
+                "detail": "Brak blokad dla botow cytujacych.",
+            }
+        )
+
+    if training_explicit:
+        checks.append(
+            {
+                "name": "AI training bots policy",
+                "status": "pass",
+                "detail": "Wykryto jawna polityke dla botow treningowych.",
+            }
+        )
+    else:
+        checks.append(
+            {
+                "name": "AI training bots policy",
+                "status": "warning",
+                "detail": "Brak jawnej polityki dla botow treningowych (GPTBot/ClaudeBot/... ).",
+            }
+        )
+        recommendations.append("Dodaj jawne reguly robots.txt dla botow treningowych, aby kontrolowac wykorzystanie tresci.")
+
+    llms_score = 0.0
+    if not llms_txt.get("exists"):
+        llms_score = 20.0
+        checks.append(
+            {
+                "name": "llms.txt",
+                "status": "fail",
+                "detail": "Brak pliku /llms.txt.",
+            }
+        )
+        recommendations.append("Dodaj /llms.txt z opisem serwisu i linkami do kluczowych stron.")
+    elif not llms_txt.get("valid"):
+        llms_score = 45.0
+        checks.append(
+            {
+                "name": "llms.txt",
+                "status": "warning",
+                "detail": "Plik /llms.txt istnieje, ale ma braki strukturalne.",
+            }
+        )
+        recommendations.append("Uzupelnij /llms.txt o H1, blockquote i sekcje H2 z linkami.")
+    else:
+        llms_score = 85.0 + (5.0 if llms_txt.get("sections", 0) >= 3 else 0.0) + (10.0 if llms_txt.get("links", 0) >= 5 else 0.0)
+        llms_score = min(100.0, llms_score)
+        checks.append(
+            {
+                "name": "llms.txt",
+                "status": "pass",
+                "detail": "Plik /llms.txt jest dostepny i ma poprawna strukture.",
+            }
+        )
+
+    schema_score = float((schema_v2.get("ai_crawler_readiness") or {}).get("score") or 0)
+    schema_status = "pass" if schema_score >= 75 else "warning" if schema_score >= 45 else "fail"
+    checks.append(
+        {
+            "name": "Schema.org coverage",
+            "status": schema_status,
+            "detail": f"Schema readiness: {round(schema_score)} / 100.",
+            "score": round(schema_score),
+        }
+    )
+    if schema_score < 60:
+        recommendations.append("Rozszerz Schema.org (Organization/WebSite/BreadcrumbList) dla lepszej interpretacji przez AI.")
+
+    semantic_score = float(semantic_html.get("score") or 0)
+    semantic_status = "pass" if semantic_score >= 75 else "warning" if semantic_score >= 45 else "fail"
+    checks.append(
+        {
+            "name": "Semantic content structure",
+            "status": semantic_status,
+            "detail": f"Semantic HTML score: {round(semantic_score)} / 100.",
+            "score": round(semantic_score),
+        }
+    )
+
+    render_score = float(render_nojs.get("score") or 0)
+    render_status = "pass" if render_score >= 75 else "warning" if render_score >= 45 else "fail"
+    checks.append(
+        {
+            "name": "Render without JavaScript",
+            "status": render_status,
+            "detail": f"No-JS render score: {round(render_score)} / 100.",
+            "score": round(render_score),
+        }
+    )
+    if render_score < 60:
+        recommendations.append("Popraw dostepnosc tresci bez JS (SSR/SSG) dla crawlerow AI i wyszukiwarek.")
+
+    technical_signals = 100.0
+    if not domain_config.get("is_https"):
+        technical_signals -= 35.0
+    technical_signals -= min(25.0, len(domain_config.get("issues", []) or []) * 8.0)
+    has_sitemap = bool(sitemap_analysis)
+    if has_sitemap:
+        total_urls = int(sitemap_analysis.get("total_urls") or sitemap_analysis.get("child_count") or 0)
+        if total_urls <= 0:
+            technical_signals -= 15.0
+    else:
+        technical_signals -= 15.0
+    technical_signals = max(0.0, min(100.0, technical_signals))
+
+    technical_status = "pass" if technical_signals >= 75 else "warning" if technical_signals >= 45 else "fail"
+    checks.append(
+        {
+            "name": "Technical AI access signals",
+            "status": technical_status,
+            "detail": f"HTTPS, domena i sitemap signals: {round(technical_signals)} / 100.",
+            "score": round(technical_signals),
+        }
+    )
+    if technical_signals < 60:
+        recommendations.append("Ustabilizuj sygnaly techniczne (HTTPS, redirect canonical host, poprawna sitemap).")
+
+    score = (
+        schema_score * 0.20
+        + robots_score * 0.20
+        + llms_score * 0.20
+        + semantic_score * 0.15
+        + render_score * 0.10
+        + technical_signals * 0.15
+    )
+    score = round(max(0.0, min(100.0, score)), 1)
+
+    if score >= 75:
+        status = "ready"
+    elif score >= 45:
+        status = "partial"
+    else:
+        status = "not_ready"
+
+    if robots_txt.get("full_block"):
+        recommendations.append("Usun globalne `Disallow: /` dla crawlerow, inaczej AI i Google nie przeczytaja tresci.")
+
+    dedup_recommendations: List[str] = []
+    for rec in recommendations:
+        if rec not in dedup_recommendations:
+            dedup_recommendations.append(rec)
+
+    return {
+        "score": score,
+        "status": status,
+        "checks": checks,
+        "recommendations": dedup_recommendations[:12],
+        "training_bots": {
+            "blocked": training_blocked,
+            "allowed": training_allowed,
+            "unknown": training_unknown,
+            "explicit_policy": training_explicit,
+        },
+        "citation_bots": {
+            "blocked": citation_blocked,
+            "allowed": citation_allowed,
+            "unknown": citation_unknown,
+        },
+        "llms_txt": llms_txt,
+        "components": {
+            "schema_readiness": round(schema_score, 1),
+            "robots_ai_config": round(robots_score, 1),
+            "llms_txt_score": round(llms_score, 1),
+            "content_structure": round(semantic_score, 1),
+            "render_accessibility": round(render_score, 1),
+            "technical_signals": round(technical_signals, 1),
+        },
+    }
+
+
+# ==========================================
 # Main Orchestrator
 # ==========================================
 
@@ -915,6 +1272,7 @@ async def collect_technical_extras(
     - render_nojs: no-JS render readiness
     - soft_404: probable soft 404 pages
     - directives_hreflang: directives/hreflang/nofollow summary
+    - ai_readiness: AI search readiness composite score and checks
     """
     ua = (user_agent or "").strip() or DEFAULT_USER_AGENT
     headers = {"User-Agent": ua}
@@ -930,6 +1288,7 @@ async def collect_technical_extras(
         "render_nojs": None,
         "soft_404": None,
         "directives_hreflang": None,
+        "ai_readiness": None,
     }
     
     async with httpx.AsyncClient(
@@ -940,6 +1299,7 @@ async def collect_technical_extras(
         tasks = {
             "homepage": _fetch(client, url),
             "robots": _fetch(client, f"{origin}/robots.txt"),
+            "llms": _fetch(client, f"{origin}/llms.txt"),
         }
         
         responses = {}
@@ -971,6 +1331,8 @@ async def collect_technical_extras(
                 result["robots_txt"] = _parse_robots_txt(robots_resp.text, url)
             except Exception as e:
                 logger.warning("Robots.txt analysis failed: %s", e)
+
+        llms_analysis = _analyze_llms_txt(responses.get("llms"), f"{origin}/llms.txt")
         
         # --- Sitemap analysis ---
         sitemap_to_analyze = sitemap_url
@@ -1005,6 +1367,20 @@ async def collect_technical_extras(
         result["directives_hreflang"] = _analyze_directives_hreflang(sf_raw_tabs, all_pages)
     except Exception as e:
         logger.warning("Directives/hreflang analysis failed: %s", e)
+
+    # --- AI readiness ---
+    try:
+        result["ai_readiness"] = _analyze_ai_readiness(
+            robots_txt=result.get("robots_txt") or {},
+            llms_txt=llms_analysis,
+            schema_v2=result.get("structured_data_v2") or {},
+            semantic_html=result.get("semantic_html") or {},
+            render_nojs=result.get("render_nojs") or {},
+            domain_config=result.get("domain_config") or {},
+            sitemap_analysis=result.get("sitemap_analysis") or {},
+        )
+    except Exception as e:
+        logger.warning("AI readiness analysis failed: %s", e)
     
     return result
 

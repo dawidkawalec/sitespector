@@ -21,11 +21,35 @@ import { Loader2, Users } from 'lucide-react'
 import { formatNumber, formatScore } from '@/lib/utils'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
 import { CompetitorsDualBarChart } from '@/components/AuditCharts'
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+} from 'recharts'
 
 function metricValue(metric: any): number {
   if (typeof metric === 'number') return Number(metric) || 0
   if (!metric || typeof metric !== 'object') return 0
   return Number(metric.current ?? metric.recent_value ?? metric.value ?? 0) || 0
+}
+
+function scoreValue(value: any): number {
+  const parsed = Number(value)
+  if (Number.isNaN(parsed)) return 0
+  return Math.max(0, Math.min(100, parsed))
+}
+
+function domainFromUrl(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]
+  }
 }
 
 export default function CompetitorsPage({ params }: { params: { id: string } }) {
@@ -143,6 +167,59 @@ export default function CompetitorsPage({ params }: { params: { id: string } }) 
     },
   ]
 
+  const ownLighthouse = audit.results?.lighthouse?.desktop || {}
+  const ownRadarLabel = domainFromUrl(audit.url)
+  const dbCompetitors = (audit.competitors || [])
+    .filter((comp: any) => comp?.status === 'completed' && comp?.results?.lighthouse)
+    .slice(0, 5)
+
+  const radarMetrics = [
+    { key: 'performance_score', subject: 'Performance' },
+    { key: 'seo_score', subject: 'SEO' },
+    { key: 'accessibility_score', subject: 'Accessibility' },
+    { key: 'best_practices_score', subject: 'Best Practices' },
+  ]
+
+  const radarData = radarMetrics.map((metric) => {
+    const row: Record<string, any> = {
+      subject: metric.subject,
+      own: scoreValue(ownLighthouse?.[metric.key]),
+    }
+    dbCompetitors.forEach((comp: any, index: number) => {
+      row[`comp_${index}`] = scoreValue(comp?.results?.lighthouse?.[metric.key])
+    })
+    return row
+  })
+
+  const radarSeries = [
+    { key: 'own', label: ownRadarLabel, color: '#3b82f6', fillOpacity: 0.45 },
+    ...dbCompetitors.map((comp: any, index: number) => ({
+      key: `comp_${index}`,
+      label: domainFromUrl(comp.url || `competitor_${index + 1}`),
+      color: ['#f97316', '#22c55e', '#a855f7', '#06b6d4', '#ef4444'][index % 5],
+      fillOpacity: 0.2,
+    })),
+  ]
+
+  const comparisonRows = [
+    {
+      domain: ownRadarLabel,
+      source: 'Twoja strona',
+      performance: scoreValue(ownLighthouse?.performance_score),
+      seo: scoreValue(ownLighthouse?.seo_score),
+      accessibility: scoreValue(ownLighthouse?.accessibility_score),
+      best_practices: scoreValue(ownLighthouse?.best_practices_score),
+    },
+    ...dbCompetitors.map((comp: any) => ({
+      domain: domainFromUrl(comp.url || ''),
+      source: 'Konkurent',
+      performance: scoreValue(comp?.results?.lighthouse?.performance_score),
+      seo: scoreValue(comp?.results?.lighthouse?.seo_score),
+      accessibility: scoreValue(comp?.results?.lighthouse?.accessibility_score),
+      best_practices: scoreValue(comp?.results?.lighthouse?.best_practices_score),
+    })),
+  ]
+
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
       <div className="flex items-center gap-3">
@@ -210,6 +287,52 @@ export default function CompetitorsPage({ params }: { params: { id: string } }) 
               <CompetitorsDualBarChart competitors={competitorsForChart} />
             </CardContent>
           </Card>
+
+          {dbCompetitors.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Competitive Performance Radar</CardTitle>
+                <CardDescription>Lighthouse: Twoja strona vs konkurenci z bazy audytu</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="h-[420px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="78%" data={radarData}>
+                      <PolarGrid />
+                      <PolarAngleAxis dataKey="subject" />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                      {radarSeries.map((series) => (
+                        <Radar
+                          key={series.key}
+                          name={series.label}
+                          dataKey={series.key}
+                          stroke={series.color}
+                          fill={series.color}
+                          fillOpacity={series.fillOpacity}
+                        />
+                      ))}
+                      <Legend />
+                      <Tooltip />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <DataExplorerTable
+                  data={comparisonRows}
+                  columns={[
+                    { key: 'domain', label: 'Domena', className: 'font-medium' },
+                    { key: 'source', label: 'Typ' },
+                    { key: 'performance', label: 'Performance', render: (v: any) => formatScore(v || 0) },
+                    { key: 'seo', label: 'SEO', render: (v: any) => formatScore(v || 0) },
+                    { key: 'accessibility', label: 'Accessibility', render: (v: any) => formatScore(v || 0) },
+                    { key: 'best_practices', label: 'Best Practices', render: (v: any) => formatScore(v || 0) },
+                  ]}
+                  pageSize={8}
+                  exportFilename="konkurencja_performance_radar"
+                />
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

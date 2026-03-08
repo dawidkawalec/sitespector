@@ -15,6 +15,7 @@ from app.config import settings
 from app.services import screaming_frog, lighthouse, ai_analysis, senuto
 from app.services import ai_execution_plan
 from app.services import technical_seo_extras
+from app.services.health_index import compute_technical_health_index, compute_visibility_momentum
 from app.services.rag_service import index_audit_for_rag
 
 # Configure logging
@@ -188,6 +189,7 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
                 crawl_data["render_nojs"] = extras.get("render_nojs") or {}
                 crawl_data["soft_404"] = extras.get("soft_404") or {}
                 crawl_data["directives_hreflang"] = extras.get("directives_hreflang") or {}
+                crawl_data["ai_readiness"] = extras.get("ai_readiness") or {}
                 duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
                 audit.processing_step = "technical_extras:done"
                 await add_audit_log(audit, "technical_extras", "success", "Technical extras collected", duration)
@@ -200,6 +202,13 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
             desktop_data = lighthouse_data.get("desktop", {})
             seo_score = calculate_seo_score(crawl_data, desktop_data)
             performance_score = desktop_data.get("performance_score", 0)
+            partial_results = {
+                "crawl": crawl_data,
+                "lighthouse": lighthouse_data,
+                "senuto": senuto_data,
+            }
+            technical_health_index = compute_technical_health_index(partial_results)
+            visibility_momentum = compute_visibility_momentum(senuto_data)
 
             # Persist crawl_blocked so frontend and Phase 2/3 can skip AI when site blocked crawler
             audit.crawl_blocked = crawl_data.get("crawl_blocked", False)
@@ -208,13 +217,19 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
             audit.seo_score = seo_score
             audit.performance_score = performance_score
             audit.results = {
-                "crawl": crawl_data,
-                "lighthouse": lighthouse_data,
-                "senuto": senuto_data
+                **partial_results,
+                "technical_health_index": technical_health_index,
+                "visibility_momentum": visibility_momentum,
             }
             await db.commit()
             
-            return {"crawl": crawl_data, "lighthouse": lighthouse_data, "senuto": senuto_data}
+            return {
+                "crawl": crawl_data,
+                "lighthouse": lighthouse_data,
+                "senuto": senuto_data,
+                "technical_health_index": technical_health_index,
+                "visibility_momentum": visibility_momentum,
+            }
 
         except Exception as e:
             await add_audit_log(audit, audit.processing_step or "technical", "error", str(e))
