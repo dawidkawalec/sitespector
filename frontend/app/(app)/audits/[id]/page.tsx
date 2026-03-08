@@ -329,6 +329,8 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   const technicalHealth = audit.results?.technical_health_index
   const visibilityMomentum = audit.results?.visibility_momentum
   const aiReadiness = crawl?.ai_readiness
+  const trafficEstimation = audit.results?.traffic_estimation
+  const contentQuality = audit.results?.content_quality_index
   const severityIssues = buildSeverityIssues(crawl, lh)
   const severityCounts = severityIssues.reduce(
     (acc, issue) => {
@@ -403,6 +405,42 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   const aiReadinessPass = aiReadinessChecks.filter((check: any) => check?.status === 'pass').length
   const aiReadinessWarn = aiReadinessChecks.filter((check: any) => check?.status === 'warning').length
   const aiReadinessFail = aiReadinessChecks.filter((check: any) => check?.status === 'fail').length
+  const trafficTotal = Number(trafficEstimation?.total_estimated_monthly || 0)
+  const trafficPotentialGain = Number(trafficEstimation?.potential_gain || 0)
+  const trafficBrackets = Object.entries(trafficEstimation?.by_position_bracket || {}).map(([key, value]: [string, any]) => ({
+    key,
+    label: value?.label || key,
+    traffic: Number(value?.estimated_traffic || 0),
+    keywords: Number(value?.keywords || 0),
+  }))
+  const trafficMax = Math.max(1, ...trafficBrackets.map((row) => row.traffic))
+  const topTrafficKeywords = Array.isArray(trafficEstimation?.top_traffic_keywords)
+    ? trafficEstimation.top_traffic_keywords.slice(0, 3)
+    : []
+  const contentQualityScore = Number(contentQuality?.site_score || 0)
+  const contentQualityGrade = contentQuality?.grade || '—'
+  const contentQualityDistribution = contentQuality?.distribution || {}
+  const contentQualityTopIssues = Array.isArray(contentQuality?.top_issues) ? contentQuality.top_issues.slice(0, 3) : []
+  const contentIssueLabel = (issue: string): string => {
+    const labels: Record<string, string> = {
+      thin_content: 'Thin content',
+      very_long_content: 'Bardzo dluga tresc',
+      low_text_ratio: 'Niski text ratio',
+      missing_title: 'Brak title',
+      title_length_out_of_range: 'Title poza zakresem',
+      missing_meta_description: 'Brak meta description',
+      meta_length_out_of_range: 'Meta poza zakresem',
+      missing_h1: 'Brak H1',
+      multiple_h1: 'Wiele H1',
+      orphan_page: 'Orphan pages',
+      deep_page: 'Duza glebokosc',
+      hard_to_read: 'Niska czytelnosc',
+      duplicate_title: 'Duplikaty title',
+      duplicate_meta_description: 'Duplikaty meta',
+      duplicate_h1: 'Duplikaty H1',
+    }
+    return labels[issue] || issue
+  }
 
   // Calculate duration
   const duration = audit.started_at && audit.completed_at 
@@ -696,7 +734,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             ))}
           </div>
 
-          <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 @md:grid-cols-2 @xl:grid-cols-4 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -817,7 +855,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 @lg:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -936,6 +974,111 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
                 <Link href={`/audits/${params.id}/ai-readiness`}>
                   <Button variant="outline" size="sm" className="w-full">
                     Zobacz szczegoly AI Readiness <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Estimated Traffic
+                </CardTitle>
+                <CardDescription>Model CTR dla wszystkich pozycji Senuto + potencjal quick wins</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold">{formatNumber(trafficTotal)}</div>
+                    <div className="text-xs text-muted-foreground uppercase">Miesiecznie (szacunek)</div>
+                  </div>
+                  <Badge variant={trafficPotentialGain > 0 ? 'default' : 'secondary'}>
+                    +{formatNumber(trafficPotentialGain)} potencjal
+                  </Badge>
+                </div>
+
+                {trafficBrackets.length > 0 && (
+                  <div className="space-y-2">
+                    {trafficBrackets.map((bucket) => (
+                      <div key={bucket.key} className="space-y-1">
+                        <div className="flex items-center justify-between text-[11px] uppercase text-muted-foreground">
+                          <span>{bucket.label}</span>
+                          <span>{formatNumber(bucket.traffic)}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-primary"
+                            style={{ width: `${Math.max(2, (bucket.traffic / trafficMax) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {topTrafficKeywords.length > 0 && (
+                  <div className="rounded border p-3 space-y-1">
+                    <p className="text-[11px] uppercase font-semibold">Top frazy</p>
+                    {topTrafficKeywords.map((row: any, idx: number) => (
+                      <p key={`${row.keyword}-${idx}`} className="text-xs truncate">
+                        {row.keyword} <span className="text-muted-foreground">({formatNumber(row.estimated_traffic || 0)})</span>
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                <Link href={`/audits/${params.id}/visibility`}>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Zobacz sekcje Traffic Impact <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Content Quality
+                </CardTitle>
+                <CardDescription>Per-page CQI 0-100 na bazie tresci, metadanych i linkowania</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold">{Math.round(contentQualityScore)}</div>
+                    <div className="text-xs text-muted-foreground uppercase">Site CQI</div>
+                  </div>
+                  <Badge variant={contentQualityScore >= 80 ? 'default' : contentQualityScore >= 60 ? 'secondary' : 'destructive'}>
+                    Grade {contentQualityGrade}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-5 gap-1">
+                  {(['A', 'B', 'C', 'D', 'F'] as const).map((grade) => (
+                    <div key={grade} className="rounded border bg-accent/5 p-2 text-center">
+                      <p className="text-[10px] uppercase text-muted-foreground">{grade}</p>
+                      <p className="font-bold text-sm">{formatNumber(Number(contentQualityDistribution?.[grade] || 0))}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {contentQualityTopIssues.length > 0 && (
+                  <div className="rounded border p-3 space-y-1">
+                    <p className="text-[11px] uppercase font-semibold">Top problemy</p>
+                    {contentQualityTopIssues.map((issue: any, idx: number) => (
+                      <p key={`${issue.issue}-${idx}`} className="text-xs truncate">
+                        {contentIssueLabel(String(issue.issue || ''))}:{' '}
+                        <span className="text-muted-foreground">{formatNumber(Number(issue.count || 0))}</span>
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                <Link href={`/audits/${params.id}/content-quality`}>
+                  <Button variant="outline" size="sm" className="w-full">
+                    Otworz Content Quality <ChevronRight className="ml-1 h-3.5 w-3.5" />
                   </Button>
                 </Link>
               </CardContent>

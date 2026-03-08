@@ -89,6 +89,85 @@ function getTrafficEstimate(row: any): number {
   return Math.round((visibility || 0) + searches * 0.05)
 }
 
+function toNumber(value: unknown, fallback = 0): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function positionBucket(position: number): 'top3' | 'top4_10' | 'top11_20' | 'top21_50' | 'over50' {
+  if (position <= 3) return 'top3'
+  if (position <= 10) return 'top4_10'
+  if (position <= 20) return 'top11_20'
+  if (position <= 50) return 'top21_50'
+  return 'over50'
+}
+
+function buildTrafficFallback(positions: any[]) {
+  const byPositionBracket: Record<string, { label: string; keywords: number; estimated_traffic: number }> = {
+    top3: { label: 'TOP 3', keywords: 0, estimated_traffic: 0 },
+    top4_10: { label: 'TOP 4-10', keywords: 0, estimated_traffic: 0 },
+    top11_20: { label: 'TOP 11-20', keywords: 0, estimated_traffic: 0 },
+    top21_50: { label: 'TOP 21-50', keywords: 0, estimated_traffic: 0 },
+    over50: { label: '50+', keywords: 0, estimated_traffic: 0 },
+  }
+
+  const topTrafficKeywords = positions
+    .map((row: any) => ({
+      keyword: row?.keyword || row?.phrase || '—',
+      position: getPosition(row),
+      search_volume: getSearches(row),
+      estimated_traffic: getTrafficEstimate(row),
+      url: row?.statistics?.url?.current || row?.url || '',
+    }))
+    .sort((a: any, b: any) => (b.estimated_traffic || 0) - (a.estimated_traffic || 0))
+
+  const urlMap = new Map<string, number>()
+  topTrafficKeywords.forEach((row: any) => {
+    if (!row.url) return
+    urlMap.set(row.url, (urlMap.get(row.url) || 0) + toNumber(row.estimated_traffic, 0))
+  })
+
+  topTrafficKeywords.forEach((row: any) => {
+    const bucket = positionBucket(toNumber(row.position, 9999))
+    byPositionBracket[bucket].keywords += 1
+    byPositionBracket[bucket].estimated_traffic += toNumber(row.estimated_traffic, 0)
+  })
+
+  const opportunities = topTrafficKeywords
+    .filter((row: any) => toNumber(row.position, 0) >= 10 && toNumber(row.position, 0) <= 20)
+    .map((row: any) => {
+      const currentTraffic = toNumber(row.estimated_traffic, 0)
+      const potentialTraffic = Math.round(toNumber(row.search_volume, 0) * 0.11)
+      return {
+        keyword: row.keyword,
+        current_pos: row.position,
+        target_pos: 3,
+        search_volume: row.search_volume,
+        current_traffic: currentTraffic,
+        potential_traffic: potentialTraffic,
+        gain: Math.max(0, potentialTraffic - currentTraffic),
+        url: row.url,
+      }
+    })
+    .sort((a: any, b: any) => toNumber(b.gain, 0) - toNumber(a.gain, 0))
+
+  const totalEstimatedMonthly = topTrafficKeywords.reduce((acc: number, row: any) => acc + toNumber(row.estimated_traffic, 0), 0)
+  const potentialGain = opportunities.reduce((acc: number, row: any) => acc + toNumber(row.gain, 0), 0)
+
+  return {
+    total_estimated_monthly: Math.round(totalEstimatedMonthly),
+    potential_gain: Math.round(potentialGain),
+    potential_monthly: Math.round(totalEstimatedMonthly + potentialGain),
+    by_position_bracket: byPositionBracket,
+    top_traffic_keywords: topTrafficKeywords.slice(0, 20),
+    top_traffic_urls: Array.from(urlMap.entries())
+      .map(([url, estimated]) => ({ url, estimated_traffic: Math.round(estimated) }))
+      .sort((a, b) => b.estimated_traffic - a.estimated_traffic)
+      .slice(0, 20),
+    top_opportunities: opportunities.slice(0, 20),
+  }
+}
+
 function makeRangeLabel(start: number, size: number) {
   return `${start}-${start + size - 1}`
 }
@@ -715,6 +794,127 @@ function CannibalizationTab({ vis }: { vis: any }) {
   )
 }
 
+function TrafficImpactTab({ estimation }: { estimation: any }) {
+  const bracketsObject = estimation?.by_position_bracket || {}
+  const bracketRows = Object.entries(bracketsObject).map(([key, value]: [string, any]) => ({
+    key,
+    label: value?.label || key,
+    keywords: toNumber(value?.keywords, 0),
+    estimated_traffic: toNumber(value?.estimated_traffic, 0),
+  }))
+  const maxTraffic = Math.max(1, ...bracketRows.map((row) => row.estimated_traffic))
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 @md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Szacowany ruch miesieczny</CardDescription>
+            <CardTitle className="text-3xl font-bold">{formatNumber(estimation?.total_estimated_monthly || 0)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Potencjal miesieczny</CardDescription>
+            <CardTitle className="text-3xl font-bold">{formatNumber(estimation?.potential_monthly || 0)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Potencjalny wzrost</CardDescription>
+            <CardTitle className="text-3xl font-bold text-green-600">+{formatNumber(estimation?.potential_gain || 0)}</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Ruch wg przedzialu pozycji</CardTitle>
+          <CardDescription>Rozklad estymowanego ruchu pomiedzy TOP3, TOP10, TOP20 i dalsze pozycje.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {bracketRows.map((row) => (
+            <div key={row.key} className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium">{row.label}</span>
+                <span className="text-muted-foreground">
+                  {formatNumber(row.estimated_traffic)} ruchu • {formatNumber(row.keywords)} fraz
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${Math.max(2, (row.estimated_traffic / maxTraffic) * 100)}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Top frazy napedzajace ruch</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataExplorerTable
+            data={Array.isArray(estimation?.top_traffic_keywords) ? estimation.top_traffic_keywords : []}
+            columns={[
+              { key: 'keyword', label: 'Fraza', className: 'font-medium max-w-[280px]', maxWidth: '280px' },
+              { key: 'position', label: 'Pozycja' },
+              { key: 'search_volume', label: 'Wyszuk.' },
+              { key: 'estimated_traffic', label: 'Szac. ruch' },
+              { key: 'url', label: 'URL', className: 'max-w-[320px]', maxWidth: '320px' },
+            ]}
+            pageSize={20}
+            exportFilename="traffic_top_keywords"
+          />
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Top URL-e wg ruchu</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataExplorerTable
+              data={Array.isArray(estimation?.top_traffic_urls) ? estimation.top_traffic_urls : []}
+              columns={[
+                { key: 'url', label: 'URL', className: 'max-w-[340px]', maxWidth: '340px' },
+                { key: 'estimated_traffic', label: 'Szac. ruch' },
+              ]}
+              pageSize={10}
+              exportFilename="traffic_top_urls"
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Top opportunities</CardTitle>
+            <CardDescription>Frazy, gdzie przesuniecie do TOP3 daje najwiekszy wzrost ruchu.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataExplorerTable
+              data={Array.isArray(estimation?.top_opportunities) ? estimation.top_opportunities : []}
+              columns={[
+                { key: 'keyword', label: 'Fraza', className: 'font-medium max-w-[260px]', maxWidth: '260px' },
+                { key: 'current_pos', label: 'Akt. pozycja' },
+                { key: 'target_pos', label: 'Cel' },
+                { key: 'search_volume', label: 'Wyszuk.' },
+                { key: 'gain', label: 'Potencjal +', render: (_: any, row: any) => `+${formatNumber(toNumber(row?.gain, 0))}` },
+              ]}
+              pageSize={10}
+              exportFilename="traffic_opportunities"
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
 export default function VisibilityPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
@@ -902,6 +1102,13 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
   const searchesChartData = useMemo(() => searchesRows.map((r) => ({ range: r.range, count: r.top50 })), [searchesRows])
   const wordsChartData = useMemo(() => wordsRows.map((r) => ({ range: r.range, count: r.top50 })), [wordsRows])
   const peakChartData = useMemo(() => peakRows.map((r) => ({ month: r.range, count: r.top50 })), [peakRows])
+  const trafficEstimation = useMemo(() => {
+    const raw = audit?.results?.traffic_estimation
+    if (raw && typeof raw === 'object') {
+      return raw
+    }
+    return buildTrafficFallback(positions)
+  }, [audit?.results?.traffic_estimation, positions])
 
   if (!isAuth || isLoading) {
     return (
@@ -950,6 +1157,7 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
             <TabsTrigger value="changes">Wzrosty/Spadki</TabsTrigger>
             <TabsTrigger value="acquired">Pozyskane/Utracone</TabsTrigger>
             <TabsTrigger value="features">Cechy fraz</TabsTrigger>
+            <TabsTrigger value="traffic">Traffic Impact</TabsTrigger>
             <TabsTrigger value="sections">Strony</TabsTrigger>
             <TabsTrigger value="cannibalization">Kanibalizacja</TabsTrigger>
             <TabsTrigger value="raw">Surowe dane (RAW)</TabsTrigger>
@@ -1029,6 +1237,10 @@ export default function VisibilityPage({ params }: { params: { id: string } }) {
                 <KeywordFeaturesTable title="Liczba słów w frazie" rows={wordsRows} />
               </TabsContent>
             </Tabs>
+          </TabsContent>
+
+          <TabsContent value="traffic" className="pt-6">
+            <TrafficImpactTab estimation={trafficEstimation} />
           </TabsContent>
 
           <TabsContent value="sections" className="pt-6">

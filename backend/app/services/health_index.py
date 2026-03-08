@@ -7,6 +7,29 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List
 
+CTR_CURVE: Dict[int, float] = {
+    1: 0.28,
+    2: 0.15,
+    3: 0.11,
+    4: 0.08,
+    5: 0.06,
+    6: 0.05,
+    7: 0.04,
+    8: 0.03,
+    9: 0.025,
+    10: 0.02,
+    11: 0.018,
+    12: 0.016,
+    13: 0.014,
+    14: 0.012,
+    15: 0.01,
+    16: 0.009,
+    17: 0.008,
+    18: 0.007,
+    19: 0.0065,
+    20: 0.006,
+}
+
 
 def _to_float(value: Any, default: float = 0.0) -> float:
     try:
@@ -105,6 +128,158 @@ def _extract_position_change(row: Dict[str, Any]) -> float:
         if isinstance(position_obj, dict):
             return _to_float(position_obj.get("diff"), 0.0)
     return 0.0
+
+
+def _extract_position(row: Dict[str, Any]) -> int:
+    direct_candidates = [
+        row.get("position"),
+        row.get("current_position"),
+        row.get("best_position"),
+    ]
+    for candidate in direct_candidates:
+        parsed = _to_int(candidate, -1)
+        if parsed > 0:
+            return parsed
+
+    statistics = row.get("statistics")
+    if isinstance(statistics, dict):
+        position_obj = statistics.get("position")
+        if isinstance(position_obj, dict):
+            for key in ("current", "recent_value", "value"):
+                parsed = _to_int(position_obj.get(key), -1)
+                if parsed > 0:
+                    return parsed
+    return 0
+
+
+def _extract_url(row: Dict[str, Any]) -> str:
+    direct_candidates = [
+        row.get("url"),
+        row.get("landing_page"),
+        row.get("best_url"),
+    ]
+    for candidate in direct_candidates:
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+
+    statistics = row.get("statistics")
+    if isinstance(statistics, dict):
+        url_obj = statistics.get("url")
+        if isinstance(url_obj, dict):
+            for key in ("current", "recent_value", "value"):
+                candidate = url_obj.get(key)
+                if isinstance(candidate, str) and candidate.strip():
+                    return candidate.strip()
+    return ""
+
+
+def _ctr_at(position: int) -> float:
+    if position <= 0:
+        return 0.0
+    return CTR_CURVE.get(position, 0.005)
+
+
+def _cqi_status(score: float) -> str:
+    if score >= 85:
+        return "excellent"
+    if score >= 70:
+        return "good"
+    if score >= 55:
+        return "needs_work"
+    return "poor"
+
+
+def _score_word_count(word_count: int) -> float:
+    if word_count <= 0:
+        return 10.0
+    if word_count < 150:
+        return 25.0
+    if word_count < 300:
+        return 50.0
+    if word_count < 800:
+        return 60.0 + ((word_count - 300) / 500.0) * 35.0
+    if word_count <= 2000:
+        return 100.0
+    if word_count <= 5000:
+        return 90.0 - ((word_count - 2000) / 3000.0) * 20.0
+    return 60.0
+
+
+def _score_text_ratio(text_ratio: float) -> float:
+    if text_ratio <= 0:
+        return 25.0
+    if text_ratio < 5:
+        return 35.0 + (text_ratio / 5.0) * 20.0
+    if text_ratio < 15:
+        return 55.0 + ((text_ratio - 5.0) / 10.0) * 35.0
+    if text_ratio <= 35:
+        return 100.0
+    if text_ratio <= 50:
+        return 80.0
+    return 65.0
+
+
+def _score_length(length: int, ideal_min: int, ideal_max: int) -> float:
+    if length <= 0:
+        return 0.0
+    if ideal_min <= length <= ideal_max:
+        return 100.0
+    if length < ideal_min:
+        gap = ideal_min - length
+    else:
+        gap = length - ideal_max
+    return _clamp(100.0 - min(75.0, gap * 1.7))
+
+
+def _score_readability(flesch: float, readability_label: Any) -> float:
+    if flesch > 0:
+        if flesch >= 70:
+            return 100.0
+        if flesch >= 50:
+            return 85.0
+        if flesch >= 30:
+            return 65.0
+        return 45.0
+
+    label = str(readability_label or "").strip().lower()
+    if not label:
+        return 65.0
+    if "easy" in label:
+        return 90.0
+    if "standard" in label:
+        return 80.0
+    if "difficult" in label:
+        return 55.0
+    return 65.0
+
+
+def _score_internal_linking(inlinks: int, outlinks: int, external_outlinks: int) -> float:
+    score = 100.0
+    if inlinks <= 0:
+        score -= 45.0
+    elif inlinks < 2:
+        score -= 20.0
+    if outlinks <= 0:
+        score -= 10.0
+    if outlinks > 250:
+        score -= 20.0
+    if external_outlinks > 100:
+        score -= 15.0
+    return _clamp(score)
+
+
+def _score_crawl_depth(depth: int) -> float:
+    if depth <= 0:
+        return 75.0
+    if depth <= 2:
+        return 100.0
+    if depth == 3:
+        return 90.0
+    if depth == 4:
+        return 75.0
+    if depth == 5:
+        return 60.0
+    return 35.0
 
 
 def compute_technical_health_index(results: Dict[str, Any]) -> Dict[str, Any]:
@@ -369,4 +544,302 @@ def compute_visibility_momentum(senuto_data: Dict[str, Any]) -> Dict[str, Any]:
         "net_keywords": len(wins) - len(losses),
         "top_wins": top_wins,
         "top_losses": top_losses,
+    }
+
+
+def compute_traffic_estimation(senuto_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Estimate monthly organic traffic from Senuto positions using CTR curve.
+    """
+    visibility = (senuto_data or {}).get("visibility", {}) if isinstance(senuto_data, dict) else {}
+    positions = visibility.get("positions") if isinstance(visibility, dict) else []
+    rows = [row for row in (positions if isinstance(positions, list) else []) if isinstance(row, dict)]
+
+    by_position_bracket: Dict[str, Dict[str, Any]] = {
+        "top3": {"label": "TOP 3", "keywords": 0, "estimated_traffic": 0.0},
+        "top4_10": {"label": "TOP 4-10", "keywords": 0, "estimated_traffic": 0.0},
+        "top11_20": {"label": "TOP 11-20", "keywords": 0, "estimated_traffic": 0.0},
+        "top21_50": {"label": "TOP 21-50", "keywords": 0, "estimated_traffic": 0.0},
+        "over50": {"label": "50+", "keywords": 0, "estimated_traffic": 0.0},
+    }
+    traffic_by_url: Dict[str, float] = {}
+    keyword_rows: List[Dict[str, Any]] = []
+    opportunities: List[Dict[str, Any]] = []
+
+    total_estimated_monthly = 0.0
+    potential_gain = 0.0
+
+    for row in rows:
+        keyword = _extract_keyword(row)
+        if not keyword:
+            continue
+
+        search_volume = max(0, _extract_search_volume(row))
+        position = _extract_position(row)
+        if position <= 0:
+            continue
+
+        url = _extract_url(row)
+        current_ctr = _ctr_at(position)
+        current_traffic = search_volume * current_ctr
+        total_estimated_monthly += current_traffic
+
+        if position <= 3:
+            bucket_key = "top3"
+        elif position <= 10:
+            bucket_key = "top4_10"
+        elif position <= 20:
+            bucket_key = "top11_20"
+        elif position <= 50:
+            bucket_key = "top21_50"
+        else:
+            bucket_key = "over50"
+
+        by_position_bracket[bucket_key]["keywords"] += 1
+        by_position_bracket[bucket_key]["estimated_traffic"] += current_traffic
+
+        if url:
+            traffic_by_url[url] = traffic_by_url.get(url, 0.0) + current_traffic
+
+        keyword_rows.append(
+            {
+                "keyword": keyword,
+                "position": position,
+                "search_volume": int(search_volume),
+                "estimated_traffic": round(current_traffic, 2),
+                "url": url,
+            }
+        )
+
+        if 10 <= position <= 20:
+            gain = max(0.0, (search_volume * _ctr_at(3)) - current_traffic)
+            potential_gain += gain
+
+        if position > 3:
+            potential_traffic = search_volume * _ctr_at(3)
+            gain = max(0.0, potential_traffic - current_traffic)
+            opportunities.append(
+                {
+                    "keyword": keyword,
+                    "search_volume": int(search_volume),
+                    "current_pos": position,
+                    "target_pos": 3,
+                    "current_traffic": round(current_traffic, 2),
+                    "potential_traffic": round(potential_traffic, 2),
+                    "gain": round(gain, 2),
+                    "url": url,
+                }
+            )
+
+    top_traffic_keywords = sorted(
+        keyword_rows, key=lambda item: item.get("estimated_traffic", 0.0), reverse=True
+    )[:20]
+    top_traffic_urls = sorted(
+        [{"url": url, "estimated_traffic": round(value, 2)} for url, value in traffic_by_url.items()],
+        key=lambda item: item.get("estimated_traffic", 0.0),
+        reverse=True,
+    )[:20]
+    top_opportunities = sorted(
+        opportunities, key=lambda item: item.get("gain", 0.0), reverse=True
+    )[:20]
+
+    for data in by_position_bracket.values():
+        data["estimated_traffic"] = round(data["estimated_traffic"], 2)
+
+    total_rounded = int(round(total_estimated_monthly))
+    potential_gain_rounded = int(round(potential_gain))
+
+    return {
+        "total_estimated_monthly": total_rounded,
+        "potential_monthly": total_rounded + potential_gain_rounded,
+        "potential_gain": potential_gain_rounded,
+        "keyword_count": len(keyword_rows),
+        "by_position_bracket": by_position_bracket,
+        "top_traffic_keywords": top_traffic_keywords,
+        "top_traffic_urls": top_traffic_urls,
+        "top_opportunities": top_opportunities,
+        "ctr_model": {
+            "name": "position_based_curve_v1",
+            "default_ctr": 0.005,
+            "curve": CTR_CURVE,
+        },
+    }
+
+
+def compute_content_quality_index(results: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Compute per-page Content Quality Index (0-100) and aggregate site score.
+    """
+    crawl = results.get("crawl") if isinstance(results, dict) else {}
+    all_pages = crawl.get("all_pages", []) if isinstance(crawl, dict) else []
+    pages = [page for page in (all_pages if isinstance(all_pages, list) else []) if isinstance(page, dict)]
+
+    if not pages:
+        return {
+            "site_score": 0.0,
+            "grade": "F",
+            "status": "poor",
+            "distribution": {"A": 0, "B": 0, "C": 0, "D": 0, "F": 0},
+            "pages": [],
+            "top_issues": [],
+            "components": {
+                "word_count": 0.0,
+                "text_ratio": 0.0,
+                "title_quality": 0.0,
+                "meta_quality": 0.0,
+                "h1_quality": 0.0,
+                "readability": 0.0,
+                "internal_linking": 0.0,
+                "crawl_depth": 0.0,
+            },
+        }
+
+    weights = {
+        "word_count": 0.25,
+        "text_ratio": 0.15,
+        "title_quality": 0.15,
+        "meta_quality": 0.10,
+        "h1_quality": 0.10,
+        "readability": 0.10,
+        "internal_linking": 0.10,
+        "crawl_depth": 0.05,
+    }
+
+    distribution = {"A": 0, "B": 0, "C": 0, "D": 0, "F": 0}
+    pages_out: List[Dict[str, Any]] = []
+    issue_counter: Dict[str, int] = {}
+    component_totals = {key: 0.0 for key in weights}
+
+    for page in pages:
+        url = str(page.get("url") or "")
+        word_count = _to_int(page.get("word_count"), 0)
+        text_ratio = _to_float(page.get("text_ratio"), 0.0)
+        title_length = _to_int(page.get("title_length"), 0)
+        meta_length = _to_int(page.get("meta_description_length"), 0)
+        has_h1 = bool(str(page.get("h1") or "").strip())
+        has_multiple_h1 = bool(page.get("has_multiple_h1"))
+        title_occurrences = _to_int(page.get("title_occurrences"), 1)
+        meta_occurrences = _to_int(page.get("meta_desc_occurrences"), 1)
+        h1_occurrences = _to_int(page.get("h1_occurrences"), 1)
+        flesch = _to_float(page.get("flesch_reading_ease"), 0.0)
+        readability_label = page.get("readability")
+        inlinks = _to_int(page.get("inlinks"), 0)
+        outlinks = _to_int(page.get("outlinks"), 0)
+        external_outlinks = _to_int(page.get("external_outlinks"), 0)
+        crawl_depth = _to_int(page.get("crawl_depth"), 0)
+
+        score_word_count = _score_word_count(word_count)
+        score_text_ratio = _score_text_ratio(text_ratio)
+        score_title = _score_length(title_length, ideal_min=30, ideal_max=60)
+        score_meta = _score_length(meta_length, ideal_min=120, ideal_max=160)
+        score_h1 = 100.0 if has_h1 and not has_multiple_h1 else (55.0 if has_h1 else 20.0)
+        score_readability = _score_readability(flesch, readability_label)
+        score_linking = _score_internal_linking(inlinks, outlinks, external_outlinks)
+        score_depth = _score_crawl_depth(crawl_depth)
+
+        if title_occurrences > 1:
+            score_title = _clamp(score_title - 20.0)
+        if meta_occurrences > 1:
+            score_meta = _clamp(score_meta - 15.0)
+        if h1_occurrences > 1:
+            score_h1 = _clamp(score_h1 - 15.0)
+
+        score = _clamp(
+            (score_word_count * weights["word_count"])
+            + (score_text_ratio * weights["text_ratio"])
+            + (score_title * weights["title_quality"])
+            + (score_meta * weights["meta_quality"])
+            + (score_h1 * weights["h1_quality"])
+            + (score_readability * weights["readability"])
+            + (score_linking * weights["internal_linking"])
+            + (score_depth * weights["crawl_depth"])
+        )
+        score = round(score, 1)
+
+        issues: List[str] = []
+        if word_count < 300:
+            issues.append("thin_content")
+        if word_count > 5000:
+            issues.append("very_long_content")
+        if text_ratio < 5:
+            issues.append("low_text_ratio")
+        if title_length <= 0:
+            issues.append("missing_title")
+        elif title_length < 30 or title_length > 60:
+            issues.append("title_length_out_of_range")
+        if meta_length <= 0:
+            issues.append("missing_meta_description")
+        elif meta_length < 120 or meta_length > 160:
+            issues.append("meta_length_out_of_range")
+        if not has_h1:
+            issues.append("missing_h1")
+        if has_multiple_h1:
+            issues.append("multiple_h1")
+        if inlinks <= 0:
+            issues.append("orphan_page")
+        if crawl_depth > 4:
+            issues.append("deep_page")
+        if flesch > 0 and flesch < 30:
+            issues.append("hard_to_read")
+        if title_occurrences > 1:
+            issues.append("duplicate_title")
+        if meta_occurrences > 1:
+            issues.append("duplicate_meta_description")
+        if h1_occurrences > 1:
+            issues.append("duplicate_h1")
+
+        for issue in issues:
+            issue_counter[issue] = issue_counter.get(issue, 0) + 1
+
+        grade = _grade_from_score(score)
+        distribution[grade] = distribution.get(grade, 0) + 1
+
+        component_totals["word_count"] += score_word_count
+        component_totals["text_ratio"] += score_text_ratio
+        component_totals["title_quality"] += score_title
+        component_totals["meta_quality"] += score_meta
+        component_totals["h1_quality"] += score_h1
+        component_totals["readability"] += score_readability
+        component_totals["internal_linking"] += score_linking
+        component_totals["crawl_depth"] += score_depth
+
+        pages_out.append(
+            {
+                "url": url,
+                "score": score,
+                "grade": grade,
+                "status": _cqi_status(score),
+                "issues": issues,
+                "word_count": word_count,
+                "text_ratio": round(text_ratio, 2),
+                "title_length": title_length,
+                "meta_description_length": meta_length,
+                "inlinks": inlinks,
+                "crawl_depth": crawl_depth,
+            }
+        )
+
+    pages_out.sort(key=lambda item: item.get("score", 0.0))
+    site_score = round(_avg([_to_float(page.get("score")) for page in pages_out], fallback=0.0), 1)
+
+    top_issues = [
+        {"issue": issue, "count": count}
+        for issue, count in sorted(issue_counter.items(), key=lambda item: item[1], reverse=True)[:10]
+    ]
+
+    pages_count = max(1, len(pages_out))
+    components = {
+        key: round(total / pages_count, 1) for key, total in component_totals.items()
+    }
+
+    return {
+        "site_score": site_score,
+        "grade": _grade_from_score(site_score),
+        "status": _cqi_status(site_score),
+        "distribution": distribution,
+        "pages_count": len(pages_out),
+        "pages": pages_out,
+        "top_issues": top_issues,
+        "weights": weights,
+        "components": components,
     }

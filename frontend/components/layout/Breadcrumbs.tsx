@@ -16,6 +16,7 @@ interface Crumb {
 
 const AUDIT_SECTION_LABELS: Record<string, string> = {
   seo: 'SEO',
+  'content-quality': 'Content Quality',
   schema: 'Schema.org',
   performance: 'Wydajnosc',
   visibility: 'Widocznosc',

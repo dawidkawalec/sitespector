@@ -348,27 +348,29 @@ Cel: Przestać marnować dane, które już zbieramy.
 ### Faza 2: "Deeper Insights" (3-4 tygodnie)
 Cel: Wyciągnąć więcej z danych, które mamy.
 
-- [ ] Wzbogać SF transform o brakujące kolumny (2.1)
-- [ ] Dodaj SF taby External:All + Links:All (2.2)
-- [ ] Quick Win Keywords + Orphan Pages + Cannibalization summary (2.6-2.7, 2.10)
-- [ ] Internal link distribution + Crawl depth charts (2.8-2.9)
-- [ ] LH: named fields + grouped categorization (2.4-2.5)
-- [ ] CWV gap + TLD distribution (2.11-2.12)
+- [x] Wzbogać SF transform o brakujące kolumny (2.1)
+- [x] Dodaj SF taby External:All + Links:All (2.2)
+- [x] Quick Win Keywords + Orphan Pages + Cannibalization summary (2.6-2.7, 2.10)
+- [x] Internal link distribution + Crawl depth charts (2.8-2.9)
+- [x] LH: named fields + grouped categorization (2.4-2.5)
+- [x] CWV gap + TLD distribution (2.11-2.12)
+
+**Status wdrożenia**: Faza 2 ukończona (2026-03-08).
 
 ### Faza 3: "Differentiate" (1-2 miesiące)
 Cel: Zbudować features, których konkurencja nie ma.
 
 - [x] Composite indices (THI, Visibility Momentum) (3.1-3.2)
-- [ ] Historical audit comparison (3.3)
-- [ ] Traffic Impact Estimation (3.4)
+- [x] Historical audit comparison (3.3)
+- [x] Traffic Impact Estimation (3.4)
 - [x] AI Search readiness checks (3.5)
 - [x] Competitive Performance Radar (3.7)
-- [ ] Composite index: Content Quality Index (3.6)
+- [x] Composite index: Content Quality Index (3.6)
 - [ ] Site architecture visualization (3.8)
 - [ ] Content Optimization Briefs (3.11)
 - [ ] Auto Monthly Reports (3.12)
 
-**Status wdrożenia**: Faza 3A ukończona (2026-03-08): THI, Visibility Momentum, AI Readiness, Competitive Performance Radar.
+**Status wdrożenia**: Faza 3A+3B ukończona (2026-03-08): THI, Visibility Momentum, AI Readiness, Competitive Performance Radar, Historical Comparison, Traffic Impact Estimation, Content Quality Index.
 
 ---
 

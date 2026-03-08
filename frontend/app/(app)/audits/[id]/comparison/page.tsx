@@ -15,8 +15,8 @@ import { supabase } from '@/lib/supabase'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
-  Loader2, ArrowLeftRight, TrendingUp, TrendingDown, Minus, Calendar, ExternalLink, 
-  ChevronDown, ArrowRight, CheckCircle2, AlertCircle, Sparkles, Layout
+  Loader2, ArrowLeftRight, TrendingUp, TrendingDown, Minus, Calendar, ExternalLink,
+  CheckCircle2, AlertCircle
 } from 'lucide-react'
 import { formatScore, getScoreColor, formatDate, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -54,6 +54,147 @@ import {
 import { Badge } from '@/components/ui/badge'
 import type { Audit } from '@/lib/api'
 
+interface KeywordDeltaRow {
+  keyword: string
+  previousPosition: number | null
+  currentPosition: number | null
+  delta: number | null
+  searchVolume: number
+  url: string
+  kind: 'improved' | 'declined' | 'new' | 'lost' | 'stable'
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function getTechnicalHealthScore(audit: Audit | null | undefined): number {
+  return toNumber(audit?.results?.technical_health_index?.score, 0)
+}
+
+function getVisibilityMomentumScore(audit: Audit | null | undefined): number {
+  return toNumber(audit?.results?.visibility_momentum?.score, 0)
+}
+
+function getAiReadinessScore(audit: Audit | null | undefined): number {
+  return toNumber(audit?.results?.crawl?.ai_readiness?.score, 0)
+}
+
+function getSearches(row: any): number {
+  return toNumber(
+    row?.statistics?.searches?.current ??
+      row?.search_volume ??
+      row?.searches ??
+      row?.monthly_searches,
+    0
+  )
+}
+
+function getKeyword(row: any): string {
+  const raw = row?.keyword ?? row?.phrase ?? row?.name ?? ''
+  return typeof raw === 'string' ? raw.trim() : ''
+}
+
+function getPosition(row: any): number | null {
+  const raw =
+    row?.statistics?.position?.current ??
+    row?.position ??
+    row?.current_position ??
+    row?.best_position
+  if (raw === null || raw === undefined) return null
+  const value = Number(raw)
+  if (!Number.isFinite(value) || value <= 0) return null
+  return Math.round(value)
+}
+
+function getKeywordUrl(row: any): string {
+  const raw =
+    row?.statistics?.url?.current ??
+    row?.url ??
+    row?.landing_page ??
+    row?.best_url ??
+    ''
+  return typeof raw === 'string' ? raw : ''
+}
+
+function getPositionsList(audit: Audit | null | undefined): any[] {
+  const rows = audit?.results?.senuto?.visibility?.positions
+  return Array.isArray(rows) ? rows : []
+}
+
+function buildKeywordDeltaRows(currentAudit: Audit, comparisonAudit: Audit | null): KeywordDeltaRow[] {
+  if (!comparisonAudit) return []
+
+  const currentRows = getPositionsList(currentAudit)
+  const previousRows = getPositionsList(comparisonAudit)
+  const currentMap = new Map<string, any>()
+  const previousMap = new Map<string, any>()
+
+  currentRows.forEach((row) => {
+    const keyword = getKeyword(row)
+    if (keyword && !currentMap.has(keyword)) {
+      currentMap.set(keyword, row)
+    }
+  })
+
+  previousRows.forEach((row) => {
+    const keyword = getKeyword(row)
+    if (keyword && !previousMap.has(keyword)) {
+      previousMap.set(keyword, row)
+    }
+  })
+
+  const allKeywords = new Set<string>([
+    ...Array.from(currentMap.keys()),
+    ...Array.from(previousMap.keys()),
+  ])
+
+  const rows: KeywordDeltaRow[] = []
+  allKeywords.forEach((keyword) => {
+    const currentRow = currentMap.get(keyword)
+    const previousRow = previousMap.get(keyword)
+    const currentPosition = getPosition(currentRow)
+    const previousPosition = getPosition(previousRow)
+    const currentSearches = getSearches(currentRow)
+    const previousSearches = getSearches(previousRow)
+    const searchVolume = Math.max(currentSearches, previousSearches)
+    const url = getKeywordUrl(currentRow) || getKeywordUrl(previousRow)
+
+    let delta: number | null = null
+    if (currentPosition !== null && previousPosition !== null) {
+      delta = previousPosition - currentPosition
+    }
+
+    let kind: KeywordDeltaRow['kind'] = 'stable'
+    if (previousPosition === null && currentPosition !== null) {
+      kind = 'new'
+    } else if (previousPosition !== null && currentPosition === null) {
+      kind = 'lost'
+    } else if (delta !== null && delta > 0) {
+      kind = 'improved'
+    } else if (delta !== null && delta < 0) {
+      kind = 'declined'
+    }
+
+    rows.push({
+      keyword,
+      previousPosition,
+      currentPosition,
+      delta,
+      searchVolume,
+      url,
+      kind,
+    })
+  })
+
+  return rows.sort((a, b) => {
+    const scoreA = Math.abs(a.delta ?? 0) * 100000 + a.searchVolume
+    const scoreB = Math.abs(b.delta ?? 0) * 100000 + b.searchVolume
+    return scoreB - scoreA
+  })
+}
+
 export default function ComparisonPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
@@ -80,7 +221,7 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
   // 2. Get history for this URL
   const { data: history, isLoading: isLoadingHistory, isError: isErrorHistory, refetch: refetchHistory } = useQuery({
     queryKey: ['audit-history', currentAudit?.url, currentWorkspace?.id],
-    queryFn: () => auditsAPI.getHistory(currentWorkspace!.id, currentAudit!.url),
+    queryFn: () => auditsAPI.getHistory(currentWorkspace!.id, currentAudit!.url, currentAudit?.project_id || undefined),
     enabled: !!currentAudit?.url && !!currentWorkspace?.id,
   })
 
@@ -133,13 +274,22 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
   // Prepare chart data (chronological order)
   const chartData = [...audits]
     .reverse()
-    .map(a => ({
-      date: new Date(a.created_at).toLocaleDateString(),
-      overall: a.overall_score || 0,
-      seo: a.seo_score || 0,
-      performance: a.performance_score || 0,
-      content: a.content_score || 0,
-    }))
+    .map(a => {
+      const technicalRaw = a?.results?.technical_health_index?.score
+      const aiRaw = a?.results?.crawl?.ai_readiness?.score
+      const momentumRaw = a?.results?.visibility_momentum?.score
+      return {
+        date: new Date(a.created_at).toLocaleDateString(),
+        overall: a.overall_score || 0,
+        seo: a.seo_score || 0,
+        performance: a.performance_score || 0,
+        content: a.content_score || 0,
+        technicalHealth: technicalRaw === null || technicalRaw === undefined ? null : toNumber(technicalRaw, 0),
+        aiReadiness: aiRaw === null || aiRaw === undefined ? null : toNumber(aiRaw, 0),
+        momentumNormalized:
+          momentumRaw === null || momentumRaw === undefined ? null : ((toNumber(momentumRaw, 0) + 100) / 2),
+      }
+    })
 
   const getDelta = (current: number | null | undefined, previous: number | null | undefined) => {
     if (current === null || current === undefined || previous === null || previous === undefined) return null
@@ -152,6 +302,22 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
     if (value < 0) return <span className="text-red-600 flex items-center gap-0.5 text-xs font-bold"><TrendingDown className="h-3 w-3" /> {value}</span>
     return <span className="text-muted-foreground flex items-center gap-0.5 text-xs font-bold"><Minus className="h-3 w-3" /> 0</span>
   }
+
+  const keywordDeltaRows = buildKeywordDeltaRows(currentAudit, comparisonAudit)
+  const improvedKeywords = keywordDeltaRows.filter((row) => row.kind === 'improved').length
+  const declinedKeywords = keywordDeltaRows.filter((row) => row.kind === 'declined').length
+  const newKeywords = keywordDeltaRows.filter((row) => row.kind === 'new').length
+  const lostKeywords = keywordDeltaRows.filter((row) => row.kind === 'lost').length
+  const movedToPageOne = keywordDeltaRows.filter(
+    (row) => row.previousPosition !== null && row.previousPosition > 10 && row.currentPosition !== null && row.currentPosition <= 10
+  ).length
+
+  const thiDelta = getDelta(getTechnicalHealthScore(currentAudit), getTechnicalHealthScore(comparisonAudit))
+  const momentumDelta = getDelta(getVisibilityMomentumScore(currentAudit), getVisibilityMomentumScore(comparisonAudit))
+  const aiReadinessDelta = getDelta(getAiReadinessScore(currentAudit), getAiReadinessScore(comparisonAudit))
+  const hasTechnicalHealthTrend = chartData.some((point) => point.technicalHealth !== null)
+  const hasAiReadinessTrend = chartData.some((point) => point.aiReadiness !== null)
+  const hasMomentumTrend = chartData.some((point) => point.momentumNormalized !== null)
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
@@ -195,11 +361,53 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
         </Card>
       ) : (
         <>
+          <Card className="border-primary/25 bg-primary/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">ROI od ostatniego audytu</CardTitle>
+              <CardDescription>
+                Szybki dowod postepu na metrykach 3A i zmianach keywordow.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 @md:grid-cols-5 gap-3">
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-[10px] uppercase text-muted-foreground">THI</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-lg font-bold">{Math.round(getTechnicalHealthScore(currentAudit))}</span>
+                    <DeltaIndicator value={thiDelta} />
+                  </div>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-[10px] uppercase text-muted-foreground">Momentum</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-lg font-bold">{getVisibilityMomentumScore(currentAudit).toFixed(1)}</span>
+                    <DeltaIndicator value={momentumDelta} />
+                  </div>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-[10px] uppercase text-muted-foreground">AI Readiness</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-lg font-bold">{Math.round(getAiReadinessScore(currentAudit))}</span>
+                    <DeltaIndicator value={aiReadinessDelta} />
+                  </div>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-[10px] uppercase text-muted-foreground">Frazy do TOP10</p>
+                  <p className="mt-1 text-lg font-bold text-green-600">+{movedToPageOne}</p>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-[10px] uppercase text-muted-foreground">Bilans fraz</p>
+                  <p className="mt-1 text-lg font-bold">{improvedKeywords - declinedKeywords}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Trend Chart */}
           <Card>
             <CardHeader>
               <CardTitle>Trend Wyników</CardTitle>
-              <CardDescription>Zmiana wyników w czasie dla {currentAudit.url}</CardDescription>
+              <CardDescription>Zmiana wynikow i metryk 3A w czasie dla {currentAudit.url}</CardDescription>
             </CardHeader>
             <CardContent className="h-[350px] pt-4">
               <ResponsiveContainer width="100%" height="100%">
@@ -226,6 +434,36 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
                   <Area type="monotone" dataKey="overall" name="Wynik Ogólny" stroke="#3b82f6" fillOpacity={1} fill="url(#colorOverall)" strokeWidth={3} />
                   <Area type="monotone" dataKey="seo" name="SEO" stroke="#10b981" fillOpacity={1} fill="url(#colorSeo)" strokeWidth={2.5} />
                   <Area type="monotone" dataKey="performance" name="Wydajność" stroke="#f59e0b" fillOpacity={1} fill="url(#colorPerformance)" strokeWidth={2.5} />
+                  {hasTechnicalHealthTrend && (
+                    <Area
+                      type="monotone"
+                      dataKey="technicalHealth"
+                      name="THI"
+                      stroke="#7c3aed"
+                      fillOpacity={0}
+                      strokeWidth={2}
+                    />
+                  )}
+                  {hasAiReadinessTrend && (
+                    <Area
+                      type="monotone"
+                      dataKey="aiReadiness"
+                      name="AI Readiness"
+                      stroke="#0d9488"
+                      fillOpacity={0}
+                      strokeWidth={2}
+                    />
+                  )}
+                  {hasMomentumTrend && (
+                    <Area
+                      type="monotone"
+                      dataKey="momentumNormalized"
+                      name="Momentum (norm.)"
+                      stroke="#dc2626"
+                      fillOpacity={0}
+                      strokeWidth={2}
+                    />
+                  )}
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
@@ -257,9 +495,10 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
 
           {/* Side-by-Side Detail Comparison */}
           <Tabs defaultValue="scores" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+            <TabsList className="grid w-full grid-cols-4 lg:w-[560px]">
               <TabsTrigger value="scores">Wyniki</TabsTrigger>
               <TabsTrigger value="technical">Techniczne</TabsTrigger>
+              <TabsTrigger value="positions">Pozycje</TabsTrigger>
               <TabsTrigger value="issues">Problemy</TabsTrigger>
             </TabsList>
             
@@ -345,6 +584,9 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
                         { label: 'LCP (ms)', cur: currentAudit.results?.lighthouse?.desktop?.lcp, prev: comparisonAudit?.results?.lighthouse?.desktop?.lcp, inverse: true },
                         { label: 'TTFB (ms)', cur: currentAudit.results?.lighthouse?.desktop?.ttfb, prev: comparisonAudit?.results?.lighthouse?.desktop?.ttfb, inverse: true },
                         { label: 'Word Count (avg)', cur: currentAudit.results?.content_analysis?.word_count, prev: comparisonAudit?.results?.content_analysis?.word_count },
+                        { label: 'THI', cur: getTechnicalHealthScore(currentAudit), prev: getTechnicalHealthScore(comparisonAudit) },
+                        { label: 'AI Readiness', cur: getAiReadinessScore(currentAudit), prev: getAiReadinessScore(comparisonAudit) },
+                        { label: 'Visibility Momentum', cur: getVisibilityMomentumScore(currentAudit), prev: getVisibilityMomentumScore(comparisonAudit) },
                       ].map((row, i) => {
                         const delta = getDelta(row.cur, row.prev)
                         const isGood = row.inverse ? (delta !== null && delta < 0) : (delta !== null && delta > 0)
@@ -369,6 +611,83 @@ export default function ComparisonPage({ params }: { params: { id: string } }) {
                           </TableRow>
                         )
                       })}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="positions" className="space-y-6 pt-4">
+              <div className="grid grid-cols-2 @md:grid-cols-5 gap-3">
+                <div className="rounded-lg border p-3 bg-accent/5">
+                  <p className="text-[10px] uppercase text-muted-foreground">Improved</p>
+                  <p className="text-2xl font-bold text-green-600">{improvedKeywords}</p>
+                </div>
+                <div className="rounded-lg border p-3 bg-accent/5">
+                  <p className="text-[10px] uppercase text-muted-foreground">Declined</p>
+                  <p className="text-2xl font-bold text-red-600">{declinedKeywords}</p>
+                </div>
+                <div className="rounded-lg border p-3 bg-accent/5">
+                  <p className="text-[10px] uppercase text-muted-foreground">New</p>
+                  <p className="text-2xl font-bold">{newKeywords}</p>
+                </div>
+                <div className="rounded-lg border p-3 bg-accent/5">
+                  <p className="text-[10px] uppercase text-muted-foreground">Lost</p>
+                  <p className="text-2xl font-bold">{lostKeywords}</p>
+                </div>
+                <div className="rounded-lg border p-3 bg-accent/5">
+                  <p className="text-[10px] uppercase text-muted-foreground">Do TOP10</p>
+                  <p className="text-2xl font-bold text-primary">+{movedToPageOne}</p>
+                </div>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Delta keywordow</CardTitle>
+                  <CardDescription>
+                    Porownanie pozycji fraz miedzy {comparisonAudit ? formatDate(comparisonAudit.created_at).split(',')[0] : 'poprzednim'} a biezacym audytem.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Fraza</TableHead>
+                        <TableHead className="text-center">Poprzednio</TableHead>
+                        <TableHead className="text-center">Teraz</TableHead>
+                        <TableHead className="text-center">Delta</TableHead>
+                        <TableHead className="text-center">SV</TableHead>
+                        <TableHead>URL</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {keywordDeltaRows.slice(0, 40).map((row) => (
+                        <TableRow key={row.keyword}>
+                          <TableCell className="max-w-[260px] font-medium truncate">{row.keyword}</TableCell>
+                          <TableCell className="text-center text-xs">{row.previousPosition ?? '-'}</TableCell>
+                          <TableCell className="text-center text-xs font-bold">{row.currentPosition ?? '-'}</TableCell>
+                          <TableCell className="text-center">
+                            {row.delta === null ? (
+                              <Badge variant="outline">{row.kind === 'new' ? 'NEW' : row.kind === 'lost' ? 'LOST' : '-'}</Badge>
+                            ) : row.delta > 0 ? (
+                              <Badge className="bg-green-100 text-green-700 border border-green-200 hover:bg-green-100">+{row.delta}</Badge>
+                            ) : row.delta < 0 ? (
+                              <Badge variant="destructive">{row.delta}</Badge>
+                            ) : (
+                              <Badge variant="outline">0</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center text-xs">{row.searchVolume}</TableCell>
+                          <TableCell className="max-w-[280px] text-xs text-muted-foreground truncate">{row.url || '-'}</TableCell>
+                        </TableRow>
+                      ))}
+                      {keywordDeltaRows.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">
+                            Brak danych pozycji do porownania.
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </CardContent>

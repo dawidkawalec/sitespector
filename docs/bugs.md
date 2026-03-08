@@ -8,6 +8,54 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-068: Brak warstwy ROI dla Fazy 3B (traffic + content quality + porownanie historyczne)
+
+**Reported**: 2026-03-08
+
+**Status**: ✅ FIXED (2026-03-08)
+
+**Severity**: HIGH
+
+**Description**:
+- Faza 3A dostarczyla nowe KPI techniczne, ale nadal brakowalo:
+  - estymacji ruchu organicznego i potencjalu wzrostu,
+  - kompozytowego content quality index per URL,
+  - porownania historycznego metryk 3A i zmian keywordow miedzy audytami.
+
+**Root cause**:
+- `audits.results` nie mial blokow pochodnych dla traffic impact i quality debt.
+- UI porownania audytow korzystalo glownie z bazowych score, bez warstwy ROI i keyword delta.
+
+**Fix**:
+- Backend:
+  - `backend/app/services/health_index.py`:
+    - dodano `compute_traffic_estimation()`,
+    - dodano `compute_content_quality_index()`.
+  - `backend/worker.py`:
+    - persistence do `results.traffic_estimation` i `results.content_quality_index`.
+- Frontend:
+  - `frontend/app/(app)/audits/[id]/comparison/page.tsx`:
+    - trend chart 3A + ROI card + tab `Pozycje` (keyword delta).
+  - `frontend/app/(app)/audits/[id]/visibility/page.tsx`:
+    - tab `Traffic Impact`.
+  - `frontend/app/(app)/audits/[id]/page.tsx`:
+    - nowe summary cards: `Estimated Traffic` i `Content Quality`.
+  - `frontend/app/(app)/audits/[id]/content-quality/page.tsx` (new).
+  - `AuditSidebar` + `Breadcrumbs`: dodany route `content-quality`.
+
+**Verification**:
+- `ReadLints` dla zmienionych plikow backend/frontend: do weryfikacji po finalnym przebiegu.
+
+**Related**:
+- `backend/app/services/health_index.py`
+- `backend/worker.py`
+- `frontend/app/(app)/audits/[id]/comparison/page.tsx`
+- `frontend/app/(app)/audits/[id]/visibility/page.tsx`
+- `frontend/app/(app)/audits/[id]/content-quality/page.tsx`
+- `docs/gap-analysis-report.md`
+
+---
+
 ### BUG-067: Brak szybkich differentiatorow Fazy 3A w produkcie
 
 **Reported**: 2026-03-08

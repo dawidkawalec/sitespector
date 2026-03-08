@@ -1,5 +1,30 @@
 # Architectural Decisions Log
 
+## ADR-060: Phase 3B Derived Insights Layer (2026-03-08)
+
+- **Decision**: Extend audit results with two additional derived KPI blocks and expose them in dedicated UI surfaces:
+  - `results.traffic_estimation` (CTR-based monthly traffic estimate + opportunity model),
+  - `results.content_quality_index` (per-page quality scoring + site-level aggregate).
+- **Rationale**:
+  - Existing visibility and content pages had rich raw data but lacked a direct answer to "ile ruchu to daje?" and "ktore strony maja najslabsza jakosc?".
+  - Product needed ROI-facing proof over time (comparison deltas) and executable prioritization from existing crawl/Senuto data.
+- **Implementation**:
+  - Backend:
+    - `backend/app/services/health_index.py` extended with:
+      - `compute_traffic_estimation(senuto_data)`,
+      - `compute_content_quality_index(results)`.
+    - `backend/worker.py` persists both blocks in `audits.results` during technical phase.
+  - Frontend:
+    - `comparison/page.tsx` enhanced with Phase 3A trend overlays + keyword delta tab + ROI summary.
+    - `visibility/page.tsx` gets `Traffic Impact` tab (summary + bracket distribution + opportunity tables).
+    - `audits/[id]/page.tsx` overview gets `Estimated Traffic` and `Content Quality` summary cards.
+    - new page: `audits/[id]/content-quality/page.tsx`.
+    - nav/breadcrumbs updated for `content-quality`.
+- **Outcome**:
+  - Faster executive interpretation of ranking impact and content debt,
+  - clearer prioritization path from data to action,
+  - stronger continuity between Phase 3A KPIs and next optimization cycles.
+
 ## ADR-059: Phase 3A Composite Scores + AI Readiness Surface (2026-03-08)
 
 - **Decision**: Introduce three new first-class derived signals in audit results and expose them directly in the audit UI:

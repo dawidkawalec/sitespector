@@ -170,6 +170,60 @@ users (1) ───→ (N) audits
 
 ```json
 {
+  "technical_health_index": {
+    "score": 78.4,
+    "grade": "B",
+    "status": "moderate",
+    "breakdown": {
+      "lighthouse_pillar": 81.0,
+      "crawl_health_pillar": 74.2,
+      "tech_extras_pillar": 79.3,
+      "content_pillar": 76.5,
+      "security_pillar": 83.0
+    }
+  },
+  "visibility_momentum": {
+    "score": 22.3,
+    "status": "growing",
+    "wins_count": 1820,
+    "losses_count": 930
+  },
+  "traffic_estimation": {
+    "total_estimated_monthly": 12840,
+    "potential_monthly": 16420,
+    "potential_gain": 3580,
+    "keyword_count": 10000,
+    "by_position_bracket": {
+      "top3": {"label": "TOP 3", "keywords": 140, "estimated_traffic": 5860.2},
+      "top4_10": {"label": "TOP 4-10", "keywords": 470, "estimated_traffic": 4020.4},
+      "top11_20": {"label": "TOP 11-20", "keywords": 910, "estimated_traffic": 1780.8}
+    },
+    "top_traffic_keywords": [],
+    "top_traffic_urls": [],
+    "top_opportunities": []
+  },
+  "content_quality_index": {
+    "site_score": 73.4,
+    "grade": "C",
+    "status": "good",
+    "distribution": {"A": 18, "B": 42, "C": 63, "D": 27, "F": 9},
+    "pages_count": 159,
+    "top_issues": [
+      {"issue": "thin_content", "count": 45},
+      {"issue": "missing_meta_description", "count": 23}
+    ],
+    "components": {
+      "word_count": 70.4,
+      "text_ratio": 74.8,
+      "title_quality": 78.1,
+      "meta_quality": 66.5,
+      "h1_quality": 81.2,
+      "readability": 69.7,
+      "internal_linking": 72.9,
+      "crawl_depth": 79.0
+    },
+    "pages": []
+  },
   "crawl": {
     "title": "string",
     "title_length": 0,
@@ -184,7 +238,16 @@ users (1) ───→ (N) audits
     "total_images": 0,
     "images_without_alt": 0,
     "internal_links_count": 0,
-    "has_sitemap": true
+    "has_sitemap": true,
+    "ai_readiness": {
+      "score": 68.2,
+      "status": "partial",
+      "checks": [],
+      "recommendations": [],
+      "training_bots": {"blocked": [], "allowed": [], "unknown": []},
+      "citation_bots": {"blocked": [], "allowed": [], "unknown": []},
+      "llms_txt": {"exists": false, "valid": false}
+    }
   },
   "lighthouse": {
     "desktop": {

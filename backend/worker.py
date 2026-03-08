@@ -15,7 +15,12 @@ from app.config import settings
 from app.services import screaming_frog, lighthouse, ai_analysis, senuto
 from app.services import ai_execution_plan
 from app.services import technical_seo_extras
-from app.services.health_index import compute_technical_health_index, compute_visibility_momentum
+from app.services.health_index import (
+    compute_content_quality_index,
+    compute_technical_health_index,
+    compute_traffic_estimation,
+    compute_visibility_momentum,
+)
 from app.services.rag_service import index_audit_for_rag
 
 # Configure logging
@@ -209,6 +214,8 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
             }
             technical_health_index = compute_technical_health_index(partial_results)
             visibility_momentum = compute_visibility_momentum(senuto_data)
+            traffic_estimation = compute_traffic_estimation(senuto_data)
+            content_quality_index = compute_content_quality_index(partial_results)
 
             # Persist crawl_blocked so frontend and Phase 2/3 can skip AI when site blocked crawler
             audit.crawl_blocked = crawl_data.get("crawl_blocked", False)
@@ -220,6 +227,8 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
                 **partial_results,
                 "technical_health_index": technical_health_index,
                 "visibility_momentum": visibility_momentum,
+                "traffic_estimation": traffic_estimation,
+                "content_quality_index": content_quality_index,
             }
             await db.commit()
             
@@ -229,6 +238,8 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
                 "senuto": senuto_data,
                 "technical_health_index": technical_health_index,
                 "visibility_momentum": visibility_momentum,
+                "traffic_estimation": traffic_estimation,
+                "content_quality_index": content_quality_index,
             }
 
         except Exception as e:

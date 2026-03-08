@@ -93,6 +93,63 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ---
 
+## Gap Analysis — Faza 3B wdrozona (2026-03-08)
+
+### Comparison (`/audits/[id]/comparison`)
+
+- `frontend/app/(app)/audits/[id]/comparison/page.tsx`:
+  - trend chart rozszerzony o metryki 3A:
+    - `technical_health_index.score`,
+    - `crawl.ai_readiness.score`,
+    - `visibility_momentum` (normalizowany do skali wykresu).
+  - dodano ROI summary card (delta THI, delta Momentum, delta AI Readiness, frazy do TOP10).
+  - dodano nowy tab `Pozycje`:
+    - porownanie keywordow miedzy 2 audytami (`results.senuto.visibility.positions`),
+    - klasyfikacja `improved / declined / new / lost`,
+    - tabela: old/new position, delta, search volume, URL.
+
+### Visibility + Overview traffic impact
+
+- `frontend/app/(app)/audits/[id]/visibility/page.tsx`:
+  - dodano tab `Traffic Impact`:
+    - summary KPI (`total_estimated_monthly`, `potential_monthly`, `potential_gain`),
+    - distribution by position bracket,
+    - tabele: top traffic keywords, top traffic URLs, top opportunities.
+  - fallback dla starszych audytow bez `results.traffic_estimation` liczony po stronie frontendu.
+
+- `frontend/app/(app)/audits/[id]/page.tsx`:
+  - dodano summary card `Estimated Traffic` na overview:
+    - total estimate,
+    - potential gain,
+    - mini breakdown per position bracket,
+    - top traffic keywords preview.
+
+### Content Quality Index
+
+- `frontend/app/(app)/audits/[id]/content-quality/page.tsx` (new):
+  - dedykowana strona CQI:
+    - site score + grade + status,
+    - distribution A/B/C/D/F,
+    - top issues,
+    - component breakdown,
+    - per-page tabela z filtrem grade.
+
+- `frontend/app/(app)/audits/[id]/page.tsx`:
+  - dodano summary card `Content Quality` na overview:
+    - `results.content_quality_index.site_score`,
+    - distribution preview,
+    - top issues preview,
+    - CTA do `/audits/[id]/content-quality`.
+
+### Navigation and IA
+
+- `frontend/components/layout/AuditSidebar.tsx`:
+  - dodano link `Content Quality` w grupie "SEO i Tresc".
+- `frontend/components/layout/Breadcrumbs.tsx`:
+  - dodano etykiete breadcrumb dla `content-quality`.
+
+---
+
 ## Navigation Redesign (TopBar + Context Sidebars) (2026-03-07)
 
 - Replaced monolithic app navigation (`UnifiedSidebar` + `MobileSidebar`) with a context-driven shell:

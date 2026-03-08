@@ -88,6 +88,7 @@ export function AuditSidebar({ auditId, onNavigate, className }: AuditSidebarPro
         value: 'seo-content',
         items: [
           { href: `/audits/${auditId}/seo`, icon: Search, label: 'SEO' },
+          { href: `/audits/${auditId}/content-quality`, icon: Sparkles, label: 'Content Quality' },
           { href: `/audits/${auditId}/schema`, icon: Code2, label: 'Schema.org' },
           { href: `/audits/${auditId}/links`, icon: LinkIcon, label: 'Linki' },
           { href: `/audits/${auditId}/images`, icon: ImageIcon, label: 'Obrazy' },

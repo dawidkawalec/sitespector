@@ -82,6 +82,32 @@ The **Worker** is a background Python process that polls for pending audits and 
 
 ---
 
+## Gap Analysis — Faza 3B Deeper Derived Insights (2026-03-08)
+
+### Nowe metryki pochodne
+
+- `backend/app/services/health_index.py`:
+  - dodano `compute_traffic_estimation(senuto_data)`:
+    - estymacja ruchu miesiecznego na bazie pozycji i modelu CTR,
+    - agregacje: `by_position_bracket`, `top_traffic_keywords`, `top_traffic_urls`, `top_opportunities`,
+    - pola wyjsciowe: `total_estimated_monthly`, `potential_monthly`, `potential_gain`.
+  - dodano `compute_content_quality_index(results)`:
+    - per-page CQI 0-100 dla URL-i z `crawl.all_pages`,
+    - czynniki: `word_count`, `text_ratio`, `title`, `meta`, `h1`, `readability`, `internal_linking`, `crawl_depth`,
+    - pola wyjsciowe: `site_score`, `grade`, `distribution`, `pages`, `top_issues`, `components`.
+
+### Worker persistence (Phase 1 technical)
+
+- `backend/worker.py`:
+  - rozszerzono etap `run_technical_analysis(...)` o:
+    - `traffic_estimation = compute_traffic_estimation(senuto_data)`,
+    - `content_quality_index = compute_content_quality_index(partial_results)`.
+  - worker zapisuje teraz dodatkowo:
+    - `results.traffic_estimation`,
+    - `results.content_quality_index`.
+
+---
+
 ## PDF Branding Rollout (SVG) (2026-03-06)
 
 - Unified PDF brand source to a single full logotype asset: `backend/templates/pdf/assets/sitespector_logo_transp.svg`.
