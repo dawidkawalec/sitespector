@@ -320,8 +320,8 @@ AI analysis (Gemini) **używa** tych danych do generowania insights, ale użytko
 | 3.5 | AI Search readiness checks (llms.txt, AI bot rules) | Backend | 2-3 dni |
 | 3.6 | Content Quality Index (per-page composite) | Backend | 2-3 dni |
 | 3.7 | Competitive Performance Radar (spider chart) | Frontend | 1-2 dni |
-| 3.8 | Site architecture visualization (D3.js) | Frontend (heavy) | 5-7 dni |
-| 3.9 | Duplicate content detection (Hash + Near Duplicates) | Backend + Frontend | 3-4 dni |
+| 3.8 | Site architecture visualization (interactive force graph) | Frontend (heavy) | 5-7 dni |
+| 3.9 | Duplicate metadata detection (Title/Meta/H1 + export) | Frontend | 2-3 dni |
 | 3.10 | Semantic content clustering (Qdrant + embeddings) | Backend | 5-7 dni |
 | 3.11 | Content Optimization Briefs (per page, AI-generated) | Backend + Frontend | 5-7 dni |
 | 3.12 | Auto Monthly SEO Health Report | Backend + Frontend | 3-5 dni |
@@ -366,11 +366,12 @@ Cel: Zbudować features, których konkurencja nie ma.
 - [x] AI Search readiness checks (3.5)
 - [x] Competitive Performance Radar (3.7)
 - [x] Composite index: Content Quality Index (3.6)
-- [ ] Site architecture visualization (3.8)
+- [x] Site architecture visualization (3.8)
+- [x] Duplicate metadata detection surface (Title/Meta/H1, 3.9-lite)
 - [ ] Content Optimization Briefs (3.11)
 - [ ] Auto Monthly Reports (3.12)
 
-**Status wdrożenia**: Faza 3A+3B ukończona (2026-03-08): THI, Visibility Momentum, AI Readiness, Competitive Performance Radar, Historical Comparison, Traffic Impact Estimation, Content Quality Index.
+**Status wdrożenia**: Faza 3A+3B+3C (częściowo) ukończona (2026-03-08): THI, Visibility Momentum, AI Readiness, Competitive Performance Radar, Historical Comparison, Traffic Impact Estimation, Content Quality Index, Site Architecture Visualization (3.8), Duplicate metadata surface (3.9-lite).
 
 ---
 

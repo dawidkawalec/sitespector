@@ -150,6 +150,55 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ---
 
+## Gap Analysis — Faza 3C wdrozona (2026-03-08)
+
+### Architecture (`/audits/[id]/architecture`)
+
+- `frontend/app/(app)/audits/[id]/architecture/page.tsx`:
+  - strona przebudowana na 2 taby:
+    - `Mapa serwisu` (nowa warstwa),
+    - `Stack technologiczny` (dotychczasowy widok, zachowany).
+  - dodano interaktywny force graph (biblioteka `react-force-graph-2d`) oparty o:
+    - `results.crawl.all_pages` (nodes),
+    - `results.crawl.link_graph` (edges).
+  - kodowanie wizualne:
+    - color by: crawl depth / status code / link score,
+    - size by: inlinks / word count,
+    - homepage jako wyróżniony node.
+  - panel kontrolny:
+    - filtr depth range,
+    - status bucket filters (2xx/3xx/4xx/5xx/other),
+    - search URL/title,
+    - limit `max nodes` (top N po inlinks).
+  - panel szczegółów klikniętego noda:
+    - URL, title, status, depth, inlinks/outlinks, link_score, word_count,
+    - tryb focus "pokaż tylko połączone".
+  - optymalizacje dla dużych crawlów:
+    - deduplikacja krawędzi source→target + `count`,
+    - warning dla dużych grafów (>500 nodes),
+    - przycisk `Dopasuj widok` (`zoomToFit`).
+
+### Content Quality duplicates (`/audits/[id]/content-quality`)
+
+- `frontend/app/(app)/audits/[id]/content-quality/page.tsx`:
+  - dodano nowy tab `Duplikaty` (3.9-lite scope) oparty o istniejące pola crawl:
+    - `title` + `title_occurrences`,
+    - `meta_description` + `meta_desc_occurrences`,
+    - `h1` + `h1_occurrences`.
+  - grupowanie duplikatów po identycznej wartości i lista URL-i w grupie.
+  - summary cards: liczba grup i liczba URL-i dla Title/Meta/H1.
+  - eksport CSV per typ duplikatu:
+    - `duplicate_titles.csv`,
+    - `duplicate_meta_descriptions.csv`,
+    - `duplicate_h1.csv`.
+
+### Dependencies
+
+- `frontend/package.json`:
+  - dodano `react-force-graph-2d` do wizualizacji mapy serwisu.
+
+---
+
 ## Navigation Redesign (TopBar + Context Sidebars) (2026-03-07)
 
 - Replaced monolithic app navigation (`UnifiedSidebar` + `MobileSidebar`) with a context-driven shell:

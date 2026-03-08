@@ -1,5 +1,31 @@
 # Architectural Decisions Log
 
+## ADR-062: Phase 3C Site Architecture Graph + Duplicate Metadata Surface (2026-03-08)
+
+- **Decision**: Implement Phase 3C as a frontend-first rollout with two scopes:
+  - 3.8 full: interactive site architecture visualization using `results.crawl.all_pages` + `results.crawl.link_graph`,
+  - 3.9 lite: duplicate content surface limited to existing metadata duplicate signals (`title/meta_description/h1` occurrences), without new backend extraction for hash/near-duplicate algorithms.
+- **Rationale**:
+  - Link graph and page-level crawl metrics already existed in `audits.results`, so the architecture map could be delivered with no backend risk.
+  - Product goal for 3.9 was clarified toward practical duplication insights first (Title/Meta/H1), while Hash/Near Duplicate from Screaming Frog remained optional and lower priority.
+  - This maximizes user-visible value with minimal deployment risk and zero crawler-pipeline changes.
+- **Implementation**:
+  - Frontend:
+    - `audits/[id]/architecture/page.tsx` rebuilt to include:
+      - force-directed map (`react-force-graph-2d`),
+      - visual encoding controls (color/size/filter/search),
+      - node detail panel with connected-node focus mode,
+      - performance guards (edge dedupe + top-N node limiting + large-graph warning).
+    - `audits/[id]/content-quality/page.tsx` extended with `Duplikaty` tab:
+      - grouped duplicate Title/Meta/H1 views,
+      - per-type CSV exports.
+  - Dependencies:
+    - added `react-force-graph-2d` to frontend dependencies.
+- **Outcome**:
+  - Architecture section now exposes real internal linking topology instead of only static stack information.
+  - Duplicate metadata issues are actionable and exportable without introducing backend complexity.
+  - Phase 3C advances immediately while preserving optional path to future Hash/Near-Duplicate expansion.
+
 ## ADR-060: Phase 3B Derived Insights Layer (2026-03-08)
 
 - **Decision**: Extend audit results with two additional derived KPI blocks and expose them in dedicated UI surfaces:

@@ -8,6 +8,44 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-069: Brak wizualizacji architektury serwisu i czytelnego modułu duplikatów metadanych
+
+**Reported**: 2026-03-08
+
+**Status**: ✅ FIXED (2026-03-08)
+
+**Severity**: MEDIUM
+
+**Description**:
+- Sekcja `Architektura` pokazywała wyłącznie stack technologiczny, bez realnej mapy połączeń wewnętrznych.
+- Duplikaty `Title / Meta Description / H1` były obecne w danych crawla, ale brakowało dedykowanej prezentacji i eksportu.
+
+**Root cause**:
+- Brak warstwy wizualizacji wykorzystującej `results.crawl.link_graph` i `results.crawl.all_pages`.
+- Brak dedykowanego taba pod duplikaty metadanych na stronie `content-quality`.
+
+**Fix**:
+- Frontend:
+  - `frontend/app/(app)/audits/[id]/architecture/page.tsx`:
+    - dodano tab `Mapa serwisu` z interaktywnym force graph (`react-force-graph-2d`),
+    - dodano statystyki, panel filtrów, panel szczegółów noda, tryb focus połączeń i zabezpieczenia wydajnościowe.
+  - `frontend/app/(app)/audits/[id]/content-quality/page.tsx`:
+    - dodano tab `Duplikaty` (Title/Meta/H1),
+    - dodano grupowanie po wartości i eksport CSV per typ.
+- Dependency:
+  - `frontend/package.json`: dodano `react-force-graph-2d`.
+
+**Verification**:
+- `ReadLints` dla zmienionych plików frontendowych: ✅ brak nowych błędów lint.
+
+**Related**:
+- `frontend/app/(app)/audits/[id]/architecture/page.tsx`
+- `frontend/app/(app)/audits/[id]/content-quality/page.tsx`
+- `docs/frontend.md`
+- `docs/gap-analysis-report.md`
+
+---
+
 ### BUG-068: Brak warstwy ROI dla Fazy 3B (traffic + content quality + porownanie historyczne)
 
 **Reported**: 2026-03-08
