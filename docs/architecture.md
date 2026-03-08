@@ -114,7 +114,7 @@ The authenticated app has a persistent right-side **ChatPanel** (desktop) which 
 
 | Module | Location | Notes |
 |--------|----------|-------|
-| Sidebar | `frontend/components/layout/UnifiedSidebar.tsx` | Projects tree + audit nav + search |
+| Sidebar | `frontend/components/layout/UnifiedSidebar.tsx` | Projects tree + audit nav + search + audit tools (`crawl-data`, `debug`) |
 | Dashboard | `frontend/app/(app)/dashboard/page.tsx` | Workspace trends only |
 | Projects | `frontend/app/(app)/projects/` | CRUD, audits, compare, schedule, team |
 | Audit detail | `frontend/app/(app)/audits/[id]/` | 15+ subpages |

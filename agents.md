@@ -47,4 +47,4 @@ docker exec sitespector-backend alembic upgrade head  # DB migrations
 - All API calls go through `frontend/lib/api.ts` (workspace-scoped)
 
 ---
-**Last updated**: 2026-03-08
+**Last updated**: 2026-03-08 (audit rerun UX + sidebar audit tools)
