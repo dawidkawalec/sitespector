@@ -373,6 +373,7 @@ Cel: Zbudować features, których konkurencja nie ma.
 
 **Status wdrożenia**: Faza 3A+3B+3C (częściowo) ukończona (2026-03-08): THI, Visibility Momentum, AI Readiness, Competitive Performance Radar, Historical Comparison, Traffic Impact Estimation, Content Quality Index, Site Architecture Visualization (3.8), Duplicate metadata surface (3.9-lite).
 Dodatkowy hardening (2026-03-08): AI Readiness runtime crash usunięty, a moduły `content-quality` i `schema` zostały doprowadzone do spójnego workflow `Dane/Analiza/Plan` z dedykowanymi kontekstami AI i taskami execution plan.
+Dodatkowy hardening (2026-03-08, tura 2): moduły `ai-readiness` i `architecture` otrzymały pełny workflow `Dane/Analiza/Plan`; backend rozszerzono o `ai_contexts`/taski dla tych obszarów oraz poprawiono fallbacki pustego widoku grafu architektury.
 
 ---
 

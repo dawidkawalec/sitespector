@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { formatNumber } from '@/lib/utils'
@@ -15,6 +15,9 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ModeSwitcher, useAuditMode } from '@/components/audit/ModeSwitcher'
+import { AnalysisView } from '@/components/audit/AnalysisView'
+import { TaskListView } from '@/components/audit/TaskListView'
 import {
   Loader2,
   Network,
@@ -32,6 +35,7 @@ import {
   Focus,
 } from 'lucide-react'
 import type { Audit } from '@/lib/api'
+import { toast } from 'sonner'
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false }) as any
 
@@ -342,6 +346,7 @@ function getLinkEndId(linkEnd: unknown): string {
 export default function ArchitecturePage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
+  const [mode, setMode] = useAuditMode('data')
 
   const [colorBy, setColorBy] = useState<ColorBy>('depth')
   const [sizeBy, setSizeBy] = useState<SizeBy>('inlinks')
@@ -374,23 +379,76 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
     checkAuth()
   }, [router])
 
-  const { data: audit, isLoading } = useQuery({
+  const { data: audit, isLoading, refetch: refetchAudit } = useQuery({
     queryKey: ['audit', params.id],
     queryFn: () => auditsAPI.get(params.id),
     enabled: isAuth,
+    refetchInterval: (query) => {
+      const data = query?.state?.data as Audit | undefined
+      const isRunning = data?.status === 'processing' || data?.status === 'pending'
+      const isAiRunning = data?.ai_status === 'processing'
+      const isPlanRunning = data?.execution_plan_status === 'processing'
+      return isRunning || isAiRunning || isPlanRunning ? 3000 : false
+    },
+  })
+
+  const { data: tasksResponse, refetch: refetchTasks } = useQuery({
+    queryKey: ['tasks', params.id, 'architecture'],
+    queryFn: () => auditsAPI.getTasks(params.id, { module: 'architecture' }),
+    enabled: isAuth && !!audit && mode === 'plan',
+    refetchInterval: mode === 'plan' && audit?.execution_plan_status === 'processing' ? 3000 : false,
+  })
+
+  const tasks = tasksResponse?.items || []
+  const aiContext = audit?.results?.ai_contexts?.architecture
+
+  const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { status })
+      await refetchTasks()
+      toast.success('Zaktualizowano status zadania')
+    } catch (_error) {
+      toast.error('Nie udalo sie zaktualizowac zadania')
+    }
+  }
+
+  const handleNotesChange = async (taskId: string, notes: string) => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { notes })
+      await refetchTasks()
+      toast.success('Zapisano notatki')
+    } catch (_error) {
+      toast.error('Nie udalo sie zapisac notatek')
+    }
+  }
+
+  const generatePlanMutation = useMutation({
+    mutationFn: () => auditsAPI.runExecutionPlan(params.id),
+    onSuccess: async () => {
+      await refetchAudit()
+      await refetchTasks()
+      toast.success('Rozpoczeto generowanie planu wykonania')
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Nie udalo sie uruchomic generowania planu')
+    },
   })
 
   useEffect(() => {
-    if (!graphContainerRef.current) return
     const updateSize = () => {
       const width = graphContainerRef.current?.clientWidth ?? 0
       setGraphSize({ width, height: 620 })
     }
+    if (!graphContainerRef.current || mode !== 'data') return
     updateSize()
     const observer = new ResizeObserver(() => updateSize())
     observer.observe(graphContainerRef.current)
-    return () => observer.disconnect()
-  }, [])
+    const timer = window.setTimeout(updateSize, 180)
+    return () => {
+      observer.disconnect()
+      window.clearTimeout(timer)
+    }
+  }, [audit?.id, audit?.status, audit?.results, mode])
 
   const baseGraph = useMemo(() => {
     if (!audit) return { nodes: [] as GraphNode[], links: [] as GraphLink[], stats: { totalPages: 0, totalLinks: 0, avgDepth: 0, orphanCount: 0, maxDepth: 0 } }
@@ -556,6 +614,7 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
   const rawGraphNodeCount = baseGraph.nodes.length
   const rawGraphEdgeCount = baseGraph.links.length
   const veryLargeGraph = rawGraphNodeCount > 500
+  const hasNoEdgesInRawGraph = rawGraphNodeCount > 0 && rawGraphEdgeCount === 0
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-6">
@@ -574,377 +633,439 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
         </Badge>
       </div>
 
-      <Tabs defaultValue="site-map" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 max-w-[460px]">
-          <TabsTrigger value="site-map">Mapa serwisu</TabsTrigger>
-          <TabsTrigger value="stack">Stack technologiczny</TabsTrigger>
-        </TabsList>
+      <ModeSwitcher
+        mode={mode}
+        onModeChange={setMode}
+        taskCount={tasks.length}
+        pendingTaskCount={tasks.filter((t) => t.status === 'pending').length}
+        hasAiData={!!aiContext}
+        hasExecutionPlan={audit?.execution_plan_status === 'completed'}
+        isAiLoading={audit?.ai_status === 'processing'}
+        isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
+      />
 
-        <TabsContent value="site-map" className="space-y-4">
-          <div className="grid grid-cols-1 @lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Strony</CardDescription>
-                <CardTitle className="text-3xl font-bold">{formatNumber(baseGraph.stats.totalPages)}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Linki wewnętrzne</CardDescription>
-                <CardTitle className="text-3xl font-bold">{formatNumber(baseGraph.stats.totalLinks)}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Śr. głębokość</CardDescription>
-                <CardTitle className="text-3xl font-bold">{baseGraph.stats.avgDepth.toFixed(1)}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Strony osierocone</CardDescription>
-                <CardTitle className="text-3xl font-bold">{formatNumber(baseGraph.stats.orphanCount)}</CardTitle>
-              </CardHeader>
-            </Card>
-          </div>
+      {mode === 'data' && (
+        <Tabs defaultValue="site-map" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 max-w-[460px]">
+            <TabsTrigger value="site-map">Mapa serwisu</TabsTrigger>
+            <TabsTrigger value="stack">Stack technologiczny</TabsTrigger>
+          </TabsList>
 
-          {veryLargeGraph && (
-            <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20">
-              <CardContent className="pt-6">
-                <p className="text-sm">
-                  Ten crawl ma duży graf ({formatNumber(rawGraphNodeCount)} węzłów). Dla płynności możesz ograniczyć liczbę węzłów filtrem
-                  <span className="font-medium"> Max nodes</span>.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {baseGraph.nodes.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-muted-foreground">
-                  Brak danych `crawl.all_pages` / `crawl.link_graph` dla tego audytu.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 @2xl:grid-cols-12 gap-4">
-              <Card className="@2xl:col-span-3">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Workflow className="h-4 w-4 text-primary" />
-                    Kontrolki mapy
-                  </CardTitle>
-                  <CardDescription>Filtry i kodowanie wizualne</CardDescription>
+          <TabsContent value="site-map" className="space-y-4">
+            <div className="grid grid-cols-1 @lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Strony</CardDescription>
+                  <CardTitle className="text-3xl font-bold">{formatNumber(baseGraph.stats.totalPages)}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-5">
-                  <div className="space-y-2">
-                    <Label>Koloruj wg</Label>
-                    <Select value={colorBy} onValueChange={(value) => setColorBy(value as ColorBy)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Wybierz kodowanie koloru" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="depth">Crawl depth</SelectItem>
-                        <SelectItem value="status">Status HTTP</SelectItem>
-                        <SelectItem value="link_score">Link score</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Rozmiar wg</Label>
-                    <Select value={sizeBy} onValueChange={(value) => setSizeBy(value as SizeBy)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Wybierz kodowanie wielkości" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="inlinks">Inlinks</SelectItem>
-                        <SelectItem value="word_count">Word count</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Maks. liczba węzłów</Label>
-                    <Select value={maxNodes} onValueChange={(value) => setMaxNodes(value as 'all' | '200' | '500' | '1000')}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Limit węzłów" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="200">Top 200 (po inlinks)</SelectItem>
-                        <SelectItem value="500">Top 500 (po inlinks)</SelectItem>
-                        <SelectItem value="1000">Top 1000 (po inlinks)</SelectItem>
-                        <SelectItem value="all">Wszystkie</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Zakres głębokości</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input
-                        type="number"
-                        min={availableDepth.min}
-                        max={availableDepth.max}
-                        value={minDepthFilter}
-                        onChange={(e) => setMinDepthFilter(Math.min(Number(e.target.value || 0), maxDepthFilter))}
-                      />
-                      <Input
-                        type="number"
-                        min={availableDepth.min}
-                        max={availableDepth.max}
-                        value={maxDepthFilter}
-                        onChange={(e) => setMaxDepthFilter(Math.max(Number(e.target.value || 0), minDepthFilter))}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Statusy HTTP</Label>
-                    <div className="space-y-2">
-                      {(['2xx', '3xx', '4xx', '5xx', 'other'] as const).map((bucket) => (
-                        <div key={bucket} className="flex items-center gap-2">
-                          <Checkbox
-                            id={`status-${bucket}`}
-                            checked={statusFilters[bucket]}
-                            onCheckedChange={(checked) =>
-                              setStatusFilters((prev) => ({ ...prev, [bucket]: checked === true }))
-                            }
-                          />
-                          <Label htmlFor={`status-${bucket}`} className="text-sm cursor-pointer">{bucket}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Szukaj URL / title</Label>
-                    <Input
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder="np. /blog lub kontakt"
-                    />
-                    {searchQuery ? (
-                      <p className="text-xs text-muted-foreground">
-                        Dopasowania: {formatNumber(searchMatchesCount)}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => {
-                      setColorBy('depth')
-                      setSizeBy('inlinks')
-                      setMaxNodes('all')
-                      setMinDepthFilter(availableDepth.min)
-                      setMaxDepthFilter(availableDepth.max)
-                      setStatusFilters({
-                        '2xx': true,
-                        '3xx': true,
-                        '4xx': true,
-                        '5xx': true,
-                        other: false,
-                      })
-                      setSearch('')
-                      setSelectedNodeId(null)
-                      setFocusConnected(false)
-                    }}
-                  >
-                    Resetuj filtry
-                  </Button>
-
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    <p>Legenda:</p>
-                    <p>• Złoty węzeł = homepage</p>
-                    <p>• Żółty węzeł = wynik wyszukiwania</p>
-                    <p>• Linia przerywana = nofollow</p>
-                  </div>
-                </CardContent>
               </Card>
-
-              <Card className="@2xl:col-span-6">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <LinkIcon className="h-4 w-4 text-primary" />
-                    Graf relacji wewnętrznych
-                  </CardTitle>
-                  <CardDescription>
-                    Kliknij węzeł, aby zobaczyć szczegóły i wyfokusować połączenia.
-                  </CardDescription>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Linki wewnętrzne</CardDescription>
+                  <CardTitle className="text-3xl font-bold">{formatNumber(baseGraph.stats.totalLinks)}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div ref={graphContainerRef} className="h-[620px] w-full rounded-lg border bg-muted/20">
-                    {graphSize.width > 0 && (
-                      <ForceGraph2D
-                        ref={graphRef}
-                        width={graphSize.width}
-                        height={graphSize.height}
-                        graphData={{ nodes: graphNodes, links: graphLinks }}
-                        nodeCanvasObject={(nodeRaw: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-                          const node = nodeRaw as GraphNode & { x: number; y: number }
-                          const radius = nodeRadius(node)
-                          const fill = nodeFill(node)
-                          ctx.beginPath()
-                          ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false)
-                          ctx.fillStyle = fill
-                          ctx.fill()
-
-                          if (selectedNodeId === node.id) {
-                            ctx.beginPath()
-                            ctx.arc(node.x, node.y, radius + 2, 0, 2 * Math.PI, false)
-                            ctx.strokeStyle = '#ffffff'
-                            ctx.lineWidth = 2
-                            ctx.stroke()
-                          }
-
-                          if (globalScale > 1.5) {
-                            const label = node.shortPath || node.url
-                            const fontSize = 11 / globalScale
-                            ctx.font = `${fontSize}px sans-serif`
-                            ctx.fillStyle = '#94a3b8'
-                            ctx.fillText(label, node.x + radius + 2, node.y + fontSize / 3)
-                          }
-                        }}
-                        linkColor={(linkRaw: any) => {
-                          const sourceId = getLinkEndId(linkRaw.source)
-                          const targetId = getLinkEndId(linkRaw.target)
-                          if (focusConnected && connectedIds && (!connectedIds.has(sourceId) || !connectedIds.has(targetId))) {
-                            return 'rgba(148,163,184,0.12)'
-                          }
-                          return 'rgba(148,163,184,0.5)'
-                        }}
-                        linkLineDash={(linkRaw: any) => {
-                          const link = linkRaw as GraphLink
-                          return link.follow ? [] : [4, 2]
-                        }}
-                        linkWidth={(linkRaw: any) => {
-                          const link = linkRaw as GraphLink
-                          return Math.min(4, 1 + Math.log1p(link.count || 1))
-                        }}
-                        nodeLabel={(nodeRaw: any) => {
-                          const node = nodeRaw as GraphNode
-                          return `${node.shortPath}\nDepth: ${node.crawl_depth} | Inlinks: ${node.inlinks} | Status: ${node.status_code || 'n/a'}`
-                        }}
-                        cooldownTicks={120}
-                        d3VelocityDecay={0.25}
-                        onNodeClick={(nodeRaw: any) => {
-                          const node = nodeRaw as GraphNode
-                          setSelectedNodeId(node.id)
-                        }}
-                      />
-                    )}
-                  </div>
-                  <div className="pt-3 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      Widoczne: {formatNumber(graphNodes.length)} węzłów / {formatNumber(graphLinks.length)} relacji
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        try {
-                          graphRef.current?.zoomToFit(500, 35)
-                        } catch {
-                          // No-op.
-                        }
-                      }}
-                    >
-                      <Maximize2 className="h-3.5 w-3.5 mr-1" />
-                      Dopasuj widok
-                    </Button>
-                  </div>
-                  {filteredOutCount > 0 ? (
-                    <p className="pt-2 text-xs text-muted-foreground">
-                      Ukryto przez filtry: {formatNumber(filteredOutCount)} stron.
-                    </p>
-                  ) : null}
-                </CardContent>
               </Card>
-
-              <Card className="@2xl:col-span-3">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <MousePointerClick className="h-4 w-4 text-primary" />
-                    Szczegóły węzła
-                  </CardTitle>
-                  <CardDescription>Kliknij node na grafie, aby zobaczyć metryki strony.</CardDescription>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Śr. głębokość</CardDescription>
+                  <CardTitle className="text-3xl font-bold">{baseGraph.stats.avgDepth.toFixed(1)}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {selectedNode ? (
-                    <>
-                      <div>
-                        <p className="text-xs uppercase text-muted-foreground">URL</p>
-                        <p className="font-mono text-xs break-all">{selectedNode.url}</p>
-                      </div>
-                      {selectedNode.title ? (
-                        <div>
-                          <p className="text-xs uppercase text-muted-foreground">Title</p>
-                          <p className="text-sm">{selectedNode.title}</p>
-                        </div>
-                      ) : null}
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div className="rounded border p-2">
-                          <p className="text-xs text-muted-foreground">Status</p>
-                          <p className="font-semibold">{selectedNode.status_code || 'n/a'}</p>
-                        </div>
-                        <div className="rounded border p-2">
-                          <p className="text-xs text-muted-foreground">Depth</p>
-                          <p className="font-semibold">{selectedNode.crawl_depth}</p>
-                        </div>
-                        <div className="rounded border p-2">
-                          <p className="text-xs text-muted-foreground">Inlinks</p>
-                          <p className="font-semibold">{formatNumber(selectedNode.inlinks)}</p>
-                        </div>
-                        <div className="rounded border p-2">
-                          <p className="text-xs text-muted-foreground">Outlinks</p>
-                          <p className="font-semibold">{formatNumber(selectedNode.outlinks)}</p>
-                        </div>
-                        <div className="rounded border p-2">
-                          <p className="text-xs text-muted-foreground">Link score</p>
-                          <p className="font-semibold">{selectedNode.link_score.toFixed(1)}</p>
-                        </div>
-                        <div className="rounded border p-2">
-                          <p className="text-xs text-muted-foreground">Word count</p>
-                          <p className="font-semibold">{formatNumber(selectedNode.word_count)}</p>
-                        </div>
-                      </div>
-                      <div className="rounded border p-2 text-sm">
-                        <p className="text-xs text-muted-foreground">Połączenia bezpośrednie</p>
-                        <p className="font-semibold flex items-center gap-1">
-                          <CircleDot className="h-3.5 w-3.5" />
-                          {formatNumber(selectedNeighborsCount)}
-                        </p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant={focusConnected ? 'default' : 'outline'}
-                        onClick={() => setFocusConnected((prev) => !prev)}
-                        className="w-full"
-                      >
-                        <Focus className="h-3.5 w-3.5 mr-1" />
-                        {focusConnected ? 'Pokaż cały graf' : 'Pokaż tylko połączone'}
-                      </Button>
-                    </>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Wybierz węzeł na grafie, aby wyświetlić szczegóły strony.
-                    </p>
-                  )}
-                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Strony osierocone</CardDescription>
+                  <CardTitle className="text-3xl font-bold">{formatNumber(baseGraph.stats.orphanCount)}</CardTitle>
+                </CardHeader>
               </Card>
             </div>
-          )}
-        </TabsContent>
 
-        <TabsContent value="stack">
-          {renderTechStackTab(techStack)}
-        </TabsContent>
-      </Tabs>
+            {veryLargeGraph && (
+              <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20">
+                <CardContent className="pt-6">
+                  <p className="text-sm">
+                    Ten crawl ma duży graf ({formatNumber(rawGraphNodeCount)} węzłów). Dla płynności możesz ograniczyć liczbę węzłów filtrem
+                    <span className="font-medium"> Max nodes</span>.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {hasNoEdgesInRawGraph && (
+              <Card className="border-amber-300 bg-amber-50/40 dark:bg-amber-950/15">
+                <CardContent className="pt-6 space-y-2">
+                  <p className="text-sm font-medium">W tym audycie nie wykryto relacji w `crawl.link_graph`.</p>
+                  <p className="text-xs text-muted-foreground">
+                    To najczęściej oznacza legacy payload albo niepełny eksport crawla. Widok pokazuje dane stron, ale bez krawędzi grafu.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {baseGraph.nodes.length === 0 ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-muted-foreground">
+                    Brak danych `crawl.all_pages` dla tego audytu.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 @2xl:grid-cols-12 gap-4">
+                <Card className="@2xl:col-span-3">
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Workflow className="h-4 w-4 text-primary" />
+                      Kontrolki mapy
+                    </CardTitle>
+                    <CardDescription>Filtry i kodowanie wizualne</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    <div className="space-y-2">
+                      <Label>Koloruj wg</Label>
+                      <Select value={colorBy} onValueChange={(value) => setColorBy(value as ColorBy)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Wybierz kodowanie koloru" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="depth">Crawl depth</SelectItem>
+                          <SelectItem value="status">Status HTTP</SelectItem>
+                          <SelectItem value="link_score">Link score</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Rozmiar wg</Label>
+                      <Select value={sizeBy} onValueChange={(value) => setSizeBy(value as SizeBy)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Wybierz kodowanie wielkości" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="inlinks">Inlinks</SelectItem>
+                          <SelectItem value="word_count">Word count</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Maks. liczba węzłów</Label>
+                      <Select value={maxNodes} onValueChange={(value) => setMaxNodes(value as 'all' | '200' | '500' | '1000')}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Limit węzłów" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="200">Top 200 (po inlinks)</SelectItem>
+                          <SelectItem value="500">Top 500 (po inlinks)</SelectItem>
+                          <SelectItem value="1000">Top 1000 (po inlinks)</SelectItem>
+                          <SelectItem value="all">Wszystkie</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Zakres głębokości</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="number"
+                          min={availableDepth.min}
+                          max={availableDepth.max}
+                          value={minDepthFilter}
+                          onChange={(e) => setMinDepthFilter(Math.min(Number(e.target.value || 0), maxDepthFilter))}
+                        />
+                        <Input
+                          type="number"
+                          min={availableDepth.min}
+                          max={availableDepth.max}
+                          value={maxDepthFilter}
+                          onChange={(e) => setMaxDepthFilter(Math.max(Number(e.target.value || 0), minDepthFilter))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Statusy HTTP</Label>
+                      <div className="space-y-2">
+                        {(['2xx', '3xx', '4xx', '5xx', 'other'] as const).map((bucket) => (
+                          <div key={bucket} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`status-${bucket}`}
+                              checked={statusFilters[bucket]}
+                              onCheckedChange={(checked) =>
+                                setStatusFilters((prev) => ({ ...prev, [bucket]: checked === true }))
+                              }
+                            />
+                            <Label htmlFor={`status-${bucket}`} className="text-sm cursor-pointer">{bucket}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Szukaj URL / title</Label>
+                      <Input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="np. /blog lub kontakt"
+                      />
+                      {searchQuery ? (
+                        <p className="text-xs text-muted-foreground">
+                          Dopasowania: {formatNumber(searchMatchesCount)}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setColorBy('depth')
+                        setSizeBy('inlinks')
+                        setMaxNodes('all')
+                        setMinDepthFilter(availableDepth.min)
+                        setMaxDepthFilter(availableDepth.max)
+                        setStatusFilters({
+                          '2xx': true,
+                          '3xx': true,
+                          '4xx': true,
+                          '5xx': true,
+                          other: false,
+                        })
+                        setSearch('')
+                        setSelectedNodeId(null)
+                        setFocusConnected(false)
+                      }}
+                    >
+                      Resetuj filtry
+                    </Button>
+
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p>Legenda:</p>
+                      <p>• Złoty węzeł = homepage</p>
+                      <p>• Żółty węzeł = wynik wyszukiwania</p>
+                      <p>• Linia przerywana = nofollow</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="@2xl:col-span-6">
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <LinkIcon className="h-4 w-4 text-primary" />
+                      Graf relacji wewnętrznych
+                    </CardTitle>
+                    <CardDescription>
+                      Kliknij węzeł, aby zobaczyć szczegóły i wyfokusować połączenia.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div ref={graphContainerRef} className="h-[620px] w-full rounded-lg border bg-muted/20">
+                      {graphSize.width <= 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center gap-3 p-4 text-center">
+                          <p className="text-sm text-muted-foreground">
+                            Nie udało się ustalić szerokości kontenera grafu.
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const width = graphContainerRef.current?.clientWidth ?? 0
+                              setGraphSize({ width, height: 620 })
+                            }}
+                          >
+                            Spróbuj ponownie
+                          </Button>
+                        </div>
+                      ) : graphNodes.length === 0 ? (
+                        <div className="h-full flex items-center justify-center p-4 text-center">
+                          <p className="text-sm text-muted-foreground">
+                            Po aktualnych filtrach brak widocznych węzłów. Poszerz zakres depth/status lub zresetuj filtry.
+                          </p>
+                        </div>
+                      ) : (
+                        <ForceGraph2D
+                          ref={graphRef}
+                          width={graphSize.width}
+                          height={graphSize.height}
+                          graphData={{ nodes: graphNodes, links: graphLinks }}
+                          nodeCanvasObject={(nodeRaw: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+                            const node = nodeRaw as GraphNode & { x: number; y: number }
+                            const radius = nodeRadius(node)
+                            const fill = nodeFill(node)
+                            ctx.beginPath()
+                            ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false)
+                            ctx.fillStyle = fill
+                            ctx.fill()
+
+                            if (selectedNodeId === node.id) {
+                              ctx.beginPath()
+                              ctx.arc(node.x, node.y, radius + 2, 0, 2 * Math.PI, false)
+                              ctx.strokeStyle = '#ffffff'
+                              ctx.lineWidth = 2
+                              ctx.stroke()
+                            }
+
+                            if (globalScale > 1.5) {
+                              const label = node.shortPath || node.url
+                              const fontSize = 11 / globalScale
+                              ctx.font = `${fontSize}px sans-serif`
+                              ctx.fillStyle = '#94a3b8'
+                              ctx.fillText(label, node.x + radius + 2, node.y + fontSize / 3)
+                            }
+                          }}
+                          linkColor={(linkRaw: any) => {
+                            const sourceId = getLinkEndId(linkRaw.source)
+                            const targetId = getLinkEndId(linkRaw.target)
+                            if (focusConnected && connectedIds && (!connectedIds.has(sourceId) || !connectedIds.has(targetId))) {
+                              return 'rgba(148,163,184,0.12)'
+                            }
+                            return 'rgba(148,163,184,0.5)'
+                          }}
+                          linkLineDash={(linkRaw: any) => {
+                            const link = linkRaw as GraphLink
+                            return link.follow ? [] : [4, 2]
+                          }}
+                          linkWidth={(linkRaw: any) => {
+                            const link = linkRaw as GraphLink
+                            return Math.min(4, 1 + Math.log1p(link.count || 1))
+                          }}
+                          nodeLabel={(nodeRaw: any) => {
+                            const node = nodeRaw as GraphNode
+                            return `${node.shortPath}\nDepth: ${node.crawl_depth} | Inlinks: ${node.inlinks} | Status: ${node.status_code || 'n/a'}`
+                          }}
+                          cooldownTicks={120}
+                          d3VelocityDecay={0.25}
+                          onNodeClick={(nodeRaw: any) => {
+                            const node = nodeRaw as GraphNode
+                            setSelectedNodeId(node.id)
+                          }}
+                        />
+                      )}
+                    </div>
+                    <div className="pt-3 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        Widoczne: {formatNumber(graphNodes.length)} węzłów / {formatNumber(graphLinks.length)} relacji
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          try {
+                            graphRef.current?.zoomToFit(500, 35)
+                          } catch {
+                            // No-op.
+                          }
+                        }}
+                      >
+                        <Maximize2 className="h-3.5 w-3.5 mr-1" />
+                        Dopasuj widok
+                      </Button>
+                    </div>
+                    {filteredOutCount > 0 ? (
+                      <p className="pt-2 text-xs text-muted-foreground">
+                        Ukryto przez filtry: {formatNumber(filteredOutCount)} stron.
+                      </p>
+                    ) : null}
+                  </CardContent>
+                </Card>
+
+                <Card className="@2xl:col-span-3">
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <MousePointerClick className="h-4 w-4 text-primary" />
+                      Szczegóły węzła
+                    </CardTitle>
+                    <CardDescription>Kliknij node na grafie, aby zobaczyć metryki strony.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {selectedNode ? (
+                      <>
+                        <div>
+                          <p className="text-xs uppercase text-muted-foreground">URL</p>
+                          <p className="font-mono text-xs break-all">{selectedNode.url}</p>
+                        </div>
+                        {selectedNode.title ? (
+                          <div>
+                            <p className="text-xs uppercase text-muted-foreground">Title</p>
+                            <p className="text-sm">{selectedNode.title}</p>
+                          </div>
+                        ) : null}
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="rounded border p-2">
+                            <p className="text-xs text-muted-foreground">Status</p>
+                            <p className="font-semibold">{selectedNode.status_code || 'n/a'}</p>
+                          </div>
+                          <div className="rounded border p-2">
+                            <p className="text-xs text-muted-foreground">Depth</p>
+                            <p className="font-semibold">{selectedNode.crawl_depth}</p>
+                          </div>
+                          <div className="rounded border p-2">
+                            <p className="text-xs text-muted-foreground">Inlinks</p>
+                            <p className="font-semibold">{formatNumber(selectedNode.inlinks)}</p>
+                          </div>
+                          <div className="rounded border p-2">
+                            <p className="text-xs text-muted-foreground">Outlinks</p>
+                            <p className="font-semibold">{formatNumber(selectedNode.outlinks)}</p>
+                          </div>
+                          <div className="rounded border p-2">
+                            <p className="text-xs text-muted-foreground">Link score</p>
+                            <p className="font-semibold">{selectedNode.link_score.toFixed(1)}</p>
+                          </div>
+                          <div className="rounded border p-2">
+                            <p className="text-xs text-muted-foreground">Word count</p>
+                            <p className="font-semibold">{formatNumber(selectedNode.word_count)}</p>
+                          </div>
+                        </div>
+                        <div className="rounded border p-2 text-sm">
+                          <p className="text-xs text-muted-foreground">Połączenia bezpośrednie</p>
+                          <p className="font-semibold flex items-center gap-1">
+                            <CircleDot className="h-3.5 w-3.5" />
+                            {formatNumber(selectedNeighborsCount)}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={focusConnected ? 'default' : 'outline'}
+                          onClick={() => setFocusConnected((prev) => !prev)}
+                          className="w-full"
+                        >
+                          <Focus className="h-3.5 w-3.5 mr-1" />
+                          {focusConnected ? 'Pokaż cały graf' : 'Pokaż tylko połączone'}
+                        </Button>
+                      </>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Wybierz węzeł na grafie, aby wyświetlić szczegóły strony.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="stack">
+            {renderTechStackTab(techStack)}
+          </TabsContent>
+        </Tabs>
+      )}
+
+      {mode === 'analysis' && (
+        <AnalysisView area="architecture" aiContext={aiContext} isLoading={audit?.ai_status === 'processing'} />
+      )}
+
+      {mode === 'plan' && (
+        <TaskListView
+          tasks={tasks}
+          module="architecture"
+          onStatusChange={handleStatusChange}
+          onNotesChange={handleNotesChange}
+          executionPlanStatus={audit?.execution_plan_status ?? null}
+          isGeneratingPlan={generatePlanMutation.isPending || audit?.execution_plan_status === 'processing'}
+          onGeneratePlan={() => generatePlanMutation.mutate()}
+        />
+      )}
     </div>
   )
 }

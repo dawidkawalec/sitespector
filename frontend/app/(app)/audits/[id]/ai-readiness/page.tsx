@@ -3,15 +3,19 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import { auditsAPI } from '@/lib/api'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { auditsAPI, type Audit } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
+import { ModeSwitcher, useAuditMode } from '@/components/audit/ModeSwitcher'
+import { AnalysisView } from '@/components/audit/AnalysisView'
+import { TaskListView } from '@/components/audit/TaskListView'
 import { formatNumber } from '@/lib/utils'
 import { Bot, CheckCircle2, AlertTriangle, XCircle, Loader2, FileText, ChevronRight } from 'lucide-react'
+import { toast } from 'sonner'
 
 type CheckStatus = 'pass' | 'warning' | 'fail'
 
@@ -24,6 +28,7 @@ function statusBadgeVariant(status: CheckStatus): 'default' | 'secondary' | 'des
 export default function AiReadinessPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
+  const [mode, setMode] = useAuditMode('data')
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -34,16 +39,58 @@ export default function AiReadinessPage({ params }: { params: { id: string } }) 
     checkAuth()
   }, [router])
 
-  const { data: audit, isLoading } = useQuery({
+  const { data: audit, isLoading, refetch: refetchAudit } = useQuery({
     queryKey: ['audit', params.id],
     queryFn: () => auditsAPI.get(params.id),
     enabled: isAuth,
     refetchInterval: (query) => {
-      const data = query?.state?.data as any
+      const data = query?.state?.data as Audit | undefined
       const isRunning = data?.status === 'processing' || data?.status === 'pending'
       const isAiRunning = data?.ai_status === 'processing'
       const isPlanRunning = data?.execution_plan_status === 'processing'
       return isRunning || isAiRunning || isPlanRunning ? 3000 : false
+    },
+  })
+
+  const { data: tasksResponse, refetch: refetchTasks } = useQuery({
+    queryKey: ['tasks', params.id, 'ai_readiness'],
+    queryFn: () => auditsAPI.getTasks(params.id, { module: 'ai_readiness' }),
+    enabled: isAuth && !!audit && mode === 'plan',
+    refetchInterval: mode === 'plan' && audit?.execution_plan_status === 'processing' ? 3000 : false,
+  })
+
+  const tasks = tasksResponse?.items || []
+  const aiContext = audit?.results?.ai_contexts?.ai_readiness
+
+  const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { status })
+      await refetchTasks()
+      toast.success('Zaktualizowano status zadania')
+    } catch (_error) {
+      toast.error('Nie udalo sie zaktualizowac zadania')
+    }
+  }
+
+  const handleNotesChange = async (taskId: string, notes: string) => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { notes })
+      await refetchTasks()
+      toast.success('Zapisano notatki')
+    } catch (_error) {
+      toast.error('Nie udalo sie zapisac notatek')
+    }
+  }
+
+  const generatePlanMutation = useMutation({
+    mutationFn: () => auditsAPI.runExecutionPlan(params.id),
+    onSuccess: async () => {
+      await refetchAudit()
+      await refetchTasks()
+      toast.success('Rozpoczeto generowanie planu wykonania')
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Nie udalo sie uruchomic generowania planu')
     },
   })
 
@@ -110,165 +157,196 @@ export default function AiReadinessPage({ params }: { params: { id: string } }) 
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 @lg:grid-cols-4 gap-4">
-        <Card className="@lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-base">Score</CardTitle>
-            <CardDescription>Composite 0-100</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{Math.round(score)}%</div>
-            <Badge variant={score >= 75 ? 'default' : score >= 45 ? 'secondary' : 'destructive'} className="mt-2">
-              {statusLabel}
-            </Badge>
-          </CardContent>
-        </Card>
+      <ModeSwitcher
+        mode={mode}
+        onModeChange={setMode}
+        taskCount={tasks.length}
+        pendingTaskCount={tasks.filter((t) => t.status === 'pending').length}
+        hasAiData={!!aiContext}
+        hasExecutionPlan={audit?.execution_plan_status === 'completed'}
+        isAiLoading={audit?.ai_status === 'processing'}
+        isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
+      />
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Checks</CardTitle>
-            <CardDescription>Pass / Warning / Fail</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <p>Pass: <strong className="text-green-700 dark:text-green-300">{formatNumber(passCount)}</strong></p>
-            <p>Warning: <strong className="text-amber-700 dark:text-amber-300">{formatNumber(warningCount)}</strong></p>
-            <p>Fail: <strong className="text-red-700 dark:text-red-300">{formatNumber(failCount)}</strong></p>
-          </CardContent>
-        </Card>
+      {mode === 'data' && (
+        <>
+          <div className="grid grid-cols-1 @lg:grid-cols-4 gap-4">
+            <Card className="@lg:col-span-1">
+              <CardHeader>
+                <CardTitle className="text-base">Score</CardTitle>
+                <CardDescription>Composite 0-100</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold">{Math.round(score)}%</div>
+                <Badge variant={score >= 75 ? 'default' : score >= 45 ? 'secondary' : 'destructive'} className="mt-2">
+                  {statusLabel}
+                </Badge>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Citation Bots</CardTitle>
-            <CardDescription>Traffic-driving crawlers</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <p>Allowed: <strong>{formatNumber(citationBots?.allowed?.length || 0)}</strong></p>
-            <p>Blocked: <strong className="text-red-700 dark:text-red-300">{formatNumber(citationBots?.blocked?.length || 0)}</strong></p>
-            <p>Unknown: <strong>{formatNumber(citationBots?.unknown?.length || 0)}</strong></p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Checks</CardTitle>
+                <CardDescription>Pass / Warning / Fail</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm">
+                <p>Pass: <strong className="text-green-700 dark:text-green-300">{formatNumber(passCount)}</strong></p>
+                <p>Warning: <strong className="text-amber-700 dark:text-amber-300">{formatNumber(warningCount)}</strong></p>
+                <p>Fail: <strong className="text-red-700 dark:text-red-300">{formatNumber(failCount)}</strong></p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">llms.txt</CardTitle>
-            <CardDescription>Manifest for LLM discovery</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <p>Exists: <strong>{llms?.exists ? 'Yes' : 'No'}</strong></p>
-            <p>Valid: <strong>{llms?.valid ? 'Yes' : 'No'}</strong></p>
-            <p>Sections: <strong>{formatNumber(llms?.sections || 0)}</strong></p>
-            <p>Links: <strong>{formatNumber(llms?.links || 0)}</strong></p>
-          </CardContent>
-        </Card>
-      </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Citation Bots</CardTitle>
+                <CardDescription>Traffic-driving crawlers</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm">
+                <p>Allowed: <strong>{formatNumber(citationBots?.allowed?.length || 0)}</strong></p>
+                <p>Blocked: <strong className="text-red-700 dark:text-red-300">{formatNumber(citationBots?.blocked?.length || 0)}</strong></p>
+                <p>Unknown: <strong>{formatNumber(citationBots?.unknown?.length || 0)}</strong></p>
+              </CardContent>
+            </Card>
 
-      {checks.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Checklist</CardTitle>
-            <CardDescription>Szczegolowe wyniki kontroli AI readiness</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {checks.map((check: any, index: number) => {
-              const currentStatus = (check?.status || 'warning') as CheckStatus
-              return (
-                <div key={`${check?.name || 'check'}-${index}`} className="rounded border p-3 space-y-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      {checkIcon(currentStatus)}
-                      <p className="font-semibold text-sm">{check?.name || 'Check'}</p>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">llms.txt</CardTitle>
+                <CardDescription>Manifest for LLM discovery</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm">
+                <p>Exists: <strong>{llms?.exists ? 'Yes' : 'No'}</strong></p>
+                <p>Valid: <strong>{llms?.valid ? 'Yes' : 'No'}</strong></p>
+                <p>Sections: <strong>{formatNumber(llms?.sections || 0)}</strong></p>
+                <p>Links: <strong>{formatNumber(llms?.links || 0)}</strong></p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {checks.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Checklist</CardTitle>
+                <CardDescription>Szczegolowe wyniki kontroli AI readiness</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {checks.map((check: any, index: number) => {
+                  const currentStatus = (check?.status || 'warning') as CheckStatus
+                  return (
+                    <div key={`${check?.name || 'check'}-${index}`} className="rounded border p-3 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          {checkIcon(currentStatus)}
+                          <p className="font-semibold text-sm">{check?.name || 'Check'}</p>
+                        </div>
+                        <Badge variant={statusBadgeVariant(currentStatus)}>{currentStatus}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{check?.detail || 'Brak szczegolow.'}</p>
                     </div>
-                    <Badge variant={statusBadgeVariant(currentStatus)}>{currentStatus}</Badge>
+                  )
+                })}
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>AI Bot Configuration</CardTitle>
+                <CardDescription>Training i citation bots wykryte w robots.txt</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DataExplorerTable
+                  data={botRows}
+                  columns={[
+                    { key: 'category', label: 'Category' },
+                    { key: 'state', label: 'State' },
+                    { key: 'bot', label: 'User-Agent', className: 'font-medium' },
+                  ]}
+                  pageSize={10}
+                  exportFilename="ai_readiness_bots"
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  llms.txt preview
+                </CardTitle>
+                <CardDescription>Pierwsze linie pliku /llms.txt</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {llms?.preview ? (
+                  <pre className="rounded border bg-muted/40 p-3 text-xs overflow-auto max-h-[320px] whitespace-pre-wrap">
+                    {llms.preview}
+                  </pre>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Brak preview pliku.</p>
+                )}
+                {Array.isArray(llms?.issues) && llms.issues.length > 0 && (
+                  <div className="rounded border border-amber-200 bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20 p-3 space-y-1">
+                    {llms.issues.slice(0, 6).map((issue: string, idx: number) => (
+                      <p key={`${issue}-${idx}`} className="text-xs">{issue}</p>
+                    ))}
                   </div>
-                  <p className="text-xs text-muted-foreground">{check?.detail || 'Brak szczegolow.'}</p>
-                </div>
-              )
-            })}
-          </CardContent>
-        </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recommendations</CardTitle>
+                <CardDescription>Kroki podniesienia AI visibility readiness</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {recommendations.length > 0 ? (
+                  <ol className="list-decimal pl-5 space-y-2 text-sm">
+                    {recommendations.map((rec: string, idx: number) => (
+                      <li key={`${rec}-${idx}`}>{rec}</li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Brak rekomendacji - wynik wyglada dobrze.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Components</CardTitle>
+                <CardDescription>Skladowe score AI readiness</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {Object.entries(components).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between text-sm rounded border bg-accent/5 px-3 py-2">
+                    <span className="text-muted-foreground">{key}</span>
+                    <strong>{formatNumber(value as number)}</strong>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        </>
       )}
 
-      <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>AI Bot Configuration</CardTitle>
-            <CardDescription>Training i citation bots wykryte w robots.txt</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataExplorerTable
-              data={botRows}
-              columns={[
-                { key: 'category', label: 'Category' },
-                { key: 'state', label: 'State' },
-                { key: 'bot', label: 'User-Agent', className: 'font-medium' },
-              ]}
-              pageSize={10}
-              exportFilename="ai_readiness_bots"
-            />
-          </CardContent>
-        </Card>
+      {mode === 'analysis' && (
+        <AnalysisView area="ai_readiness" aiContext={aiContext} isLoading={audit?.ai_status === 'processing'} />
+      )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-primary" />
-              llms.txt preview
-            </CardTitle>
-            <CardDescription>Pierwsze linie pliku /llms.txt</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {llms?.preview ? (
-              <pre className="rounded border bg-muted/40 p-3 text-xs overflow-auto max-h-[320px] whitespace-pre-wrap">
-                {llms.preview}
-              </pre>
-            ) : (
-              <p className="text-sm text-muted-foreground">Brak preview pliku.</p>
-            )}
-            {Array.isArray(llms?.issues) && llms.issues.length > 0 && (
-              <div className="rounded border border-amber-200 bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20 p-3 space-y-1">
-                {llms.issues.slice(0, 6).map((issue: string, idx: number) => (
-                  <p key={`${issue}-${idx}`} className="text-xs">{issue}</p>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recommendations</CardTitle>
-            <CardDescription>Kroki podniesienia AI visibility readiness</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {recommendations.length > 0 ? (
-              <ol className="list-decimal pl-5 space-y-2 text-sm">
-                {recommendations.map((rec: string, idx: number) => (
-                  <li key={`${rec}-${idx}`}>{rec}</li>
-                ))}
-              </ol>
-            ) : (
-              <p className="text-sm text-muted-foreground">Brak rekomendacji - wynik wyglada dobrze.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Components</CardTitle>
-            <CardDescription>Skladowe score AI readiness</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {Object.entries(components).map(([key, value]) => (
-              <div key={key} className="flex items-center justify-between text-sm rounded border bg-accent/5 px-3 py-2">
-                <span className="text-muted-foreground">{key}</span>
-                <strong>{formatNumber(value as number)}</strong>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+      {mode === 'plan' && (
+        <TaskListView
+          tasks={tasks}
+          module="ai_readiness"
+          onStatusChange={handleStatusChange}
+          onNotesChange={handleNotesChange}
+          executionPlanStatus={audit?.execution_plan_status ?? null}
+          isGeneratingPlan={generatePlanMutation.isPending || audit?.execution_plan_status === 'processing'}
+          onGeneratePlan={() => generatePlanMutation.mutate()}
+        />
+      )}
     </div>
   )
 }

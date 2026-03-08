@@ -931,6 +931,199 @@ Wygeneruj 5-10 zadan: duplikaty metadata, thin content, struktura contentu, popr
         return []
 
 
+async def generate_ai_readiness_tasks(
+    crawl: Dict[str, Any],
+    ai_context_ai_readiness: Optional[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    Generate AI readiness tasks from crawl ai_readiness payload + AI context.
+    """
+    system_prompt = """Jestes ekspertem AI Search SEO. Wygeneruj konkretne zadania poprawy AI Readiness.
+
+JSON format:
+{
+    "tasks": [
+        {
+            "title": "Krotki tytul",
+            "description": "BARDZO KROTKA instrukcja (max 1-2 zdania, do 150 znakow).",
+            "category": "technical|content",
+            "priority": "critical|high|medium|low",
+            "impact": "high|medium|low",
+            "effort": "easy|medium|hard",
+            "fix_data": {
+                "current_value": "obecny stan",
+                "suggested_value": "docelowy stan",
+                "code_snippet": "fragment robots.txt/llms.txt lub kroki wdrozenia"
+            }
+        }
+    ]
+}"""
+
+    ai_readiness = crawl.get("ai_readiness", {}) or {}
+    llms = ai_readiness.get("llms_txt", {}) or {}
+    checks = ai_readiness.get("checks", []) or []
+    citation_bots = ai_readiness.get("citation_bots", {}) or {}
+    training_bots = ai_readiness.get("training_bots", {}) or {}
+
+    ai_findings = []
+    ai_recs = []
+    ai_issues = []
+    if ai_context_ai_readiness:
+        ai_findings = ai_context_ai_readiness.get("key_findings", [])
+        ai_recs = ai_context_ai_readiness.get("recommendations", [])
+        ai_issues = ai_context_ai_readiness.get("priority_issues", [])
+
+    user_message = f"""AI readiness data:
+- Score: {ai_readiness.get('score', 0)}
+- Status: {ai_readiness.get('status', 'not_ready')}
+- Checks: {len(checks)}
+- llms.txt: exists={llms.get('exists', False)}, valid={llms.get('valid', False)}, issues={(llms.get('issues') or [])[:6]}
+- Citation bots: allowed={len(citation_bots.get('allowed') or [])}, blocked={len(citation_bots.get('blocked') or [])}, unknown={len(citation_bots.get('unknown') or [])}
+- Training bots: allowed={len(training_bots.get('allowed') or [])}, blocked={len(training_bots.get('blocked') or [])}, unknown={len(training_bots.get('unknown') or [])}
+
+AI context:
+- Findings: {ai_findings[:4]}
+- Recommendations: {ai_recs[:4]}
+- Priority issues: {ai_issues[:3]}
+
+Wygeneruj 4-8 zadan: poprawa robots dla botow AI, llms.txt, schema readiness i walidacja indeksowalnosci."""
+
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(crawl=crawl, lighthouse=None, senuto=None),
+    )
+
+    try:
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
+
+        import json
+        import re
+
+        try:
+            data = json.loads(response)
+        except json.JSONDecodeError:
+            match = re.search(r'```json\s*\n(.*?)\n```', response, re.DOTALL)
+            if match:
+                data = json.loads(match.group(1))
+            else:
+                match = re.search(r'\{.*"tasks".*\}', response, re.DOTALL)
+                if match:
+                    data = json.loads(match.group(0))
+                else:
+                    raise ValueError("No JSON found in response")
+
+        tasks = data.get("tasks", [])
+        for task in tasks:
+            task["module"] = "ai_readiness"
+            task["source"] = "execution_plan"
+        return tasks
+    except Exception as e:
+        logger.error(f"Failed to generate AI readiness tasks: {e}")
+        return []
+
+
+async def generate_architecture_tasks(
+    crawl: Dict[str, Any],
+    ai_context_architecture: Optional[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    Generate architecture tasks from crawl graph and depth/link data.
+    """
+    system_prompt = """Jestes ekspertem Information Architecture i internal linking. Wygeneruj konkretne zadania naprawy architektury.
+
+JSON format:
+{
+    "tasks": [
+        {
+            "title": "Krotki tytul",
+            "description": "BARDZO KROTKA instrukcja (max 1-2 zdania, do 150 znakow).",
+            "category": "technical|content",
+            "priority": "critical|high|medium|low",
+            "impact": "high|medium|low",
+            "effort": "easy|medium|hard",
+            "fix_data": {
+                "target_urls": ["..."],
+                "current_value": "obecny stan",
+                "suggested_value": "docelowy stan"
+            }
+        }
+    ]
+}"""
+
+    pages = crawl.get("all_pages", []) or []
+    link_graph = crawl.get("link_graph", []) or []
+    links = crawl.get("links", {}) or {}
+    avg_depth = crawl.get("avg_crawl_depth", 0)
+    max_depth = crawl.get("max_crawl_depth", 0)
+    pages_deep = crawl.get("pages_deep", 0)
+
+    orphan_count = 0
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        try:
+            inlinks = float(page.get("inlinks", 0) or 0)
+        except (TypeError, ValueError):
+            inlinks = 0
+        if inlinks <= 0:
+            orphan_count += 1
+
+    ai_findings = []
+    ai_recs = []
+    ai_issues = []
+    if ai_context_architecture:
+        ai_findings = ai_context_architecture.get("key_findings", [])
+        ai_recs = ai_context_architecture.get("recommendations", [])
+        ai_issues = ai_context_architecture.get("priority_issues", [])
+
+    user_message = f"""Architecture data:
+- Pages: {len(pages)}
+- Graph edges: {len(link_graph)}
+- Links summary: internal={links.get('internal', 0)}, broken={links.get('broken', 0)}
+- Depth: avg={avg_depth}, max={max_depth}, pages_deep={pages_deep}
+- Orphan pages: {orphan_count}
+
+AI context:
+- Findings: {ai_findings[:4]}
+- Recommendations: {ai_recs[:4]}
+- Priority issues: {ai_issues[:3]}
+
+Wygeneruj 4-8 zadan: splycenie struktury, redukcja orphan pages, poprawa linkowania i priorytetowe URL pathing."""
+
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(crawl=crawl, lighthouse=None, senuto=None),
+    )
+
+    try:
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
+
+        import json
+        import re
+
+        try:
+            data = json.loads(response)
+        except json.JSONDecodeError:
+            match = re.search(r'```json\s*\n(.*?)\n```', response, re.DOTALL)
+            if match:
+                data = json.loads(match.group(1))
+            else:
+                match = re.search(r'\{.*"tasks".*\}', response, re.DOTALL)
+                if match:
+                    data = json.loads(match.group(0))
+                else:
+                    raise ValueError("No JSON found in response")
+
+        tasks = data.get("tasks", [])
+        for task in tasks:
+            task["module"] = "architecture"
+            task["source"] = "execution_plan"
+        return tasks
+    except Exception as e:
+        logger.error(f"Failed to generate architecture tasks: {e}")
+        return []
+
+
 async def generate_ux_tasks(
     lighthouse: Dict[str, Any],
     ai_context_ux: Optional[Dict[str, Any]]

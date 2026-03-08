@@ -8,6 +8,60 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-071: Brak 3-trybowego workflow dla AI Readiness/Architecture + pusty widok grafu Architecture
+
+**Reported**: 2026-03-08
+
+**Status**: ✅ FIXED (2026-03-08)
+
+**Severity**: HIGH
+
+**Description**:
+- `ai-readiness` i `architecture` byly niespojne z glownymi modulami audytu - brakowalo trybow `Analiza` i `Plan`.
+- `architecture` mogla wyswietlac pusty obszar bez bledow runtime, co utrudnialo diagnoze.
+- Dla istniejacych audytow brakowalo latwej regeneracji nowych contextow AI per-module.
+
+**Root cause**:
+- Brak dedykowanych contextow AI (`ai_contexts.ai_readiness`, `ai_contexts.architecture`) oraz generatorow taskow (`module=ai_readiness`, `module=architecture`) w pipeline.
+- `POST /run-ai-context` mial nieaktualne `valid_areas`.
+- Pomiar kontenera force-graph byl inicjalizowany zbyt wczesnie i mogl zostawic `graphSize.width=0`.
+
+**Fix**:
+- Frontend:
+  - `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx`:
+    - dodano `ModeSwitcher` + flow `Dane/Analiza/Plan`,
+    - `AnalysisView` oparty o `results.ai_contexts.ai_readiness`,
+    - `TaskListView` oparty o `module=ai_readiness`.
+  - `frontend/app/(app)/audits/[id]/architecture/page.tsx`:
+    - dodano `ModeSwitcher` + flow `Dane/Analiza/Plan`,
+    - `AnalysisView` oparty o `results.ai_contexts.architecture`,
+    - `TaskListView` oparty o `module=architecture`,
+    - hardening renderu grafu: poprawiony lifecycle `ResizeObserver`, fallback `width=0`, czytelne empty-state.
+- Backend:
+  - `backend/app/services/ai_analysis.py`:
+    - dodano `analyze_ai_readiness_context()` i `analyze_architecture_context()`.
+  - `backend/app/services/ai_execution_plan.py`:
+    - dodano `generate_ai_readiness_tasks()` i `generate_architecture_tasks()`.
+  - `backend/worker.py`:
+    - podlaczono nowe contexty i task generation do pipeline.
+  - `backend/app/routers/audits.py`:
+    - rozszerzono `run-ai-context` o: `schema`, `content_quality`, `ai_readiness`, `architecture`.
+
+**Verification**:
+- `npm run lint -- --file app/(app)/audits/[id]/ai-readiness/page.tsx --file app/(app)/audits/[id]/architecture/page.tsx`: ✅.
+- `python3 -m py_compile backend/app/services/ai_analysis.py backend/app/services/ai_execution_plan.py backend/worker.py backend/app/routers/audits.py`: ✅.
+- `ReadLints` dla zmienionych plikow: ✅ brak nowych bledow.
+
+**Related**:
+- `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx`
+- `frontend/app/(app)/audits/[id]/architecture/page.tsx`
+- `backend/app/services/ai_analysis.py`
+- `backend/app/services/ai_execution_plan.py`
+- `backend/worker.py`
+- `backend/app/routers/audits.py`
+
+---
+
 ### BUG-070: AI Readiness crash + brak 3-trybowego workflow dla Schema/Content Quality
 
 **Reported**: 2026-03-08

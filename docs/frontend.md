@@ -8,6 +8,32 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ---
 
+## Gap Analysis — Hardening: AI Readiness + Architecture parity (2026-03-08)
+
+### 3-Mode parity dla AI Readiness i Architecture
+
+- `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx`
+  - dodano `ModeSwitcher` (`Dane / Analiza / Plan`),
+  - tryb `Analiza` czyta `results.ai_contexts.ai_readiness`,
+  - tryb `Plan` czyta i aktualizuje taski `module=ai_readiness` (`TaskListView` + update status/notes + trigger generowania planu).
+
+- `frontend/app/(app)/audits/[id]/architecture/page.tsx`
+  - dodano `ModeSwitcher` (`Dane / Analiza / Plan`),
+  - tryb `Analiza` czyta `results.ai_contexts.architecture`,
+  - tryb `Plan` czyta i aktualizuje taski `module=architecture` (`TaskListView` + update status/notes + trigger generowania planu).
+
+### Naprawa pustego widoku Architecture
+
+- `frontend/app/(app)/audits/[id]/architecture/page.tsx`
+  - poprawiono lifecycle pomiaru kontenera grafu (`ResizeObserver` + ponowny pomiar po zaladowaniu widoku danych),
+  - dodano fallback przy `graphSize.width=0` z akcja ponownego pomiaru,
+  - dodano rozroznienie empty-state:
+    - brak `all_pages`,
+    - brak relacji (`link_graph`),
+    - brak widocznych wezlow po filtrach.
+
+---
+
 ## Gap Analysis — Hardening: AI Readiness + 3-Mode parity (2026-03-08)
 
 ### Stabilizacja AI Readiness

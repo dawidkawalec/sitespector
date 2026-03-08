@@ -78,6 +78,8 @@ def aggregate_quick_wins_from_results(all_results: Dict[str, Any], max_items: in
         "images": "Images",
         "schema": "Schema",
         "content_quality": "Content Quality",
+        "ai_readiness": "AI Readiness",
+        "architecture": "Architecture",
     }
 
     if isinstance(ai_contexts, dict):
@@ -1529,6 +1531,124 @@ Przygotuj max 6 key_findings, 6 recommendations, 4 quick_wins, 4 content_brief_s
     }
 
 
+async def analyze_ai_readiness_context(
+    crawl: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    AI readiness context from technical extras signals.
+    """
+    logger.info("Analyzing AI readiness context")
+
+    ai_readiness = crawl.get("ai_readiness", {}) or {}
+    llms = ai_readiness.get("llms_txt", {}) or {}
+    citation_bots = ai_readiness.get("citation_bots", {}) or {}
+    training_bots = ai_readiness.get("training_bots", {}) or {}
+    checks = ai_readiness.get("checks", []) or []
+    components = ai_readiness.get("components", {}) or {}
+    schema_score = _to_number(
+        ((crawl.get("structured_data_v2", {}) or {}).get("ai_crawler_readiness", {}) or {}).get("score"),
+        default=0.0,
+    )
+
+    system_prompt = """Jestes ekspertem AI Search SEO. Przygotuj kontekst dla modulu AI Readiness.
+
+Odpowiedz w JSON:
+{
+    "key_findings": ["..."],
+    "recommendations": ["..."],
+    "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+    "priority_issues": ["..."],
+    "implementation_notes": ["..."],
+    "validation_steps": ["..."]
+}"""
+
+    user_prompt = f"""Dane AI readiness:
+- Score: {_to_number(ai_readiness.get('score'), default=0.0)}
+- Status: {ai_readiness.get('status', 'not_ready')}
+- Checks: {len(checks)} (pass={len([c for c in checks if (c or {{}}).get('status') == 'pass'])}, warning={len([c for c in checks if (c or {{}}).get('status') == 'warning'])}, fail={len([c for c in checks if (c or {{}}).get('status') == 'fail'])})
+- llms.txt: exists={llms.get('exists', False)}, valid={llms.get('valid', False)}, sections={llms.get('sections', 0)}, links={llms.get('links', 0)}, issues={(llms.get('issues') or [])[:6]}
+- Citation bots: allowed={len(citation_bots.get('allowed') or [])}, blocked={len(citation_bots.get('blocked') or [])}, unknown={len(citation_bots.get('unknown') or [])}
+- Training bots: allowed={len(training_bots.get('allowed') or [])}, blocked={len(training_bots.get('blocked') or [])}, unknown={len(training_bots.get('unknown') or [])}
+- Components: {components}
+- Schema readiness score: {schema_score}
+
+Przygotuj max 6 key_findings, 6 recommendations, 4 quick_wins i 4 validation_steps."""
+
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
+
+    return {
+        **_ai_meta(result),
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+        "implementation_notes": result.get("implementation_notes", []),
+        "validation_steps": result.get("validation_steps", []),
+    }
+
+
+async def analyze_architecture_context(
+    crawl: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Architecture context from crawl graph and depth/link signals.
+    """
+    logger.info("Analyzing architecture context")
+
+    pages = crawl.get("all_pages", []) or []
+    link_graph = crawl.get("link_graph", []) or []
+    links_summary = crawl.get("links", {}) or {}
+    pages_deep = _to_number(crawl.get("pages_deep"), default=0.0)
+    avg_depth = _to_number(crawl.get("avg_crawl_depth"), default=0.0)
+    max_depth = _to_number(crawl.get("max_crawl_depth"), default=0.0)
+
+    orphan_count = 0
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        inlinks = _to_number(page.get("inlinks"), default=0.0)
+        if inlinks <= 0:
+            orphan_count += 1
+
+    system_prompt = """Jestes ekspertem Information Architecture i internal linking. Przygotuj kontekst dla modulu Architecture.
+
+Odpowiedz w JSON:
+{
+    "key_findings": ["..."],
+    "recommendations": ["..."],
+    "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+    "priority_issues": ["..."],
+    "topology_notes": ["..."],
+    "validation_steps": ["..."]
+}"""
+
+    user_prompt = f"""Dane architektury:
+- Strony (all_pages): {len(pages)}
+- Krawedzie grafu (link_graph): {len(link_graph)}
+- Links summary: total={links_summary.get('total', 0)}, internal={links_summary.get('internal', 0)}, broken={links_summary.get('broken', 0)}
+- Crawl depth: avg={avg_depth}, max={max_depth}, pages_deep={pages_deep}
+- Orphan pages (inlinks=0): {orphan_count}
+- Duplicate groups: title={_duplicate_group_count(pages, 'title', 'title_occurrences')}, meta={_duplicate_group_count(pages, 'meta_description', 'meta_desc_occurrences')}, h1={_duplicate_group_count(pages, 'h1', 'h1_occurrences')}
+
+Przygotuj max 6 key_findings, 6 recommendations, 4 quick_wins i 4 validation_steps."""
+
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
+
+    return {
+        **_ai_meta(result),
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+        "topology_notes": result.get("topology_notes", []),
+        "validation_steps": result.get("validation_steps", []),
+    }
+
+
 async def analyze_cross_tool(
     all_results: Dict[str, Any],
     *,
@@ -1809,6 +1929,8 @@ def validate_cross_module_consistency(ai_contexts: Dict[str, Any]) -> Dict[str, 
         "ux",
         "schema",
         "content_quality",
+        "ai_readiness",
+        "architecture",
     ]
     priority_map = {}
     

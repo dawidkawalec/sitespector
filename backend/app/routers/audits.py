@@ -40,6 +40,7 @@ from app.services.ai_analysis import (
     generate_fix_suggestion, analyze_single_page, generate_quick_wins, generate_alt_text,
     analyze_seo_context, analyze_performance_context, analyze_visibility_context,
     analyze_backlinks_context, analyze_links_context, analyze_images_context,
+    analyze_schema_context, analyze_content_quality_context, analyze_ai_readiness_context, analyze_architecture_context,
     analyze_cross_tool, generate_roadmap, generate_executive_summary, analyze_ai_overviews_context,
     aggregate_quick_wins_from_results,
 )
@@ -897,7 +898,7 @@ async def trigger_ai_analysis(
 @router.post("/{audit_id}/run-ai-context")
 async def trigger_ai_context(
     audit_id: UUID,
-    area: Optional[str] = Query(None, description="Specific area to re-analyze (seo, performance, visibility, backlinks, links, images)"),
+    area: Optional[str] = Query(None, description="Specific area to re-analyze (seo, performance, visibility, ai_overviews, backlinks, links, images, schema, content_quality, ai_readiness, architecture)"),
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
@@ -921,7 +922,19 @@ async def trigger_ai_context(
         extra={"source": "trigger_ai_context"},
     )
     
-    valid_areas = ["seo", "performance", "visibility", "ai_overviews", "backlinks", "links", "images"]
+    valid_areas = [
+        "seo",
+        "performance",
+        "visibility",
+        "ai_overviews",
+        "backlinks",
+        "links",
+        "images",
+        "schema",
+        "content_quality",
+        "ai_readiness",
+        "architecture",
+    ]
     areas_to_run = [area] if area and area in valid_areas else valid_areas
     
     import asyncio
@@ -958,6 +971,18 @@ async def trigger_ai_context(
             tasks[a] = analyze_links_context(crawl_data, global_snapshot=global_snapshot)
         elif a == "images":
             tasks[a] = analyze_images_context(crawl_data, global_snapshot=global_snapshot)
+        elif a == "schema":
+            tasks[a] = analyze_schema_context(crawl_data, global_snapshot=global_snapshot)
+        elif a == "content_quality":
+            tasks[a] = analyze_content_quality_context(
+                audit.results.get("content_quality_index", {}),
+                crawl_data,
+                global_snapshot=global_snapshot,
+            )
+        elif a == "ai_readiness":
+            tasks[a] = analyze_ai_readiness_context(crawl_data, global_snapshot=global_snapshot)
+        elif a == "architecture":
+            tasks[a] = analyze_architecture_context(crawl_data, global_snapshot=global_snapshot)
     
     if not tasks:
         return {"status": "skipped", "message": "No valid areas to analyze"}

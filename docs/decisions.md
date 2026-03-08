@@ -1,5 +1,30 @@
 # Architectural Decisions Log
 
+## ADR-064: 3-Mode parity dla AI Readiness i Architecture + hardening pustego grafu (2026-03-08)
+
+- **Decision**:
+  - Ujednolicic UX stron `ai-readiness` i `architecture` do standardu audytu `Dane / Analiza / Plan`.
+  - Rozszerzyc backend o dedykowane contexty AI i task generation dla `ai_readiness` i `architecture`.
+  - Naprawic pusty rendering grafu w `architecture` przez hardening lifecycle pomiaru kontenera i czytelne fallbacki empty-state.
+  - Rozszerzyc endpoint `run-ai-context` o nowe obszary, aby umozliwic regeneracje kontekstow dla istniejacych audytow.
+- **Rationale**:
+  - Oba moduly byly niespojne z glownym flow produktu i nie mialy warstwy `Analiza` / `Plan`.
+  - Istniejace audyty mogly miec komplet stron, ale bez `ai_contexts` i bez taskow dla tych modulow.
+  - `architecture` mogla wygladac na pusta bez bledu runtime przez problem z inicjalizacja szerokosci kontenera grafu.
+- **Implementation**:
+  - Frontend:
+    - `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx` (`ModeSwitcher`, `AnalysisView`, `TaskListView`, task mutations),
+    - `frontend/app/(app)/audits/[id]/architecture/page.tsx` (`ModeSwitcher`, `AnalysisView`, `TaskListView`, resize/fallback hardening).
+  - Backend:
+    - `backend/app/services/ai_analysis.py`: `analyze_ai_readiness_context()`, `analyze_architecture_context()`,
+    - `backend/app/services/ai_execution_plan.py`: `generate_ai_readiness_tasks()`, `generate_architecture_tasks()`,
+    - `backend/worker.py`: wlaczenie nowych contextow i modulow task generation do pipeline,
+    - `backend/app/routers/audits.py`: rozszerzenie `run-ai-context` o nowe `valid_areas`.
+- **Outcome**:
+  - `AI Readiness` i `Architecture` maja spojny flow `Dane / Analiza / Plan`.
+  - Execution plan obejmuje dedykowane taski `ai_readiness` i `architecture`.
+  - Widok architecture komunikuje brak danych relacji i renderuje graf stabilnie zamiast pustego ekranu.
+
 ## ADR-063: AI Readiness hardening + 3-Mode parity dla Schema i Content Quality (2026-03-08)
 
 - **Decision**:

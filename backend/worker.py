@@ -436,6 +436,14 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                     crawl_data,
                     global_snapshot=global_snapshot,
                 ),
+                "ai_readiness": ai_analysis.analyze_ai_readiness_context(
+                    crawl_data,
+                    global_snapshot=global_snapshot,
+                ),
+                "architecture": ai_analysis.analyze_architecture_context(
+                    crawl_data,
+                    global_snapshot=global_snapshot,
+                ),
                 "security": ai_analysis.analyze_security_context(
                     results.get("security", {}),
                     crawl_data,
@@ -703,6 +711,22 @@ async def run_execution_plan(audit_id: str, tech_data: Dict[str, Any]) -> None:
                     results.get("content_quality_index", {}),
                     crawl_data,
                     ai_contexts.get("content_quality")
+                )
+            )
+
+            # AI Readiness
+            tasks_futures.append(
+                ai_execution_plan.generate_ai_readiness_tasks(
+                    crawl_data,
+                    ai_contexts.get("ai_readiness")
+                )
+            )
+
+            # Architecture
+            tasks_futures.append(
+                ai_execution_plan.generate_architecture_tasks(
+                    crawl_data,
+                    ai_contexts.get("architecture")
                 )
             )
             

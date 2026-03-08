@@ -38,6 +38,42 @@ The **Worker** is a background Python process that polls for pending audits and 
 
 ---
 
+## Gap Analysis — Hardening: AI Readiness + Architecture parity (2026-03-08)
+
+### Nowe contexty AI (Phase 2)
+
+- `backend/app/services/ai_analysis.py`:
+  - dodano `analyze_ai_readiness_context(crawl, ...)`,
+  - dodano `analyze_architecture_context(crawl, ...)`,
+  - rozszerzono mapowanie quick wins i consistency validator o:
+    - `ai_readiness`,
+    - `architecture`.
+
+- `backend/worker.py`:
+  - do `ai_contexts` podlaczono nowe obszary:
+    - `ai_readiness`,
+    - `architecture`.
+
+### Nowe task generators (Phase 3)
+
+- `backend/app/services/ai_execution_plan.py`:
+  - dodano `generate_ai_readiness_tasks(...)` (`module="ai_readiness"`),
+  - dodano `generate_architecture_tasks(...)` (`module="architecture"`).
+- `backend/worker.py`:
+  - `run_execution_plan(...)` uruchamia nowe generatory rownolegle z pozostalymi modulami.
+
+### Re-run AI contexts dla istniejacych audytow
+
+- `backend/app/routers/audits.py`:
+  - endpoint `POST /api/audits/{audit_id}/run-ai-context` ma rozszerzone `valid_areas`:
+    - `schema`,
+    - `content_quality`,
+    - `ai_readiness`,
+    - `architecture`,
+  - pozwala dogenerowac konteksty bez pelnego recrawla i bez pelnego rerunu pipeline.
+
+---
+
 ## Gap Analysis — Faza 2 Data Enrichment (2026-03-08)
 
 ### Screaming Frog: transform + eksport tabow
