@@ -1,5 +1,27 @@
 # Architectural Decisions Log
 
+## ADR-065: Audit operational UX — szybkie reruny + narzedzia diagnostyczne (2026-03-08)
+
+- **Decision**:
+  - Dodac na stronach `ai-readiness` i `architecture` staly panel operacyjny `Stan i szybkie akcje`.
+  - Udostepnic szybkie akcje bez opuszczania modulu: przeliczenie contextu AI i generowanie execution plan.
+  - Dodac do sidebara sekcje `Ustawienia audytu` z linkami diagnostycznymi (`crawl-data`, `debug`).
+- **Rationale**:
+  - Uzytkownik potrzebuje jasnego flow "co kliknac dalej", gdy dane sa niepelne (np. `link_graph=0`) mimo braku bledow runtime.
+  - Sam flow `Dane / Analiza / Plan` nie rozwiazuje problemu discoverability akcji rerun.
+  - Operacyjne akcje powinny byc lokalne dla modulu i dostepne bez szukania po innych ekranach.
+- **Implementation**:
+  - `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx`:
+    - panel statusowy + `run-ai-context(area=ai_readiness)` + `run-execution-plan`.
+  - `frontend/app/(app)/audits/[id]/architecture/page.tsx`:
+    - panel statusowy + `run-ai-context(area=architecture)` + `run-execution-plan`,
+    - CTA rerunu w warningu o pustym `link_graph`.
+  - `frontend/components/layout/AuditSidebar.tsx`:
+    - nowa grupa `Ustawienia audytu` (`crawl-data`, `debug`).
+- **Outcome**:
+  - Lepsza interpretowalnosc widoku architektury i szybsza obsluga przypadkow legacy payload.
+  - Krotsza sciezka od diagnozy do akcji (AI context/plan/full rerun).
+
 ## ADR-064: 3-Mode parity dla AI Readiness i Architecture + hardening pustego grafu (2026-03-08)
 
 - **Decision**:

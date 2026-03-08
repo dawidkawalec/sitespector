@@ -93,6 +93,16 @@ export default function AiReadinessPage({ params }: { params: { id: string } }) 
       toast.error(err?.message || 'Nie udalo sie uruchomic generowania planu')
     },
   })
+  const recalculateContextMutation = useMutation({
+    mutationFn: () => auditsAPI.runAiContext(params.id, 'ai_readiness'),
+    onSuccess: async () => {
+      await refetchAudit()
+      toast.success('Rozpoczeto przeliczanie analizy AI Readiness')
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Nie udalo sie uruchomic przeliczania analizy')
+    },
+  })
 
   const aiReadiness = audit?.results?.crawl?.ai_readiness || {}
   const score = Number(aiReadiness?.score || 0)
@@ -167,6 +177,62 @@ export default function AiReadinessPage({ params }: { params: { id: string } }) 
         isAiLoading={audit?.ai_status === 'processing'}
         isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
       />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Stan i szybkie akcje</CardTitle>
+          <CardDescription>Najwazniejsze statusy modulu oraz rerun bez zmiany widoku.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 @lg:grid-cols-2 gap-4">
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
+              <span className="text-muted-foreground">AI context</span>
+              <Badge variant={aiContext ? 'default' : 'secondary'}>{aiContext ? 'Gotowy' : 'Brak'}</Badge>
+            </div>
+            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
+              <span className="text-muted-foreground">Status AI pipeline</span>
+              <Badge variant={audit?.ai_status === 'completed' ? 'default' : 'secondary'}>
+                {audit?.ai_status || 'unknown'}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
+              <span className="text-muted-foreground">Status execution plan</span>
+              <Badge variant={audit?.execution_plan_status === 'completed' ? 'default' : 'secondary'}>
+                {audit?.execution_plan_status || 'unknown'}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
+              <span className="text-muted-foreground">Taski modułu</span>
+              <strong>{formatNumber(tasks.length)}</strong>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Button
+              className="w-full"
+              onClick={() => recalculateContextMutation.mutate()}
+              disabled={recalculateContextMutation.isPending || audit?.ai_status === 'processing'}
+            >
+              {recalculateContextMutation.isPending ? 'Przeliczanie...' : 'Przelicz analize AI Readiness'}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => generatePlanMutation.mutate()}
+              disabled={generatePlanMutation.isPending || audit?.execution_plan_status === 'processing'}
+            >
+              {generatePlanMutation.isPending ? 'Generowanie...' : 'Wygeneruj plan zadan'}
+            </Button>
+            {audit?.project_id ? (
+              <Link href={`/projects/${audit.project_id}`}>
+                <Button variant="ghost" className="w-full">
+                  Przejdz do projektu i uruchom nowy audyt (pelny rerun)
+                </Button>
+              </Link>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
 
       {mode === 'data' && (
         <>

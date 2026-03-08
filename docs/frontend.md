@@ -32,6 +32,28 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
     - brak relacji (`link_graph`),
     - brak widocznych wezlow po filtrach.
 
+### Szybkie akcje i narzedzia audytu
+
+- `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx`
+  - dodano panel `Stan i szybkie akcje`:
+    - status AI context / AI pipeline / execution plan,
+    - akcja `Przelicz analize AI Readiness`,
+    - akcja `Wygeneruj plan zadan`,
+    - CTA do projektu na pelny rerun (nowy audyt).
+
+- `frontend/app/(app)/audits/[id]/architecture/page.tsx`
+  - dodano panel `Stan i szybkie akcje`:
+    - diagnostyka `all_pages` vs `link_graph`,
+    - akcja `Przelicz analize Architecture`,
+    - akcja `Wygeneruj plan zadan`,
+    - CTA do projektu na pelny rerun (nowy audyt).
+  - w ostrzezeniu o pustym `link_graph` dodano kontekstowe CTA do rerunu.
+
+- `frontend/components/layout/AuditSidebar.tsx`
+  - dodano sekcje `Ustawienia audytu`:
+    - `Crawl data`,
+    - `Debug`.
+
 ---
 
 ## Gap Analysis — Hardening: AI Readiness + 3-Mode parity (2026-03-08)

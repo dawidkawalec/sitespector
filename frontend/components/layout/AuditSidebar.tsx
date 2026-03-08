@@ -126,6 +126,15 @@ export function AuditSidebar({ auditId, onNavigate, className }: AuditSidebarPro
         ],
       },
       {
+        title: 'Ustawienia audytu',
+        icon: Wrench,
+        value: 'audit-tools',
+        items: [
+          { href: `/audits/${auditId}/crawl-data`, icon: ScrollText, label: 'Crawl data' },
+          { href: `/audits/${auditId}/debug`, icon: Wrench, label: 'Debug' },
+        ],
+      },
+      {
         title: 'Raporty',
         icon: ScrollText,
         value: 'reports',

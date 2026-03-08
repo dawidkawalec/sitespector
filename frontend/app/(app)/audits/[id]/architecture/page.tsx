@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -433,6 +434,16 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
       toast.error(err?.message || 'Nie udalo sie uruchomic generowania planu')
     },
   })
+  const recalculateContextMutation = useMutation({
+    mutationFn: () => auditsAPI.runAiContext(params.id, 'architecture'),
+    onSuccess: async () => {
+      await refetchAudit()
+      toast.success('Rozpoczeto przeliczanie analizy Architecture')
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Nie udalo sie uruchomic przeliczania analizy')
+    },
+  })
 
   useEffect(() => {
     const updateSize = () => {
@@ -644,6 +655,58 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
         isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
       />
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Stan i szybkie akcje</CardTitle>
+          <CardDescription>Diagnostyka danych grafu, analiza AI i rerun planu dla tego audytu.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 @lg:grid-cols-2 gap-4">
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
+              <span className="text-muted-foreground">Strony (all_pages)</span>
+              <strong>{formatNumber(rawGraphNodeCount)}</strong>
+            </div>
+            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
+              <span className="text-muted-foreground">Relacje (link_graph)</span>
+              <strong>{formatNumber(rawGraphEdgeCount)}</strong>
+            </div>
+            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
+              <span className="text-muted-foreground">AI context</span>
+              <Badge variant={aiContext ? 'default' : 'secondary'}>{aiContext ? 'Gotowy' : 'Brak'}</Badge>
+            </div>
+            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
+              <span className="text-muted-foreground">Taski modułu</span>
+              <strong>{formatNumber(tasks.length)}</strong>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Button
+              className="w-full"
+              onClick={() => recalculateContextMutation.mutate()}
+              disabled={recalculateContextMutation.isPending || audit?.ai_status === 'processing'}
+            >
+              {recalculateContextMutation.isPending ? 'Przeliczanie...' : 'Przelicz analize Architecture'}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => generatePlanMutation.mutate()}
+              disabled={generatePlanMutation.isPending || audit?.execution_plan_status === 'processing'}
+            >
+              {generatePlanMutation.isPending ? 'Generowanie...' : 'Wygeneruj plan zadan'}
+            </Button>
+            {audit?.project_id ? (
+              <Link href={`/projects/${audit.project_id}`}>
+                <Button variant="ghost" className="w-full">
+                  Przejdz do projektu i uruchom nowy audyt (pelny rerun)
+                </Button>
+              </Link>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
+
       {mode === 'data' && (
         <Tabs defaultValue="site-map" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 max-w-[460px]">
@@ -697,6 +760,23 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
                   <p className="text-xs text-muted-foreground">
                     To najczęściej oznacza legacy payload albo niepełny eksport crawla. Widok pokazuje dane stron, ale bez krawędzi grafu.
                   </p>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => recalculateContextMutation.mutate()}
+                      disabled={recalculateContextMutation.isPending || audit?.ai_status === 'processing'}
+                    >
+                      Przelicz analize AI
+                    </Button>
+                    {audit?.project_id ? (
+                      <Link href={`/projects/${audit.project_id}`}>
+                        <Button size="sm" variant="outline">
+                          Nowy audyt w projekcie
+                        </Button>
+                      </Link>
+                    ) : null}
+                  </div>
                 </CardContent>
               </Card>
             )}

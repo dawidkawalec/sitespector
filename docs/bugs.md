@@ -8,6 +8,47 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-072: Brak szybkich akcji rerun i narzedzi audytu w AI Readiness/Architecture
+
+**Reported**: 2026-03-08
+
+**Status**: ✅ FIXED (2026-03-08)
+
+**Severity**: MEDIUM
+
+**Description**:
+- Uzytkownik nie mial jasnej sciezki "co dalej" przy widokach `ai-readiness` i `architecture`.
+- Dla przypadku `link_graph=0` brakowalo lokalnych CTA do rerunu analizy i planu.
+- Sidebar audytu nie eksponowal stron diagnostycznych (`crawl-data`, `debug`), przez co utrudnial obsluge incydentow.
+
+**Root cause**:
+- Brak warstwy operacyjnej UX (status + akcje) na poziomie poszczegolnych modulow.
+- Brak dedykowanej grupy narzedzi audytu w nawigacji bocznej.
+
+**Fix**:
+- Frontend:
+  - `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx`:
+    - dodano panel `Stan i szybkie akcje`,
+    - podlaczono `run-ai-context(area=ai_readiness)` i `run-execution-plan`,
+    - dodano CTA do projektu na pelny rerun (nowy audyt).
+  - `frontend/app/(app)/audits/[id]/architecture/page.tsx`:
+    - dodano panel `Stan i szybkie akcje`,
+    - podlaczono `run-ai-context(area=architecture)` i `run-execution-plan`,
+    - dodano kontekstowe CTA przy pustym `link_graph`.
+  - `frontend/components/layout/AuditSidebar.tsx`:
+    - dodano sekcje `Ustawienia audytu` (`crawl-data`, `debug`).
+
+**Verification**:
+- `npm run lint -- --file app/(app)/audits/[id]/ai-readiness/page.tsx --file app/(app)/audits/[id]/architecture/page.tsx --file components/layout/AuditSidebar.tsx`: ✅.
+- `ReadLints` dla zmienionych plikow frontend: ✅ brak nowych bledow.
+
+**Related**:
+- `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx`
+- `frontend/app/(app)/audits/[id]/architecture/page.tsx`
+- `frontend/components/layout/AuditSidebar.tsx`
+
+---
+
 ### BUG-071: Brak 3-trybowego workflow dla AI Readiness/Architecture + pusty widok grafu Architecture
 
 **Reported**: 2026-03-08
