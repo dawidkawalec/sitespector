@@ -43,6 +43,22 @@ def _to_number(value: Any, default: float = 0.0) -> float:
         return default
 
 
+def _duplicate_group_count(
+    pages: List[Dict[str, Any]],
+    value_key: str,
+    occurrences_key: str,
+) -> int:
+    groups = set()
+    for page in pages or []:
+        occurrences = _to_number(page.get(occurrences_key), default=0.0)
+        if occurrences <= 1:
+            continue
+        value = str(page.get(value_key) or "").strip()
+        if value:
+            groups.add(value.lower())
+    return len(groups)
+
+
 def aggregate_quick_wins_from_results(all_results: Dict[str, Any], max_items: int = 20) -> List[Dict[str, Any]]:
     """
     Build a single prioritized quick wins list from all AI modules.
@@ -60,6 +76,8 @@ def aggregate_quick_wins_from_results(all_results: Dict[str, Any], max_items: in
         "backlinks": "Backlinks",
         "links": "Internal Links",
         "images": "Images",
+        "schema": "Schema",
+        "content_quality": "Content Quality",
     }
 
     if isinstance(ai_contexts, dict):
@@ -1393,6 +1411,124 @@ async def analyze_images_context(
     }
 
 
+async def analyze_schema_context(
+    crawl: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Schema and semantic structure context for data-rich schema module.
+    """
+    logger.info("Analyzing schema context")
+
+    schema_v2 = crawl.get("structured_data_v2", {}) or {}
+    schema_legacy = crawl.get("structured_data", {}) or {}
+    semantic_html = crawl.get("semantic_html", {}) or {}
+    render_nojs = crawl.get("render_nojs", {}) or {}
+    directives = crawl.get("directives_hreflang", {}) or {}
+
+    schema_types = schema_v2.get("types") or schema_legacy.get("types") or []
+    schema_items = schema_v2.get("items") or schema_legacy.get("schemas") or []
+    missing_priority = schema_v2.get("missing_priority_types") or schema_legacy.get("missing_suggestions") or []
+    readiness_score = _to_number((schema_v2.get("ai_crawler_readiness") or {}).get("score"), default=0.0)
+    semantic_score = _to_number(semantic_html.get("score"), default=0.0)
+    render_score = _to_number(render_nojs.get("score"), default=0.0)
+
+    system_prompt = """Jestes ekspertem Schema.org i semantic SEO. Na podstawie danych technicznych przygotuj kontekst dla modułu Schema.
+
+Odpowiedz w JSON:
+{
+    "key_findings": ["..."],
+    "recommendations": ["..."],
+    "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+    "priority_issues": ["..."],
+    "implementation_notes": ["..."],
+    "validation_steps": ["..."]
+}"""
+
+    user_prompt = f"""Dane schema:
+- Schema found: {bool(schema_v2.get('found') or schema_legacy.get('found'))}
+- Readiness score: {readiness_score}
+- Typy schema: {schema_types[:12]}
+- Obiekty schema: {len(schema_items)}
+- Braki priorytetowe: {missing_priority[:10]}
+- Semantic HTML score: {semantic_score}, issues: {(semantic_html.get('issues') or [])[:6]}
+- Render no-JS score: {render_score}, status: {render_nojs.get('status')}, issues: {(render_nojs.get('issues') or [])[:6]}
+- Directives/Hreflang: noindex={directives.get('noindex_count', 0)}, hreflang={directives.get('hreflang_count', 0)}
+
+Przygotuj max 6 key_findings, 6 recommendations, 4 quick_wins i 4 validation_steps."""
+
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
+
+    return {
+        **_ai_meta(result),
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+        "implementation_notes": result.get("implementation_notes", []),
+        "validation_steps": result.get("validation_steps", []),
+    }
+
+
+async def analyze_content_quality_context(
+    content_quality_data: Dict[str, Any],
+    crawl: Dict[str, Any],
+    *,
+    global_snapshot: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Content quality context using CQI + crawl duplicate/depth signals.
+    """
+    logger.info("Analyzing content quality context")
+
+    cqi = content_quality_data or {}
+    pages = cqi.get("pages") or []
+    top_issues = cqi.get("top_issues") or []
+    components = cqi.get("components") or {}
+    all_pages = crawl.get("all_pages") or []
+
+    title_duplicates = _duplicate_group_count(all_pages, "title", "title_occurrences")
+    meta_duplicates = _duplicate_group_count(all_pages, "meta_description", "meta_desc_occurrences")
+    h1_duplicates = _duplicate_group_count(all_pages, "h1", "h1_occurrences")
+
+    system_prompt = """Jestes ekspertem content SEO. Przygotuj kontekst dla modułu Content Quality (CQI).
+
+Odpowiedz w JSON:
+{
+    "key_findings": ["..."],
+    "recommendations": ["..."],
+    "quick_wins": [{"title": "...", "description": "...", "impact": "high|medium|low", "effort": "easy|medium|hard"}],
+    "priority_issues": ["..."],
+    "content_brief_suggestions": ["..."],
+    "monitoring_kpis": ["..."]
+}"""
+
+    user_prompt = f"""Dane CQI:
+- Site score: {_to_number(cqi.get('site_score'), default=0.0)}
+- Grade: {cqi.get('grade', 'F')}, status: {cqi.get('status', 'poor')}
+- Pages scored: {cqi.get('pages_count', len(pages))}
+- Distribution: {cqi.get('distribution', {})}
+- Top issues: {top_issues[:10]}
+- Components: {components}
+- Duplicate groups: title={title_duplicates}, meta={meta_duplicates}, h1={h1_duplicates}
+- Crawl pages: {len(all_pages)}
+
+Przygotuj max 6 key_findings, 6 recommendations, 4 quick_wins, 4 content_brief_suggestions i 4 monitoring_kpis."""
+
+    result = await _call_ai_context(system_prompt, user_prompt, global_snapshot=global_snapshot)
+
+    return {
+        **_ai_meta(result),
+        "key_findings": result.get("key_findings", []),
+        "recommendations": result.get("recommendations", []),
+        "quick_wins": result.get("quick_wins", []),
+        "priority_issues": result.get("priority_issues", []),
+        "content_brief_suggestions": result.get("content_brief_suggestions", []),
+        "monitoring_kpis": result.get("monitoring_kpis", []),
+    }
+
+
 async def analyze_cross_tool(
     all_results: Dict[str, Any],
     *,
@@ -1662,7 +1798,18 @@ def validate_cross_module_consistency(ai_contexts: Dict[str, Any]) -> Dict[str, 
                 })
     
     # Check if contexts have contradictory priority_issues
-    all_modules = ["seo", "performance", "visibility", "backlinks", "links", "images", "security", "ux"]
+    all_modules = [
+        "seo",
+        "performance",
+        "visibility",
+        "backlinks",
+        "links",
+        "images",
+        "security",
+        "ux",
+        "schema",
+        "content_quality",
+    ]
     priority_map = {}
     
     for module in all_modules:

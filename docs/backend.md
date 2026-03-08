@@ -12,6 +12,32 @@ The **Worker** is a background Python process that polls for pending audits and 
 
 ---
 
+## Gap Analysis — Hardening: AI Readiness + Schema/CQI parity (2026-03-08)
+
+### Nowe contexty AI (Phase 2)
+
+- `backend/app/services/ai_analysis.py`:
+  - dodano `analyze_schema_context(crawl, ...)`,
+  - dodano `analyze_content_quality_context(content_quality_data, crawl, ...)`,
+  - rozszerzono mapowanie quick wins i consistency validator o obszary:
+    - `schema`,
+    - `content_quality`.
+
+- `backend/worker.py`:
+  - do `ai_contexts` podlaczono nowe obszary:
+    - `schema`,
+    - `content_quality`.
+
+### Nowe task generators (Phase 3)
+
+- `backend/app/services/ai_execution_plan.py`:
+  - dodano `generate_schema_tasks(...)` (`module="schema"`),
+  - dodano `generate_content_quality_tasks(...)` (`module="content_quality"`).
+- `backend/worker.py`:
+  - `run_execution_plan(...)` uruchamia nowe generatory rownolegle z pozostalymi modulami.
+
+---
+
 ## Gap Analysis — Faza 2 Data Enrichment (2026-03-08)
 
 ### Screaming Frog: transform + eksport tabow
@@ -251,7 +277,7 @@ Enriches technical results with AI insights using Gemini 3.0 Flash.
 
 #### Phase 3: Execution Plan (Tasks)
 Generates an actionable implementation plan as structured tasks (`audit_tasks` table).
-1. **8 module task generators in parallel** (seo, performance, visibility, ai_overviews, backlinks, links, images, security/ux as applicable)
+1. **10 module task generators in parallel** (seo, performance, visibility, ai_overviews, links, images, schema, content_quality, security, ux)
 2. **Synthesis**: deduplication, sorting by priority, quick-win tagging
 3. **Persistence**: bulk insert tasks and set `audit.execution_plan_status`
 
@@ -324,7 +350,7 @@ The `run_execution_plan` flag controls whether Phase 3 runs automatically:
 ### Phase 2 Extensions (AI Contexts + Strategy)
 
 After existing AI analyses, the worker now runs:
-1. **Contextual AI** (`ai_contexts:start/done`): Parallel per-area AI (seo, performance, visibility, ai_overviews, backlinks, links, images)
+1. **Contextual AI** (`ai_contexts:start/done`): Parallel per-area AI (seo, performance, visibility, ai_overviews, backlinks, links, images, schema, content_quality, security, ux)
 2. **Strategy** (`ai_strategy:start/done`): Cross-tool analysis, roadmap, executive summary
 
 #### Cross-Module Consistency (Global Snapshot)

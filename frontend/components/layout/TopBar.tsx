@@ -28,13 +28,13 @@ export function TopBar({ mobileMenu, isImpersonating = false }: TopBarProps) {
           <TooltipProvider delayDuration={120}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link
+                <a
                   href="/"
                   className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
                   aria-label="Powrot na strone glowna"
                 >
                   <ArrowUpLeft className="h-4 w-4" />
-                </Link>
+                </a>
               </TooltipTrigger>
               <TooltipContent side="bottom">
                 <p className="text-xs">Strona glowna</p>
@@ -56,13 +56,13 @@ export function TopBar({ mobileMenu, isImpersonating = false }: TopBarProps) {
           <TooltipProvider delayDuration={120}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link
+                <a
                   href="/"
                   className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
                   aria-label="Powrot na strone glowna"
                 >
                   <ArrowUpLeft className="h-4 w-4" />
-                </Link>
+                </a>
               </TooltipTrigger>
               <TooltipContent side="bottom">
                 <p className="text-xs">Strona glowna</p>

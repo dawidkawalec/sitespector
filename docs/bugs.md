@@ -8,6 +8,62 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-070: AI Readiness crash + brak 3-trybowego workflow dla Schema/Content Quality
+
+**Reported**: 2026-03-08
+
+**Status**: ✅ FIXED (2026-03-08)
+
+**Severity**: HIGH
+
+**Description**:
+- `/audits/[id]/ai-readiness` potrafil losowo crashowac na produkcji (React #310 + fallback na browser navigation).
+- `schema` i `content-quality` byly niespojne z kluczowymi modulami audytu (`seo`, `links`, `images`) - brakowalo trybow `Analiza` i `Plan`.
+- Plan wykonania nie mial dedykowanych taskow backendowych dla tych dwoch obszarow.
+
+**Root cause**:
+- Naruszona kolejnosc hookow w `ai-readiness` (hook po warunkowych `return`).
+- Brak dedykowanych contextow AI (`ai_contexts.schema`, `ai_contexts.content_quality`) i generatorow taskow (`module=schema`, `module=content_quality`) w pipeline.
+- Link z topbara do `/` wykonywal SPA nawigacje miedzy dwiema aplikacjami Next (frontend vs landing), co moglo powodowac bledy RSC/chunk.
+
+**Fix**:
+- Frontend:
+  - `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx`:
+    - usunieto warunkowe naruszenie kolejnosci hookow,
+    - dodano fallbacki dla brakujacego `results.crawl.ai_readiness`.
+  - `frontend/app/(app)/audits/[id]/content-quality/page.tsx`:
+    - dodano `ModeSwitcher` i pelny flow `Dane/Analiza/Plan`,
+    - `AnalysisView` oparty o `results.ai_contexts.content_quality`,
+    - `TaskListView` oparty o `module=content_quality`.
+  - `frontend/app/(app)/audits/[id]/schema/page.tsx`:
+    - dodano `ModeSwitcher` i pelny flow `Dane/Analiza/Plan`,
+    - `AnalysisView` oparty o `results.ai_contexts.schema`,
+    - `TaskListView` oparty o `module=schema`.
+  - `frontend/components/layout/TopBar.tsx`:
+    - zmieniono nawigacje home z `Link` na natywny `<a href="/">` (pelny reload do landingu).
+- Backend:
+  - `backend/app/services/ai_analysis.py`:
+    - dodano `analyze_schema_context()` i `analyze_content_quality_context()`.
+  - `backend/app/services/ai_execution_plan.py`:
+    - dodano `generate_schema_tasks()` i `generate_content_quality_tasks()`.
+  - `backend/worker.py`:
+    - podlaczono nowe contexty i task generation do pipeline.
+
+**Verification**:
+- `npm run lint -- --file app/(app)/audits/[id]/ai-readiness/page.tsx --file app/(app)/audits/[id]/content-quality/page.tsx --file app/(app)/audits/[id]/schema/page.tsx --file components/layout/TopBar.tsx`: ✅.
+- `python3 -m py_compile backend/app/services/ai_analysis.py backend/app/services/ai_execution_plan.py backend/worker.py`: ✅.
+- `ReadLints` dla zmienionych plikow: ✅ brak nowych bledow.
+
+**Related**:
+- `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx`
+- `frontend/app/(app)/audits/[id]/content-quality/page.tsx`
+- `frontend/app/(app)/audits/[id]/schema/page.tsx`
+- `backend/app/services/ai_analysis.py`
+- `backend/app/services/ai_execution_plan.py`
+- `backend/worker.py`
+
+---
+
 ### BUG-069: Brak wizualizacji architektury serwisu i czytelnego modułu duplikatów metadanych
 
 **Reported**: 2026-03-08

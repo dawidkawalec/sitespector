@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
@@ -47,23 +47,7 @@ export default function AiReadinessPage({ params }: { params: { id: string } }) 
     },
   })
 
-  if (!isAuth || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
-  if (!audit) {
-    return (
-      <div className="container mx-auto py-8 px-4">
-        <p className="text-muted-foreground">Audyt nie zostal znaleziony.</p>
-      </div>
-    )
-  }
-
-  const aiReadiness = audit.results?.crawl?.ai_readiness || {}
+  const aiReadiness = audit?.results?.crawl?.ai_readiness || {}
   const score = Number(aiReadiness?.score || 0)
   const status = aiReadiness?.status || 'not_ready'
   const checks = Array.isArray(aiReadiness?.checks) ? aiReadiness.checks : []
@@ -79,21 +63,34 @@ export default function AiReadinessPage({ params }: { params: { id: string } }) 
 
   const statusLabel = status === 'ready' ? 'Ready' : status === 'partial' ? 'Partial' : 'Not ready'
 
-  const botRows = useMemo(() => {
-    const rows: Array<{ category: string; state: string; bot: string }> = []
-    for (const bot of citationBots?.allowed || []) rows.push({ category: 'Citation', state: 'Allowed', bot })
-    for (const bot of citationBots?.blocked || []) rows.push({ category: 'Citation', state: 'Blocked', bot })
-    for (const bot of citationBots?.unknown || []) rows.push({ category: 'Citation', state: 'Unknown', bot })
-    for (const bot of trainingBots?.allowed || []) rows.push({ category: 'Training', state: 'Allowed', bot })
-    for (const bot of trainingBots?.blocked || []) rows.push({ category: 'Training', state: 'Blocked', bot })
-    for (const bot of trainingBots?.unknown || []) rows.push({ category: 'Training', state: 'Unknown', bot })
-    return rows
-  }, [citationBots, trainingBots])
+  const botRows: Array<{ category: string; state: string; bot: string }> = []
+  for (const bot of citationBots?.allowed || []) botRows.push({ category: 'Citation', state: 'Allowed', bot })
+  for (const bot of citationBots?.blocked || []) botRows.push({ category: 'Citation', state: 'Blocked', bot })
+  for (const bot of citationBots?.unknown || []) botRows.push({ category: 'Citation', state: 'Unknown', bot })
+  for (const bot of trainingBots?.allowed || []) botRows.push({ category: 'Training', state: 'Allowed', bot })
+  for (const bot of trainingBots?.blocked || []) botRows.push({ category: 'Training', state: 'Blocked', bot })
+  for (const bot of trainingBots?.unknown || []) botRows.push({ category: 'Training', state: 'Unknown', bot })
 
   const checkIcon = (checkStatus: CheckStatus) => {
     if (checkStatus === 'pass') return <CheckCircle2 className="h-4 w-4 text-green-600" />
     if (checkStatus === 'warning') return <AlertTriangle className="h-4 w-4 text-amber-600" />
     return <XCircle className="h-4 w-4 text-red-600" />
+  }
+
+  if (!isAuth || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!audit) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <p className="text-muted-foreground">Audyt nie zostal znaleziony.</p>
+      </div>
+    )
   }
 
   return (

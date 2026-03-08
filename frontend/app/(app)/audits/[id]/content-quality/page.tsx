@@ -3,16 +3,20 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import { auditsAPI } from '@/lib/api'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { auditsAPI, type Audit } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ModeSwitcher, useAuditMode } from '@/components/audit/ModeSwitcher'
+import { AnalysisView } from '@/components/audit/AnalysisView'
+import { TaskListView } from '@/components/audit/TaskListView'
 import { formatNumber } from '@/lib/utils'
 import { Loader2, Sparkles, ChevronRight, Download } from 'lucide-react'
+import { toast } from 'sonner'
 
 function issueLabel(issue: string): string {
   const labels: Record<string, string> = {
@@ -103,6 +107,7 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
   const [gradeFilter, setGradeFilter] = useState<'all' | 'A' | 'B' | 'C' | 'D' | 'F'>('all')
+  const [mode, setMode] = useAuditMode('data')
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -113,16 +118,58 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
     checkAuth()
   }, [router])
 
-  const { data: audit, isLoading } = useQuery({
+  const { data: audit, isLoading, refetch: refetchAudit } = useQuery({
     queryKey: ['audit', params.id],
     queryFn: () => auditsAPI.get(params.id),
     enabled: isAuth,
     refetchInterval: (query) => {
-      const data = query?.state?.data as any
+      const data = query?.state?.data as Audit | undefined
       const isRunning = data?.status === 'processing' || data?.status === 'pending'
       const isAiRunning = data?.ai_status === 'processing'
       const isPlanRunning = data?.execution_plan_status === 'processing'
       return isRunning || isAiRunning || isPlanRunning ? 3000 : false
+    },
+  })
+
+  const { data: tasksResponse, refetch: refetchTasks } = useQuery({
+    queryKey: ['tasks', params.id, 'content_quality'],
+    queryFn: () => auditsAPI.getTasks(params.id, { module: 'content_quality' }),
+    enabled: isAuth && !!audit && mode === 'plan',
+    refetchInterval: mode === 'plan' && audit?.execution_plan_status === 'processing' ? 3000 : false,
+  })
+
+  const tasks = tasksResponse?.items || []
+  const aiContext = audit?.results?.ai_contexts?.content_quality
+
+  const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { status })
+      refetchTasks()
+      toast.success('Zaktualizowano status zadania')
+    } catch (_error) {
+      toast.error('Nie udalo sie zaktualizowac zadania')
+    }
+  }
+
+  const handleNotesChange = async (taskId: string, notes: string) => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { notes })
+      refetchTasks()
+      toast.success('Zapisano notatki')
+    } catch (_error) {
+      toast.error('Nie udalo sie zapisac notatek')
+    }
+  }
+
+  const generatePlanMutation = useMutation({
+    mutationFn: () => auditsAPI.runExecutionPlan(params.id),
+    onSuccess: async () => {
+      await refetchAudit()
+      await refetchTasks()
+      toast.success('Rozpoczeto generowanie planu wykonania')
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Nie udalo sie uruchomic generowania planu')
     },
   })
 
@@ -205,6 +252,19 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
         </Link>
       </div>
 
+      <ModeSwitcher
+        mode={mode}
+        onModeChange={setMode}
+        taskCount={tasks.length}
+        pendingTaskCount={tasks.filter((t) => t.status === 'pending').length}
+        hasAiData={!!aiContext}
+        hasExecutionPlan={audit?.execution_plan_status === 'completed'}
+        isAiLoading={audit?.ai_status === 'processing'}
+        isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
+      />
+
+      {mode === 'data' && (
+      <>
       <div className="grid grid-cols-1 @md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -520,6 +580,24 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
           </Card>
         </TabsContent>
       </Tabs>
+      </>
+      )}
+
+      {mode === 'analysis' && (
+        <AnalysisView area="content_quality" aiContext={aiContext} isLoading={audit?.ai_status === 'processing'} />
+      )}
+
+      {mode === 'plan' && (
+        <TaskListView
+          tasks={tasks}
+          module="content_quality"
+          onStatusChange={handleStatusChange}
+          onNotesChange={handleNotesChange}
+          executionPlanStatus={audit?.execution_plan_status ?? null}
+          isGeneratingPlan={generatePlanMutation.isPending || audit?.execution_plan_status === 'processing'}
+          onGeneratePlan={() => generatePlanMutation.mutate()}
+        />
+      )}
     </div>
   )
 }

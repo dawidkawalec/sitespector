@@ -744,6 +744,193 @@ Wygeneruj 3-6 zadań optymalizacji obrazów."""
         return []
 
 
+async def generate_schema_tasks(
+    crawl: Dict[str, Any],
+    ai_context_schema: Optional[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    Generate schema implementation tasks from crawl schema payload and AI context.
+    """
+    system_prompt = """Jestes ekspertem Schema.org. Wygeneruj konkretne zadania wdrozeniowe dla schema i walidacji.
+
+JSON format:
+{
+    "tasks": [
+        {
+            "title": "Krotki tytul",
+            "description": "BARDZO KROTKA instrukcja (max 1-2 zdania, do 150 znakow).",
+            "category": "technical|content",
+            "priority": "critical|high|medium|low",
+            "impact": "high|medium|low",
+            "effort": "easy|medium|hard",
+            "fix_data": {
+                "current_value": "obecny stan",
+                "suggested_value": "docelowy stan",
+                "code_snippet": "JSON-LD albo kroki wdrozenia"
+            }
+        }
+    ]
+}"""
+
+    schema_v2 = crawl.get("structured_data_v2", {}) or {}
+    schema_legacy = crawl.get("structured_data", {}) or {}
+    semantic = crawl.get("semantic_html", {}) or {}
+    render_nojs = crawl.get("render_nojs", {}) or {}
+
+    types = schema_v2.get("types") or schema_legacy.get("types") or []
+    missing_priority = schema_v2.get("missing_priority_types") or schema_legacy.get("missing_suggestions") or []
+    readiness = (schema_v2.get("ai_crawler_readiness") or {}).get("score", 0)
+
+    ai_findings = []
+    ai_recs = []
+    ai_issues = []
+    if ai_context_schema:
+        ai_findings = ai_context_schema.get("key_findings", [])
+        ai_recs = ai_context_schema.get("recommendations", [])
+        ai_issues = ai_context_schema.get("priority_issues", [])
+
+    user_message = f"""Schema data:
+- Found: {bool(schema_v2.get('found') or schema_legacy.get('found'))}
+- Readiness score: {readiness}
+- Types: {types[:12]}
+- Missing priority types: {missing_priority[:10]}
+- Semantic score: {semantic.get('score', 0)} | issues: {(semantic.get('issues') or [])[:6]}
+- Render no-JS score: {render_nojs.get('score', 0)} | issues: {(render_nojs.get('issues') or [])[:6]}
+
+AI context:
+- Findings: {ai_findings[:4]}
+- Recommendations: {ai_recs[:4]}
+- Priority issues: {ai_issues[:3]}
+
+Wygeneruj 4-8 praktycznych zadan: wdrozenie typow schema, uzupelnienie brakujacych pol i kroki walidacji."""
+
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(crawl=crawl, lighthouse=None, senuto=None),
+    )
+
+    try:
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
+
+        import json
+        import re
+
+        try:
+            data = json.loads(response)
+        except json.JSONDecodeError:
+            match = re.search(r'```json\s*\n(.*?)\n```', response, re.DOTALL)
+            if match:
+                data = json.loads(match.group(1))
+            else:
+                match = re.search(r'\{.*"tasks".*\}', response, re.DOTALL)
+                if match:
+                    data = json.loads(match.group(0))
+                else:
+                    raise ValueError("No JSON found in response")
+
+        tasks = data.get("tasks", [])
+        for task in tasks:
+            task["module"] = "schema"
+            task["source"] = "execution_plan"
+        return tasks
+    except Exception as e:
+        logger.error(f"Failed to generate schema tasks: {e}")
+        return []
+
+
+async def generate_content_quality_tasks(
+    content_quality_data: Dict[str, Any],
+    crawl: Dict[str, Any],
+    ai_context_content_quality: Optional[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    Generate content quality tasks from CQI payload and crawl signals.
+    """
+    system_prompt = """Jestes ekspertem content SEO. Wygeneruj konkretne zadania poprawy jakosci tresci.
+
+JSON format:
+{
+    "tasks": [
+        {
+            "title": "Krotki tytul",
+            "description": "BARDZO KROTKA instrukcja (max 1-2 zdania, do 150 znakow).",
+            "category": "content|technical",
+            "priority": "critical|high|medium|low",
+            "impact": "high|medium|low",
+            "effort": "easy|medium|hard",
+            "fix_data": {
+                "target_urls": ["..."],
+                "current_value": "obecny stan",
+                "suggested_value": "docelowy stan"
+            }
+        }
+    ]
+}"""
+
+    cqi = content_quality_data or {}
+    top_issues = cqi.get("top_issues", []) or []
+    distribution = cqi.get("distribution", {}) or {}
+    site_score = cqi.get("site_score", 0)
+    pages_count = cqi.get("pages_count", 0)
+    all_pages = crawl.get("all_pages", []) or []
+
+    ai_findings = []
+    ai_recs = []
+    ai_issues = []
+    if ai_context_content_quality:
+        ai_findings = ai_context_content_quality.get("key_findings", [])
+        ai_recs = ai_context_content_quality.get("recommendations", [])
+        ai_issues = ai_context_content_quality.get("priority_issues", [])
+
+    user_message = f"""Content Quality data:
+- Site score: {site_score}
+- Grade: {cqi.get('grade', 'F')} | Status: {cqi.get('status', 'poor')}
+- Pages scored: {pages_count}
+- Distribution: {distribution}
+- Top issues: {top_issues[:10]}
+- Crawl pages: {len(all_pages)}
+
+AI context:
+- Findings: {ai_findings[:4]}
+- Recommendations: {ai_recs[:4]}
+- Priority issues: {ai_issues[:3]}
+
+Wygeneruj 5-10 zadan: duplikaty metadata, thin content, struktura contentu, poprawa stron o niskim score i monitoring efektow."""
+
+    user_message = _with_global_snapshot(
+        user_message,
+        build_global_snapshot(crawl=crawl, lighthouse=None, senuto=None),
+    )
+
+    try:
+        response = await call_claude(user_message, system_prompt, max_tokens=20000)
+
+        import json
+        import re
+
+        try:
+            data = json.loads(response)
+        except json.JSONDecodeError:
+            match = re.search(r'```json\s*\n(.*?)\n```', response, re.DOTALL)
+            if match:
+                data = json.loads(match.group(1))
+            else:
+                match = re.search(r'\{.*"tasks".*\}', response, re.DOTALL)
+                if match:
+                    data = json.loads(match.group(0))
+                else:
+                    raise ValueError("No JSON found in response")
+
+        tasks = data.get("tasks", [])
+        for task in tasks:
+            task["module"] = "content_quality"
+            task["source"] = "execution_plan"
+        return tasks
+    except Exception as e:
+        logger.error(f"Failed to generate content quality tasks: {e}")
+        return []
+
+
 async def generate_ux_tasks(
     lighthouse: Dict[str, Any],
     ai_context_ux: Optional[Dict[str, Any]]

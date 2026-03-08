@@ -2,13 +2,17 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import { auditsAPI } from '@/lib/api'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { auditsAPI, type Audit } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ModeSwitcher, useAuditMode } from '@/components/audit/ModeSwitcher'
+import { AnalysisView } from '@/components/audit/AnalysisView'
+import { TaskListView } from '@/components/audit/TaskListView'
 import { AlertTriangle, CheckCircle2, Code2, Loader2, Sparkles } from 'lucide-react'
+import { toast } from 'sonner'
 
 function priorityBadgeClass(priority: string): string {
   if (priority === 'critical') return 'bg-red-100 text-red-700 border-red-300'
@@ -71,6 +75,7 @@ const SCHEMA_SNIPPETS: Array<{ title: string; code: string }> = [
 export default function SchemaPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [isAuth, setIsAuth] = useState(false)
+  const [mode, setMode] = useAuditMode('data')
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -83,10 +88,24 @@ export default function SchemaPage({ params }: { params: { id: string } }) {
     checkAuth()
   }, [router])
 
-  const { data: audit, isLoading } = useQuery({
+  const { data: audit, isLoading, refetch: refetchAudit } = useQuery({
     queryKey: ['audit', params.id],
     queryFn: () => auditsAPI.get(params.id),
     enabled: isAuth,
+    refetchInterval: (query) => {
+      const data = query?.state?.data as Audit | undefined
+      const isRunning = data?.status === 'processing' || data?.status === 'pending'
+      const isAiRunning = data?.ai_status === 'processing'
+      const isPlanRunning = data?.execution_plan_status === 'processing'
+      return isRunning || isAiRunning || isPlanRunning ? 3000 : false
+    },
+  })
+
+  const { data: tasksResponse, refetch: refetchTasks } = useQuery({
+    queryKey: ['tasks', params.id, 'schema'],
+    queryFn: () => auditsAPI.getTasks(params.id, { module: 'schema' }),
+    enabled: isAuth && !!audit && mode === 'plan',
+    refetchInterval: mode === 'plan' && audit?.execution_plan_status === 'processing' ? 3000 : false,
   })
 
   const crawl = audit?.results?.crawl || {}
@@ -118,6 +137,40 @@ export default function SchemaPage({ params }: { params: { id: string } }) {
   const readinessColor =
     readinessScore >= 75 ? 'text-green-600' : readinessScore >= 45 ? 'text-amber-600' : 'text-red-600'
   const semantic = crawl?.semantic_html || {}
+  const tasks = tasksResponse?.items || []
+  const aiContext = audit?.results?.ai_contexts?.schema
+
+  const handleStatusChange = async (taskId: string, status: 'pending' | 'done') => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { status })
+      refetchTasks()
+      toast.success('Zaktualizowano status zadania')
+    } catch (_error) {
+      toast.error('Nie udalo sie zaktualizowac zadania')
+    }
+  }
+
+  const handleNotesChange = async (taskId: string, notes: string) => {
+    try {
+      await auditsAPI.updateTask(params.id, taskId, { notes })
+      refetchTasks()
+      toast.success('Zapisano notatki')
+    } catch (_error) {
+      toast.error('Nie udalo sie zapisac notatek')
+    }
+  }
+
+  const generatePlanMutation = useMutation({
+    mutationFn: () => auditsAPI.runExecutionPlan(params.id),
+    onSuccess: async () => {
+      await refetchAudit()
+      await refetchTasks()
+      toast.success('Rozpoczeto generowanie planu wykonania')
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Nie udalo sie uruchomic generowania planu')
+    },
+  })
 
   if (!isAuth || isLoading) {
     return (
@@ -145,6 +198,18 @@ export default function SchemaPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
+      <ModeSwitcher
+        mode={mode}
+        onModeChange={setMode}
+        taskCount={tasks.length}
+        pendingTaskCount={tasks.filter((t) => t.status === 'pending').length}
+        hasAiData={!!aiContext}
+        hasExecutionPlan={audit?.execution_plan_status === 'completed'}
+        isAiLoading={audit?.ai_status === 'processing'}
+        isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
+      />
+
+      {mode === 'data' && (
       <Tabs defaultValue="overview" className="w-full">
         <TabsList>
           <TabsTrigger value="overview">Przegląd</TabsTrigger>
@@ -345,7 +410,9 @@ export default function SchemaPage({ params }: { params: { id: string } }) {
             </CardHeader>
             <CardContent>
               <ol className="list-decimal pl-6 space-y-2 text-sm">
-                <li>Wstaw JSON-LD w `&lt;script type="application/ld+json"&gt;` w finalnym HTML strony.</li>
+                <li>
+                  Wstaw JSON-LD w <code>&lt;script type=&quot;application/ld+json&quot;&gt;</code> w finalnym HTML strony.
+                </li>
                 <li>Uzupełnij pola wymagane i rekomendowane dla każdego typu (np. Organization, Breadcrumb, Product).</li>
                 <li>Zweryfikuj kluczowe URL-e w Google Rich Results Test.</li>
                 <li>Sprawdź raporty „Ulepszenia” w Google Search Console po ponownej indeksacji.</li>
@@ -399,6 +466,23 @@ export default function SchemaPage({ params }: { params: { id: string } }) {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
+
+      {mode === 'analysis' && (
+        <AnalysisView area="schema" aiContext={aiContext} isLoading={audit?.ai_status === 'processing'} />
+      )}
+
+      {mode === 'plan' && (
+        <TaskListView
+          tasks={tasks}
+          module="schema"
+          onStatusChange={handleStatusChange}
+          onNotesChange={handleNotesChange}
+          executionPlanStatus={audit?.execution_plan_status ?? null}
+          isGeneratingPlan={generatePlanMutation.isPending || audit?.execution_plan_status === 'processing'}
+          onGeneratePlan={() => generatePlanMutation.mutate()}
+        />
+      )}
     </div>
   )
 }

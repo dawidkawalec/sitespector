@@ -372,6 +372,7 @@ Cel: Zbudować features, których konkurencja nie ma.
 - [ ] Auto Monthly Reports (3.12)
 
 **Status wdrożenia**: Faza 3A+3B+3C (częściowo) ukończona (2026-03-08): THI, Visibility Momentum, AI Readiness, Competitive Performance Radar, Historical Comparison, Traffic Impact Estimation, Content Quality Index, Site Architecture Visualization (3.8), Duplicate metadata surface (3.9-lite).
+Dodatkowy hardening (2026-03-08): AI Readiness runtime crash usunięty, a moduły `content-quality` i `schema` zostały doprowadzone do spójnego workflow `Dane/Analiza/Plan` z dedykowanymi kontekstami AI i taskami execution plan.
 
 ---
 

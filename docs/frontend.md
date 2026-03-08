@@ -8,6 +8,35 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ---
 
+## Gap Analysis — Hardening: AI Readiness + 3-Mode parity (2026-03-08)
+
+### Stabilizacja AI Readiness
+
+- `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx`
+  - naprawiono crash runtime (React #310) przez usuniecie warunkowego naruszenia kolejnosci hookow,
+  - dodano bezpieczne fallbacki dla brakujacego `results.crawl.ai_readiness`,
+  - strona nie wysypuje sie przy starszych payloadach audytu.
+
+### 3-Mode parity dla Content Quality i Schema
+
+- `frontend/app/(app)/audits/[id]/content-quality/page.tsx`
+  - dodano `ModeSwitcher` (`Dane / Analiza / Plan`),
+  - tryb `Analiza` czyta `results.ai_contexts.content_quality`,
+  - tryb `Plan` czyta i aktualizuje taski `module=content_quality` (`TaskListView` + update status/notes + trigger generowania planu).
+
+- `frontend/app/(app)/audits/[id]/schema/page.tsx`
+  - dodano `ModeSwitcher` (`Dane / Analiza / Plan`),
+  - tryb `Analiza` czyta `results.ai_contexts.schema`,
+  - tryb `Plan` czyta i aktualizuje taski `module=schema` (`TaskListView` + update status/notes + trigger generowania planu).
+
+### Cross-app navigation boundary
+
+- `frontend/components/layout/TopBar.tsx`
+  - przycisk powrotu do `/` zmieniony z `Link` na natywny `<a href="/">`,
+  - wymuszony pelny reload przy przejsciu do landingu (osobna appka), co ogranicza bledy RSC payload/chunk 404.
+
+---
+
 ## Gap Analysis — Faza 2 wdrozona (2026-03-08)
 
 ### Zmiany w stronach audytu

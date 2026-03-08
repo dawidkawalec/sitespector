@@ -427,6 +427,15 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 ),
                 "links": ai_analysis.analyze_links_context(crawl_data, global_snapshot=global_snapshot),
                 "images": ai_analysis.analyze_images_context(crawl_data, global_snapshot=global_snapshot),
+                "schema": ai_analysis.analyze_schema_context(
+                    crawl_data,
+                    global_snapshot=global_snapshot,
+                ),
+                "content_quality": ai_analysis.analyze_content_quality_context(
+                    results.get("content_quality_index", {}),
+                    crawl_data,
+                    global_snapshot=global_snapshot,
+                ),
                 "security": ai_analysis.analyze_security_context(
                     results.get("security", {}),
                     crawl_data,
@@ -677,6 +686,23 @@ async def run_execution_plan(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 ai_execution_plan.generate_images_tasks(
                     crawl_data,
                     ai_contexts.get("images")
+                )
+            )
+
+            # Schema
+            tasks_futures.append(
+                ai_execution_plan.generate_schema_tasks(
+                    crawl_data,
+                    ai_contexts.get("schema")
+                )
+            )
+
+            # Content Quality
+            tasks_futures.append(
+                ai_execution_plan.generate_content_quality_tasks(
+                    results.get("content_quality_index", {}),
+                    crawl_data,
+                    ai_contexts.get("content_quality")
                 )
             )
             

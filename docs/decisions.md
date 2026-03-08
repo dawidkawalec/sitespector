@@ -1,5 +1,33 @@
 # Architectural Decisions Log
 
+## ADR-063: AI Readiness hardening + 3-Mode parity dla Schema i Content Quality (2026-03-08)
+
+- **Decision**:
+  - Ustabilizowac route `/audits/[id]/ai-readiness` (eliminacja runtime crash i bezpieczne fallbacki payloadu).
+  - Ujednolicic UX stron `schema` i `content-quality` do standardu audytu `Dane / Analiza / Plan`.
+  - Rozszerzyc backend o dedykowane contexty AI i task generation dla `schema` i `content_quality`.
+  - Wymusic twarda granice nawigacji app -> landing dla `/` (pelny reload zamiast SPA navigation).
+- **Rationale**:
+  - `AI Readiness` potrafil sie wykladac na produkcji przy warunkowym naruszeniu kolejnosci hookow (React #310).
+  - Moduly `schema` i `content-quality` byly niespojne z reszta IA audytu (brak trybow `Analiza` i `Plan`).
+  - Brak dedykowanych taskow backendowych ograniczal realna egzekucje rekomendacji w tych obszarach.
+  - Root `/` jest serwowany przez osobna aplikacje (`landing`), co przy `Link` powodowalo bledy RSC/chunk.
+- **Implementation**:
+  - Frontend:
+    - `frontend/app/(app)/audits/[id]/ai-readiness/page.tsx` (stabilizacja hookow + fallbacki),
+    - `frontend/app/(app)/audits/[id]/content-quality/page.tsx` (`ModeSwitcher`, `AnalysisView`, `TaskListView`, task mutations),
+    - `frontend/app/(app)/audits/[id]/schema/page.tsx` (`ModeSwitcher`, `AnalysisView`, `TaskListView`, task mutations),
+    - `frontend/components/layout/TopBar.tsx` (home action jako natywny `<a href="/">`).
+  - Backend:
+    - `backend/app/services/ai_analysis.py`: `analyze_schema_context()`, `analyze_content_quality_context()`,
+    - `backend/app/services/ai_execution_plan.py`: `generate_schema_tasks()`, `generate_content_quality_tasks()`,
+    - `backend/worker.py`: wlaczenie nowych contextow i modulow task generation do pipeline.
+- **Outcome**:
+  - `AI Readiness` dziala stabilnie na produkcyjnych payloadach.
+  - `Schema` i `Content Quality` maja pelny, spojny flow `Dane / Analiza / Plan`.
+  - Execution plan obejmuje dedykowane taski `schema` i `content_quality`.
+  - Przejscie z appki na landing nie powoduje juz mieszania RSC/chunkow miedzy aplikacjami.
+
 ## ADR-062: Phase 3C Site Architecture Graph + Duplicate Metadata Surface (2026-03-08)
 
 - **Decision**: Implement Phase 3C as a frontend-first rollout with two scopes:
