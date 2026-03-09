@@ -71,7 +71,7 @@ export default function SitemapPage() {
       />
       <div className="mb-12 flex items-center gap-3">
         <Image
-          src="/sitespector_logo_transp.svg"
+          src="/sitespector_logo_dark.svg"
           alt="SiteSpector"
           width={3068}
           height={759}

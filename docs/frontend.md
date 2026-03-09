@@ -74,6 +74,35 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ---
 
+## Mobile menu fix + branding refresh (2026-03-09)
+
+- `landing/src/component/layout/Topbar/page.tsx`
+  - usunieto podwojne renderowanie menu mobilnego (desktop lista byla widoczna wewnatrz collapse na mobile),
+  - desktop `navbar-nav` i desktop CTA sa teraz ukryte na mobile (`d-none d-lg-flex`),
+  - mobilne CTA (`Przejdz do panelu` / `Zaloguj sie` / `Zaloz konto`) przeniesione do sekcji `mega-nav-mobile`,
+  - logo topbara przepiete na nowy asset `sitespector_logo_dark.svg`.
+- `frontend/components/brand/SiteSpectorLogo.tsx`
+  - dodano `variant` (`dark` / `light`) dla centralnego sterowania wersja logotypu.
+- `frontend/components/layout/PublicFooter.tsx`
+  - footer korzysta z `variant=\"light\"` dla ciemnego tla.
+- `frontend/app/layout.tsx`, `landing/src/app/layout.tsx`
+  - metadane ikon przepiete na nowy `favicon.png` (`icon`, `apple`, `shortcut`).
+- branding assets:
+  - dodano nowe pliki do runtime:
+    - `frontend/public/sitespector_logo_dark.svg`
+    - `frontend/public/sitespector_logo_light.svg`
+    - `landing/public/sitespector_logo_dark.svg`
+    - `landing/public/sitespector_logo_light.svg`
+    - `frontend/public/favicon.png`
+    - `landing/public/favicon.png`
+    - `backend/templates/pdf/assets/sitespector_logo_dark.svg`
+- dodatkowo przepieto bezposrednie uzycia logo na nowe assety:
+  - landing login/footer/schema,
+  - frontend public login/home/sitemap i report clienta,
+  - backend PDF generator + legacy report template.
+
+---
+
 ## Gap Analysis — Hardening: AI Readiness + 3-Mode parity (2026-03-08)
 
 ### Stabilizacja AI Readiness

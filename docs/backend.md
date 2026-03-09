@@ -12,6 +12,17 @@ The **Worker** is a background Python process that polls for pending audits and 
 
 ---
 
+## Branding asset refresh (PDF) (2026-03-09)
+
+- `backend/app/services/pdf/generator.py`
+  - domyslne logo PDF przelaczone na nowy asset `assets/sitespector_logo_dark.svg`.
+- `backend/templates/report.html`
+  - legacy template cover przelaczony na `pdf/assets/sitespector_logo_dark.svg`.
+- `backend/templates/pdf/assets/`
+  - dodano nowy runtime asset: `sitespector_logo_dark.svg`.
+
+---
+
 ## Gap Analysis — Hardening: AI Readiness + Schema/CQI parity (2026-03-08)
 
 ### Nowe contexty AI (Phase 2)

@@ -225,7 +225,7 @@ export default function ClientReportPage({ params }: { params: { id: string } })
               </div>
               <div className="text-left @md:text-right shrink-0">
                 <Image
-                  src="/sitespector_logo_transp.svg"
+                  src="/sitespector_logo_dark.svg"
                   alt="SiteSpector"
                   width={3068}
                   height={759}
@@ -375,7 +375,7 @@ export default function ClientReportPage({ params }: { params: { id: string } })
             {/* Technical Footer */}
             <div className="mt-auto pt-12 border-t border-slate-200 flex flex-col @md:flex-row @md:justify-between @md:items-center gap-3 text-slate-400 text-xs">
               <Image
-                src="/sitespector_logo_transp.svg"
+                src="/sitespector_logo_dark.svg"
                 alt="SiteSpector"
                 width={3068}
                 height={759}

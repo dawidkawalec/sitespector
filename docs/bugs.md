@@ -2948,3 +2948,60 @@ Replaced all instances of `{% from '../macros.html' import ... %}` with `{% from
 **Verification**:
 - Sprawdzono kompilacje frontendu i landingu (`npm run lint` w obu aplikacjach) — bez nowych bledow.
 - Potwierdzono, ze logo trzyma szerokosc kontenera na mobile i nie eskaluje rozmiaru.
+
+---
+
+### BUG-055: Mobile menu pokazywalo podwojne listy (landing)
+
+**Reported**: 2026-03-09
+
+**Status**: ✅ FIXED (2026-03-09)
+
+**Severity**: HIGH
+
+**Description**:
+- Na mobile menu landingu renderowalo dwa zestawy nawigacji jednoczesnie (lista desktop + akordeon mobile), co powodowalo chaos wizualny i mylne CTA.
+
+**Root cause**:
+- Desktopowe `navbar-nav` i `nav-btn` byly osadzone we wspolnym `Collapse` i nie byly ukryte na mobile.
+
+**Fix**:
+- `landing/src/component/layout/Topbar/page.tsx`:
+  - desktopowe listy i CTA dostaly `d-none d-lg-flex`,
+  - mobilne CTA zostaly przeniesione do `mega-nav-mobile` (jedno zrodlo prawdy),
+  - zachowano ten sam stan auth (`isAuthenticated`) dla mobile i desktop.
+
+**Verification**:
+- Potwierdzono brak duplikacji sekcji `Start/Oferta/Produkt...` na mobile.
+- Potwierdzono, ze mobilne CTA dzialaja poprawnie dla stanu zalogowany/niezalogowany.
+
+---
+
+### BUG-056: Niespojny branding po podmianie logo/favikony
+
+**Reported**: 2026-03-09
+
+**Status**: ✅ FIXED (2026-03-09)
+
+**Severity**: HIGH
+
+**Description**:
+- Po aktualizacji identyfikacji wizualnej istnialo ryzyko mieszania starego `sitespector_logo_transp.svg` z nowymi assetami oraz starej ikony appki.
+
+**Root cause**:
+- Stare odwolania byly rozproszone po appce, landingu, schema.org i PDF, a ikony byly generowane przez oddzielne route'y `icon.tsx`/`apple-icon.tsx`.
+
+**Fix**:
+- Przepieto wszystkie runtime odwolania na:
+  - `sitespector_logo_dark.svg` / `sitespector_logo_light.svg`,
+  - `favicon.png` jako `icon/apple/shortcut` w metadata obu aplikacji.
+- Dodano centralny wariant logo:
+  - `frontend/components/brand/SiteSpectorLogo.tsx` -> prop `variant`.
+- Usunieto legacy generatory ikon:
+  - `frontend/app/icon.tsx`, `frontend/app/apple-icon.tsx`,
+  - `landing/src/app/icon.tsx`, `landing/src/app/apple-icon.tsx`.
+- Dodano nowe assety do `frontend/public`, `landing/public` i `backend/templates/pdf/assets`.
+
+**Verification**:
+- `rg "sitespector_logo_transp.svg"` dla `frontend/`, `landing/`, `backend/` nie zwraca juz wynikow.
+- Linty frontendu i landingu przeszly bez nowych bledow w zmienionych plikach.

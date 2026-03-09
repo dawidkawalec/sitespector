@@ -273,7 +273,7 @@ const Topbar = () => {
               onClick={() => closeAll()}
             >
               <img
-                src="/sitespector_logo_transp.svg"
+                src="/sitespector_logo_dark.svg"
                 alt="SiteSpector"
                 className="sitespector-logo-img sitespector-logo-img--nav"
               />
@@ -295,7 +295,7 @@ const Topbar = () => {
 
           <Collapse in={mobileOpen}>
             <div className="navbar-collapse" id="navbarCollapse">
-              <ul className="navbar-nav mx-auto mega-nav-desktop" id="navbar-navlist">
+              <ul className="navbar-nav mx-auto mega-nav-desktop d-none d-lg-flex" id="navbar-navlist">
                 <li className="nav-item">
                   <Link className={`nav-link ${pathname === '/' ? 'active' : ''}`} href="/" onClick={() => closeAll()}>
                     Start
@@ -367,9 +367,27 @@ const Topbar = () => {
                     </div>
                   ))}
                 </div>
+                <div className="px-3 pt-3">
+                  {isAuthenticated === null ? (
+                    <span className="btn btn-orange text-light w-100 invisible">Przejdź do panelu</span>
+                  ) : isAuthenticated ? (
+                    <Link className="btn btn-orange text-light w-100" href={appDashboardHref} onClick={() => closeAll()}>
+                      Przejdź do panelu
+                    </Link>
+                  ) : (
+                    <div className="d-flex flex-column gap-2">
+                      <Link className="btn btn-outline-orange w-100" href="/login" onClick={() => closeAll()}>
+                        Zaloguj się
+                      </Link>
+                      <Link className="btn btn-orange text-light w-100" href="/register" onClick={() => closeAll()}>
+                        Załóż konto
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <ul className="navbar-nav nav-btn">
+              <ul className="navbar-nav nav-btn d-none d-lg-flex">
                 {isAuthenticated === null ? (
                   <li className="nav-item" aria-hidden="true">
                     {/* Keep layout stable while session is checked */}

@@ -42,7 +42,7 @@ export default function PublicHomePage() {
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-24">
       <div className="text-center">
         <Image
-          src="/sitespector_logo_transp.svg"
+          src="/sitespector_logo_dark.svg"
           alt="SiteSpector"
           width={3068}
           height={759}

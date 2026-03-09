@@ -222,7 +222,7 @@ function LoginPageInner() {
         <CardHeader className="space-y-1 text-center">
           <div className="mb-4 flex justify-center">
             <Image
-              src="/sitespector_logo_transp.svg"
+              src="/sitespector_logo_dark.svg"
               alt="SiteSpector"
               width={3068}
               height={759}

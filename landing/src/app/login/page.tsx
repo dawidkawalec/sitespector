@@ -142,7 +142,7 @@ export default function LoginPage() {
               <Col xs={12} md={8} lg={6} className="auth-card text-center">
                 <div className="mb-4">
                   <img
-                    src="/sitespector_logo_transp.svg"
+                    src="/sitespector_logo_dark.svg"
                     alt="SiteSpector"
                     className="mx-auto sitespector-logo-img sitespector-logo-img--auth"
                   />
@@ -170,7 +170,7 @@ export default function LoginPage() {
             <Col xs={12} sm={10} md={8} lg={5} className="auth-card">
               <div className="text-center mb-4">
                 <img
-                  src="/sitespector_logo_transp.svg"
+                  src="/sitespector_logo_dark.svg"
                   alt="SiteSpector"
                   className="mx-auto sitespector-logo-img sitespector-logo-img--auth"
                 />

@@ -105,7 +105,7 @@ const Footer = () => {
                   <Link className="navbar-caption fs-5 text-light ls-1 fw-bold d-inline-flex align-items-center text-nowrap" href="/">
                     <span className="rounded-3 bg-white px-3 py-2 d-inline-flex">
                       <img
-                        src="/sitespector_logo_transp.svg"
+                        src="/sitespector_logo_light.svg"
                         alt="SiteSpector"
                         className="sitespector-logo-img sitespector-logo-img--footer"
                       />

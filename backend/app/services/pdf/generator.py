@@ -77,7 +77,7 @@ from .charts import (
 )
 
 logger = logging.getLogger(__name__)
-DEFAULT_BRAND_LOGO_SRC = "assets/sitespector_logo_transp.svg"
+DEFAULT_BRAND_LOGO_SRC = "assets/sitespector_logo_dark.svg"
 
 # Jinja2 environment
 _TEMPLATE_DIR = Path(__file__).parent.parent.parent.parent / "templates" / "pdf"

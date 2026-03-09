@@ -89,7 +89,8 @@ export function PublicFooter() {
             <SiteSpectorLogo
               href="/"
               logoHeight={30}
-              className="mb-4 inline-flex rounded-xl bg-white px-3 py-2"
+              variant="light"
+              className="mb-4 inline-flex"
             />
             <p className="mt-4 text-sm text-white/80">
               Profesjonalna platforma do audytów SEO i optymalizacji stron

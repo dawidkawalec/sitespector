@@ -1,5 +1,30 @@
 # Architectural Decisions Log
 
+## ADR-067: Single mobile navigation source + full brand asset refresh (2026-03-09)
+
+- **Decision**:
+  - W landingu utrzymac jeden zrodlo prawdy dla mobile menu (tylko `mega-nav-mobile`) i ukryc desktopowe listy/CTA pod `d-lg`.
+  - Przepiac branding runtime z legacy `sitespector_logo_transp.svg` na nowe zestawy `sitespector_logo_dark.svg` / `sitespector_logo_light.svg`.
+  - Ujednolicic favicon/app-icon w obu aplikacjach przez `favicon.png` w metadata.
+- **Rationale**:
+  - Menu mobilne renderowalo podwojne listy (desktop + mobile), co psulo UX i czytelnosc na iPhone/iPad.
+  - Zmiana identyfikacji wymagala jednoczesnej podmiany wszystkich powierzchni public/app/pdf, zeby uniknac mieszania starego i nowego brandingu.
+- **Implementation**:
+  - `landing/src/component/layout/Topbar/page.tsx`:
+    - desktop nav + desktop CTA ukryte na mobile,
+    - mobilne CTA osadzone w `mega-nav-mobile`.
+  - `frontend/components/brand/SiteSpectorLogo.tsx`:
+    - nowy prop `variant` (`dark` / `light`).
+  - Branding assets skopiowane do runtime:
+    - `frontend/public/*`, `landing/public/*`, `backend/templates/pdf/assets/*`.
+  - Ikony:
+    - `frontend/app/layout.tsx`, `landing/src/app/layout.tsx` -> `icons` na `favicon.png`,
+    - usunieto stare dynamiczne route'y `icon.tsx` i `apple-icon.tsx` w obu appkach.
+  - Wszystkie bezposrednie referencje logo przepiete na nowe pliki.
+- **Outcome**:
+  - Mobilne menu jest jednoznaczne i bez duplikatow.
+  - Branding i ikony sa spojne w landingu, appce i PDF.
+
 ## ADR-066: Mobile logo guardrails + hero background softening (2026-03-09)
 
 - **Decision**:

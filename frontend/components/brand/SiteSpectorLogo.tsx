@@ -8,6 +8,7 @@ interface SiteSpectorLogoProps {
   href?: string
   logoHeight?: number
   maxWidthPx?: number
+  variant?: 'dark' | 'light'
   className?: string
   onClick?: () => void
 }
@@ -16,10 +17,12 @@ export function SiteSpectorLogo({
   href = '/',
   logoHeight = 28,
   maxWidthPx,
+  variant = 'dark',
   className,
   onClick,
 }: SiteSpectorLogoProps) {
   const safeMaxWidthPx = maxWidthPx ?? Math.round(logoHeight * 6)
+  const logoSrc = variant === 'light' ? '/sitespector_logo_light.svg' : '/sitespector_logo_dark.svg'
 
   return (
     <Link
@@ -29,7 +32,7 @@ export function SiteSpectorLogo({
       aria-label="SiteSpector"
     >
       <Image
-        src="/sitespector_logo_transp.svg"
+        src={logoSrc}
         alt="SiteSpector"
         width={3068}
         height={759}
