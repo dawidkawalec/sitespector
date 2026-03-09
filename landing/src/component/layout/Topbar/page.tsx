@@ -275,7 +275,7 @@ const Topbar = () => {
               <img
                 src="/sitespector_logo_transp.svg"
                 alt="SiteSpector"
-                className="h-[30px] w-auto object-contain"
+                className="sitespector-logo-img sitespector-logo-img--nav"
               />
             </Link>
           </div>

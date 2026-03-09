@@ -2912,3 +2912,39 @@ Replaced all instances of `{% from '../macros.html' import ... %}` with `{% from
 - Confirmed overview contains Health Score + severity counts + top 5 critical issues.
 - Confirmed backlinks incoming tab now surfaces full domains/anchors datasets.
 - Confirmed visibility positions tab shows `X z Y` sampling message.
+
+---
+
+### BUG-054: Gigantyczny motyw logo i przeskalowane brandingi na mobile (iPhone/iPad)
+
+**Reported**: 2026-03-09
+
+**Status**: ✅ FIXED (2026-03-09)
+
+**Severity**: HIGH
+
+**Description**:
+- Landing mobile view byl wizualnie zdominowany przez duzy motyw w hero oraz niespojnie skalowane logotypy w publicznych sekcjach (navbar/footer/login).
+
+**Root cause**:
+- Brak ujednoliconych, twardych limitow `max-width` dla renderowanego logotypu.
+- Hero `bg-img-1` opieral sie o agresywny obraz tła, ktory na mniejszych viewportach (iPhone/iPad) wygladal jak „gigantyczne logo/lupa”.
+
+**Fix**:
+- Dodano wspolne klasy brandingowe i limity mobile:
+  - `landing/src/assets/scss/_general.scss`
+  - `sitespector-logo-img--nav/footer/auth`
+- Podmieniono klasy obrazka logotypu w:
+  - `landing/src/component/layout/Topbar/page.tsx`
+  - `landing/src/component/layout/Footer/page.tsx`
+  - `landing/src/app/login/page.tsx`
+- Zmniejszono wizualna dominacje hero na mobile:
+  - `landing/src/assets/scss/_hero.scss`
+  - `bg-img-1` na `<=991px` -> lekki gradient zamiast mocnego motywu obrazkowego
+  - `bg-home-1` padding mobilny ustawiony na `128px 0 72px`
+- Dodano fallback bezpiecznego `maxWidth` do wspolnego komponentu logo:
+  - `frontend/components/brand/SiteSpectorLogo.tsx`
+
+**Verification**:
+- Sprawdzono kompilacje frontendu i landingu (`npm run lint` w obu aplikacjach) — bez nowych bledow.
+- Potwierdzono, ze logo trzyma szerokosc kontenera na mobile i nie eskaluje rozmiaru.

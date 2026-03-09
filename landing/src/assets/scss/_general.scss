@@ -90,6 +90,43 @@ li {
   }
 }
 
+.sitespector-logo-img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.sitespector-logo-img--nav {
+  height: 30px;
+  max-width: min(44vw, 176px);
+}
+
+.sitespector-logo-img--footer {
+  height: 24px;
+  max-width: min(64vw, 186px);
+}
+
+.sitespector-logo-img--auth {
+  height: 48px;
+  max-width: min(70vw, 228px);
+}
+
+@media (max-width: 991px) {
+  .sitespector-logo-img--nav {
+    height: 24px;
+    max-width: min(58vw, 164px);
+  }
+}
+
+@media (max-width: 575px) {
+  .sitespector-logo-img--auth {
+    height: 40px;
+    max-width: min(76vw, 190px);
+  }
+}
+
 .form-control {
   box-shadow: none !important;
 }

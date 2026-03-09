@@ -56,6 +56,24 @@ SiteSpector uses **Next.js 14 App Router** with file-based routing.
 
 ---
 
+## Mobile branding hardening (iPhone/iPad) (2026-03-09)
+
+- `landing/src/assets/scss/_general.scss`
+  - dodano wspolne klasy rozmiarowe logo (`sitespector-logo-img--nav/footer/auth`) z twardym `max-width` na mobile.
+- `landing/src/component/layout/Topbar/page.tsx`
+  - logo topbara korzysta z klasy mobilnej, aby nie roslo poza kontener na iPhone/iPad.
+- `landing/src/component/layout/Footer/page.tsx`
+  - logo stopki korzysta z klasy z limitem szerokosci.
+- `landing/src/app/login/page.tsx`
+  - logo na ekranie logowania korzysta z klasy z limitem szerokosci.
+- `landing/src/assets/scss/_hero.scss`
+  - na `<=991px` hero dostaje lekkie tlo gradientowe zamiast agresywnego obrazka z duzym motywem lupy,
+  - zmniejszono pionowy padding hero na mobile (`128px 0 72px`), aby ograniczyc "przeskalowany" efekt first-view.
+- `frontend/components/brand/SiteSpectorLogo.tsx`
+  - komponent dostal bezpieczny fallback `maxWidth` zalezny od `logoHeight`, zeby logo nie eskalowalo rozmiaru nawet gdy style zewnetrzne zawodza.
+
+---
+
 ## Gap Analysis — Hardening: AI Readiness + 3-Mode parity (2026-03-08)
 
 ### Stabilizacja AI Readiness

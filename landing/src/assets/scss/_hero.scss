@@ -6,9 +6,17 @@
 }
 .bg-img-1 {
   background-image: url('../images/banner-2.jpg');
+
+  @media (max-width: 991px) {
+    // Avoid oversized decorative motif on iPhone/iPad and keep hero readable.
+    background-image: radial-gradient(circle at 88% 4%, rgba($orange, 0.14) 0%, rgba($orange, 0.07) 24%, #fff9f5 58%);
+  }
 }
 .bg-home-1 {
   padding: 200px 0;
+  @media (max-width: 991px) {
+    padding: 128px 0 72px;
+  }
   h1 {
     span {
       color: $orange;

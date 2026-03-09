@@ -1,5 +1,23 @@
 # Architectural Decisions Log
 
+## ADR-066: Mobile logo guardrails + hero background softening (2026-03-09)
+
+- **Decision**:
+  - Wprowadzic globalne guardraile rozmiaru logotypu dla publicznych powierzchni landingu (`navbar`, `footer`, `login`) oraz bezpieczny limit szerokosci w komponencie `SiteSpectorLogo`.
+  - Zmiekczyc mobilne tlo hero na landingu (iPhone/iPad), zastępując duzy motyw graficzny lżejszym gradientem na `<=991px`.
+- **Rationale**:
+  - Na urzadzeniach mobilnych branding mogl optycznie dominowac layout (zbyt duzy logotyp i agresywne tlo hero), co pogarszalo czytelnosc i percepcje UX.
+  - Potrzebne bylo jednoznaczne, powtarzalne ograniczenie szerokosci logotypu zamiast polegania tylko na pojedynczych utility classes.
+- **Implementation**:
+  - `landing/src/assets/scss/_general.scss`: klasy `sitespector-logo-img--nav/footer/auth` z twardymi limitami mobile.
+  - `landing/src/component/layout/Topbar/page.tsx`, `landing/src/component/layout/Footer/page.tsx`, `landing/src/app/login/page.tsx`: przejscie na wspolne klasy rozmiarowe.
+  - `landing/src/assets/scss/_hero.scss`: mobilny gradient + mniejszy vertical spacing hero.
+  - `frontend/components/brand/SiteSpectorLogo.tsx`: dodany `maxWidthPx` i domyslny bezpieczny limit szerokosci.
+- **Outcome**:
+  - Logo nie rozlewa sie poza kontenery na iPhone/iPad.
+  - Hero na mobile nie dominuje pierwszego ekranu gigantycznym motywem graficznym.
+  - Branding pozostaje spójny, ale z lepszym balansem czytelnosci.
+
 ## ADR-065: Audit operational UX — szybkie reruny + narzedzia diagnostyczne (2026-03-08)
 
 - **Decision**:

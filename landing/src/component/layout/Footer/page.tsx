@@ -107,7 +107,7 @@ const Footer = () => {
                       <img
                         src="/sitespector_logo_transp.svg"
                         alt="SiteSpector"
-                        className="h-[24px] w-auto object-contain"
+                        className="sitespector-logo-img sitespector-logo-img--footer"
                       />
                     </span>
                   </Link>

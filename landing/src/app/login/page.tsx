@@ -144,7 +144,7 @@ export default function LoginPage() {
                   <img
                     src="/sitespector_logo_transp.svg"
                     alt="SiteSpector"
-                    className="mx-auto h-12 w-auto object-contain"
+                    className="mx-auto sitespector-logo-img sitespector-logo-img--auth"
                   />
                 </div>
                 <h2 className="auth-heading">Sprawdź e-mail</h2>
@@ -172,7 +172,7 @@ export default function LoginPage() {
                 <img
                   src="/sitespector_logo_transp.svg"
                   alt="SiteSpector"
-                  className="mx-auto h-12 w-auto object-contain"
+                  className="mx-auto sitespector-logo-img sitespector-logo-img--auth"
                 />
                 <p className="auth-subheading">Zaloguj się lub załóż konto, aby kontynuować.</p>
               </div>
