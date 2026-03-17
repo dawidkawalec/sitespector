@@ -1421,7 +1421,7 @@ docker exec sitespector-nginx nginx -s reload
 
 ---
 
-**Last Updated**: 2026-02-15  
-**Version**: Nginx (container reports `nginx/1.29.5`)  
-**SSL**: Let's Encrypt (`sitespector.app`, `www.sitespector.app`)  
+**Last Updated**: 2026-03-17
+**Version**: Nginx (container reports `nginx/1.29.5`)
+**SSL**: Let's Encrypt (`sitespector.app`, `www.sitespector.app`)
 **Status**: Production-ready (hardened: headers + rate limiting)

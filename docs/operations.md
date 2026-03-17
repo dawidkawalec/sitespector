@@ -1,6 +1,6 @@
 # SiteSpector - Operations & Admin Runbooks
 
-Last updated: 2026-02-15
+Last updated: 2026-03-17
 
 ## Production Topology (Current)
 
@@ -11,7 +11,7 @@ Last updated: 2026-02-15
 - **Runtime**: Docker + Docker Compose plugin
 - **App directory**: `/opt/sitespector`
 - **Branch**: `release`
-- **Services** (Docker): `nginx`, `frontend`, `landing`, `backend`, `worker`, `postgres`, `screaming-frog`, `lighthouse`, `dozzle`
+- **Services** (Docker): `nginx`, `frontend`, `landing`, `backend`, `worker`, `postgres`, `qdrant`, `screaming-frog`, `lighthouse`, `dozzle`
 
 ## Access & Security Baseline
 

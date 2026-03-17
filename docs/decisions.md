@@ -1189,7 +1189,7 @@ Audit-scoped chat relies on a Qdrant vector index built from audit results. Inde
 
 ---
 
-**Last Updated**: 2026-03-05
+**Last Updated**: 2026-03-17
 **Total Decisions**: 46 accepted
 
 ---
