@@ -1317,12 +1317,18 @@ async def collect_technical_extras(
                 html = homepage_resp.text
                 schemas = _parse_structured_data(html)
                 schema_v2 = _analyze_schema_v2(schemas)
+                schema_v2["detection_status"] = "success"
                 result["structured_data_v2"] = schema_v2
                 result["structured_data"] = _to_legacy_schema(schema_v2)
                 result["semantic_html"] = _analyze_semantic_html(html)
                 result["render_nojs"] = _analyze_render_nojs(html)
             except Exception as e:
                 logger.warning("Structured data / semantic HTML analysis failed: %s", e)
+                result["structured_data_v2"] = {"detection_status": "error", "found": False, "items": [], "types": [], "missing_priority_types": []}
+        elif homepage_resp:
+            result["structured_data_v2"] = {"detection_status": "no_html", "found": False, "items": [], "types": [], "missing_priority_types": [], "http_status": homepage_resp.status_code}
+        else:
+            result["structured_data_v2"] = {"detection_status": "no_html", "found": False, "items": [], "types": [], "missing_priority_types": []}
         
         # --- Robots.txt ---
         robots_resp = responses.get("robots")

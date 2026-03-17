@@ -39,6 +39,43 @@ function issueLabel(issue: string): string {
   return labels[issue] || issue
 }
 
+const GRADE_DESCRIPTIONS: Record<string, { range: string; label: string; description: string }> = {
+  A: { range: '90-100', label: 'Doskonała', description: 'Treść kompletna, dobrze zoptymalizowana, z odpowiednimi metadanymi i linkowaniem.' },
+  B: { range: '80-89', label: 'Dobra', description: 'Drobne braki w optymalizacji lub metadanych. Niewielka poprawa da duży efekt.' },
+  C: { range: '70-79', label: 'Średnia', description: 'Wymaga pracy nad treścią, metadanymi lub linkowaniem wewnętrznym.' },
+  D: { range: '60-69', label: 'Słaba', description: 'Poważne braki w treści, metadanych lub strukturze strony.' },
+  F: { range: '0-59', label: 'Krytyczna', description: 'Strona wymaga gruntownej przebudowy treści i optymalizacji.' },
+}
+
+const COMPONENT_LABELS: Record<string, { label: string; description: string }> = {
+  word_count: { label: 'Długość treści', description: 'Ilość tekstu na stronie' },
+  text_ratio: { label: 'Proporcja tekstu', description: 'Stosunek tekstu do kodu HTML' },
+  title_quality: { label: 'Jakość Title', description: 'Długość i unikalność tagu title' },
+  meta_quality: { label: 'Jakość Meta', description: 'Długość i unikalność meta description' },
+  h1_quality: { label: 'Jakość H1', description: 'Obecność i unikalność nagłówka H1' },
+  readability: { label: 'Czytelność', description: 'Łatwość czytania treści (Flesch)' },
+  internal_linking: { label: 'Linkowanie wewn.', description: 'Ilość inlinków prowadzących do strony' },
+  crawl_depth: { label: 'Głębokość crawla', description: 'Liczba kliknięć od homepage' },
+}
+
+const ISSUE_GUIDANCE: Record<string, string> = {
+  thin_content: 'Rozbuduj treść strony — minimum 300 słów dla stron informacyjnych.',
+  very_long_content: 'Rozważ podział na podstrony lub sekcje z nawigacją.',
+  low_text_ratio: 'Zmniejsz ilość kodu/skryptów lub dodaj więcej treści.',
+  missing_title: 'Dodaj unikalny tag <title> opisujący zawartość strony.',
+  title_length_out_of_range: 'Dostosuj długość title do 50-60 znaków.',
+  missing_meta_description: 'Dodaj meta description (150-160 znaków) zachęcający do kliknięcia.',
+  meta_length_out_of_range: 'Dostosuj długość meta description do 150-160 znaków.',
+  missing_h1: 'Dodaj jeden nagłówek H1 opisujący główny temat strony.',
+  multiple_h1: 'Zostaw jeden H1, resztę zamień na H2 lub niższe.',
+  orphan_page: 'Dodaj linki wewnętrzne prowadzące do tej strony.',
+  deep_page: 'Przenieś stronę bliżej homepage (max 3 kliknięcia).',
+  hard_to_read: 'Uprość język — krótsze zdania, prostsze słowa.',
+  duplicate_title: 'Każda strona powinna mieć unikalny title.',
+  duplicate_meta_description: 'Każda strona powinna mieć unikalny meta description.',
+  duplicate_h1: 'Każda strona powinna mieć unikalny nagłówek H1.',
+}
+
 function gradeBadgeVariant(score: number): 'default' | 'secondary' | 'destructive' {
   if (score >= 80) return 'default'
   if (score >= 60) return 'secondary'
@@ -206,7 +243,8 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
 
   const componentRows = Object.entries(components)
     .map(([key, value]) => ({
-      component: key,
+      component: COMPONENT_LABELS[key]?.label || key,
+      description: COMPONENT_LABELS[key]?.description || '',
       score: Number(value || 0),
     }))
     .sort((a, b) => a.score - b.score)
@@ -283,13 +321,13 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Pages scored</CardDescription>
+            <CardDescription>Stron ocenionych</CardDescription>
             <CardTitle className="text-3xl font-bold">{formatNumber(Number(cqi?.pages_count || pages.length || 0))}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Najslabsza skladowa</CardDescription>
+            <CardDescription>Najsłabsza składowa</CardDescription>
             <CardTitle className="text-xl font-bold">
               {componentRows.length > 0 ? componentRows[0].component : '—'}
             </CardTitle>
@@ -304,7 +342,7 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full max-w-[420px] grid-cols-2">
-          <TabsTrigger value="overview">Przeglad CQI</TabsTrigger>
+          <TabsTrigger value="overview">Przegląd CQI</TabsTrigger>
           <TabsTrigger value="duplicates">Duplikaty</TabsTrigger>
         </TabsList>
 
@@ -322,12 +360,13 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
                   return (
                     <div key={gradeKey} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-medium">Grade {gradeKey}</span>
+                        <span className="font-medium">Grade {gradeKey} <span className="text-muted-foreground font-normal">({GRADE_DESCRIPTIONS[gradeKey]?.range})</span></span>
                         <span className="text-muted-foreground">{formatNumber(value)}</span>
                       </div>
                       <div className="h-2 rounded-full bg-muted overflow-hidden">
                         <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(2, (value / maxValue) * 100)}%` }} />
                       </div>
+                      <p className="text-[10px] text-muted-foreground">{GRADE_DESCRIPTIONS[gradeKey]?.label}: {GRADE_DESCRIPTIONS[gradeKey]?.description}</p>
                     </div>
                   )
                 })}
@@ -336,8 +375,8 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
 
             <Card>
               <CardHeader>
-                <CardTitle>Top issues</CardTitle>
-                <CardDescription>Najczesciej powtarzajace sie problemy quality</CardDescription>
+                <CardTitle>Najczęstsze problemy</CardTitle>
+                <CardDescription>Najczęściej powtarzające się problemy jakości</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {topIssues.length > 0 ? (
@@ -347,11 +386,14 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
                       <div key={`${issue?.issue || 'issue'}-${idx}`} className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-medium">{issueLabel(String(issue?.issue || ''))}</span>
-                          <span className="text-muted-foreground">{formatNumber(count)}</span>
+                          <span className="text-muted-foreground">{formatNumber(count)} stron</span>
                         </div>
                         <div className="h-2 rounded-full bg-muted overflow-hidden">
                           <div className="h-full rounded-full bg-amber-500" style={{ width: `${Math.max(2, (count / issueMax) * 100)}%` }} />
                         </div>
+                        {ISSUE_GUIDANCE[String(issue?.issue || '')] && (
+                          <p className="text-[10px] text-muted-foreground">{ISSUE_GUIDANCE[String(issue?.issue || '')]}</p>
+                        )}
                       </div>
                     )
                   })
@@ -364,15 +406,16 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
 
           <Card>
             <CardHeader>
-              <CardTitle>Component breakdown</CardTitle>
-              <CardDescription>Sredni wynik kazdego filaru CQI (0-100)</CardDescription>
+              <CardTitle>Rozkład komponentów</CardTitle>
+              <CardDescription>Średni wynik każdego filaru CQI (0-100)</CardDescription>
             </CardHeader>
             <CardContent>
               <DataExplorerTable
                 data={componentRows}
                 columns={[
-                  { key: 'component', label: 'Component', className: 'font-medium' },
-                  { key: 'score', label: 'Score' },
+                  { key: 'component', label: 'Komponent', className: 'font-medium' },
+                  { key: 'description', label: 'Opis', className: 'text-muted-foreground text-xs' },
+                  { key: 'score', label: 'Wynik' },
                 ]}
                 pageSize={8}
                 exportFilename="content_quality_components"
@@ -383,8 +426,8 @@ export default function ContentQualityPage({ params }: { params: { id: string } 
           <Card>
             <CardHeader className="space-y-3">
               <div>
-                <CardTitle>Per-page CQI</CardTitle>
-                <CardDescription>Lista stron posortowana po score, z filtrami po grade i issue.</CardDescription>
+                <CardTitle>CQI per strona</CardTitle>
+                <CardDescription>Lista stron posortowana po wyniku, z filtrami po ocenie i problemach.</CardDescription>
               </div>
               <div className="flex flex-wrap gap-2">
                 {(['all', 'A', 'B', 'C', 'D', 'F'] as const).map((value) => (

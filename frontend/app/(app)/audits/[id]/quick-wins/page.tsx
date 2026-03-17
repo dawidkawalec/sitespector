@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
@@ -137,7 +138,7 @@ export default function QuickWinsPage({ params }: { params: { id: string } }) {
             </div>
             <div>
               <h1 className="text-3xl font-bold">Quick Wins</h1>
-              <p className="text-muted-foreground">Szybkie wygrane - łatwe do wdrożenia, duży wpływ</p>
+              <p className="text-muted-foreground">Zadania z planu AI — łatwe do wdrożenia, duży wpływ</p>
             </div>
           </div>
         </div>
@@ -156,7 +157,7 @@ export default function QuickWinsPage({ params }: { params: { id: string } }) {
                   <p className="text-xs text-muted-foreground">
                     {audit?.execution_plan_status === 'processing'
                       ? 'To może potrwać 1-3 minuty. Quick wins pojawią się automatycznie.'
-                      : 'Wygeneruj plan, aby zobaczyć quick wins.'}
+                      : 'Wygeneruj plan AI, aby zobaczyć quick wins zadaniowe.'}
                   </p>
                 </div>
                 {audit?.execution_plan_status !== 'processing' && (
@@ -247,6 +248,17 @@ export default function QuickWinsPage({ params }: { params: { id: string } }) {
           </CardContent>
         </Card>
       )}
+
+      {/* Info: SEO keyword-based quick wins */}
+      <Card className="bg-muted/30">
+        <CardContent className="py-4">
+          <p className="text-sm text-muted-foreground">
+            Ta strona pokazuje <strong>zadania z planu AI</strong> oznaczone jako quick wins.
+            Quick wins bazujące na <strong>frazach kluczowych</strong> (pozycje 11-20, niska trudność) znajdziesz w{' '}
+            <Link href={`/audits/${params.id}/seo`} className="text-primary underline">zakładce SEO → Quick Wins</Link>.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -284,13 +284,21 @@ export default function SchemaPage({ params }: { params: { id: string } }) {
           )}
 
           {!found ? (
-            <Card className="border-red-200 bg-red-50/30 dark:bg-red-950/10">
+            <Card className={`${(!schemaV2 && !schemaLegacy) || audit?.crawl_blocked ? 'border-amber-200 bg-amber-50/30 dark:bg-amber-950/10' : 'border-red-200 bg-red-50/30 dark:bg-red-950/10'}`}>
               <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2 text-red-700">
+                <CardTitle className={`text-base flex items-center gap-2 ${(!schemaV2 && !schemaLegacy) || audit?.crawl_blocked ? 'text-amber-700' : 'text-red-700'}`}>
                   <AlertTriangle className="h-5 w-5" />
-                  Brak danych Schema.org
+                  {(!schemaV2 && !schemaLegacy) || audit?.crawl_blocked
+                    ? 'Nie udało się przeanalizować Schema.org'
+                    : 'Brak danych Schema.org na stronie'}
                 </CardTitle>
-                <CardDescription>Brak schema ogranicza rich results i zrozumienie strony przez crawlery AI.</CardDescription>
+                <CardDescription>
+                  {audit?.crawl_blocked
+                    ? 'Strona zablokowała crawlera — analiza Schema mogła być niepełna. Uruchom nowy audyt po odblokowaniu dostępu.'
+                    : (!schemaV2 && !schemaLegacy)
+                      ? 'Analiza Schema nie została przeprowadzona. Prawdopodobnie wystąpił błąd podczas pobierania HTML strony. Spróbuj uruchomić nowy audyt.'
+                      : 'Na stronie nie wykryto danych Schema.org (JSON-LD). Oznacza to, że strona nie implementuje structured data. Brak schema ogranicza rich results i zrozumienie strony przez crawlery AI.'}
+                </CardDescription>
               </CardHeader>
             </Card>
           ) : (

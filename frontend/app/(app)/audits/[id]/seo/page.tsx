@@ -155,24 +155,34 @@ function QuickWinKeywordsTab({ positions }: { positions: any[] }) {
           <CardDescription>
             {quickWins.length > 0
               ? `${formatNumber(quickWins.length)} fraz na stronie 2 z potencjałem wejścia na stronę 1.`
-              : 'Brak fraz spełniających kryteria quick wins.'}
+              : positions.length === 0
+                ? 'Brak danych o pozycjach z Senuto. Domena może nie mieć wystarczającej widoczności lub Senuto API nie zwróciło danych dla tego audytu.'
+                : `Przeskanowano ${formatNumber(positions.length)} fraz, ale żadna nie spełnia kryteriów quick win (pozycja 11-20, SV >= 100, difficulty <= 40). Domena może być już dobrze zoptymalizowana lub nie rankuje na frazy o niskiej trudności.`}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DataExplorerTable
-            data={quickWins}
-            columns={[
-              { key: 'keyword', label: 'Fraza', className: 'font-medium max-w-[260px]', maxWidth: '260px' },
-              { key: 'position', label: 'Pozycja' },
-              { key: 'searches', label: 'Search Volume', render: (v: any) => formatNumber(v) },
-              { key: 'difficulty', label: 'Difficulty' },
-              { key: 'estimated_traffic_gain', label: 'Szac. gain', render: (v: any) => formatNumber(v) },
-              { key: 'url', label: 'URL', className: 'max-w-[300px]', maxWidth: '300px' },
-            ]}
-            pageSize={20}
-            exportFilename="seo_quick_win_keywords"
-            searchPlaceholder="Szukaj frazy lub URL..."
-          />
+          {quickWins.length > 0 ? (
+            <DataExplorerTable
+              data={quickWins}
+              columns={[
+                { key: 'keyword', label: 'Fraza', className: 'font-medium max-w-[260px]', maxWidth: '260px' },
+                { key: 'position', label: 'Pozycja' },
+                { key: 'searches', label: 'Wolumen wyszukiwań', render: (v: any) => formatNumber(v) },
+                { key: 'difficulty', label: 'Trudność' },
+                { key: 'estimated_traffic_gain', label: 'Szac. gain', render: (v: any) => formatNumber(v) },
+                { key: 'url', label: 'URL', className: 'max-w-[300px]', maxWidth: '300px' },
+              ]}
+              pageSize={20}
+              exportFilename="seo_quick_win_keywords"
+              searchPlaceholder="Szukaj frazy lub URL..."
+            />
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              {positions.length === 0
+                ? 'Dane Senuto są wymagane do analizy Quick Wins. Upewnij się, że domena jest śledzona w Senuto i uruchom nowy audyt.'
+                : 'Wszystkie frazy są poza zakresem quick win. Rozważ optymalizację fraz z pozycji 4-10 lub budowanie treści na nowe frazy.'}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

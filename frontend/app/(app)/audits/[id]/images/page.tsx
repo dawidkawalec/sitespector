@@ -15,7 +15,8 @@ import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Image as ImageIcon, AlertCircle, CheckCircle2, XCircle, HardDrive } from 'lucide-react'
+import { Loader2, Image as ImageIcon, AlertCircle, CheckCircle2, XCircle, HardDrive, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { ImageSizeChart } from '@/components/AuditCharts'
 import { toast } from 'sonner'
 import type { Audit } from '@/lib/api'
@@ -137,7 +138,29 @@ function OverviewTab({ imagesData, allImages, params, generatingAlt, aiAlts, han
             data={allImages}
             columns={[
               { key: 'url', label: 'URL', className: 'font-medium truncate', maxWidth: '300px' },
-              { key: 'alt_text', label: 'ALT Text', render: (v: any) => v || <Badge variant="destructive">Brak</Badge> },
+              { key: 'alt_text', label: 'ALT Text', render: (v: any, row: any) => {
+                const imageUrl = row?.url || ''
+                if (aiAlts[imageUrl]) return <span className="text-xs text-green-600">{aiAlts[imageUrl]}</span>
+                if (v) return v
+                return (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="destructive">Brak</Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-xs"
+                      disabled={generatingAlt[imageUrl]}
+                      onClick={(e) => { e.stopPropagation(); handleGenerateAlt(imageUrl) }}
+                    >
+                      {generatingAlt[imageUrl] ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <><Sparkles className="h-3 w-3 mr-1" />Generuj ALT</>
+                      )}
+                    </Button>
+                  </div>
+                )
+              }},
               { key: 'size_bytes', label: 'Rozmiar', render: (v: any) => formatBytes(v) },
               { key: 'format', label: 'Format' },
             ]}

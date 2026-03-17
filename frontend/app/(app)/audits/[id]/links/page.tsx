@@ -252,7 +252,7 @@ function OrphanPagesTab({ allPages }: { allPages: any[] }) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>High Value Orphans</CardDescription>
+            <CardDescription>Wartościowe orphany</CardDescription>
             <CardTitle className="text-3xl font-bold">{formatNumber(highValueOrphans.length)}</CardTitle>
           </CardHeader>
           <CardContent>
@@ -316,7 +316,7 @@ function InternalLinkDistributionTab({ allPages }: { allPages: any[] }) {
       <div className="grid grid-cols-1 @md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Link deserts</CardDescription>
+            <CardDescription>Pustynie linkowe</CardDescription>
             <CardTitle className="text-3xl font-bold">{formatNumber(linkDeserts)}</CardTitle>
           </CardHeader>
           <CardContent>
@@ -376,7 +376,12 @@ function InternalLinkDistributionTab({ allPages }: { allPages: any[] }) {
 function IncomingLinksTab({ senuto, audit }: { senuto: any; audit: Audit }) {
   const [searchTerm, setSearchTerm] = useState('')
   const bl = senuto?.backlinks || {}
-  const hasBacklinksData = Boolean(senuto?.backlinks)
+  const hasBacklinksData = Boolean(
+    senuto?.backlinks && (
+      (Array.isArray(senuto.backlinks.list) && senuto.backlinks.list.length > 0) ||
+      Number(senuto.backlinks.statistics?.backlinks_count || 0) > 0
+    )
+  )
 
   const stats = bl.statistics || {}
   const attrs = bl.link_attributes?.[audit.url.replace(/https?:\/\/(www\.)?/, '').replace(/\/$/, '')] || []
@@ -535,7 +540,30 @@ function IncomingLinksTab({ senuto, audit }: { senuto: any; audit: Audit }) {
     { key: 'examples', label: 'Przykłady', className: 'max-w-[360px]', maxWidth: '360px' },
   ]
 
-  if (!hasBacklinksData) return <p className="text-muted-foreground py-8 text-center">Brak danych o linkach przychodzących.</p>
+  if (!hasBacklinksData) return (
+    <Card className="border-amber-200 dark:border-amber-900 bg-amber-500/5">
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Info className="h-5 w-5 text-amber-600" />
+          Brak danych o linkach przychodzących
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Dane o backlinkach są pobierane z Senuto API. Możliwe przyczyny braku danych:
+        </p>
+        <ul className="text-sm text-muted-foreground space-y-1 list-disc pl-5">
+          <li>Senuto API nie zwróciło danych dla tej domeny</li>
+          <li>Domena jest zbyt nowa lub nie ma backlinków w bazie Senuto</li>
+          <li>Limit API został osiągnięty podczas tego audytu</li>
+          <li>Senuto nie śledzi tej domeny (wymagana widoczność w polskim Google)</li>
+        </ul>
+        <p className="text-xs text-muted-foreground italic">
+          Aby uzyskać dane o backlinkach, upewnij się, że domena ma widoczność w Senuto i uruchom nowy audyt.
+        </p>
+      </CardContent>
+    </Card>
+  )
 
   return (
     <div className="space-y-6">
@@ -666,6 +694,114 @@ function IncomingLinksTab({ senuto, audit }: { senuto: any; audit: Audit }) {
   )
 }
 
+function ExternalLinksTab({ externalLinks, allPages }: { externalLinks: any; allPages: any[] }) {
+  const totalExternal = Number(externalLinks?.total || 0)
+  const brokenExternal = Array.isArray(externalLinks?.broken) ? externalLinks.broken : []
+  const byDomain = Array.isArray(externalLinks?.by_domain)
+    ? externalLinks.by_domain
+    : Object.entries(externalLinks?.by_domain || {}).map(([domain, count]) => ({ domain, count: Number(count) }))
+  const sortedDomains = [...byDomain].sort((a: any, b: any) => Number(b.count || b.links || 0) - Number(a.count || a.links || 0))
+
+  const pagesWithExternal = allPages
+    .filter((p: any) => Number(p?.external_outlinks || 0) > 0)
+    .map((p: any) => ({
+      url: p.url,
+      external_outlinks: Number(p.external_outlinks || 0),
+      status_code: p.status_code,
+    }))
+    .sort((a, b) => b.external_outlinks - a.external_outlinks)
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 @md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Linki zewnętrzne (total)</CardDescription>
+            <CardTitle className="text-3xl font-bold">{formatNumber(totalExternal)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Zepsute zewnętrzne</CardDescription>
+            <CardTitle className={`text-3xl font-bold ${brokenExternal.length > 0 ? 'text-red-600' : 'text-green-600'}`}>
+              {formatNumber(brokenExternal.length)}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Unikalne domeny</CardDescription>
+            <CardTitle className="text-3xl font-bold">{formatNumber(sortedDomains.length)}</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {brokenExternal.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Link2Off className="h-5 w-5 text-red-600" />
+              Zepsute linki zewnętrzne
+            </CardTitle>
+            <CardDescription>Linki wychodzące prowadzące do niedziałających stron</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataExplorerTable
+              data={brokenExternal}
+              columns={[
+                { key: 'url', label: 'URL docelowy', className: 'font-medium max-w-[320px]', maxWidth: '320px' },
+                { key: 'status_code', label: 'Status', render: (v: any) => <Badge variant="destructive">{v}</Badge> },
+                { key: 'source_page', label: 'Strona źródłowa', className: 'max-w-[280px]', maxWidth: '280px' },
+              ]}
+              pageSize={15}
+              exportFilename="linki_zewn_zepsute"
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Domeny zewnętrzne</CardTitle>
+          <CardDescription>Do jakich domen prowadzą linki wychodzące ze strony</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataExplorerTable
+            data={sortedDomains}
+            columns={[
+              { key: 'domain', label: 'Domena', className: 'font-medium max-w-[320px]', maxWidth: '320px' },
+              { key: 'count', label: 'Liczba linków', render: (v: any, row: any) => formatNumber(Number(v || row?.links || 0)) },
+            ]}
+            pageSize={20}
+            exportFilename="linki_zewn_domeny"
+            searchPlaceholder="Szukaj domeny..."
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Strony z linkami zewnętrznymi</CardTitle>
+          <CardDescription>Które strony linkują najczęściej na zewnątrz</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataExplorerTable
+            data={pagesWithExternal}
+            columns={[
+              { key: 'url', label: 'URL strony', className: 'font-medium max-w-[360px]', maxWidth: '360px' },
+              { key: 'external_outlinks', label: 'Linki zewn.', render: (v: any) => formatNumber(v) },
+              { key: 'status_code', label: 'Status', render: (v: any) => <Badge variant={v === 200 ? 'default' : 'destructive'}>{v}</Badge> },
+            ]}
+            pageSize={20}
+            exportFilename="linki_zewn_strony"
+            searchPlaceholder="Szukaj URL..."
+          />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 function RawDataTab({ audit }: { audit: Audit }) {
   const [activeDataset, setActiveDataset] = useState('internal')
   const rawTabs = audit.results?.crawl?.sf_raw_tabs || {}
@@ -713,7 +849,7 @@ function LinksPageInner({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     const tab = searchParams.get('tab')
-    if (tab === 'incoming' || tab === 'internal' || tab === 'orphan' || tab === 'distribution' || tab === 'raw') {
+    if (tab === 'incoming' || tab === 'internal' || tab === 'external' || tab === 'orphan' || tab === 'distribution' || tab === 'raw') {
       setActiveTab(tab)
     }
   }, [searchParams])
@@ -839,6 +975,12 @@ function LinksPageInner({ params }: { params: { id: string } }) {
                 {formatNumber(senuto?.backlinks?.list?.length || 0)}
               </Badge>
             </TabsTrigger>
+            <TabsTrigger value="external">
+              Zewnętrzne
+              <Badge variant="secondary" className="ml-2 text-[9px] h-4 px-1">
+                {formatNumber(audit.results?.crawl?.external_links?.total || 0)}
+              </Badge>
+            </TabsTrigger>
             <TabsTrigger value="orphan">
               Orphan Pages
               <Badge variant="secondary" className="ml-2 text-[9px] h-4 px-1">
@@ -855,6 +997,10 @@ function LinksPageInner({ params }: { params: { id: string } }) {
 
           <TabsContent value="incoming" className="pt-6">
             <IncomingLinksTab senuto={senuto} audit={audit!} />
+          </TabsContent>
+
+          <TabsContent value="external" className="pt-6">
+            <ExternalLinksTab externalLinks={audit.results?.crawl?.external_links} allPages={allPages} />
           </TabsContent>
 
           <TabsContent value="orphan" className="pt-6">

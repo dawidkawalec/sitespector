@@ -286,7 +286,7 @@ function renderTechStackTab(techStack: any) {
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground uppercase font-bold">Protokół</p>
-                <Badge variant="outline">HTTP/2</Badge>
+                <Badge variant="outline">{techStack.protocol || 'Nieznany'}</Badge>
               </div>
             </div>
           </CardContent>
@@ -294,28 +294,6 @@ function renderTechStackTab(techStack: any) {
       </div>
 
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Shield className="h-4 w-4 text-green-600" />
-              Bezpieczeństwo stacku
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center text-sm">
-              <span>Wersje bibliotek</span>
-              <Badge variant="outline">Aktualne</Badge>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span>Znane luki (CVE)</span>
-              <Badge variant="outline" className="text-green-600 border-green-600">0 wykryto</Badge>
-            </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed italic">
-              Analiza bazuje na publicznie dostępnych informacjach z nagłówków i kodu źródłowego.
-            </p>
-          </CardContent>
-        </Card>
-
         <Card className="bg-primary/5 border-primary/20">
           <CardHeader>
             <CardTitle className="text-sm">Rekomendacje architektury</CardTitle>
@@ -655,58 +633,6 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
         isExecutionPlanLoading={audit?.execution_plan_status === 'processing'}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Stan i szybkie akcje</CardTitle>
-          <CardDescription>Diagnostyka danych grafu, analiza AI i rerun planu dla tego audytu.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 @lg:grid-cols-2 gap-4">
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
-              <span className="text-muted-foreground">Strony (all_pages)</span>
-              <strong>{formatNumber(rawGraphNodeCount)}</strong>
-            </div>
-            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
-              <span className="text-muted-foreground">Relacje (link_graph)</span>
-              <strong>{formatNumber(rawGraphEdgeCount)}</strong>
-            </div>
-            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
-              <span className="text-muted-foreground">AI context</span>
-              <Badge variant={aiContext ? 'default' : 'secondary'}>{aiContext ? 'Gotowy' : 'Brak'}</Badge>
-            </div>
-            <div className="flex items-center justify-between rounded border bg-accent/5 px-3 py-2">
-              <span className="text-muted-foreground">Taski modułu</span>
-              <strong>{formatNumber(tasks.length)}</strong>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Button
-              className="w-full"
-              onClick={() => recalculateContextMutation.mutate()}
-              disabled={recalculateContextMutation.isPending || audit?.ai_status === 'processing'}
-            >
-              {recalculateContextMutation.isPending ? 'Przeliczanie...' : 'Przelicz analize Architecture'}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => generatePlanMutation.mutate()}
-              disabled={generatePlanMutation.isPending || audit?.execution_plan_status === 'processing'}
-            >
-              {generatePlanMutation.isPending ? 'Generowanie...' : 'Wygeneruj plan zadan'}
-            </Button>
-            {audit?.project_id ? (
-              <Link href={`/projects/${audit.project_id}`}>
-                <Button variant="ghost" className="w-full">
-                  Przejdz do projektu i uruchom nowy audyt (pelny rerun)
-                </Button>
-              </Link>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
-
       {mode === 'data' && (
         <Tabs defaultValue="site-map" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 max-w-[460px]">
@@ -756,9 +682,17 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
             {hasNoEdgesInRawGraph && (
               <Card className="border-amber-300 bg-amber-50/40 dark:bg-amber-950/15">
                 <CardContent className="pt-6 space-y-2">
-                  <p className="text-sm font-medium">W tym audycie nie wykryto relacji w `crawl.link_graph`.</p>
+                  <p className="text-sm font-medium">Nie wykryto połączeń między stronami</p>
                   <p className="text-xs text-muted-foreground">
-                    To najczęściej oznacza legacy payload albo niepełny eksport crawla. Widok pokazuje dane stron, ale bez krawędzi grafu.
+                    Graf pokazuje strony, ale bez relacji (krawędzi). Możliwe przyczyny:
+                  </p>
+                  <ul className="text-xs text-muted-foreground list-disc pl-5 space-y-1">
+                    <li>Crawl objął zbyt mało stron, aby wykryć relacje</li>
+                    <li>Strona ma małą liczbę linków wewnętrznych</li>
+                    <li>Dane z crawla nie zawierały informacji o linkach między stronami</li>
+                  </ul>
+                  <p className="text-xs text-muted-foreground">
+                    Aby uzyskać pełny graf, uruchom nowy audyt z większym limitem stron.
                   </p>
                   <div className="flex flex-wrap gap-2 pt-2">
                     <Button
@@ -1042,6 +976,11 @@ export default function ArchitecturePage({ params }: { params: { id: string } })
                         Dopasuj widok
                       </Button>
                     </div>
+                    {!selectedNodeId && !hasNoEdgesInRawGraph && (
+                      <p className="pt-2 text-xs text-amber-600 dark:text-amber-400">
+                        Kliknij węzeł na grafie, aby zobaczyć szczegóły strony i przefiltrować połączenia.
+                      </p>
+                    )}
                     {filteredOutCount > 0 ? (
                       <p className="pt-2 text-xs text-muted-foreground">
                         Ukryto przez filtry: {formatNumber(filteredOutCount)} stron.
