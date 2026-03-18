@@ -135,7 +135,7 @@ async def deduct_credits(
     user_id: str,
     amount: int,
     tx_type: str,
-    metadata: Optional[Dict[str, Any]] = None,
+    tx_metadata: Optional[Dict[str, Any]] = None,
 ) -> CreditTransaction:
     """
     Atomically deduct credits from workspace balance.
@@ -170,7 +170,7 @@ async def deduct_credits(
         type=tx_type,
         amount=-amount,
         balance_after=balance.total,
-        metadata=metadata,
+        tx_metadata=tx_metadata,
     )
     db.add(tx)
     await db.flush()
@@ -211,7 +211,7 @@ async def grant_credits(
         type=tx_type,
         amount=amount,
         balance_after=balance.total,
-        metadata=metadata,
+        tx_metadata=tx_metadata,
     )
     db.add(tx)
     await db.flush()
@@ -248,7 +248,7 @@ async def reset_subscription_credits(
         type="grant_subscription",
         amount=new_amount,  # net grant for the new cycle
         balance_after=balance.total,
-        metadata={"old_subscription_credits": old_sub, "new_subscription_credits": new_amount},
+        tx_metadata={"old_subscription_credits": old_sub, "new_subscription_credits": new_amount},
     )
     db.add(tx)
     await db.flush()

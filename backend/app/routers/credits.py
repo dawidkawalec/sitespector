@@ -106,7 +106,7 @@ async def list_credit_transactions(
             type=tx.type,
             amount=tx.amount,
             balance_after=tx.balance_after,
-            metadata=tx.metadata,
+            metadata=tx.tx_metadata,
             created_at=tx.created_at.isoformat() if tx.created_at else "",
         )
         for tx in transactions

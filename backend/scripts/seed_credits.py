@@ -70,7 +70,7 @@ async def seed():
                 type="grant_subscription",
                 amount=credits,
                 balance_after=credits,
-                metadata={"plan": plan, "seed": True},
+                tx_metadata={"plan": plan, "seed": True},
             )
             db.add(tx)
 

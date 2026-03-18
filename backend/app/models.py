@@ -591,7 +591,7 @@ class CreditTransaction(Base):
     type = Column(String(30), nullable=False, index=True)
     amount = Column(Integer, nullable=False)  # positive = credit, negative = debit
     balance_after = Column(Integer, nullable=False)
-    metadata = Column("metadata", JSONB, nullable=True)
+    tx_metadata = Column("metadata", JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     def __repr__(self) -> str:
