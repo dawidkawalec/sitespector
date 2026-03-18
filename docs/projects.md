@@ -9,10 +9,46 @@
 
 | Priorytet | Projekty | Dlaczego |
 |-----------|----------|----------|
-| **P0 — Blokery launch** | P1, P2, P3 | Bez nich nie da się uruchomić nowego cennika |
+| **P0 — Blokery launch** | ~~P1~~✅, ~~P2~~✅, ~~P3~~✅ | DONE — kredyty, cennik, paywall |
+| **BLOKER** | Stripe setup (Piotr) | Założyć konto, stworzyć produkty, wpisać klucze |
 | **P1 — Pre-launch** | P4, P9, P10 | Potrzebne przed kampaniami Meta Ads |
 | **P2 — Post-launch** | P5, P6, P7, P8 | Wzmacniają konwersję i retention |
 | **P3 — Skalowanie** | P11, P12, P13 | Długoterminowy growth |
+
+---
+
+## BLOKER: Konfiguracja Stripe (Piotr)
+
+**Konto Stripe musi założyć partner (Piotr).** Bez tego nie działają:
+- Checkout (upgrade planów)
+- Zakup pakietów kredytów
+- Webhook (grant kredytów po płatności)
+
+**Co trzeba zrobić:**
+1. Założyć konto Stripe (lub aktywować istniejące)
+2. Stworzyć 10 produktów/cen (skrypt gotowy — uruchomić po uzyskaniu klucza):
+   - 3 subskrypcje × 2 okresy = 6 cen (Solo/Agency/Enterprise × monthly/annual)
+   - 4 pakiety kredytów (Starter $4.99, Standard $12.99, Pro $34.99, Agency $89.99)
+3. Wpisać klucze do .env na VPS:
+   - `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`
+   - 6 price ID subskrypcji + 4 price ID pakietów
+4. Skonfigurować webhook w Stripe Dashboard: URL `https://sitespector.app/api/billing/webhook`
+5. Restart backend: `docker compose -f docker-compose.prod.yml restart backend worker`
+
+**Status:** Czeka na Piotra
+
+---
+
+## Ukończone
+
+### P1: System Kredytowy ✅ (2026-03-18)
+Commit: b9b1d4d + 37600ec. Tabele credit_balances + credit_transactions, credit_service.py, wiring do audits/chat/billing/worker.
+
+### P2: Nowy Cennik Stripe ✅ (2026-03-18)
+Commit: 8414221. 5 planów, dynamic pricing, purchase-credits, /plans API, landing pricing.
+
+### P3: Blurowanie Raportów Free ✅ (2026-03-18)
+Commit: 9d75efd. PaywallOverlay, usePlanGate, blur w AnalysisView/TaskListView/PDF.
 
 ---
 
@@ -23,58 +59,6 @@
 ---
 
 ## Backlog
-
-### P1: System Kredytowy (Backend + Frontend) — KRYTYCZNY
-
-**Zakres:** Implementacja kompletnego systemu kredytów jako uniwersalnej waluty platformy.
-
-**Co obejmuje:**
-- Tabela `credits` w DB (balance, transactions, plan_id)
-- Zużycie per akcja: audyt=30kr (20 tech + 10 AI), chat=1kr, competitor=3kr
-- Limity per plan (Free: 50 jednorazowo, Solo: 100/msc, Agency: 400/msc, Enterprise: 2000/msc)
-- Free: blokada dokupywania kredytów
-- UI: widget salda kredytów, historia transakcji
-- Alembic migracja + seedowanie istniejących userów
-
-**Zależności:** Musi być przed P2 i P3.
-
-**Status:** Backlog
-
----
-
-### P2: Nowy Cennik Stripe (Backend + Frontend) — KRYTYCZNY
-
-**Zakres:** Przebudowa z 3 planów na 5 + pakiety kredytów + annual billing.
-
-**Co obejmuje:**
-- Stripe Dashboard: 4 plany × 2 okresy (monthly/annual) + 4 pakiety kredytów (one-time)
-- Backend: mapowanie plan → credit_limit, webhook obsługa pakietów
-- Frontend /pricing: nowa strona cennika (4 karty + toggle monthly/annual + decoy effect na Agency)
-- Frontend /settings/billing: nowy billing UI z upgradem/downgradem
-- Gating: Solo/Agency/Enterprise features (harmonogramy, branding, white-label)
-- Migracja istniejących Free/Pro/Enterprise userów na nowe plany
-
-**Zależności:** P1 musi być gotowy.
-
-**Status:** Backlog
-
----
-
-### P3: Blurowanie Raportów Free (Frontend) — KRYTYCZNY
-
-**Zakres:** Implementacja paywalla w Free tier — raport 80% zblurowany jako natural FOMO trigger.
-
-**Co obejmuje:**
-- Frontend: komponent blurowania (CSS blur + overlay z CTA "Odblokuj pełny raport")
-- Logika: które sekcje widoczne (20%), które zblurowane (80%)
-- CTA do upgrade na stronie wyników audytu
-- Zblurowany Execution Plan (widać tytuły zadań, nie widać detali/kodu)
-
-**Aha moment:** Częściowe dane tech + AI Chat + zblurowany Execution Plan.
-
-**Status:** Backlog
-
----
 
 ### P4: Aktualizacja Landing Page (Frontend Landing) — WYSOKI
 
