@@ -1,5 +1,11 @@
 # Architectural Decisions Log
 
+## ADR-072: P7 Branding & White-Label PDF (2026-03-18)
+
+- **Decision**: Dwa poziomy brandingu: Agency+ = logo na PDF (cover + footer), Enterprise = full white-label (company name, kontakt, kolory, usunięcie "SiteSpector"). Branding przechowywany w Supabase `workspaces` table (5 kolumn branding_*). Logo uploadowane do Supabase Storage bucket `branding-logos`.
+- **Rationale**: Naturalna ścieżka upsell: Agency → Enterprise. Logo jest niskokosztowe (tylko obraz), white-label wymaga większej customizacji (kolory CSS, tekst w 5+ szablonach).
+- **Trade-off**: Jinja2 globals zamiast per-template context (prostsze ale shared state — czyszczone po render). CSS accent color via string replace (nie Jinja2 CSS template — prostsze, wystarczające).
+
 ## ADR-071: P4 Landing cleanup — usunięcie placeholderów i fake danych (2026-03-18)
 
 - **Decision**: Usunięto fake testimoniale (i.pravatar.cc), fake stats (200K, 98%, 1M), placeholder telefon, "wkrótce" labele, dev notes z produkcji. Zastąpiono prawdziwymi danymi: integracje (SF/Lighthouse/Senuto/Gemini), metryki produktu (9 AI, 200 tasks, 30 min), prawdziwe ceny na stronach segmentowych.

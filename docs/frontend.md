@@ -80,6 +80,7 @@ Location: `frontend/`
 | `notifications` | Notification preferences |
 | `team` | Workspace members & roles |
 | `agents` | AI agent configuration |
+| `branding` | PDF branding: logo upload (Agency+), white-label settings (Enterprise) |
 | `schedules` | Scheduled audits management |
 
 ### Admin `/admin/...`

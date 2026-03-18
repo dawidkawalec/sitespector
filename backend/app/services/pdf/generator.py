@@ -13,6 +13,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from weasyprint import HTML, CSS
 
 from app.config import settings
+from app.lib.supabase import get_workspace_branding, get_workspace_subscription
 from .config import get_report_config, ReportTypeConfig
 from .styles import get_pdf_css
 from .utils import build_skipped_sections_notes, safe_get, truncate
@@ -219,7 +220,7 @@ def _build_toc(cfg: ReportTypeConfig, skipped: List[Dict]) -> List[Dict]:
 
 
 def _render_section(template_name: str, ctx: Dict) -> str:
-    """Render a section template to HTML string."""
+    """Render a section template to HTML string. Branding is injected via _jinja_env.globals."""
     try:
         tmpl = _jinja_env.get_template(f"sections/{template_name}.html")
         return tmpl.render(**ctx)
@@ -264,6 +265,7 @@ async def generate_pdf(
     audit_data: Dict[str, Any],
     tasks_list: Optional[List[Dict]] = None,
     report_type: str = "standard",
+    workspace_id: Optional[str] = None,
 ) -> str:
     """
     Generate PDF report for a completed audit.
@@ -273,6 +275,7 @@ async def generate_pdf(
         audit_data: Full audit dict from DB (with .results JSONB)
         tasks_list: List of audit_tasks dicts (from audit_tasks table)
         report_type: 'executive' | 'standard' | 'full'
+        workspace_id: Optional workspace UUID for branding lookup
 
     Returns:
         Path to generated PDF file
@@ -296,6 +299,43 @@ async def generate_pdf(
     configured_logo_src = (getattr(settings, "PDF_COVER_LOGO_SRC", "") or "").strip()
     cover_logo_src = configured_logo_src or DEFAULT_BRAND_LOGO_SRC
 
+    # ---- Workspace branding ----
+    branding = {
+        "logo_src": cover_logo_src,
+        "company_name": "SiteSpector",
+        "contact_email": "kontakt@sitespector.pl",
+        "contact_url": "sitespector.pl",
+        "accent_color": "#ff8945",
+        "is_whitelabel": False,
+    }
+
+    if workspace_id:
+        try:
+            ws_branding = await get_workspace_branding(workspace_id)
+            subscription = await get_workspace_subscription(workspace_id)
+            plan = (subscription or {}).get("plan", "free")
+
+            # Agency+: custom logo
+            if ws_branding.get("branding_logo_url"):
+                branding["logo_src"] = ws_branding["branding_logo_url"]
+
+            # Enterprise: full white-label
+            if plan == "enterprise":
+                if ws_branding.get("branding_company_name"):
+                    branding["company_name"] = ws_branding["branding_company_name"]
+                    branding["is_whitelabel"] = True
+                if ws_branding.get("branding_contact_email"):
+                    branding["contact_email"] = ws_branding["branding_contact_email"]
+                if ws_branding.get("branding_contact_url"):
+                    branding["contact_url"] = ws_branding["branding_contact_url"]
+                if ws_branding.get("branding_accent_color"):
+                    branding["accent_color"] = ws_branding["branding_accent_color"]
+        except Exception as e:
+            logger.warning(f"Failed to fetch workspace branding: {e}")
+
+    # Override cover_logo_src with branding
+    cover_logo_src = branding["logo_src"]
+
     # ---- Pre-check data availability ----
     senuto = results.get("senuto") or {}
     has_senuto = bool(senuto and senuto.get("visibility"))
@@ -311,6 +351,9 @@ async def generate_pdf(
         n = sec_counter[0]
         sec_counter[0] += 1
         return n
+
+    # ---- Inject branding into Jinja2 globals (available in all templates) ----
+    _jinja_env.globals["branding"] = branding
 
     # ---- Generate all section HTML blocks ----
     sections_html: List[str] = []
@@ -672,7 +715,7 @@ async def generate_pdf(
     body_content = "\n".join(sections_html)
     base_tmpl = _jinja_env.get_template("base.html")
     full_html = base_tmpl.render(
-        css=get_pdf_css(),
+        css=get_pdf_css(accent_color=branding["accent_color"]),
         content=body_content,
         audit_url=audit_url,
         audit_url_short=audit_url_short,
@@ -680,6 +723,9 @@ async def generate_pdf(
         generated_date=generated_date,
         brand_logo_src=cover_logo_src,
     )
+
+    # Clean up globals
+    _jinja_env.globals.pop("branding", None)
 
     # ---- Convert to PDF ----
     current_time = datetime.utcnow()

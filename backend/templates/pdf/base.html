@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>SiteSpector — Raport Audytu | {{ audit_url }}</title>
+    <title>{{ branding.company_name }} — Raport Audytu | {{ audit_url }}</title>
     <style>{{ css }}</style>
 </head>
 <body>
@@ -11,16 +11,16 @@
 {# Running header elements (referenced by @page margin boxes)  #}
 {# ============================================================ #}
 <div id="running-header-logo">
-    <img src="{{ brand_logo_src }}" alt="SiteSpector" class="running-logo-image" />
+    <img src="{{ brand_logo_src }}" alt="{{ branding.company_name }}" class="running-logo-image" />
 </div>
 <div id="running-header-right">
     {{ audit_url_short }} &nbsp;|&nbsp; {{ report_label }}
 </div>
 <div id="running-footer-brand">
-    <img src="{{ brand_logo_src }}" alt="SiteSpector" class="running-footer-logo-image" />
+    <img src="{{ brand_logo_src }}" alt="{{ branding.company_name }}" class="running-footer-logo-image" />
 </div>
 <div id="running-footer-text">
-    <span class="running-footer-contact">sitespector.pl | kontakt@sitespector.pl</span>
+    <span class="running-footer-contact">{{ branding.contact_url }} | {{ branding.contact_email }}</span>
 </div>
 
 {# ============================================================ #}

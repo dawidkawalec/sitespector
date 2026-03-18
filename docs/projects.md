@@ -12,7 +12,7 @@
 | **P0 — Blokery launch** | ~~P1~~✅, ~~P2~~✅, ~~P3~~✅ | DONE — kredyty, cennik, paywall |
 | **BLOKER** | Stripe setup (Piotr) | Założyć konto, stworzyć produkty, wpisać klucze |
 | **P1 — Pre-launch** | ~~P4~~✅, P9, P10 | P4 done. P9 (pixel) + P10 (blog) przed Meta Ads |
-| **P2 — Post-launch** | ~~P5~~✅, P6, P7, P8 | P5 done. P6 (PQL) + P7 (branding) + P8 (pakiety) |
+| **P2 — Post-launch** | ~~P5~~✅, P6, ~~P7~~✅, P8 | P5+P7 done. P6 (PQL) + P8 (pakiety) |
 | **P3 — Skalowanie** | P11, P12, P13 | Długoterminowy growth |
 
 ---
@@ -75,20 +75,6 @@ Commit: 22dd9d2. /demo route w frontend (public), mock audit overview (156 stron
 - Email sequences: onboarding (dzień 0/2/14), upgrade nudge, reactivation
 - Integracja z CRM (Twenty CRM?)
 - Dashboard admin: lista PQL z scoringiem
-
-**Status:** Backlog
-
----
-
-### P7: Branding & White-Label PDF (Frontend + Backend) — ŚREDNI
-
-**Zakres:** Branding raportów od Agency, full white-label od Enterprise.
-
-**Co obejmuje:**
-- Agency: upload logo klienta, logo na raportach PDF
-- Enterprise: pełne brandowanie (kolory, logo, nazwa firmy, usunięcie "SiteSpector")
-- UI: /settings/branding z uploadem logo i wyborem kolorów
-- Backend: template PDF z dynamicznym brandingiem
 
 **Status:** Backlog
 

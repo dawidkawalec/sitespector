@@ -3,9 +3,9 @@ CSS styles for PDF report generation via WeasyPrint.
 """
 
 
-def get_pdf_css() -> str:
+def get_pdf_css(accent_color: str = "#ff8945") -> str:
     """Return the complete CSS string for the PDF report."""
-    return """
+    css = """
 @font-face {
     font-family: "DejaVu Sans";
     src: local("DejaVu Sans");
@@ -196,7 +196,7 @@ li {
     width: 54px;
     height: 0;
     margin: 0 auto 24px auto;
-    border-top: 2px solid #ff8945;
+    border-top: 2px solid {{ACCENT_COLOR}};
 }
 .cover-url-box {
     width: 100%;
@@ -673,3 +673,4 @@ tr:last-child td { border-bottom: none; }
 }
 
 """
+    return css.replace("{{ACCENT_COLOR}}", accent_color)

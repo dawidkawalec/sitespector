@@ -2,7 +2,7 @@
 <div class="cover-page">
     <div class="cover-main">
         <div class="cover-logo-wrap">
-            <img src="{{ cover_logo_src }}" alt="SiteSpector" class="cover-logo-image" />
+            <img src="{{ cover_logo_src }}" alt="{{ branding.company_name }}" class="cover-logo-image" />
         </div>
 
         <div class="cover-title">Profesjonalny Audyt SEO & AI</div>
@@ -19,7 +19,7 @@
     </div>
 
     <div class="cover-footer-note">
-        <img src="{{ cover_logo_src }}" alt="SiteSpector" class="cover-footer-logo" />
-        <div>sitespector.pl &nbsp;·&nbsp; kontakt@sitespector.pl</div>
+        <img src="{{ cover_logo_src }}" alt="{{ branding.company_name }}" class="cover-footer-logo" />
+        <div>{{ branding.contact_url }} &nbsp;·&nbsp; {{ branding.contact_email }}</div>
     </div>
 </div>

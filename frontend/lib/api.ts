@@ -7,10 +7,10 @@
 import { supabase } from './supabase'
 import { getImpersonationSession } from './impersonation'
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/api$/, '')
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/api$/, '')
 
 // Get Supabase session token (with auto-refresh)
-async function getSupabaseToken(): Promise<string | null> {
+export async function getSupabaseToken(): Promise<string | null> {
   try {
     // Try to refresh session first to ensure token is valid
     const { data: { session }, error } = await supabase.auth.getSession()
@@ -813,5 +813,55 @@ export const billingAPI = {
   createPortalSession: (workspaceId: string) =>
     apiRequest<{ portal_url: string }>(`/api/billing/create-portal-session?workspace_id=${workspaceId}`, {
       method: 'POST',
+    }),
+}
+
+// --- Branding API ---
+
+export interface BrandingSettings {
+  branding_logo_url: string | null
+  branding_company_name: string | null
+  branding_contact_email: string | null
+  branding_contact_url: string | null
+  branding_accent_color: string | null
+}
+
+export const brandingAPI = {
+  get: (workspaceId: string) =>
+    apiRequest<BrandingSettings>(`/api/branding?workspace_id=${workspaceId}`),
+
+  update: (workspaceId: string, data: Partial<BrandingSettings>) =>
+    apiRequest<BrandingSettings>(`/api/branding?workspace_id=${workspaceId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  uploadLogo: async (workspaceId: string, file: File): Promise<BrandingSettings> => {
+    const token = await getSupabaseToken()
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(
+      `${API_URL}/api/branding/logo?workspace_id=${workspaceId}`,
+      {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      }
+    )
+
+    if (!response.ok) {
+      const err = await response.text().catch(() => '')
+      throw new Error(err || `HTTP ${response.status}`)
+    }
+
+    return response.json()
+  },
+
+  deleteLogo: (workspaceId: string) =>
+    apiRequest<BrandingSettings>(`/api/branding/logo?workspace_id=${workspaceId}`, {
+      method: 'DELETE',
     }),
 }

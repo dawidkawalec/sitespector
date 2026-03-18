@@ -909,6 +909,34 @@ Creates Stripe checkout for one-time credit package purchase. Requires Solo+ pla
 
 ---
 
+## Branding Endpoints
+
+Workspace branding for PDF white-label. Agency+ can upload logo. Enterprise can set full white-label (company name, contact, colors).
+
+#### `GET /api/branding?workspace_id=<UUID>`
+
+Returns branding settings for workspace.
+
+**Response**: `{ branding_logo_url, branding_company_name, branding_contact_email, branding_contact_url, branding_accent_color }`
+
+#### `PATCH /api/branding?workspace_id=<UUID>`
+
+Update branding settings. Requires admin role. Enterprise fields (company_name, contact, colors) blocked for Agency.
+
+**Body**: `{ branding_company_name?, branding_contact_email?, branding_contact_url?, branding_accent_color? }`
+
+#### `POST /api/branding/logo?workspace_id=<UUID>`
+
+Upload branding logo (Agency+ required). Max 2 MB, PNG/JPG/SVG/WebP. Multipart form data.
+
+**Response**: Updated branding settings with `branding_logo_url` set.
+
+#### `DELETE /api/branding/logo?workspace_id=<UUID>`
+
+Remove branding logo. Requires admin role.
+
+---
+
 ## Schedules Endpoints
 
 Recurring audit schedules scoped to a workspace (and optionally a project). All endpoints require **Supabase JWT** authentication and workspace membership.

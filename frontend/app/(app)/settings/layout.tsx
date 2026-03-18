@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { User, Users, CreditCard, Calendar, Palette, Bell, Sparkles } from 'lucide-react'
+import { User, Users, CreditCard, Calendar, Palette, Bell, Sparkles, Stamp } from 'lucide-react'
 import { NavItem } from '@/components/layout/NavItem'
 
 const settingsItems = [
@@ -11,6 +11,7 @@ const settingsItems = [
   { href: '/settings/team', label: 'Zespol', icon: Users },
   { href: '/settings/billing', label: 'Platnosci', icon: CreditCard },
   { href: '/settings/schedules', label: 'Automatyzacja', icon: Calendar },
+  { href: '/settings/branding', label: 'Branding', icon: Stamp },
   { href: '/settings/appearance', label: 'Wyglad', icon: Palette },
   { href: '/settings/notifications', label: 'Powiadomienia', icon: Bell },
   { href: '/settings/agents', label: 'Agenci czatu', icon: Sparkles },

@@ -120,6 +120,60 @@ async def check_audit_limit(workspace_id: str) -> bool:
     return subscription["audits_used_this_month"] < subscription["audit_limit"]
 
 
+# --- Branding helpers ---
+
+
+BRANDING_FIELDS = (
+    "branding_logo_url",
+    "branding_company_name",
+    "branding_contact_email",
+    "branding_contact_url",
+    "branding_accent_color",
+)
+
+BRANDING_DEFAULTS = {
+    "branding_logo_url": None,
+    "branding_company_name": None,
+    "branding_contact_email": None,
+    "branding_contact_url": None,
+    "branding_accent_color": None,
+}
+
+
+async def get_workspace_branding(workspace_id: str) -> dict:
+    """
+    Fetch branding settings for workspace.
+    Returns dict with branding_* fields (None if not set).
+    """
+    fields = ",".join(BRANDING_FIELDS)
+    response = supabase.table("workspaces").select(fields).eq(
+        "id", workspace_id
+    ).execute()
+
+    if not response.data:
+        return dict(BRANDING_DEFAULTS)
+
+    row = response.data[0]
+    return {k: row.get(k) for k in BRANDING_FIELDS}
+
+
+async def update_workspace_branding(workspace_id: str, updates: dict) -> dict:
+    """
+    Update branding settings for workspace.
+    Only accepts known branding_* fields.
+    Returns updated branding dict.
+    """
+    safe_updates = {k: v for k, v in updates.items() if k in BRANDING_FIELDS}
+    if not safe_updates:
+        return await get_workspace_branding(workspace_id)
+
+    supabase.table("workspaces").update(safe_updates).eq(
+        "id", workspace_id
+    ).execute()
+
+    return await get_workspace_branding(workspace_id)
+
+
 # --- Project helpers ---
 
 

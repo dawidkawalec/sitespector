@@ -381,8 +381,15 @@ Personal or team workspace -- auto-created for every new user.
 | slug | TEXT | UNIQUE, NOT NULL, indexed |
 | type | TEXT | NOT NULL, CHECK (personal/team) |
 | owner_id | UUID | FK -> auth.users(id) CASCADE, indexed |
+| branding_logo_url | TEXT | nullable, URL to uploaded logo (Supabase Storage) |
+| branding_company_name | TEXT | nullable, Enterprise white-label company name |
+| branding_contact_email | TEXT | nullable, Enterprise white-label contact email |
+| branding_contact_url | TEXT | nullable, Enterprise white-label contact URL |
+| branding_accent_color | TEXT | nullable, Enterprise white-label hex color (#RRGGBB) |
 | created_at | TIMESTAMPTZ | default now() |
 | updated_at | TIMESTAMPTZ | default now(), trigger-updated |
+
+**Branding**: Agency+ can set logo. Enterprise can set all branding fields for full white-label PDF reports.
 
 ---
 

@@ -729,6 +729,7 @@ async def download_audit_pdf(
             audit_data,
             tasks_list=tasks_list,
             report_type=report_type,
+            workspace_id=str(audit.workspace_id) if audit.workspace_id else None,
         )
         
         type_suffix = f"_{report_type}" if report_type != "standard" else ""
