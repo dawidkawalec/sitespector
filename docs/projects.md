@@ -12,7 +12,7 @@
 | **P0 — Blokery launch** | ~~P1~~✅, ~~P2~~✅, ~~P3~~✅ | DONE — kredyty, cennik, paywall |
 | **BLOKER** | Stripe setup (Piotr) | Założyć konto, stworzyć produkty, wpisać klucze |
 | **P1 — Pre-launch** | ~~P4~~✅, P9, P10 | P4 done. P9 (pixel) + P10 (blog) przed Meta Ads |
-| **P2 — Post-launch** | P5, P6, P7, P8 | Wzmacniają konwersję i retention |
+| **P2 — Post-launch** | ~~P5~~✅, P6, P7, P8 | P5 done. P6 (PQL) + P7 (branding) + P8 (pakiety) |
 | **P3 — Skalowanie** | P11, P12, P13 | Długoterminowy growth |
 
 ---
@@ -53,6 +53,9 @@ Commit: 9d75efd. PaywallOverlay, usePlanGate, blur w AnalysisView/TaskListView/P
 ### P4: Aktualizacja Landing Page ✅ (2026-03-18)
 Commit: 0233cfd. Usunięto fake testimoniale/stats/telefon/dev notes. Prawdziwe ceny na /cennik, /dla-freelancerow, /dla-agencji-seo. Integracje zamiast testimoniali.
 
+### P5: Statyczne Demo ✅ (2026-03-18)
+Commit: 22dd9d2. /demo route w frontend (public), mock audit overview (156 stron, score 72), sidebar z zakładkami, CTA.
+
 ---
 
 ## W toku
@@ -62,20 +65,6 @@ Commit: 0233cfd. Usunięto fake testimoniale/stats/telefon/dev notes. Prawdziwe 
 ---
 
 ## Backlog
-
-### P5: Statyczne Demo (Frontend) — ŚREDNI
-
-**Zakres:** "Wydmuszka" bez logowania — pokazuje przykładowy raport audytu.
-
-**Co obejmuje:**
-- Strona /demo z przykładowym audytem (prerendered, bez API)
-- Nawigacja po zakładkach jak w prawdziwym audycie
-- Blurowane sekcje z CTA "Zacznij za darmo"
-- Link z landing page i cold outreach
-
-**Status:** Backlog
-
----
 
 ### P6: PQL Scoring & Automatyzacja Email (Backend) — ŚREDNI
 

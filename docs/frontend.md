@@ -17,6 +17,7 @@ Location: `frontend/`
 | `/` | Landing / homepage |
 | `/login` | Email + OAuth sign-in |
 | `/register` | New account registration |
+| `/demo` | Static demo audit (prerendered, no auth, mock data) |
 | `/sitemap` | Public HTML sitemap |
 | `/auth/callback` | OAuth / magic-link callback (outside route groups) |
 
