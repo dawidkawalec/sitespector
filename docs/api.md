@@ -866,6 +866,49 @@ Create a Stripe Customer Portal session for managing subscription (update paymen
 
 ---
 
+## Credits Endpoints
+
+Credit system — universal currency for audits and chat. All endpoints require **Supabase JWT** authentication and workspace membership.
+
+#### `GET /api/credits/balance?workspace_id=<UUID>`
+
+Returns credit balance for workspace.
+
+**Response**: `{ subscription_credits, purchased_credits, total, plan, credits_per_cycle }`
+
+#### `GET /api/credits/transactions?workspace_id=<UUID>&limit=20&offset=0`
+
+Returns paginated credit transaction history (newest first).
+
+**Response**: `[{ id, type, amount, balance_after, metadata, created_at }]`
+
+#### `GET /api/credits/packages`
+
+Returns available credit packages for purchase (no auth required).
+
+**Response**: `[{ id, label, credits, price_cents }]`
+
+#### `GET /api/credits/cost-estimate?run_ai_pipeline=true&competitors_count=0`
+
+Returns estimated credit cost for an audit configuration.
+
+**Response**: `{ total_cost, breakdown: { tech, ai, competitors } }`
+
+#### `GET /api/billing/plans`
+
+Returns pricing plans for the pricing page (no auth required).
+
+**Response**: `[{ id, name, price_monthly, price_annual, credits_per_cycle, credits_note, features, highlighted }]`
+
+#### `POST /api/billing/purchase-credits`
+
+Creates Stripe checkout for one-time credit package purchase. Requires Solo+ plan (Free blocked).
+
+**Body**: `{ workspace_id, package_id }`
+**Response**: `{ checkout_url }`
+
+---
+
 ## Schedules Endpoints
 
 Recurring audit schedules scoped to a workspace (and optionally a project). All endpoints require **Supabase JWT** authentication and workspace membership.

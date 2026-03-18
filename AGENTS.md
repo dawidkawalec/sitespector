@@ -11,7 +11,7 @@ Professional SaaS SEO & technical audit platform for the Polish B2B market (agen
 - **Backend**: FastAPI (Python 3.11, SQLAlchemy 2.0 async, Alembic) → `backend/`
 - **Worker**: Background audit processor (Screaming Frog + Lighthouse + Gemini AI) → `backend/worker.py`
 - **Auth & Teams**: Supabase (workspaces, projects, subscriptions, RLS)
-- **Data**: VPS PostgreSQL (audits, chat), Qdrant (RAG vectors), Stripe (billing)
+- **Data**: VPS PostgreSQL (audits, chat, credits), Qdrant (RAG vectors), Stripe (billing)
 
 ## Commands
 

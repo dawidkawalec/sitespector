@@ -136,8 +136,8 @@ switch, table, tabs, textarea, tooltip
 | File | Purpose |
 |------|---------|
 | `ModeSwitcher.tsx` | Dane / Analiza / Plan tab switcher |
-| `AnalysisView.tsx` | AI analysis markdown renderer |
-| `TaskListView.tsx` | Execution plan task list |
+| `AnalysisView.tsx` | AI analysis markdown renderer (Free tier: blurred with PaywallOverlay) |
+| `TaskListView.tsx` | Execution plan task list (Free tier: titles visible, details blurred) |
 | `TaskCard.tsx` | Single task card with status/notes |
 | `QuickWinBadge.tsx` | Priority/impact badge for quick wins |
 
@@ -169,7 +169,10 @@ switch, table, tabs, textarea, tooltip
 | `DataExplorerTable.tsx` | Generic sortable/filterable data table |
 | `JsonLd.tsx` | JSON-LD structured data injector |
 | `KeywordFeaturesTable.tsx` | SERP features keyword table |
-| `NewAuditDialog.tsx` | Start new audit modal |
+| `CreditBalance.tsx` | Compact credit balance widget (in TopBar) |
+| `CreditPackagesDialog.tsx` | Credit package purchase modal (Stripe one-time) |
+| `PaywallOverlay.tsx` | Blur overlay + upgrade CTA for Free tier |
+| `NewAuditDialog.tsx` | Start new audit modal (credit-based cost display) |
 | `Providers.tsx` | Root providers (QueryClient, Theme, Workspace) |
 | `SystemStatus.tsx` | System status indicator |
 | `ThemeToggle.tsx` | Light/dark theme switch |
@@ -188,6 +191,7 @@ switch, table, tabs, textarea, tooltip
 | `supabase.ts` | Supabase client initialization |
 | `impersonation.ts` | Admin user impersonation session management |
 | `useAdmin.ts` | Hook to check if current user is admin |
+| `usePlanGate.ts` | Hook to check Free tier (isFree, plan, balance) — used by PaywallOverlay |
 | `WorkspaceContext.tsx` | React context — current workspace, members, role |
 | `ProjectContext.tsx` | React context — current project metadata |
 | `schema.ts` | JSON-LD schema builders (Organization, WebSite, etc.) |

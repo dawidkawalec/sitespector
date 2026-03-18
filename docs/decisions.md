@@ -1,5 +1,23 @@
 # Architectural Decisions Log
 
+## ADR-071: P4 Landing cleanup — usunięcie placeholderów i fake danych (2026-03-18)
+
+- **Decision**: Usunięto fake testimoniale (i.pravatar.cc), fake stats (200K, 98%, 1M), placeholder telefon, "wkrótce" labele, dev notes z produkcji. Zastąpiono prawdziwymi danymi: integracje (SF/Lighthouse/Senuto/Gemini), metryki produktu (9 AI, 200 tasks, 30 min), prawdziwe ceny na stronach segmentowych.
+- **Rationale**: Landing z fake danymi podważa wiarygodność. Testimoniale z i.pravatar.cc są rozpoznawalne jako fake. "Wkrótce" labele blokują konwersję.
+- **Trade-off**: Brak prawdziwych testimoniali (nie mamy klientów) — zastąpiono sekcją integracji.
+
+## ADR-070: P3 Paywall — blur raportów Free tier (2026-03-18)
+
+- **Decision**: AnalysisView i TaskListView sprawdzają plan via usePlanGate hook. Free → blur + PaywallOverlay CTA. Dane tab (raw data) widoczne w pełni. Analiza 100% blur. Plan: tytuły widoczne, detale blur. PDF zablokowany.
+- **Rationale**: FOMO paywall — user widzi że dane istnieją ale musi zapłacić żeby odblokować. Wstrzyknięcie w 2 shared components zamiast 20 subpages.
+- **Trade-off**: Blur w shared components oznacza że nie da się granularnie kontrolować blurowania per moduł.
+
+## ADR-069: P1+P2 Credit system + 5-plan Stripe pricing (2026-03-18)
+
+- **Decision**: Zastąpiono miesięczne liczniki audytów/chatu systemem kredytowym (1 audyt=30kr, 1 chat=1kr). VPS PostgreSQL (credit_balances + credit_transactions z SELECT FOR UPDATE). 5 planów: Free(50kr)/Solo($9.99,100kr)/Agency($29.99,400kr)/Enterprise($99,2000kr)/Custom. Stripe checkout z plan_id+billing_period routing. Pakiety kredytów one-time.
+- **Rationale**: Kredyty to uniwersalna waluta — prostsze niż osobne limity. VPS PG = atomowe transakcje z audytami/chatem. Subscription first, purchased rollover.
+- **Trade-off**: Wymaga Stripe setup (Piotr). Legacy counters zachowane do backward compat.
+
 ## ADR-068: Dashboard audit — usunięcie dev-remnant paneli i wzbogacenie empty states (2026-03-18)
 
 - **Decision**:

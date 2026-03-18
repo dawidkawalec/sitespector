@@ -11,7 +11,7 @@
 |-----------|----------|----------|
 | **P0 — Blokery launch** | ~~P1~~✅, ~~P2~~✅, ~~P3~~✅ | DONE — kredyty, cennik, paywall |
 | **BLOKER** | Stripe setup (Piotr) | Założyć konto, stworzyć produkty, wpisać klucze |
-| **P1 — Pre-launch** | P4, P9, P10 | Potrzebne przed kampaniami Meta Ads |
+| **P1 — Pre-launch** | ~~P4~~✅, P9, P10 | P4 done. P9 (pixel) + P10 (blog) przed Meta Ads |
 | **P2 — Post-launch** | P5, P6, P7, P8 | Wzmacniają konwersję i retention |
 | **P3 — Skalowanie** | P11, P12, P13 | Długoterminowy growth |
 
@@ -50,6 +50,9 @@ Commit: 8414221. 5 planów, dynamic pricing, purchase-credits, /plans API, landi
 ### P3: Blurowanie Raportów Free ✅ (2026-03-18)
 Commit: 9d75efd. PaywallOverlay, usePlanGate, blur w AnalysisView/TaskListView/PDF.
 
+### P4: Aktualizacja Landing Page ✅ (2026-03-18)
+Commit: 0233cfd. Usunięto fake testimoniale/stats/telefon/dev notes. Prawdziwe ceny na /cennik, /dla-freelancerow, /dla-agencji-seo. Integracje zamiast testimoniali.
+
 ---
 
 ## W toku
@@ -59,25 +62,6 @@ Commit: 9d75efd. PaywallOverlay, usePlanGate, blur w AnalysisView/TaskListView/P
 ---
 
 ## Backlog
-
-### P4: Aktualizacja Landing Page (Frontend Landing) — WYSOKI
-
-**Zakres:** Aktualizacja strony www pod nowe ustalenia biznesowe.
-
-**Co obejmuje:**
-- Hero: nowe plany i ceny ($9.99/$29.99/$99)
-- Sekcja cennik: 4 karty z toggle annual/monthly
-- Usunięcie placeholderów: telefon (+48 123 456 789), testimoniale, statystyki (200K, 98%, 1M)
-- Ujednolicenie email: wybrać support@sitespector.app LUB kontakt@sitespector.pl
-- Nowe sekcje segmentowe: Software House, Agencja marketingowa
-- Aktualizacja /dla-freelancerow, /dla-agencji-seo pod nowe ceny
-- Usunięcie "Nasze algorytmy analizują" → konkretne narzędzia (SF, Lighthouse, Senuto, Gemini)
-
-**Zależności:** P2 (cennik Stripe) powinien być gotowy.
-
-**Status:** Backlog
-
----
 
 ### P5: Statyczne Demo (Frontend) — ŚREDNI
 

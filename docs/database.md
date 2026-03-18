@@ -12,7 +12,7 @@ SiteSpector uses a **dual-database** architecture:
 Cross-database references (e.g. `audits.project_id` on VPS pointing to `projects.id` in Supabase) are **UUID-based with no foreign key** -- integrity is enforced in the application layer.
 
 **ORM**: SQLAlchemy 2.0 (async) with asyncpg driver
-**Migrations**: Alembic (17 migration files in `backend/alembic/versions/`)
+**Migrations**: Alembic (18 migration files in `backend/alembic/versions/`)
 
 ---
 
@@ -316,6 +316,38 @@ Monthly message counters for rate limiting.
 | updated_at | TIMESTAMPTZ | NOT NULL, auto-update |
 
 **Unique**: `(user_id, month)`
+
+### 10. credit_balances
+
+Per-workspace credit balance. One row per workspace. Uses SELECT FOR UPDATE for atomic deductions.
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | UUID | PK, default uuid4 |
+| workspace_id | UUID | UNIQUE, NOT NULL, indexed |
+| subscription_credits | INTEGER | NOT NULL, default 0 |
+| purchased_credits | INTEGER | NOT NULL, default 0 |
+| created_at | TIMESTAMPTZ | NOT NULL, server default now() |
+| updated_at | TIMESTAMPTZ | NOT NULL, auto-update |
+
+**Total balance** = subscription_credits + purchased_credits. Deductions consume subscription first, then purchased.
+
+### 11. credit_transactions
+
+Append-only credit transaction ledger. Never delete rows.
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | UUID | PK, default uuid4 |
+| workspace_id | UUID | NOT NULL, indexed |
+| user_id | UUID | NOT NULL |
+| type | VARCHAR(30) | NOT NULL, indexed (grant_subscription, grant_purchase, deduct_audit, deduct_chat, refund, admin_adjustment) |
+| amount | INTEGER | NOT NULL (positive=credit, negative=debit) |
+| balance_after | INTEGER | NOT NULL |
+| metadata | JSONB | nullable (audit_id, stripe_session_id, package_name, etc.) |
+| created_at | TIMESTAMPTZ | NOT NULL, server default now(), indexed |
+
+**Indexes**: `(workspace_id, created_at DESC)`, `(type)`
 
 ---
 
