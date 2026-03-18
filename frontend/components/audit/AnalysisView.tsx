@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { AlertCircle, CheckCircle2, Lightbulb, Zap } from 'lucide-react'
 import { QuickWinBadge } from './QuickWinBadge'
+import { usePlanGate } from '@/lib/usePlanGate'
+import { PaywallOverlay } from '@/components/PaywallOverlay'
 
 interface AnalysisViewProps {
   area: string
@@ -24,6 +26,8 @@ interface AnalysisViewProps {
 }
 
 export function AnalysisView({ area, aiContext, isLoading }: AnalysisViewProps) {
+  const { isFree } = usePlanGate()
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -58,6 +62,46 @@ export function AnalysisView({ area, aiContext, isLoading }: AnalysisViewProps) 
     priority_issues = [],
     ...extraFields
   } = aiContext
+
+  // Free tier paywall — blur entire analysis
+  if (isFree) {
+    return (
+      <div className="relative min-h-[400px]">
+        <div className="pointer-events-none select-none space-y-6" aria-hidden="true">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="w-5 h-5 text-blue-500" />
+                Kluczowe ustalenia
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                <li className="text-sm text-muted-foreground">Analiza wykryła 5 kluczowych obszarów do poprawy...</li>
+                <li className="text-sm text-muted-foreground">Strona posiada potencjał wzrostu widoczności o 40%...</li>
+                <li className="text-sm text-muted-foreground">Zidentyfikowano 3 krytyczne problemy techniczne...</li>
+              </ul>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-amber-500" />
+                Rekomendacje
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                <li className="text-sm text-muted-foreground">Optymalizacja meta tagów na kluczowych stronach...</li>
+                <li className="text-sm text-muted-foreground">Poprawa Core Web Vitals — LCP i CLS poniżej progu...</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+        <PaywallOverlay variant="full" feature="Analizę AI" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

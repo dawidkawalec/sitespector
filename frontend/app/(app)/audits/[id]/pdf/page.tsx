@@ -23,6 +23,9 @@ import {
   Clock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { usePlanGate } from '@/lib/usePlanGate'
+import { PaywallOverlay } from '@/components/PaywallOverlay'
+import Link from 'next/link'
 
 type ReportType = 'executive' | 'standard' | 'full'
 
@@ -117,6 +120,7 @@ const REPORT_TYPES: ReportTypeOption[] = [
 
 export default function PDFPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const { isFree } = usePlanGate()
   const [isAuth, setIsAuth] = useState(false)
   const [selectedType, setSelectedType] = useState<ReportType>('standard')
   const [downloading, setDownloading] = useState(false)
@@ -174,6 +178,29 @@ export default function PDFPage({ params }: { params: { id: string } }) {
     return (
       <div className="container mx-auto py-8 px-4">
         <p className="text-muted-foreground">Audyt nie został znaleziony.</p>
+      </div>
+    )
+  }
+
+  if (isFree) {
+    return (
+      <div className="container mx-auto py-8 px-4 max-w-2xl">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Raporty PDF
+            </CardTitle>
+            <CardDescription>
+              Raporty PDF dostępne od planu Solo ($9.99/msc). Ulepsz plan, aby pobierać raporty Executive, Standard i Full.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/pricing">Zobacz plany</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }

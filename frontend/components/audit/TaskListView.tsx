@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Search, Filter, CheckCheck, Loader2 } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Search, Filter, CheckCheck, Loader2, ListTodo } from 'lucide-react'
+import { usePlanGate } from '@/lib/usePlanGate'
+import { PaywallOverlay } from '@/components/PaywallOverlay'
 
 interface Task {
   id: string
@@ -44,6 +47,53 @@ export function TaskListView({
   onGeneratePlan,
   isGeneratingPlan = false,
 }: TaskListViewProps) {
+  const { isFree } = usePlanGate()
+
+  // Free tier paywall — show task titles but blur details
+  if (isFree) {
+    const sampleTasks = tasks.slice(0, 6)
+    return (
+      <div className="relative min-h-[400px]">
+        <div className="pointer-events-none select-none space-y-3" aria-hidden="true">
+          {sampleTasks.length > 0 ? sampleTasks.map((task, i) => (
+            <Card key={i} className="opacity-80">
+              <CardHeader className="py-3 px-4">
+                <div className="flex items-center gap-2">
+                  <ListTodo className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">{task.title}</CardTitle>
+                  <Badge variant="secondary" className="text-xs capitalize">{task.priority}</Badge>
+                  {task.is_quick_win && <Badge className="text-xs bg-amber-500">Quick Win</Badge>}
+                </div>
+              </CardHeader>
+              <CardContent className="py-2 px-4">
+                <p className="text-xs text-muted-foreground line-clamp-1">{task.description}</p>
+              </CardContent>
+            </Card>
+          )) : (
+            <div className="space-y-3">
+              {[1,2,3,4].map(i => (
+                <Card key={i} className="opacity-60">
+                  <CardHeader className="py-3 px-4">
+                    <div className="h-4 bg-muted rounded w-3/4" />
+                  </CardHeader>
+                  <CardContent className="py-2 px-4">
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+          {tasks.length > 6 && (
+            <p className="text-center text-sm text-muted-foreground">
+              ...i {tasks.length - 6} kolejnych zadań
+            </p>
+          )}
+        </div>
+        <PaywallOverlay variant="partial" feature="Plan zadań" />
+      </div>
+    )
+  }
+
   const [searchTerm, setSearchTerm] = useState('')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
