@@ -11,9 +11,9 @@
 |-----------|----------|----------|
 | **P0 — Blokery launch** | ~~P1~~✅, ~~P2~~✅, ~~P3~~✅ | DONE — kredyty, cennik, paywall |
 | **BLOKER** | Stripe setup (Piotr) | Założyć konto, stworzyć produkty, wpisać klucze |
-| **P1 — Pre-launch** | ~~P4~~✅, P9, P10 | P4 done. P9 (pixel) + P10 (blog) przed Meta Ads |
-| **P2 — Post-launch** | ~~P5~~✅, P6, ~~P7~~✅, P8 | P5+P7 done. P6 (PQL) + P8 (pakiety) |
-| **P3 — Skalowanie** | P11, P12, P13 | Długoterminowy growth |
+| **P1 — Pre-launch** | ~~P4~~✅, ~~P5~~✅, P9, P10 | P4+P5 done. P9 (pixel) + P10 (blog) przed Meta Ads |
+| **P2 — Post-launch** | P6, ~~P7~~✅, P8, P11 | P7 done. P6 (PQL) + P8 (pakiety) + P11 (porównanie) |
+| **P3 — Skalowanie** | P12, P13 | Długoterminowy growth |
 
 ---
 
@@ -56,6 +56,15 @@ Commit: 0233cfd. Usunięto fake testimoniale/stats/telefon/dev notes. Prawdziwe 
 ### P5: Statyczne Demo ✅ (2026-03-18)
 Commit: 22dd9d2. /demo route w frontend (public), mock audit overview (156 stron, score 72), sidebar z zakładkami, CTA.
 
+### P7: Branding & White-Label PDF ✅ (2026-03-18)
+Commit: b9bebe5. Nowy router /api/branding (4 endpointy), Supabase Storage bucket branding-logos, /settings/branding UI. Agency: logo na PDF. Enterprise: full white-label (nazwa, kontakt, kolory). PDF templates dynamiczne (cover, base, quick_wins, roadmap, keywords).
+
+### Dodatkowe: Audit Techniczny Dashboardu ✅ (2026-03-18)
+Commit: d7393b4. 13 poprawek UX: puste stany, brakujące dane schema/links/quick-wins, usunięte dev remnants (Przelicz/Wygeneruj), opisy Content Quality grades, nowa zakładka Linki Zewnętrzne.
+
+### Dodatkowe: Aktualizacja Dokumentacji Marketingowej ✅ (2026-03-18)
+12 plików marketing/*.md zaktualizowanych pod nowe businessdocs: cennik (3 plany → 4+Custom), segmenty (5→7), Meta Ads jako primary paid channel, PQL model, nowy sales process.
+
 ---
 
 ## W toku
@@ -89,6 +98,8 @@ Commit: 22dd9d2. /demo route w frontend (public), mock audit overview (156 stron
 - UI: "Kup kredyty" button w dashboardzie + modal z wyborem paczki
 - Backend: webhook Stripe → dodanie kredytów do salda
 - Gating: zablokowane w Free (wymaga upgrade do Solo)
+
+**Zależności:** Wymaga Stripe setup (BLOKER).
 
 **Status:** Backlog
 
@@ -161,12 +172,6 @@ Commit: 22dd9d2. /demo route w frontend (public), mock audit overview (156 stron
 - Faza 3 (2027+)
 
 **Status:** Backlog
-
----
-
-## Ukończone
-
-*(przenieś tu projekt gdy zakończysz)*
 
 ---
 

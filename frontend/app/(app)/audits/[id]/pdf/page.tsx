@@ -359,6 +359,17 @@ export default function PDFPage({ params }: { params: { id: string } }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cross-link to Client Report */}
+      <div className="mt-6 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium">Szukasz personalizowanego raportu?</p>
+          <p className="text-xs text-muted-foreground">Builder z wlasnym tekstem, logo, porownaniem przed/po i wyborem sekcji.</p>
+        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/audits/${params.id}/client-report`}>Raport klienta</Link>
+        </Button>
+      </div>
     </div>
   )
 }

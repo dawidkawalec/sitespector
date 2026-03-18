@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChevronDown, LogOut, Settings, User, Users, CreditCard, Palette, Bell, Sparkles, Shield } from 'lucide-react'
+import { ChevronDown, LogOut, Settings, User, Users, CreditCard, Calendar, Stamp, Palette, Bell, Sparkles, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { supabase } from '@/lib/supabase'
@@ -69,6 +69,8 @@ export function UserMenu({ className }: { className?: string }) {
     { href: '/settings/profile', label: 'Profil', icon: User },
     { href: '/settings/team', label: 'Zespol', icon: Users },
     { href: '/settings/billing', label: 'Platnosci', icon: CreditCard },
+    { href: '/settings/schedules', label: 'Automatyzacja', icon: Calendar },
+    { href: '/settings/branding', label: 'Branding', icon: Stamp },
     { href: '/settings/appearance', label: 'Wyglad', icon: Palette },
     { href: '/settings/notifications', label: 'Powiadomienia', icon: Bell },
     { href: '/settings/agents', label: 'Agenci czatu', icon: Sparkles },

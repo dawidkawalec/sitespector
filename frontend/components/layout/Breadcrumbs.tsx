@@ -48,6 +48,7 @@ const SETTINGS_LABELS: Record<string, string> = {
   schedules: 'Automatyzacja',
   appearance: 'Wyglad',
   notifications: 'Powiadomienia',
+  branding: 'Branding',
   agents: 'Agenci czatu',
 }
 
