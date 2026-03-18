@@ -780,3 +780,38 @@ export const creditsAPI = {
       `/api/credits/cost-estimate?run_ai_pipeline=${runAiPipeline}&competitors_count=${competitorsCount}`
     ),
 }
+
+// --- Billing API ---
+
+export interface PlanInfo {
+  id: string
+  name: string
+  price_monthly: number  // cents
+  price_annual: number   // cents (per month)
+  credits_per_cycle: number
+  credits_note: string
+  features: string[]
+  highlighted: boolean
+}
+
+export const billingAPI = {
+  getPlans: () =>
+    apiRequest<PlanInfo[]>('/api/billing/plans'),
+
+  createCheckoutSession: (workspaceId: string, planId: string, billingPeriod: 'monthly' | 'annual' = 'monthly') =>
+    apiRequest<{ checkout_url: string }>('/api/billing/create-checkout-session', {
+      method: 'POST',
+      body: JSON.stringify({ workspace_id: workspaceId, plan_id: planId, billing_period: billingPeriod }),
+    }),
+
+  purchaseCredits: (workspaceId: string, packageId: string) =>
+    apiRequest<{ checkout_url: string }>('/api/billing/purchase-credits', {
+      method: 'POST',
+      body: JSON.stringify({ workspace_id: workspaceId, package_id: packageId }),
+    }),
+
+  createPortalSession: (workspaceId: string) =>
+    apiRequest<{ portal_url: string }>(`/api/billing/create-portal-session?workspace_id=${workspaceId}`, {
+      method: 'POST',
+    }),
+}

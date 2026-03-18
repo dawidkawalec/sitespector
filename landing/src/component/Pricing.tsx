@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { Col, Container, Row } from 'react-bootstrap';
 import { RiCheckboxCircleLine } from 'react-icons/ri';
-import { OFFER_PLACEHOLDER_COPY } from '@/lib/offerPlaceholder';
 
 export interface PricingPlan {
   title: string;
   description: string;
-  price: number;
+  price: string;
   period: string;
+  credits: string;
   features: string[];
   isPopular?: boolean;
   button: {
@@ -19,52 +19,78 @@ export interface PricingPlan {
 
 export const pricingPlans: PricingPlan[] = [
   {
-    title: 'Wkrótce',
-    description: 'Pracujemy nad nową ofertą dla freelancerów i zespołów.',
-    price: 0,
+    title: 'Free',
+    description: 'Zacznij za darmo — bez karty kredytowej.',
+    price: '$0',
     period: '',
+    credits: '50 kredytów na start',
     features: [
-      'Szczegóły pakietów opublikujemy wkrótce',
-      'Pełna oferta będzie dostępna po publikacji szczegółów',
-      'Skontaktuj się z nami, aby poznać aktualne możliwości',
-      'Dostosujemy zakres do Twoich potrzeb',
+      '1 audyt demo (raport 80% zblurowany)',
+      'AI Chat (do wyczerpania kredytów)',
+      'Workspace osobisty',
+      'Bez zobowiązań',
     ],
     button: {
-      label: OFFER_PLACEHOLDER_COPY.cta,
-      link: '/kontakt',
+      label: 'Zacznij za darmo',
+      link: '/register',
       variant: 'outline-primary',
     },
   },
   {
-    title: 'Wkrótce',
-    description: 'Aktualizujemy szczegóły planu dla agencji i specjalistów.',
-    price: 29,
-    period: '',
-    isPopular: true,
+    title: 'Solo',
+    description: 'Dla freelancerów i specjalistów SEO.',
+    price: '$9.99',
+    period: '/msc',
+    credits: '100 kredytów/msc (~3 audyty)',
     features: [
-      'Wkrótce opublikujemy pełny zakres funkcji',
-      'Nowe limity i możliwości podamy po finalizacji oferty',
-      'W sprawie wdrożenia skontaktuj się z nami',
+      'Pełne raporty (bez blurowania)',
+      '1 harmonogram automatyczny',
+      'Dokupywanie kredytów',
+      'Do 3 członków workspace',
+      'Wsparcie email',
     ],
     button: {
-      label: OFFER_PLACEHOLDER_COPY.cta,
-      link: '/kontakt',
+      label: 'Wypróbuj za darmo',
+      link: '/register',
+      variant: 'outline-primary',
+    },
+  },
+  {
+    title: 'Agency',
+    description: 'Dla agencji SEO i software house\'ów.',
+    price: '$29.99',
+    period: '/msc',
+    credits: '400 kredytów/msc (~13 audytów)',
+    isPopular: true,
+    features: [
+      'Branding raportów PDF (logo klienta)',
+      '5 harmonogramów automatycznych',
+      'Analiza do 3 konkurentów',
+      'Wiele workspace\'ów',
+      'Do 10 członków workspace',
+      'Wsparcie priorytetowe',
+    ],
+    button: {
+      label: 'Wypróbuj za darmo',
+      link: '/register',
       variant: 'primary',
     },
   },
   {
-    title: 'Wkrótce',
-    description: 'Oferta dla większych zespołów jest przygotowywana.',
-    price: 99,
-    period: '',
+    title: 'Enterprise',
+    description: 'Dla dużych zespołów i firm.',
+    price: '$99',
+    period: '/msc',
+    credits: '2 000 kredytów/msc (~66 audytów)',
     features: [
-      'Przygotowujemy finalne warunki współpracy',
-      'Pakiety i zakres wsparcia podamy wkrótce',
-      'Skontaktuj się z nami, aby omówić potrzeby Twojego zespołu',
+      'White-label PDF (pełne brandowanie)',
+      'Unlimited harmonogramy',
+      'Unlimited członków workspace',
+      'Dedykowane wsparcie + SLA',
     ],
     button: {
-      label: OFFER_PLACEHOLDER_COPY.cta,
-      link: '/kontakt',
+      label: 'Wypróbuj za darmo',
+      link: '/register',
       variant: 'outline-primary',
     },
   },
@@ -81,14 +107,15 @@ const Pricing = () => {
                 <span>CENNIK</span>
               </div>
               <div className="price-title main-title mt-3">
-                <h2 className="text-primary">{OFFER_PLACEHOLDER_COPY.title}</h2>
+                <h2 className="text-primary">Prosty cennik, bez ukrytych opłat</h2>
+                <p className="text-muted mt-2">Bez opłat per-seat. Screaming Frog + Lighthouse + Senuto + AI w jednym.</p>
               </div>
             </Col>
           </Row>
 
           <Row className="mt-4 g-4">
             {pricingPlans.map((plan, index) => (
-              <Col key={index} md={6} lg={4}>
+              <Col key={index} md={6} lg={3}>
                 <div
                   className={`card ${plan.isPopular ? 'shadow' : 'shadow-sm'} h-100 border-0 rounded-2`}
                 >
@@ -100,18 +127,28 @@ const Pricing = () => {
                         className={`card-title fw-bold ${plan.isPopular ? 'text-light' : 'text-primary'}`}
                       >
                         {plan.title}
+                        {plan.isPopular && (
+                          <span className="badge bg-warning text-dark ms-2" style={{ fontSize: '0.65rem' }}>
+                            Najlepsza wartość
+                          </span>
+                        )}
                       </h4>
-                      <p className={`mt-4 m-0 ${plan.isPopular ? 'text-white' : ''}`}>
+                      <p className={`mt-2 m-0 ${plan.isPopular ? 'text-white' : ''}`} style={{ fontSize: '0.9rem' }}>
                         {plan.description}
                       </p>
                     </div>
                     <div className="price-info text-start p-4">
-                      <h1 className="fw-bold text-primary my-3">Wkrótce</h1>
-                      <p className="text-dark mb-4">Skontaktuj się z nami, aby otrzymać szczegóły:</p>
-                      <ul>
+                      <h1 className="fw-bold text-primary my-2">
+                        {plan.price}
+                        {plan.period && <span style={{ fontSize: '1rem', fontWeight: 400 }}>{plan.period}</span>}
+                      </h1>
+                      <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>
+                        {plan.credits}
+                      </p>
+                      <ul className="list-unstyled">
                         {plan.features.map((feature, i) => (
-                          <li key={i} className="mt-3 text-muted">
-                            <RiCheckboxCircleLine className="text-primary me-4 fs-5 align-middle" />
+                          <li key={i} className="mt-2 text-muted" style={{ fontSize: '0.9rem' }}>
+                            <RiCheckboxCircleLine className="text-primary me-2 fs-6 align-middle" />
                             {feature}
                           </li>
                         ))}
@@ -122,7 +159,7 @@ const Pricing = () => {
                     <div className="price-btn text-center">
                       <Link
                         href={plan.button.link}
-                        className={`btn btn-${plan.button.variant} w-50`}
+                        className={`btn btn-${plan.button.variant} w-75`}
                       >
                         {plan.button.label}
                       </Link>
@@ -131,6 +168,15 @@ const Pricing = () => {
                 </div>
               </Col>
             ))}
+          </Row>
+
+          <Row className="mt-4 text-center">
+            <Col>
+              <p className="text-muted" style={{ fontSize: '0.85rem' }}>
+                Wszystkie ceny w USD. 1 audyt = 30 kredytów. Roczna subskrypcja: 20% taniej.
+                Potrzebujesz API? <Link href="/kontakt" className="text-primary fw-bold">Kontakt — plan Custom</Link>
+              </p>
+            </Col>
           </Row>
         </Container>
       </section>

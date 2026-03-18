@@ -18,7 +18,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Coins, Download, Loader2, TrendingDown, TrendingUp, ArrowRight } from 'lucide-react'
+import { Coins, Download, Loader2, Plus, TrendingDown, TrendingUp, ArrowRight } from 'lucide-react'
+import { CreditPackagesDialog } from '@/components/CreditPackagesDialog'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -66,6 +67,7 @@ function BillingPageInner() {
   const [transactions, setTransactions] = useState<CreditTransaction[]>([])
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [showPackages, setShowPackages] = useState(false)
   const searchParams = useSearchParams()
   const showSuccess = searchParams?.get('success') === 'true'
 
@@ -188,7 +190,14 @@ function BillingPageInner() {
                 Zmień plan <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
+            {balance.plan !== 'free' && (
+              <Button variant="default" onClick={() => setShowPackages(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Kup kredyty
+              </Button>
+            )}
           </div>
+
+          <CreditPackagesDialog open={showPackages} onOpenChange={setShowPackages} />
         </CardContent>
       </Card>
 
