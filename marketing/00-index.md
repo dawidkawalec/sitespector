@@ -21,7 +21,7 @@
 
 | Plik | Zawartość | Kiedy używać |
 |------|-----------|--------------|
-| `05-target-audiences.md` | 4 persony (agencje, freelancerzy, właściciele, managerowie) + personas cards | Targetowanie reklam, landing pages per segment |
+| `05-target-audiences.md` | 7 person (freelancerzy, agencje SEO, właściciele, managerowie, developerzy, software house, agencje mark.) | Targetowanie reklam, landing pages per segment |
 | `06-competitive-landscape.md` | Analiza konkurencji, feature matrix, pozycjonowanie, differentiatory | Sales pitches, strona porównania, objection handling |
 | `07-pricing-strategy-input.md` | Plany cenowe, limity, koszty operacyjne, benchmarki rynkowe | Finalizacja cennika, decyzje o planach |
 
@@ -58,8 +58,9 @@
 | **URL** | sitespector.app |
 | **Typ** | B2B SaaS, audyty SEO |
 | **Rynek** | Polska (język PL) |
-| **Plany** | Free / Pro / Enterprise |
-| **Ceny (docelowe)** | $0 / $29/msc / $99/msc |
+| **Plany** | Free / Solo / Agency / Enterprise / Custom |
+| **Ceny** | $0 / $9.99 / $29.99 / $99 / kontakt |
+| **Model** | Subskrypcja + system kredytów (1 audyt = 30 kr) |
 | **Główne narzędzia** | Screaming Frog + Lighthouse + Senuto + AI (Gemini) |
 | **Unikalna cecha** | Execution Plan z gotowym kodem — nie tylko "co poprawić", ale "jak" |
 | **AI** | Google Gemini 3.0 Flash (9 analiz per-area + strategia + chat) |
@@ -79,11 +80,11 @@
 
 ### Czego nie ma w tych materiałach (do uzupełnienia przez człowieka):
 - Realne case studies z danymi (liczba klientów, wyniki SEO)
-- Finalne ceny (cennik w trybie placeholder)
+- ~~Finalne ceny~~ ✅ Model kredytowy sfinalizowany (Free/$9.99/$29.99/$99/Custom)
 - Zdjęcia i screenshoty produktu
 - Dane o ruchu organicznym i konwersjach
 - Opinie klientów (testimoniale są placeholder)
 
 ---
 
-*Wygenerowano: Marzec 2026 | Wersja: 1.0*
+*Wygenerowano: Marzec 2026 | Wersja: 1.2 — zaktualizowano cennik, segmenty, kanały*

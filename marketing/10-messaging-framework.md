@@ -41,6 +41,9 @@ Dodatkowe: **Pomocnik** — jest po twojej stronie, chce żebyś wygrał.
 - ❌ Przesada o AI: "AI zrobi za ciebie SEO"
 - ❌ Korporacyjny dystans: "Nasz produkt umożliwia..."
 
+### Tone of Voice — zasada nadrzędna
+> **Piszemy po ludzku, na ty, bez sztywnego żargonu.**
+
 ### Przykłady: złe vs dobre
 
 | Złe | Dobre |
@@ -81,7 +84,7 @@ Dodatkowe: **Pomocnik** — jest po twojej stronie, chce żebyś wygrał.
 
 #### Dla freelancerów
 - "Narzędzia agencyjne. Cena freelancerska."
-- "$29 zamiast 500 zł/msc na narzędzia. Różnicę zatrzymaj."
+- "Solo za $9.99 albo Agency za $29.99 — zamiast 500 zł/msc na narzędzia. Różnicę zatrzymaj."
 - "Wyglądaj jak agencja. Kosztuj jak freelancer."
 - "Audyt w 30 minut. Więcej klientów. Ten sam dzień pracy."
 
@@ -116,7 +119,7 @@ Dodatkowe: **Pomocnik** — jest po twojej stronie, chce żebyś wygrał.
 3. Harmonogramy automatyczne — audyty bez obsługi
 
 ### Freelancerzy
-1. Koszt: $29 zamiast 400–600 zł/msc na osobne narzędzia
+1. Koszt: Solo $9.99 / Agency $29.99 zamiast 400–600 zł/msc na osobne narzędzia
 2. Czas: audyt 30 minut zamiast 2 dni
 3. Wizerunek: profesjonalne PDF raporty
 
@@ -130,12 +133,24 @@ Dodatkowe: **Pomocnik** — jest po twojej stronie, chce żebyś wygrał.
 2. Niezależna weryfikacja pracy agencji
 3. Benchmarki vs konkurencja
 
+### Software House
+*Ton: techniczny, automatyzacja, skala*
+1. Masowe audyty techniczne i generowanie schematów — "Masowo generuj schemy i audyty techniczne w 15 sekund"
+2. API-first — integracja z CI/CD i wewnętrznymi pipeline'ami
+3. Jeden workspace na projekt, pełna kontrola nad danymi klientów
+
+### Agencja marketingowa
+*Ton: biznesowy, upsell, rozszerzanie oferty*
+1. Content plan dla klienta w pół godziny — "Wygeneruj content plan dla klienta w 30 minut i poszerz swoją ofertę usług"
+2. Upsell audytów SEO jako dodatkowa usługa bez zatrudniania specjalisty
+3. White-label PDF raporty gotowe do wysłania pod swoją marką
+
 ---
 
 ## 5. Objection Handling — odpowiedzi na obiekcje
 
 ### "Za drogie"
-> "Pro za $29 zastępuje Screaming Frog (200 zł/msc), Senuto (300+ zł/msc) i ChatGPT (80 zł/msc). Net savings: 400–500 zł/msc. Zacznij za darmo — bez karty."
+> "Solo za $9.99 lub Agency za $29.99 zastępuje Screaming Frog (200 zł/msc), Senuto (300+ zł/msc) i ChatGPT (80 zł/msc). Net savings: 400–500 zł/msc. Zacznij za darmo — bez karty."
 
 ### "Mamy już [Ahrefs / SEMrush / Screaming Frog]"
 > "Świetnie. SiteSpector robi coś innego — łączy crawl z Lighthouse, Senuto i AI analizą, i na końcu generuje Execution Plan z kodem. To nie jest wymiana — to uzupełnienie. Wielu klientów używa obu."
@@ -153,7 +168,7 @@ Dodatkowe: **Pomocnik** — jest po twojej stronie, chce żebyś wygrał.
 > "Execution Plan sortuje zadania: critical, high, medium, low. Quick wins to top 10–15 rzeczy które możesz zrobić w dzień i które dają największy efekt. Nie musisz wdrażać wszystkiego."
 
 ### "Chcemy sprawdzić narzędzie bez zobowiązań"
-> "Plan Free jest zawsze bezpłatny — 5 audytów miesięcznie. Nie potrzebujemy karty kredytowej. Zrób audyt swojej strony i oceń sam."
+> "Plan Free jest zawsze bezpłatny — dostajesz 50 kredytów na start, wystarczy na darmowy audyt i rozmowę z AI. Nie potrzebujemy karty kredytowej. Zrób audyt swojej strony i oceń sam."
 
 ---
 
@@ -178,8 +193,8 @@ Jak mówimy o produkcie i funkcjach — spójność nazewnictwa:
 
 ### Nazwy planów (spójne)
 - **Free** (nie: bezpłatny, darmowy — chyba że w kontekście "darmowy plan Free")
-- **Pro** (nie: Professional, Premium)
-- **Enterprise** (nie: Business, Advanced)
+- **Solo** $9.99 (nie: Pro, Professional, Premium)
+- **Agency** $29.99 (nie: Enterprise, Business, Advanced)
 
 ---
 
@@ -187,7 +202,7 @@ Jak mówimy o produkcie i funkcjach — spójność nazewnictwa:
 
 ### Reklamy (paid ads)
 - Krótko, konkretnie, benefit-first
-- Cyfry gdzie możliwe: "30 minut", "$29", "5 narzędzi"
+- Cyfry gdzie możliwe: "30 minut", "$9.99", "$29.99", "5 narzędzi"
 - Silne CTA: "Zacznij za darmo", "Audytuj stronę"
 
 ### Blog / content edukacyjny
@@ -226,4 +241,4 @@ Jak mówimy o produkcie i funkcjach — spójność nazewnictwa:
 
 ---
 
-*Aktualizacja: Marzec 2026*
+*Aktualizacja: Marzec 2026 v2 — nowy pricing (Solo/Agency), segmenty Software House i Agencja marketingowa*

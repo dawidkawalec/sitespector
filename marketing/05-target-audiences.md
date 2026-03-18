@@ -5,15 +5,18 @@
 
 ---
 
-## Przegląd segmentów
+## Przegląd segmentów (7)
 
-| Segment | Strona landingowa | Główna propozycja wartości |
-|---------|------------------|--------------------------|
-| **Agencje SEO** | /dla-agencji-seo | Jeden panel dla wszystkich klientów, white-label PDF |
-| **Freelancerzy SEO** | /dla-freelancerow | Profesjonalne narzędzia za ułamek ceny |
-| **Właściciele stron / E-commerce** | /dla-ecommerce | Audit bez technikaliów, konkretne kroki |
-| **Managerowie / CEOs** | /dla-managerow | Executive summary, weryfikacja agencji SEO |
-| **[BONUS] Weryfikacja agencji** | /sprawdz-agencje-seo | Zweryfikuj co robi twoja agencja SEO |
+| # | Segment | Strona landingowa | Główna propozycja wartości | Plan docelowy | Faza |
+|---|---------|------------------|--------------------------|---------------|------|
+| 1 | **Freelancerzy SEO** | /dla-freelancerow | Profesjonalne narzędzia za ułamek ceny | Solo → Agency | 1 |
+| 2 | **Agencje SEO** | /dla-agencji-seo | Jeden panel, white-label PDF, standaryzacja | Agency → Enterprise | 1 |
+| 3 | **Właściciele stron / E-commerce** | /dla-ecommerce | Audit bez technikaliów, konkretne kroki | Free → Solo | 2 |
+| 4 | **Managerowie / CEOs** | /dla-managerow | Executive summary, weryfikacja agencji SEO | Agency → Enterprise | 2–3 |
+| 5 | **Web developerzy** | — | Techniczny audyt, schemy, gotowy kod | Solo | Influence |
+| 6 | **Software House** | — (planowana) | Masowe audyty/schemy, automatyzacja, API | Agency → Enterprise | 1–2 |
+| 7 | **Agencje marketingowe / freelancerzy mark.** | — (planowana) | Content plany, raporty dla klientów, upsell oferty | Solo → Agency | 1–2 |
+| [BONUS] | **Weryfikacja agencji** | /sprawdz-agencje-seo | Zweryfikuj co robi twoja agencja SEO | Free → Solo | 2 |
 
 ---
 
@@ -54,8 +57,8 @@ Małe lub średnie polskie agencje SEO, które obsługują kilkanaście lub kilk
 
 | Problem | Rozwiązanie |
 |---------|-------------|
-| Drogie licencje per-seat | Model per-workspace — nieograniczona liczba użytkowników w workspace |
-| Ręczne raporty PDF | PDF generowany automatycznie w 1 klik (3 formaty) |
+| Drogie licencje per-seat | Model per-workspace — brak opłat per-seat, Agency $29.99/msc |
+| Ręczne raporty PDF | PDF generowany automatycznie w 1 klik (3 formaty), branding od Agency |
 | Brak execution plan | Execution Plan z kodem generowany automatycznie |
 | Niespójna jakość | Zautomatyzowany, powtarzalny 3-fazowy proces |
 | Brak AI Overviews | Monitoring AI Overviews przez Senuto wbudowany |
@@ -116,22 +119,22 @@ Specjalista SEO pracujący na własny rachunek, obsługujący kilku klientów je
 
 | Problem | Rozwiązanie |
 |---------|-------------|
-| Drogie narzędzia | Pro za $29/msc zamiast 500+ PLN/msc na osobne narzędzia |
+| Drogie narzędzia | Solo za $9.99/msc lub Agency za $29.99/msc zamiast 500+ PLN/msc na osobne narzędzia |
 | Czas audytu | Audyt gotowy w 30 minut zamiast 2 dni |
 | Trudno pokazać wartość | PDF raport gotowy do wysłania klientowi |
 | Brak wizerunku premium | Professional PDF (50–80 stron) z logo klienta |
 | Execution Plan = "co dalej" | Klient dostaje listę zadań — freelancer może implementować |
 
 ### Messaging dla freelancerów
-**Nagłówek:** "Profesjonalny audyt SEO bez profesjonalnych cen narzędzi"  
-**Podtytuł:** "Zastąp Screaming Frog, Lighthouse, Senuto i ChatGPT jedną subskrypcją za $29/msc."  
+**Nagłówek:** "Profesjonalny audyt SEO bez profesjonalnych cen narzędzi"
+**Podtytuł:** "Zastąp Screaming Frog, Lighthouse, Senuto i ChatGPT jedną subskrypcją od $9.99/msc."
 **CTA:** "Zacznij za darmo"
 
 **Kluczowe frazy:**
-- "5 narzędzi w jednym"
+- "5 narzędzi w jednym. $9.99/msc. Przestań przepłacać."
 - "Audyt gotowy w 30 minut — nie 2 dni"
 - "Profesjonalny raport PDF dla każdego klienta"
-- "$29 zamiast 500+ zł/msc na narzędzia"
+- "$9.99 zamiast 500+ zł/msc na narzędzia"
 - "Execution Plan — twój klient wie co zrobić"
 
 ### Preferred channels
@@ -257,7 +260,126 @@ Manager który odpowiada za wyniki digital marketingu, ale sam nie wykonuje tech
 
 ---
 
-## Persona 5 (Bonus): Weryfikator Agencji SEO
+## Persona 5: Web Developer
+
+### Kim jest?
+Deweloper lub mały zespół budujący strony. Szuka narzędzia do szybkiego audytu technicznego i generowania schem. Nie jest specjalistą SEO, ale potrzebuje zweryfikować stronę przed oddaniem klientowi.
+
+### Pain points
+1. **Brak wiedzy SEO** — wie jak kodować, ale nie jak optymalizować pod SEO
+2. **Schemy JSON-LD** — generowanie ręczne jest czasochłonne
+3. **Core Web Vitals** — klient pyta "dlaczego strona wolno się ładuje?"
+
+### Jak SiteSpector rozwiązuje problemy developera
+
+| Problem | Rozwiązanie |
+|---------|-------------|
+| Brak wiedzy SEO | Execution Plan z gotowym kodem — copy-paste do projektu |
+| Schemy JSON-LD | Automatyczne generowanie schem (audyt schema) |
+| Core Web Vitals | Lighthouse wbudowany, konkretne rekomendacje |
+
+### Messaging dla developerów
+**Nagłówek:** "Audyt techniczny z gotowym kodem do wdrożenia"
+**CTA:** "Zacznij za darmo"
+
+### Preferred channels
+- Google (intent: "SEO audit tool", "schema generator")
+- GitHub / dev communities
+- YouTube (tutoriale techniczne)
+
+---
+
+## Persona 6: Software House
+
+### Profil demograficzny
+- **Typ firmy:** Software house, 5–100 osób, buduje strony/sklepy dla klientów
+- **Stanowisko decyzyjne:** CTO, CEO, Team Lead
+- **Liczba projektów:** 10–50+ aktywnych jednocześnie
+
+### Kim jest?
+Firma budująca strony i sklepy internetowe dla klientów. Potrzebuje masowej automatyzacji audytów technicznych, generowania schem i raportów. Docelowo chce wpięcie przez API we własne procesy i CRM.
+
+### Pain points
+1. **Masowa skala** — potrzeba audytowania dziesiątek stron jednocześnie
+2. **Brak standaryzacji** — każdy developer robi audyt inaczej (lub wcale)
+3. **Brak API** — chce wpięcie audytów we własny pipeline (CI/CD, CRM)
+4. **Schemy i raporty** — generowanie schem JSON-LD i raportów PDF masowo
+
+### Cele i motywacje
+- Automatyzacja audytów na skalę (masowo)
+- Integracja z własnymi systemami (API)
+- Standaryzacja jakości SEO w projektach
+- Upsell klientom: "oferujemy audyt SEO w cenie"
+
+### Jak SiteSpector rozwiązuje problemy software house
+
+| Problem | Rozwiązanie |
+|---------|-------------|
+| Masowa skala | Wiele workspace'ów, harmonogramy automatyczne |
+| Brak standaryzacji | Zautomatyzowany 3-fazowy audyt, powtarzalny |
+| Brak API | Plan Custom z API (Faza 3, 2027+) |
+| Masowe schemy/raporty | Audyt schema + PDF w 1 klik per projekt |
+
+### Messaging dla software house
+**Nagłówek:** "Masowe audyty SEO i schemy w sekundach"
+**Podtytuł:** "Przestań ręcznie sprawdzać strony klientów. Zautomatyzuj audyty techniczne i generuj raporty na skalę."
+**CTA:** "Wypróbuj za darmo"
+
+**Kluczowe frazy:**
+- "Masowo generuj schemy i audyty techniczne w 15 sekund"
+- "Zautomatyzuj SEO w swoim pipeline"
+- "Standaryzacja jakości SEO dla każdego projektu"
+
+### Preferred channels
+- LinkedIn (B2B, CTO networking)
+- Meta Ads (dedykowane kreacje z tonem technicznym)
+- Konferencje dev (code:me, 4Developers)
+
+---
+
+## Persona 7: Agencja Marketingowa / Freelancer Marketingowy
+
+### Profil demograficzny
+- **Typ:** Agencja marketingowa (nie SEO!) lub freelancer marketingowy
+- **Stanowisko:** CMO, CEO agencji, marketing manager
+- **Usługi:** Social media, content, PPC, branding — SEO to dodatkowa usługa
+
+### Kim jest?
+Agencja lub freelancer marketingowy, dla którego SEO nie jest core business — ale klienci pytają o SEO. Szuka szybkiego narzędzia do generowania planów działania (content planów) i raportów, żeby poszerzyć ofertę usług bez zatrudniania specjalisty SEO.
+
+### Pain points
+1. **SEO to nie core** — nie mają specjalisty, ale klienci pytają
+2. **Brak content planów** — chcą oferować content strategy ale tworzenie ręczne trwa zbyt długo
+3. **Raportowanie** — potrzebują prostych raportów do prezentacji klientom
+4. **Poszerzenie oferty** — chcą sprzedawać "audyt SEO" bez głębokiej wiedzy
+
+### Jak SiteSpector rozwiązuje problemy agencji marketingowej
+
+| Problem | Rozwiązanie |
+|---------|-------------|
+| SEO to nie core | Execution Plan — AI robi analizę, agencja prezentuje |
+| Brak content planów | Content quality analysis + AI rekomendacje |
+| Raportowanie | PDF Executive Summary — zrozumiały dla klienta marketingowego |
+| Poszerzenie oferty | "Wygeneruj content plan w 30 minut" — nowa usługa |
+
+### Messaging dla agencji marketingowych
+**Nagłówek:** "Poszerz ofertę o audyty SEO — bez specjalisty SEO"
+**Podtytuł:** "Wygeneruj content plan dla klienta w 30 minut i poszerz swoją ofertę usług."
+**CTA:** "Wypróbuj za darmo"
+
+**Kluczowe frazy:**
+- "Content plan dla klienta w 30 minut"
+- "Audyt SEO bez bycia ekspertem SEO"
+- "Poszerzenie oferty = wyższe przychody"
+
+### Preferred channels
+- Meta Ads (dedykowane kreacje z tonem biznesowym/upsell)
+- LinkedIn (marketing communities)
+- Konferencje marketingowe (I Love Marketing, Marketing Festival)
+
+---
+
+## Persona BONUS: Weryfikator Agencji SEO
 
 ### Kim jest?
 Firma która już korzysta z agencji SEO i chce zweryfikować jej pracę — albo rozważa zmianę agencji i chce mieć punkt odniesienia.
@@ -280,17 +402,20 @@ Firma która już korzysta z agencji SEO i chce zweryfikować jej pracę — alb
 
 ---
 
-## Tabela porównawcza segmentów
+## Tabela porównawcza segmentów (7)
 
-| | Agencja SEO | Freelancer | Właściciel | Manager |
-|--|-------------|-----------|------------|---------|
-| **Priorytet #1** | Skala i czas | Koszty | Zrozumiałość | Kontrola |
-| **Plan docelowy** | Pro/Enterprise | Pro | Free/Pro | Pro/Enterprise |
-| **Decyzja** | Właściciel agencji | Sam | Właściciel firmy | Manager |
-| **Cykl zakupu** | 1–4 tygodnie | 1–7 dni | 1–14 dni | 2–8 tygodni |
-| **Kluczowa feature** | PDF, workspace | Cena, zakres | Execution Plan | Executive summary |
-| **Kanał #1** | LinkedIn | Google | Google/FB | LinkedIn |
+| | Freelancer SEO | Agencja SEO | Właściciel | Manager | Software House | Agencja Mark. |
+|--|---------------|-------------|------------|---------|---------------|--------------|
+| **Priorytet** | ⭐ Najwyższy | Wysoki | Średni | Średni | Średni | Wysoki |
+| **Faza** | 1 | 1 | 2 | 2–3 | 1–2 | 1–2 |
+| **Plan docelowy** | Solo → Agency | Agency → Enterprise | Free → Solo | Agency → Enterprise | Agency → Enterprise | Solo → Agency |
+| **Decyzja** | Sam | CEO agencji | Właściciel firmy | Manager | CTO/CEO | CEO/CMO |
+| **Cykl zakupu** | 1–7 dni | 1–4 tygodnie | 1–14 dni | 2–8 tygodni | 1–4 tygodnie | 1–2 tygodnie |
+| **Priorytet #1** | Koszty | Skala i czas | Zrozumiałość | Kontrola | Automatyzacja | Upsell oferty |
+| **Kluczowa feature** | Cena, zakres | PDF, workspace | Execution Plan | Executive summary | API, masowe audyty | Content plan |
+| **Kanał #1** | Google + FB grupy | LinkedIn | Google/FB | LinkedIn | LinkedIn + Meta | Meta Ads |
+| **CAC docelowy** | ≤$40 | ≤$60 | ≤$30 | ≤$80 | ≤$60 | ≤$40 |
 
 ---
 
-*Aktualizacja: Marzec 2026*
+*Aktualizacja: Marzec 2026 | Wersja 1.2 — rozszerzono z 5 do 7 segmentów*

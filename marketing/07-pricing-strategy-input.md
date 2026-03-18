@@ -1,62 +1,96 @@
 # SiteSpector — Dane do Strategii Cenowej
 
-> **Dla kogo:** Founder, strategia biznesowa, osoba finalizująca cennik.  
-> **Po co:** Zebranie wszystkich faktów cenowych, kosztowych i rynkowych — jako input do decyzji o finalnym cenniku.  
-> **Status:** Cennik w trybie placeholder (Marzec 2026) — decyzje cenowe OCZEKUJĄ na finalizację.
+> **Dla kogo:** Founder, strategia biznesowa, osoba finalizująca cennik.
+> **Po co:** Zebranie wszystkich faktów cenowych, kosztowych i rynkowych — jako input do decyzji o finalnym cenniku.
+> **Status:** Model kredytowy sfinalizowany (Marzec 2026) — implementacja w kodzie i Stripe w toku.
 
 ---
 
-## 1. Obecna struktura planów (zaimplementowana w kodzie)
+## 1. Finalna struktura planów (model kredytowy v1.2)
 
-### Plany i limity (HARDCODED w kodzie)
+### Plany i limity
 
-| Plan | Audyty/msc | Chat/msc | Cena (docelowa) | Status UI |
-|------|-----------|---------|-----------------|-----------|
-| **Free** | 5 | 100 | $0 | Aktywny |
-| **Pro** | 50 | 500 | $29/msc | Placeholder ("wkrótce") |
-| **Enterprise** | Unlimited (999 999) | Unlimited | $99/msc | Placeholder ("wkrótce") |
+| Plan | Cena/msc | Roczna | Kredyty/msc | Equiv. audytów | Status |
+|------|----------|--------|-------------|----------------|--------|
+| **Free** | $0 | — | 50 (jednorazowo, start) | 1 audyt demo + 20 chat | Do implementacji |
+| **Solo** | $9.99 | $7.99 (20% rabat) | 100 | ~3 audyty | Do implementacji |
+| **Agency** | $29.99 | $23.99 (20% rabat) | 400 | ~13 audytów | Do implementacji |
+| **Enterprise** | $99 | $79 (20% rabat) | 2 000 | ~66 audytów | Do implementacji |
+| **Custom** | Kontakt | Kontakt | Indywidualnie | API, integracje CRM | Faza 3 (2027+) |
 
-### Co zawiera każdy plan (wg kodu i dokumentacji)
+### System kredytów — uniwersalna waluta
+
+| Akcja | Koszt kredytów | Szacunkowy koszt rzeczywisty |
+|-------|---------------|------------------------------|
+| 1 pełny audyt SEO | 30 (20 tech + 10 AI) | ~$0.15–0.30 |
+| 1 wiadomość Chat AI | 1 | ~$0.002–0.005 |
+| 1 audyt konkurenta | 3 | ~$0.05 |
+| Raporty PDF | 0 (wliczone) | — |
+
+### Pakiety dokupywania kredytów (od planu Solo)
+
+| Paczka | Kredyty | Cena | Cena/kredyt | Equiv. audytów |
+|--------|---------|------|------------|----------------|
+| Starter | 50 | $4.99 | $0.10 | ~1.5 |
+| Standard | 150 | $12.99 | $0.087 | 5 |
+| Pro | 500 | $34.99 | $0.070 | ~16 |
+| Agency | 1 500 | $89.99 | $0.060 | 50 |
+
+**WAŻNE:** W planie Free NIE można dokupować kredytów — wymaga upgrade do Solo.
+
+### Co zawiera każdy plan
 
 **Free:**
-- 5 audytów miesięcznie
-- 100 wiadomości chat/msc
-- Podstawowy audyt (faza 1 + 2 + 3)
+- 50 kredytów na start (jednorazowo, bez odnawiania)
+- 1 audyt demo z 80% raportu zblurowanym (paywall)
+- AI Chat (do wyczerpania kredytów)
 - Workspace osobisty
-- Raporty PDF
-- [DO UZUPEŁNIENIA: jakie limity funkcji vs Pro?]
+- Brak harmonogramów, brak dokupywania kredytów
 
-**Pro:**
-- 50 audytów miesięcznie
-- 500 wiadomości chat/msc
-- Wszystkie funkcje audytu
-- Harmonogramy automatyczne
-- Analiza konkurentów (do 3)
+**Solo ($9.99/msc):**
+- 100 kredytów/msc (~3 pełne audyty)
+- Pełne raporty (bez blurowania)
+- 1 harmonogram automatyczny
+- Możliwość dokupywania kredytów
 - Team workspace (role: owner, admin, member)
-- White-label PDF [DO WERYFIKACJI]
-- API [DO WERYFIKACJI status]
 
-**Enterprise:**
-- Unlimited audytów
-- Unlimited chat
-- Dedykowane wsparcie
-- SLA
-- [DO UZUPEŁNIENIA: wszystkie enterprise features]
+**Agency ($29.99/msc):**
+- 400 kredytów/msc (~13 audytów) — 4x za 3x cenę (decoy effect)
+- Branding raportów PDF (logo klienta)
+- 5 harmonogramów automatycznych
+- Analiza konkurentów (do 3)
+- Wiele workspace'ów
+
+**Enterprise ($99/msc):**
+- 2 000 kredytów/msc (~66 audytów)
+- White-label PDF (pełne brandowanie)
+- Unlimited harmonogramy
+- Dedykowane wsparcie + SLA
+- Sprzedaż self-serve (PLG)
+
+**Custom (kontakt handlowy):**
+- Dostęp API
+- Integracje CRM
+- Indywidualny SLA
+- Dedykowany onboarding
 
 ---
 
 ## 2. Infrastruktura cenowa (Stripe)
 
 **Stripe integration: GOTOWA do uruchomienia**
-- `STRIPE_PRICE_ID_PRO` — ID ceny Pro w Stripe (do skonfigurowania)
-- `STRIPE_PRICE_ID_ENTERPRISE` — ID ceny Enterprise w Stripe (do skonfigurowania)
+- Potrzebne 4 price ID w Stripe: Solo, Agency, Enterprise (monthly + annual)
+- Custom: bez Stripe, kontakt handlowy
 - Checkout flow, webhook, Customer Portal — zaimplementowane
 - Billing UI — w trybie placeholder, gotowe do aktywacji
+- Pakiety kredytów: osobne produkty one-time w Stripe
 
 **Jak włączyć cennik:**
-1. Skonfigurować STRIPE_PRICE_ID_PRO i STRIPE_PRICE_ID_ENTERPRISE w Stripe Dashboard
+1. Stworzyć produkty i price ID w Stripe Dashboard (4 plany × 2 billing periods + 4 pakiety kredytów)
 2. Ustawić klucze w `.env` na VPS
 3. Zmienić billing UI z trybu placeholder na aktywny checkout
+4. Zaimplementować system kredytów w backendzie (tabela credits, zużycie per akcja)
+5. Zaimplementować blurowanie raportów w Free
 
 ---
 
@@ -85,12 +119,24 @@
 | Lighthouse (CPU) | koszt serwera | Brak opłaty per API |
 | **Łącznie zmienne** | ~$0.10–0.30/audyt | Szacunek |
 
-### Break-even analysis (szacunkowa)
+### Break-even analysis (per plan, nowy model kredytowy)
 
-Przy założeniu $29/msc Pro i koszcie ~$0.20/audyt:
-- 50 audytów Pro × $0.20 = $10 kosztów zmiennych
-- + $2.50 przypadające koszty stałe na subskrybenta
-- **Marża brutto: ~$29 - $12.50 = $16.50 (~57%)**
+**Solo ($9.99/msc, ~3 audyty):**
+- 3 audyty × $0.20 + 70 chat × $0.003 = $0.81 kosztów zmiennych
+- + ~$2.50 koszty stałe na subskrybenta
+- **Marża brutto: ~$9.99 - $3.31 = $6.68 (~67%)**
+
+**Agency ($29.99/msc, ~13 audytów):**
+- 13 audytów × $0.20 + 270 chat × $0.003 = $3.41 kosztów zmiennych
+- + ~$2.50 koszty stałe na subskrybenta
+- **Marża brutto: ~$29.99 - $5.91 = $24.08 (~80%)**
+
+**Enterprise ($99/msc, ~66 audytów):**
+- 66 audytów × $0.20 + 1680 chat × $0.003 = $18.24 kosztów zmiennych
+- + ~$2.50 koszty stałe na subskrybenta
+- **Marża brutto: ~$99 - $20.74 = $78.26 (~79%)**
+
+Marże 67–80% — zdrowe dla SaaS. Agency to "sweet spot" (decoy effect działa).
 
 [DO WERYFIKACJI z rzeczywistymi rachunkami Senuto API i Gemini API]
 
@@ -107,111 +153,111 @@ Przy założeniu $29/msc Pro i koszcie ~$0.20/audyt:
 | **Mangools** | $29/msc | $44/msc | $89/msc |
 | **Screaming Frog** | 199 GBP/rok (~17 GBP/msc) | — | — |
 | **Senuto** | ~299 PLN/msc | ~599 PLN/msc | Custom |
-| **SiteSpector Pro** | $29/msc | — | $99/msc |
+| **SiteSpector Solo** | $9.99/msc | $29.99/msc (Agency) | $99/msc |
 
-**Kluczowa obserwacja:** SiteSpector Pro ($29) jest porównywalny ceną z Mangools — ale zastępuje SF + Lighthouse + Senuto + AI. To silny argument wartości.
-
----
-
-## 5. Modele cenowe do rozważenia
-
-### Model A: Obecny — Per-workspace (rekomendowany)
-- Free: 5/msc, Pro: $29/50/msc, Enterprise: $99/unlimited
-- **Za:** Prosty, przewidywalny, nie penalizuje za dodawanie użytkowników
-- **Przeciw:** Limit audytów może być za restrykcyjny dla większych agencji
-
-### Model B: Per-audit (usage-based)
-- Pay-as-you-go: $X za audyt
-- **Za:** Idealne dla okazjonalnych użytkowników, zero ryzyka po stronie klienta
-- **Przeciw:** Nieprzewidywalne przychody, trudna retencja, brak "sticky" efektu
-
-### Model C: Per-seat + workspace
-- $X/użytkownik/msc + workspace fee
-- **Za:** Skaluje z rozmiarem agencji
-- **Przeciw:** Penalizuje agencje za wzrost, skomplikowane wyceny
-
-### Model D: Tiered by features (nie audyty)
-- Wszystkie plany mają unlimited audytów, ale różne funkcje (PDF, AI, konkurenci)
-- **Za:** Usuwa główną obiekcję "za mało audytów"
-- **Przeciw:** Trudniej kontrolować koszty operacyjne (Senuto API, Gemini)
-
-### Model E: Annual vs Monthly
-- Roczna subskrypcja z rabatem 20–30%
-- **Za:** Cash flow, retencja, commitment
-- **Przeciw:** Bariera wejścia dla nowych klientów
-
-**Rekomendacja do przemyślenia:** Model A (obecny) + opcja roczna z 20% rabatem + "Agencja pack" (wyższy limit audytów bez full Enterprise).
+**Kluczowa obserwacja:** SiteSpector Solo ($9.99) jest najtańszy na rynku. Agency ($29.99) jest porównywalny z Mangools — ale zastępuje SF + Lighthouse + Senuto + AI. Brak opłat per-seat to najważniejszy differentiator vs Ahrefs/SEMrush.
 
 ---
 
-## 6. Potencjalne dodatkowe źródła przychodów
+## 5. Wybrany model cenowy — Hybrid: Subskrypcja + Kredyty
 
-| Źródło | Opis | Trudność |
-|--------|------|---------|
-| **Add-on: dodatkowe audyty** | +10 audytów/msc za $X | Łatwy |
-| **Add-on: white-label** | Własne logo na PDF | Łatwy |
-| **Add-on: priorytetowe wsparcie** | SLA, dedykowany opiekun | Średni |
-| **Agencja pack** | Workspace per klient w jednym pakiecie | Średni |
-| **API access** | Dostęp do API dla developerów | Trudny |
-| **Custom integrations** | Integracja z CRM, Slack, etc. | Trudny |
-| **White-label platform** | Platforma pod marką agencji | Bardzo trudny |
+**DECYZJA (Marzec 2026):** Model hybrydowy — subskrypcja z limitem kredytów + dokupywanie ad-hoc.
+
+### Dlaczego ten model
+- **Subskrypcja** = przewidywalny MRR, sticky
+- **Kredyty** = elastyczność, usage-based element, natural upsell
+- **Brak per-seat** = najważniejszy differentiator (agencje nie karane za wzrost)
+- **Annual 20% rabat** = cash flow + retention
+- **Decoy effect:** Agency ($29.99) to "best value" — 4x kredytów za 3x cenę Solo
+
+### Price jumps (psychologia)
+- Solo → Agency: 3x cena, 4x kredytów
+- Agency → Enterprise: 3.3x cena, 5x kredytów
+- Każdy kolejny plan daje lepszą wartość per kredyt
 
 ---
 
-## 7. Psychologia cenowa — obserwacje
+## 6. Źródła przychodów
+
+| Źródło | Opis | Status | Faza |
+|--------|------|--------|------|
+| **Subskrypcja MRR** | 4 plany (Solo/Agency/Enterprise/Custom) | Główne (90%+) | 1 |
+| **Pakiety kredytów** | Dokupywanie ad-hoc od planu Solo | Upsell | 1 |
+| **Branding PDF** | Logo klienta na raportach (od Agency) | Wliczone | 1 |
+| **White-label PDF** | Pełne brandowanie (od Enterprise) | Wliczone | 1 |
+| **API access** | Integracja z CRM/własnymi systemami (Custom) | Kontakt | 3 |
+| **Platforma rozszerzeń** | Płatne upselle/wtyczki (np. Content Optimization) | Planowane | 3 |
+| **Affiliate/referral** | 20% prowizji za poleconych klientów | Planowane | 2 |
+
+---
+
+## 7. Psychologia cenowa — decyzje
 
 ### Anchoring
-- Enterprise ($99) sprawia że Pro ($29) wygląda tanio
-- "5 narzędzi za cenę jednego" — porównanie do sumy osobnych subskrypcji
+- Enterprise ($99) sprawia że Agency ($29.99) wygląda tanio
+- "5 narzędzi za cenę jednego" — porównanie do sumy osobnych subskrypcji (~580–700 zł)
 
-### Free tier strategy
-- 5 audytów/msc to wystarczająco żeby zobaczyć wartość (1-2 strony)
-- Za mało dla freelancera z 10 klientami → naturalna presja do upgrade
-- Pytanie: czy Free powinno mieć AI Overviews? Execution Plan?
+### Decoy effect (kluczowe)
+- Agency ($29.99) = "best value" — 4x kredytów za 3x cenę Solo
+- Większość agencji i freelancerów powinna wybierać Agency
+
+### Free tier strategy (DECYZJA: Freemium z blurowanym raportem)
+- 50 kredytów na start (starcza na 1 audyt + 20 chat)
+- Raport 80% zblurowany = naturalny paywall (buduje FOMO)
+- W Free NIE MOŻNA dokupować kredytów → wymaga upgrade do Solo
+- **Aha moment:** Zobaczenie częściowych danych tech + AI Chat + zblurowany Execution Plan
+- **Trigger do upgrade:** Chęć odblurowania raportu + wyczerpanie 50 kredytów
 
 ### Annual commitment
-- $29 × 12 = $348/rok → roczna za $250–280 = oszczędność widoczna
+- 20% rabat na roczną: Solo $7.99, Agency $23.99, Enterprise $79
 - Dla agencji roczna umowa = budżet zapisany w planie finansowym
 
-### Trial vs Freemium
-- Obecny model: Freemium (Free tier zawsze dostępny)
-- Alternatywa: 14-dniowy trial Pro bez karty kredytowej → presja konwersji
-- [DO DECYZJI: czy zostawiamy Freemium czy dodajemy trial?]
+### Statyczne Demo (planowane)
+- "Wydmuszka" bez logowania — pokazuje przykładowy raport
+- Agencje mogą ocenić jakość przed założeniem konta
 
 ---
 
 ## 8. Obiekcje cenowe i odpowiedzi
 
 ### "Za drogo"
-> "Pro za $29 zastępuje: Screaming Frog (17 GBP/msc), Senuto (~300 PLN/msc), ChatGPT ($20/msc). Oszczędzasz 400–600 PLN miesięcznie i masz wszystko w jednym miejscu."
+> "Agency za $29.99 zastępuje: Screaming Frog (17 GBP/msc), Senuto (~300 PLN/msc), ChatGPT ($20/msc). Oszczędzasz 400–600 PLN miesięcznie i masz wszystko w jednym miejscu. A jeśli potrzebujesz mniej — Solo za $9.99."
 
 ### "Nie wiem czy tego potrzebuję"
-> "Zacznij za darmo — 5 audytów miesięcznie, bez karty kredytowej. Zrób audyt swojej strony i jednej strony konkurenta. Jeśli znajdziesz 3 rzeczy do poprawy, narzędzie już się zwróciło."
+> "Zacznij za darmo — bez karty kredytowej. Zrób darmowy audyt swojej strony. Zobaczysz częściowe wyniki i możesz porozmawiać z AI o nich. Jeśli znajdziesz wartość — odblokujesz pełny raport od $9.99/msc."
 
 ### "Mamy już Ahrefs/SEMrush"
-> "SiteSpector robi inną rzecz — kompleksowy audyt techniczny z Execution Plan. Ahrefs jest świetny do backlinków i słów kluczowych; SiteSpector mówi ci co zrobić żeby strona technicznie i contentowo była gotowa na TOP3. Wiele agencji używa obu."
+> "SiteSpector robi inną rzecz — kompleksowy audyt techniczny z Execution Plan z kodem. Ahrefs jest świetny do backlinków i słów kluczowych; SiteSpector mówi ci co zrobić żeby strona technicznie i contentowo była gotowa na TOP3. Wiele agencji używa obu."
 
-### "Cennik nie jest dostępny"
-> "Masz rację, finalizujemy szczegóły oferty. Napisz do nas — przygotujemy indywidualną propozycję."
+### "5 audytów mi nie wystarczy" (stara obiekcja — nieaktualna)
+> Model zmieniony na kredytowy. Free = 1 audyt demo. Solo = ~3/msc. Agency = ~13/msc. Dokupywanie kredytów ad-hoc od Solo.
 
 ---
 
-## 9. Rekomendacje do finalizacji cennika
+## 9. Decyzje podjęte i do implementacji
 
-**Do ustalenia:**
-1. Finalne ceny PLN vs USD (czy lokalizujemy?)
-2. Limity funcji per plan (co Free, co Pro, co Enterprise?)
-3. White-label: od którego planu?
-4. API: od którego planu?
-5. "Agencja pack" — czy warto?
-6. Roczna subskrypcja z rabatem — tak/nie?
-7. Trial 14 dni Pro — tak/nie?
+**PODJĘTE (Marzec 2026):**
+1. ✅ Ceny w USD (globalnie)
+2. ✅ 4 plany + Custom: Free / Solo $9.99 / Agency $29.99 / Enterprise $99
+3. ✅ White-label: Enterprise (branding: Agency)
+4. ✅ API: wyłącznie Custom (kontakt handlowy)
+5. ✅ Roczna subskrypcja: 20% rabat
+6. ✅ Model: Freemium z blurowanym raportem (nie trial)
+7. ✅ Brak per-seat — per-workspace
+8. ✅ System kredytów jako uniwersalna waluta
+9. ✅ Free bez dokupywania — upgrade wymagany
 
-**Do weryfikacji:**
+**DO IMPLEMENTACJI (w kodzie):**
+- System kredytów (tabela, zużycie per akcja, limity per plan)
+- Blurowanie raportów w Free (80%)
+- Stripe: 4 plany × 2 okresy + 4 pakiety kredytów
+- UI: nowa strona cennika (4 plany + toggle annual/monthly)
+- Gating: dokupywanie kredytów zablokowane w Free
+
+**DO WERYFIKACJI:**
 - Rzeczywiste koszty Senuto API (per zapytanie)
 - Rzeczywiste koszty Gemini API (per audyt i per wiadomość chat)
-- Break-even przy różnych wolumenach
 
 ---
 
-*Aktualizacja: Marzec 2026 | Status: cennik w trybie placeholder*
+*Aktualizacja: Marzec 2026 | Status: model kredytowy sfinalizowany, implementacja w toku*

@@ -1,5 +1,22 @@
 # Architectural Decisions Log
 
+## ADR-068: Dashboard audit — usunięcie dev-remnant paneli i wzbogacenie empty states (2026-03-18)
+
+- **Decision**:
+  - Usunac panele "Stan i szybkie akcje" z ai-readiness i architecture (odwraca ADR-065).
+  - Usunac hardcoded dane (HTTP/2, 0 CVE) z architecture.
+  - Dodac kontekstowe empty states we wszystkich modulach (schema, links, quick-wins, images).
+  - Dodac nowa zakladke "Zewnetrzne" w links.
+  - Dodac detection_status w backendzie dla schema.
+  - Dodac opisy ocen A-F i nazw komponentow w content-quality.
+- **Rationale**:
+  - Panele rerun byly dev-remnant — user nie ma dostepu do API rerun z UI, wiec przyciski byly mylace.
+  - Hardcoded dane (HTTP/2, 0 CVE) falszowaly obraz audytu.
+  - Brak empty states powodowal ze user nie wiedzial czy dane nie istnieja, czy wystapil blad.
+  - Content Quality nie wyjasnialo systemu ocen, co zmniejszalo wartosc audytu.
+- **Trade-off**:
+  - Jesli w przyszlosci chcemy dac userowi mozliwosc re-runu AI, trzeba zaprojektowac to jako feature z kredytami, nie dev-debug panel.
+
 ## ADR-067: Single mobile navigation source + full brand asset refresh (2026-03-09)
 
 - **Decision**:

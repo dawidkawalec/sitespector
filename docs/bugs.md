@@ -8,6 +8,51 @@ This document tracks bugs found, their fixes, and known issues in SiteSpector.
 
 ## Resolved Bugs
 
+### BUG-073: Audit techniczny dashboardu — 13 poprawek UX, puste stany, brakujace funkcje
+
+**Reported**: 2026-03-18
+
+**Status**: ✅ FIXED (2026-03-18)
+
+**Severity**: HIGH
+
+**Description**:
+Kompleksowy przeglad techniczny dashboardu audytu ujawnil 13 problemow:
+- Quick Wins nie ladowaly sie stabilnie (brak kontekstowych komunikatow o zrodle danych)
+- Content Quality nie wyjasnialo ocen A-F ani nazw komponentow
+- Schema nie rozroznial "brak schema" vs "blad detekcji" vs "crawl blocked"
+- Links/Incoming pokazywal zera zamiast informacji o braku danych Senuto
+- Links/External nie mial zadnej zakladki
+- Images nie renderowal przycisku "Generuj ALT"
+- Architecture mial hardcoded "HTTP/2", falszywa karte bezpieczenstwa (0 CVE), dev-remnant "Przelicz/Wygeneruj"
+- AI Readiness mial dev-remnant karty "Stan i szybkie akcje"
+- Graf relacji zewnetrznych nie informowal o braku danych ani interakcji
+
+**Root cause**:
+- Brak empty states i kontekstowych komunikatow w wielu modulach
+- Dev-remnant karty z BUG-072/ADR-065 byly niepotrzebne w produkcji (user sam nie uzywa API rerun)
+- Backend nie zwracal detection_status dla schema (brak rozroznienia przyczyn)
+
+**Fix**:
+- Frontend (8 plikow):
+  - `quick-wins/page.tsx`: kontekstowe komunikaty (brak Senuto vs brak pasujacych fraz)
+  - `content-quality/page.tsx`: opisy ocen A-F, polskie nazwy komponentow, poradnik "co zrobic"
+  - `schema/page.tsx`: rozroznienie przyczyn braku danych (3 stany)
+  - `links/page.tsx`: nowa zakladka "Zewnetrzne" + rozbudowany pusty stan Incoming
+  - `images/page.tsx`: podpiecie przycisku "Generuj ALT" w tabeli
+  - `architecture/page.tsx`: usuniecie hardcoded HTTP/2, falszywego CVE, dev-remnant panelu
+  - `ai-readiness/page.tsx`: usuniecie dev-remnant panelu "Stan i szybkie akcje"
+  - `seo/page.tsx`: kontekstowe komunikaty Quick Wins
+- Backend (1 plik):
+  - `technical_seo_extras.py`: dodanie detection_status do schema response
+
+**Supersedes**: Czesciowo odwraca BUG-072 (usuniecie paneli "Stan i szybkie akcje") i ADR-065.
+
+**Related**:
+- Commit: d7393b4
+
+---
+
 ### BUG-072: Brak szybkich akcji rerun i narzedzi audytu w AI Readiness/Architecture
 
 **Reported**: 2026-03-08

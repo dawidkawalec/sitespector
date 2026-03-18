@@ -76,11 +76,14 @@ Główny przekaz GTM:
 - Szybki cykl decyzyjny vs enterprise
 
 **Kanały Fazy 1:**
-1. **LinkedIn direct outreach** — CEO agencji SEO, Head of SEO w agencjach
-2. **Polskie grupy SEO** — Facebook (SEO Polska, Pozycjonowanie stron), LinkedIn groups
-3. **Konferencje branżowe** — SEMcamp, I Love Marketing, MeetSEO
-4. **Partnerstwa** — agencje które mogą rekomendować narzędzie klientom
-5. **Content marketing** — blog SEO, YouTube porównania narzędzi
+1. **LinkedIn direct outreach** — CEO agencji SEO, Head of SEO w agencjach (founder-led)
+2. **Polskie grupy SEO** — Facebook (SEO Polska, Pozycjonowanie stron ~50k), LinkedIn groups
+3. **Meta Ads (FB/IG)** — główny kanał płatny, budżet 1000–2000 zł/msc, target: freelancerzy SEO
+4. **Konferencje branżowe** — SEMcamp, I Love Marketing, MeetSEO
+5. **Partnerstwa** — agencje które mogą rekomendować narzędzie klientom
+6. **Content marketing** — blog SEO, YouTube porównania narzędzi
+
+**Zasoby:** Dawid + Piotr (founderzy part-time) + zewnętrzny zespół marketingowy (3 os.)
 
 **Działania Fazy 1:**
 - Cold outreach LinkedIn do 200–500 CEO agencji SEO
@@ -90,11 +93,12 @@ Główny przekaz GTM:
 - Obecność na SEMcamp 2026
 
 **KPI Fazy 1:**
-- 50 płacących klientów Pro
-- MRR: $1 500 ($29 × 50)
-- Conversion free-to-pro: ≥ 15%
+- 50+ płacących klientów (Solo/Agency mix)
+- MRR: $1 000–$3 000
+- Conversion free-to-paid: ≥ 15%
+- Activation rate: ≥ 60% (ukończenie audytu w 7 dni)
 - Churn miesięczny: ≤ 5%
-- CAC (agencja): ≤ $60
+- CAC freelancer: ≤ $40, CAC agencja: ≤ $60
 
 **Timeline:** Q2 2026 (2–4 miesiące od uruchomienia cennika)
 
@@ -114,8 +118,8 @@ Główny przekaz GTM:
 
 **Kanały Fazy 2:**
 1. **SEO bloga** — pozycjonowanie na "audyt SEO", "narzędzie do audytu SEO PL"
-2. **Google Ads** — intent keywords: "audyt SEO narzędzie", "sprawdź stronę SEO"
-3. **Facebook/Meta Ads** — retargeting, lookalike audience od Fazy 1
+2. **Meta Ads skalowanie** — Lookalike audiences (po zebraniu ~1000 piksela), nowe targety (Software House, Agencja Mark.)
+3. **Google Ads** — wyłącznie remarketing (odzysk osób z Meta) + brand keywords
 4. **YouTube** — tutoriale "jak zrobić audyt SEO", porównania narzędzi
 5. **Referral program** — freelancerzy i agencje z Fazy 1 rekomendują klientom
 
@@ -197,13 +201,30 @@ Główny przekaz GTM:
 
 ---
 
-### Google Ads
+### Meta Ads (priorytet #1 dla paid — od Fazy 1)
+
+**Strategia:**
+- **Budżet Faza 1:** 1 000–2 000 zł/msc
+- **Lepiej:** 2 grupy × 500 zł niż 5 grup × 100 zł (algorytm potrzebuje sygnałów)
+- **Target Faza 1:** Freelancerzy SEO (1 grupa, 2–3 warianty kreacji, testy A/B)
+- **Target Faza 2:** Software House + Agencja marketingowa (osobne kreacje i tono)
+- **Piksel:** Tracking rejestracji, upgrade, audytów — budowanie Lookalike po 1000 userów
+- **KPI:** Koszt pozyskania lida ≤ ~20 USD
+
+**Testy A/B (obowiązkowe):**
+- 10 kreacji × 10 tekstów — budżet rozkłada się na testy
+- Zwycięskie warianty dostają więcej budżetu
+
+---
+
+### Google Ads (wyłącznie remarketing + brand)
 
 **Kampanie:**
-1. Brand awareness: "SiteSpector" keywords
-2. Competitor targeting: "Screaming Frog alternatywa", "Ahrefs zamiennik"
-3. Intent: "audyt SEO", "narzędzie do analizy strony"
-4. Problem-aware: "dlaczego strona nie jest w Google", "SEO sprawdzenie strony"
+1. Brand: "SiteSpector" keywords (200–500 PLN/msc)
+2. Remarketing: odzysk użytkowników z Meta (300–600 PLN/msc)
+3. Competitor intent: dopiero w Fazie 2+ gdy budżet pozwoli
+
+**WAŻNE:** Google Ads NIE jest głównym kanałem intent. Meta Ads jest tańsze i lepsze na starcie dla B2B SaaS.
 
 ---
 
@@ -285,4 +306,14 @@ Główny przekaz GTM:
 
 ---
 
-*Aktualizacja: Marzec 2026*
+## 8. Odpowiedzialność za KPI
+
+| Obszar | Owner | Zakres |
+|--------|-------|--------|
+| **Acquisition** (marketing, ads, content) | Piotr + zespół marketingowy (3 os.) | Meta Ads, LinkedIn, blog, konferencje |
+| **Activation & Retention** (produkt, UX) | Dawid | Onboarding, features, UX, chatbot AI |
+| **Sales assist** (demo, relacje z klientami) | Dawid + Piotr (wspólnie) | Demo calls, cold outreach, relacje |
+
+---
+
+*Aktualizacja: Marzec 2026 | Wersja 1.2 — Meta Ads jako główny paid, podział KPI*

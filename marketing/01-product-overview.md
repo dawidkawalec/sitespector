@@ -117,7 +117,7 @@ Trzy typy raportów PDF dopasowanych do odbiorcy: executive (zarząd), standard 
 >
 > **Dla kogo:** Agencje SEO (jeden panel dla klientów), freelancerzy (profesjonalizacja za ułamek kosztów), właściciele e-commerce i managerowie (executive summary bez technikaliów).
 >
-> **Model:** SaaS, Free → Pro ($29/msc) → Enterprise ($99/msc). Dane w EU. Stripe billing.
+> **Model:** SaaS, Free → Solo ($9.99) → Agency ($29.99) → Enterprise ($99) → Custom (API). System kredytowy. Dane w EU. Stripe billing.
 
 ---
 
@@ -130,7 +130,7 @@ Trzy typy raportów PDF dopasowanych do odbiorcy: executive (zarząd), standard 
 | Raporty PDF od zera | Generator PDF (3 formaty, white-label) | Profesjonalne raporty w 1 klik |
 | "Co poprawić" bez "jak" | Execution Plan z kodem | Klient wie co zrobić z audytem |
 | Brak monitoringu AI Overviews | Monitoring AI Overviews przez Senuto | Przewaga na nowym froncie SEO |
-| Drogie narzędzia dla małych firm | Free tier, Pro za $29/msc | Dostępne dla freelancerów |
+| Drogie narzędzia dla małych firm | Free tier + Solo za $9.99/msc | Dostępne dla freelancerów |
 | Brak widoczności dla zarządu | Executive summary + dashboard | Manager rozumie co się dzieje |
 | Dane za granicą (GDPR risk) | Serwery EU (Hetzner Niemcy) | Pełna zgodność GDPR |
 | Jeden audit = jedno narzędzie | Harmonogramy automatyczne | Monitoring ciągły bez obsługi |
@@ -140,11 +140,11 @@ Trzy typy raportów PDF dopasowanych do odbiorcy: executive (zarząd), standard 
 
 ## 7. Misja i wizja
 
-**Misja:**  
-Sprawić, żeby każda polska firma mogła uzyskać profesjonalny audyt SEO i wiedzieć dokładnie jak go wdrożyć — bez konieczności zatrudniania eksperta czy kupowania pięciu narzędzi.
+**Misja:**
+Sprawić, żeby każda polska firma mogła uzyskać profesjonalny audyt SEO i wiedzieć dokładnie jak go wdrożyć — bez konieczności zatrudniania eksperta czy kupowania pięciu narzędzi. Model Freemium z elastycznym systemem kredytowym demokratyzuje dostęp do profesjonalnych audytów.
 
-**Wizja:**  
-Stać się standardowym narzędziem do audytów SEO w Polsce — używanym zarówno przez freelancerów robiących pierwsze kroki, jak i przez największe agencje obsługujące dziesiątki klientów jednocześnie.
+**Wizja:**
+Stać się standardowym narzędziem do audytów SEO w Polsce — używanym przez freelancerów, agencje marketingowe, software house'y i największe agencje SEO. Docelowo: platforma z ekosystemem płatnych rozszerzeń (upselli) np. Content Optimization.
 
 ---
 
@@ -164,4 +164,4 @@ Stać się standardowym narzędziem do audytów SEO w Polsce — używanym zaró
 
 ---
 
-*Aktualizacja: Marzec 2026*
+*Aktualizacja: Marzec 2026 | Wersja 1.2 — model kredytowy, 7 segmentów, freemium*

@@ -35,7 +35,7 @@ docker logs sitespector-backend --tail 100             # logs
 
 ## Docs
 
-Detailed docs in [docs/](docs/): [architecture](docs/architecture.md) | [api](docs/api.md) | [database](docs/database.md) | [frontend](docs/frontend.md) | [backend](docs/backend.md) | [deployment](docs/deployment.md) | [operations](docs/operations.md) | [decisions](docs/decisions.md) | [bugs](docs/bugs.md) | [coding-standards](docs/coding-standards.md) | [marketing/](marketing/)
+Detailed docs in [docs/](docs/): [architecture](docs/architecture.md) | [api](docs/api.md) | [database](docs/database.md) | [frontend](docs/frontend.md) | [backend](docs/backend.md) | [deployment](docs/deployment.md) | [operations](docs/operations.md) | [decisions](docs/decisions.md) | [bugs](docs/bugs.md) | [coding-standards](docs/coding-standards.md) | [projects](docs/projects.md) | [marketing/](marketing/)
 
 ## Critical Rules
 

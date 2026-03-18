@@ -312,7 +312,7 @@ Co dostajesz w SiteSpector czego nie ma w SF:
 Koszt SF standalone: 199 GBP/rok (~17 GBP/msc)
 Koszt Senuto: ~300 PLN/msc
 
-SiteSpector Pro: $29/msc. Z tym wszystkim.
+SiteSpector: od $9.99/msc. Z tym wszystkim.
 
 Zrób audyt swojej strony za darmo i porównaj.
 
@@ -432,7 +432,7 @@ Senuto → Senuto API w SiteSpector ✅
 AI analysis → Gemini AI w SiteSpector ✅
 PDF raport → Generator PDF w SiteSpector ✅
 
-Za $29/msc zamiast 400-600 zł za każde osobno.
+Od $9.99/msc zamiast 400-600 zł za każde osobno.
 
 Klient dostaje ten sam zakres audytu co od agencji.
 Ty masz więcej czasu i mniejsze koszty.

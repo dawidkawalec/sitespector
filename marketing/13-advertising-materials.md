@@ -8,13 +8,13 @@
 
 ## 1. Google Ads
 
+> **Rola kanału:** Remarketing + ochrona brand only. Nie jest kanałem primary intent — Meta Ads przejmują tę funkcję.
+
 ### Kampanie priorytetowe
 
 | Kampania | Typ | Budget start | Cel |
 |----------|-----|-------------|-----|
-| **Brand** | Search | 200–500 PLN/msc | Ochrona brand, remarketing |
-| **Competitor intent** | Search | 500–1 000 PLN/msc | "Screaming Frog alternatywa" |
-| **Problem-aware** | Search | 1 000–2 000 PLN/msc | "audyt SEO narzędzie" |
+| **Brand** | Search | 200–500 PLN/msc | Ochrona brand |
 | **Remarketing** | Display/RLSA | 300–600 PLN/msc | Powracający użytkownicy |
 
 ---
@@ -52,17 +52,17 @@ Description 2: Dla agencji SEO, freelancerów i firm B2B. PDF raporty w 1 klik. 
 ```
 Headline 1: Więcej niż Screaming Frog
 Headline 2: SF + Lighthouse + Senuto + AI
-Headline 3: Audyt SEO od $29/miesiąc
+Headline 3: Audyt SEO od $9.99/miesiąc
 Description 1: Crawl jak Screaming Frog. Plus Core Web Vitals, widoczność Senuto i Execution Plan z kodem.
 Description 2: Jeden audyt. Pełny obraz. Plan działania. Bez 5 osobnych subskrypcji.
 ```
 
 **Ad Copy #2 — cost comparison:**
 ```
-Headline 1: SF + Senuto + ChatGPT = $29/msc?
+Headline 1: SF + Senuto + ChatGPT = $9.99/msc?
 Headline 2: SiteSpector łączy je wszystkie
 Headline 3: Oszczędź 400+ zł miesięcznie
-Description 1: Screaming Frog, Lighthouse, Senuto i AI (Gemini) w jednej subskrypcji za $29/msc.
+Description 1: Screaming Frog, Lighthouse, Senuto i AI (Gemini) w jednej subskrypcji od $9.99/msc.
 Description 2: Zamiast płacić za 4-5 narzędzi osobno — jeden audyt, wszystkie dane, gotowy plan.
 ```
 
@@ -95,7 +95,7 @@ Description 2: Dla agencji i freelancerów SEO. Raporty PDF gotowe do wysłania 
 ```
 Headline 1: Koniec z 5 Narzędziami SEO
 Headline 2: Jeden Audyt. Pełny Obraz.
-Headline 3: $29/msc zamiast 600 zł
+Headline 3: Od $9.99/msc zamiast 600 zł
 Description 1: Audyt SEO łączący Screaming Frog, Core Web Vitals, Senuto i AI w jednym narzędziu.
 Description 2: 3 fazy: techniczna → AI → Execution Plan z kodem. Dane w EU. Zacznij bezpłatnie.
 ```
@@ -175,7 +175,7 @@ Zamiast listy błędów — Execution Plan z kodem dla klienta.
 ✓ Audyt w 30 minut
 ✓ PDF raport gotowy do wysłania
 ✓ Harmonogramy automatyczne
-✓ $29/msc
+✓ Od $9.99/msc (Solo) / $29.99/msc (Agency)
 
 Zacznij audytować klientów bezpłatnie →
 
@@ -193,7 +193,7 @@ Nagłówek: 5 narzędzi SEO za cenę jednego
 Treść:
 Screaming Frog (199 GBP/rok) + Senuto (~300 PLN/msc) + ChatGPT ($20/msc) = ~500 PLN/msc
 
-Lub: SiteSpector Pro za $29/msc.
+Lub: SiteSpector Solo za $9.99/msc.
 Z tym samym zakresem analizy.
 
 Dla freelancerów SEO którzy chcą wyglądać jak agencja.
@@ -248,11 +248,20 @@ Tekst pod formularzem: Otrzymasz też 2 emaile z wskazówkami SEO (możesz zrezy
 
 ## 3. Meta Ads (Facebook/Instagram)
 
+> **Rola kanału:** PRIMARY paid channel. Budżet: 1 000–2 000 zł/msc.
+
 ### Główne zastosowanie
-Meta Ads dla SiteSpector sprawdzają się najlepiej jako:
-1. **Remarketing** dla osób które były na stronie (pixel)
-2. **Lookalike** od listy emailowej klientów
-3. **Facebook Groups** — właściciele stron i e-commerce
+Meta Ads to **główny płatny kanał akwizycji** SiteSpector. Trzy dedykowane grupy docelowe:
+
+1. **Freelancer SEO** (peer-level) — komunikacja na równi, porównanie kosztów narzędzi
+2. **Software House** (technical) — audyt techniczny, integracja z workflow, Execution Plan z kodem
+3. **Agencja marketingowa** (business/upsell) — skalowalność, raporty PDF, zarządzanie klientami
+
+**Obowiązkowe:** A/B testing kreacji i copy w każdej grupie docelowej (min. 2 warianty na kampanię).
+
+Dodatkowo:
+- **Remarketing** dla osób które były na stronie (pixel)
+- **Lookalike** od listy emailowej klientów
 
 ---
 
@@ -264,7 +273,7 @@ Meta Ads dla SiteSpector sprawdzają się najlepiej jako:
 Nagłówek: Sprawdziłeś już SiteSpector?
 
 Treść:
-Możesz audytować swoją stronę za darmo — 5 audytów miesięcznie, bez karty.
+Możesz audytować swoją stronę za darmo — bez karty kredytowej. 50 kredytów na start.
 Screaming Frog + Lighthouse + Senuto + AI w jednym.
 
 Zacznij za darmo →
@@ -287,7 +296,7 @@ Twoja strona może mieć błędy techniczne które blokują ranking. Powolny cza
 
 SiteSpector sprawdzi to w 30 minut i powie ci co zrobić — po polsku, bez technikaliów.
 
-Bezpłatny audyt: 5 audytów miesięcznie za darmo.
+Bezpłatny audyt: darmowy start, bez karty kredytowej.
 
 [OBRAZ: Przed/Po — niska pozycja vs top wyniki + "30 minut audytu"]
 CTA: Audytuj swoją stronę
@@ -306,7 +315,7 @@ Treść:
 Screaming Frog + Senuto + cokolwiek do wydajności + ChatGPT.
 400-600 zł miesięcznie? Może więcej?
 
-SiteSpector robi to wszystko za $29/msc.
+SiteSpector robi to wszystko od $9.99/msc.
 I generuje Execution Plan z kodem zamiast listy błędów.
 
 [OBRAZ: Kalkulator/porównanie kosztów]
@@ -317,12 +326,15 @@ CTA: Oszczędź na narzędziach
 
 ### Budżet i harmonogram Meta Ads
 
+**Łączny budżet:** 1 000–2 000 PLN/msc (high priority)
+
 | Kampania | Budżet dzienny | Optymalizacja | KPI |
 |----------|--------------|--------------|-----|
-| Remarketing | 30–50 PLN/dzień | Konwersja (rejestracja) | CPA < 30 PLN |
-| Lookalike | 50–100 PLN/dzień | Traffic / konwersja | CPC < 2 PLN |
-| E-commerce | 50–100 PLN/dzień | Lead gen | CPL < 25 PLN |
-| Freelancerzy | 30–50 PLN/dzień | Traffic | CPC < 1.5 PLN |
+| **Freelancer SEO** | 15–25 PLN/dzień | Konwersja (rejestracja) | CPA < 25 PLN |
+| **Software House** | 15–25 PLN/dzień | Traffic / konwersja | CPC < 2 PLN |
+| **Agencja marketingowa** | 15–25 PLN/dzień | Lead gen / konwersja | CPL < 30 PLN |
+| Remarketing | 10–20 PLN/dzień | Konwersja (rejestracja) | CPA < 20 PLN |
+| Lookalike | 10–20 PLN/dzień | Traffic / konwersja | CPC < 2 PLN |
 
 ---
 
@@ -343,7 +355,7 @@ CTA: Oszczędź na narzędziach
 - CTA: "Zacznij za darmo"
 
 **Wariant B — Cost:**
-- Headline: "5 narzędzi SEO za $29/msc"
+- Headline: "5 narzędzi SEO od $9.99/msc"
 - Subline: "Zamiast 400-600 zł miesięcznie"
 - CTA: "Sprawdź teraz"
 
@@ -368,7 +380,7 @@ CTA: Oszczędź na narzędziach
 | **Cold visit** | Był na stronie, nie kliknął nic | "Sprawdź nas za darmo — 5 audytów gratis" | Meta, Google Display |
 | **Engaged** | Był na /funkcje lub /jak-to-dziala | "Masz pytania? Napisz lub zacznij bezpłatnie" | Meta, LinkedIn |
 | **Signup, no audit** | Zarejestrował się ale nie zrobił audytu | "Twoje konto czeka — zrób pierwszy audyt" | Email + Meta |
-| **Free, no upgrade** | Używa Free, nie przeszedł na Pro | "Pro — $29/msc. Więcej audytów, PDF, harmonogramy" | Email + Meta |
+| **Free, no upgrade** | Używa Free, nie przeszedł na Solo/Pro | "Solo od $9.99/msc. Więcej audytów, PDF, harmonogramy" | Email + Meta |
 | **Competitor search** | Szukał "Screaming Frog alternatywa" | "SiteSpector = SF + Lighthouse + Senuto w jednym" | Google RLSA |
 
 ---
@@ -397,7 +409,7 @@ CTA: Oszczędź na narzędziach
 
 **Format:** Interaktywny widget na landing page  
 **Jak działa:** Użytkownik zaznacza które narzędzia ma → kalkulator sumuje koszty → porównuje z SiteSpector  
-**Wynik:** "Płacisz [X PLN/msc]. SiteSpector Pro kosztuje $29/msc i zastępuje [te narzędzia]."
+**Wynik:** "Płacisz [X PLN/msc]. SiteSpector Solo kosztuje $9.99/msc i zastępuje [te narzędzia]."
 
 ---
 
@@ -439,4 +451,4 @@ CTA: Oszczędź na narzędziach
 
 ---
 
-*Aktualizacja: Marzec 2026 | Budżety i CPx do weryfikacji z aktualnymi benchmarkami rynkowymi*
+*Aktualizacja: Marzec 2026 v2 | Meta Ads → primary channel, Google Ads → brand+remarketing only, ceny zaktualizowane do $9.99/$29.99. Budżety i CPx do weryfikacji z aktualnymi benchmarkami rynkowymi.*

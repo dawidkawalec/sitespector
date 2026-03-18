@@ -70,7 +70,7 @@ weryfikacja agencji.
 
 **Dolny pasek:**
 ```
-Free: 5 audytów/msc | Pro: $29/msc (50 audytów) | Enterprise: $99/msc (unlimited)
+Free: 50 kredytów na start (1 audyt demo, zblurowany raport) | Solo: $9.99/msc | Agency: $29.99/msc | Enterprise: $99/msc | Custom: API
 Dane w EU (GDPR) | Sreaming Frog Engine | Gemini AI | Senuto API
 support@sitespector.app | sitespector.app
 ```
@@ -142,16 +142,18 @@ Dla każdego: kluczowy pain point + jak SiteSpector rozwiązuje
 - Chat AI
 
 ### Slajd 8: Model Biznesowy
-**Nagłówek:** "SaaS, trzy plany, per-workspace"
+**Nagłówek:** "SaaS, pięć planów, PLG self-serve + Custom API"
 
 **Treść:**
-| | Free | Pro | Enterprise |
-|-|------|-----|-----------|
-| Audyty | 5/msc | 50/msc | Unlimited |
-| Chat | 100/msc | 500/msc | Unlimited |
-| Cena | $0 | $29/msc | $99/msc |
+| | Free | Solo | Agency | Enterprise | Custom |
+|-|------|------|--------|-----------|--------|
+| Kredyty | 50 na start | X/msc | X/msc | X/msc | API |
+| Chat | demo | ✓ | ✓ | ✓ | ✓ |
+| Raport | zblurowany | pełny | pełny | pełny | pełny |
+| Cena | $0 | $9.99/msc | $29.99/msc | $99/msc | contact sales |
 
-- Stripe billing, gotowe
+- Stripe billing, self-serve (włącznie z Enterprise)
+- Custom plan = API access, dedykowana oferta
 - Per-workspace (nie per-seat) — skaluje z agencjami
 
 ### Slajd 9: Traction / Status
@@ -167,7 +169,7 @@ Dla każdego: kluczowy pain point + jak SiteSpector rozwiązuje
 
 **Treść:**
 - sitespector.app — Free tier, bez karty
-- support@sitespector.app — pytania, demo, oferta enterprise
+- support@sitespector.app — pytania, demo, oferta Custom/API
 - LinkedIn: [link do profilu]
 
 ---
@@ -232,7 +234,7 @@ Cześć [Imię],
 Wysłałem kilka wiadomości — jeśli nie trafiłem w dobry moment, rozumiem.
 
 Zostawiam link do bezpłatnego dostępu: sitespector.app
-5 audytów miesięcznie, bez karty, bez zobowiązań.
+darmowy audyt (zblurowany) i testowanie AI Chatu bez podpinania karty.
 
 Jeśli kiedyś będziesz chciał porozmawiać o narzędziach do audytów — jestem pod support@sitespector.app.
 
@@ -258,7 +260,7 @@ Zacznij od:
 2. W projekcie → "Nowy Audyt" → Wpisz URL
 3. Poczekaj ~30 minut → Przejrzyj Execution Plan
 
-Bezpłatnie masz 5 audytów miesięcznie — to wystarczy żeby zobaczyć wartość.
+Bezpłatnie masz 50 kredytów na start (1 audyt demo, zblurowany raport) — to wystarczy żeby zobaczyć wartość.
 
 Masz pytania? Odpiszę.
 
@@ -301,21 +303,21 @@ Dawid
 
 **Email 4 — Day 14 (konwersja Free → Pro):**
 ```
-Temat: Wyczerpujesz 5 audytów miesięcznie?
+Temat: Chcesz pełne raporty bez blura?
 
 Cześć [Imię],
 
-Jeśli używasz SiteSpector regularnie, pewnie widzisz że 5 audytów/msc to mało.
+Jeśli przetestowałeś darmowy audyt, pewnie widzisz wartość — ale raport jest zblurowany.
 
-Pro Plan: $29/msc
-→ 50 audytów miesięcznie
+Solo Plan: $9.99/msc
+→ Pełne raporty bez blura
 → Harmonogramy automatyczne (audyty bez obsługi)
-→ 500 wiadomości chat/msc
+→ Chat AI bez limitu demo
 → Wszystkie raporty PDF bez limitu
 
-Dla freelancera obsługującego 5 klientów: $29 zamiast nawet 1 audytu ręcznego.
+Dla freelancera: $9.99 zamiast nawet 1 audytu ręcznego. Agencje → Agency $29.99/msc.
 
-Uaktualnij: [CTA: Sprawdź Pro]
+Uaktualnij: [CTA: Sprawdź plany]
 Lub napisz do mnie jeśli masz pytania.
 
 Dawid
@@ -380,9 +382,9 @@ Jeśli chcesz ją wypróbować — Free tier: sitespector.app
 - "Jak to porównuje się z tym co teraz robisz?"
 
 **[12-15 min] Closing**
-- "Możesz zacząć bezpłatnie — 5 audytów, bez karty, bez zobowiązań."
-- Jeśli chcą Pro: "Pro to $29/msc — czy masz pytania zanim zaczniesz?"
-- Jeśli Enterprise: "Przygotujemy ci dedykowaną ofertę — kiedy mogę się odezwać?"
+- "Możesz zacząć bezpłatnie — darmowy audyt demo, bez karty, bez zobowiązań."
+- Jeśli chcą Solo/Agency: "Solo to $9.99/msc, Agency $29.99/msc — wszystko self-serve, od razu."
+- Jeśli Custom/API: "Przygotujemy ci dedykowaną ofertę API — kiedy mogę się odezwać?"
 - Zawsze: "Mam twój email — wyślę link do audytu który zrobiłem i krótkie podsumowanie."
 
 ---
@@ -393,7 +395,7 @@ Jeśli chcesz ją wypróbować — Free tier: sitespector.app
 > "Bezpośrednio — nie. Ale eksportujemy dane do PDF i możemy zintegrować przez API (planowane). Jakie narzędzie masz na myśli? Możemy sprawdzić co możemy zrobić."
 
 ### "Czy mogę przetestować przed zakupem?"
-> "Oczywiście — Free tier jest zawsze dostępny, 5 audytów bez karty. Możemy też przedłużyć trial Pro jeśli potrzebujesz więcej czasu na ocenę."
+> "Oczywiście — Free tier daje 50 kredytów na start (1 audyt demo, zblurowany raport), bez karty. Możemy też przedłużyć trial jeśli potrzebujesz więcej czasu na ocenę."
 
 ### "Jak długo trwa audyt?"
 > "Zależy od rozmiaru strony. Małe strony (do 100 podstron): 10–15 minut. Większe (100–1000 podstron): 20–30 minut. Bardzo duże: może trwać dłużej."
@@ -421,14 +423,14 @@ Jeśli chcesz ją wypróbować — Free tier: sitespector.app
 | ChatGPT/AI | ~80–100 zł/msc | ✓ Wbudowany (Gemini) |
 | Czas na łączenie | X godz × stawka | ✓ Automatyczne |
 | Generator PDF | [Word/czas] | ✓ Automatyczny |
-| **ŁĄCZNIE** | **~580–700 zł/msc + czas** | **$29/msc Pro** |
+| **ŁĄCZNIE** | **~580–700 zł/msc + czas** | **od $9.99/msc** |
 
 ### Jak używać w sprzedaży
 1. Zapytaj klienta które narzędzia ma i ile płaci
 2. Wpisz ich liczby
 3. Pokaż porównanie
-4. "SiteSpector Pro kosztuje $29/msc i zastępuje to wszystko"
+4. "SiteSpector kosztuje od $9.99/msc i zastępuje to wszystko"
 
 ---
 
-*Aktualizacja: Marzec 2026*
+*Aktualizacja: Marzec 2026 v2 — nowy pricing (Free/Solo/Agency/Enterprise/Custom)*
