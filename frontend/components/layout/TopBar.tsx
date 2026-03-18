@@ -8,6 +8,7 @@ import { SiteSpectorLogo } from '@/components/brand/SiteSpectorLogo'
 import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher'
 import { Breadcrumbs } from './Breadcrumbs'
 import { UserMenu } from './UserMenu'
+import { CreditBalance } from '@/components/CreditBalance'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface TopBarProps {
@@ -104,6 +105,7 @@ export function TopBar({ mobileMenu, isImpersonating = false }: TopBarProps) {
         <div className="hidden md:block w-[250px]">
           <WorkspaceSwitcher />
         </div>
+        <CreditBalance />
         <UserMenu />
       </div>
     </header>

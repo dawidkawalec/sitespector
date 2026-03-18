@@ -558,3 +558,41 @@ class ChatUsage(Base):
 
     def __repr__(self) -> str:
         return f"<ChatUsage(user_id={self.user_id}, month={self.month}, messages_sent={self.messages_sent})>"
+
+
+class CreditBalance(Base):
+    """Per-workspace credit balance. One row per workspace."""
+
+    __tablename__ = "credit_balances"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id = Column(UUID(as_uuid=True), nullable=False, unique=True, index=True)
+    subscription_credits = Column(Integer, nullable=False, server_default="0")
+    purchased_credits = Column(Integer, nullable=False, server_default="0")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    @property
+    def total(self) -> int:
+        return (self.subscription_credits or 0) + (self.purchased_credits or 0)
+
+    def __repr__(self) -> str:
+        return f"<CreditBalance(workspace_id={self.workspace_id}, sub={self.subscription_credits}, purchased={self.purchased_credits})>"
+
+
+class CreditTransaction(Base):
+    """Append-only credit transaction ledger."""
+
+    __tablename__ = "credit_transactions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    type = Column(String(30), nullable=False, index=True)
+    amount = Column(Integer, nullable=False)  # positive = credit, negative = debit
+    balance_after = Column(Integer, nullable=False)
+    metadata = Column("metadata", JSONB, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    def __repr__(self) -> str:
+        return f"<CreditTransaction(workspace={self.workspace_id}, type={self.type}, amount={self.amount})>"

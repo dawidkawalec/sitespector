@@ -731,3 +731,52 @@ export const adminAPI = {
       { method: 'POST' }
     ),
 }
+
+// --- Credits API ---
+
+export interface CreditBalance {
+  subscription_credits: number
+  purchased_credits: number
+  total: number
+  plan: string
+  credits_per_cycle: number
+}
+
+export interface CreditTransaction {
+  id: string
+  type: string
+  amount: number
+  balance_after: number
+  metadata: Record<string, any> | null
+  created_at: string
+}
+
+export interface CreditPackage {
+  id: string
+  label: string
+  credits: number
+  price_cents: number
+}
+
+export interface CostEstimate {
+  total_cost: number
+  breakdown: { tech: number; ai: number; competitors: number }
+}
+
+export const creditsAPI = {
+  getBalance: (workspaceId: string) =>
+    apiRequest<CreditBalance>(`/api/credits/balance?workspace_id=${workspaceId}`),
+
+  getTransactions: (workspaceId: string, limit = 20, offset = 0) =>
+    apiRequest<CreditTransaction[]>(
+      `/api/credits/transactions?workspace_id=${workspaceId}&limit=${limit}&offset=${offset}`
+    ),
+
+  getPackages: () =>
+    apiRequest<CreditPackage[]>('/api/credits/packages'),
+
+  getCostEstimate: (runAiPipeline = true, competitorsCount = 0) =>
+    apiRequest<CostEstimate>(
+      `/api/credits/cost-estimate?run_ai_pipeline=${runAiPipeline}&competitors_count=${competitorsCount}`
+    ),
+}

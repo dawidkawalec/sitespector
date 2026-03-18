@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { auditsAPI, type CreateAuditData } from '@/lib/api'
-import { supabase } from '@/lib/supabase'
+import { auditsAPI, creditsAPI, type CreateAuditData, type CreditBalance } from '@/lib/api'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import {
   Dialog,
@@ -48,18 +47,14 @@ interface NewAuditDialogProps {
   projectUrl?: string
 }
 
-interface Subscription {
-  audit_limit: number
-  audits_used_this_month: number
-  plan: string
-}
+// CreditBalance imported from api.ts
 
 export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, projectUrl }: NewAuditDialogProps) {
   const router = useRouter()
   const [error, setError] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [competitors, setCompetitors] = useState<string[]>([''])
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
   const [senutoCountry, setSenutoCountry] = useState('200')
   const [senutoFetchMode, setSenutoFetchMode] = useState('subdomain')
   const [runAiPipeline, setRunAiPipeline] = useState(true)
@@ -101,29 +96,14 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, proje
     setCompetitors(newCompetitors)
   }
 
-  // Fetch subscription data when dialog opens
+  // Fetch credit balance when dialog opens
   useEffect(() => {
     if (open && currentWorkspace) {
-      fetchSubscription()
+      creditsAPI.getBalance(currentWorkspace.id).then(setCreditBalance).catch(err => {
+        console.error('Error fetching credit balance:', err)
+      })
     }
   }, [open, currentWorkspace])
-
-  const fetchSubscription = async () => {
-    if (!currentWorkspace) return
-
-    try {
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('workspace_id', currentWorkspace.id)
-        .single()
-
-      if (error) throw error
-      setSubscription(data as Subscription)
-    } catch (err) {
-      console.error('Error fetching subscription:', err)
-    }
-  }
 
   const onSubmit = async (data: { url: string }) => {
     setLoading(true)
@@ -159,9 +139,9 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, proje
     }
   }
 
-  const auditsRemaining = subscription 
-    ? subscription.audit_limit - subscription.audits_used_this_month 
-    : 0
+  const competitorsCount = competitors.filter(c => c.trim() !== '').length
+  const auditCost = (runAiPipeline ? 30 : 20) + competitorsCount * 3
+  const hasEnoughCredits = creditBalance ? creditBalance.total >= auditCost : true
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -182,26 +162,23 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, proje
             </Alert>
           )}
 
-          {/* Usage warning */}
-          {subscription && auditsRemaining <= 2 && auditsRemaining > 0 && (
-            <Alert className="bg-accent/10 border-accent/20 text-accent">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Pozostało Ci {auditsRemaining} {auditsRemaining === 1 ? 'audyt' : 'audyty'} w tym miesiącu.{' '}
-                <Link href="/pricing" className="underline font-bold">
-                  Cennik wkrótce - skontaktuj się z nami
-                </Link>
-              </AlertDescription>
-            </Alert>
+          {/* Credit cost & balance info */}
+          {creditBalance && (
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
+              <span>Koszt audytu: <strong>{auditCost} kr</strong></span>
+              <span className={!hasEnoughCredits ? 'text-red-600 font-bold' : 'text-muted-foreground'}>
+                Saldo: {creditBalance.total} kr
+              </span>
+            </div>
           )}
 
-          {subscription && auditsRemaining === 0 && (
+          {creditBalance && !hasEnoughCredits && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Osiągnięto limit audytów ({subscription.audit_limit}/miesiąc).{' '}
-                <Link href="/pricing" className="underline font-bold">
-                  Cennik wkrótce - skontaktuj się z nami
+                Niewystarczające kredyty. Potrzebujesz {auditCost} kr, masz {creditBalance.total} kr.{' '}
+                <Link href="/settings/billing" className="underline font-bold">
+                  Kup kredyty
                 </Link>
               </AlertDescription>
             </Alert>
@@ -393,7 +370,7 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, proje
               type="submit" 
               variant="accent"
               className="rounded-xl px-8 shadow-lg shadow-accent/20"
-              disabled={loading || (!!subscription && (auditsRemaining ?? 0) === 0)}
+              disabled={loading || !hasEnoughCredits}
             >
               {loading ? 'Uruchamianie...' : 'Rozpocznij Audyt'}
             </Button>

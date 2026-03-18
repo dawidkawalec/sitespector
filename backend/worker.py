@@ -953,12 +953,30 @@ async def worker_loop() -> None:
                 now = datetime.utcnow()
                 res = await db.execute(select(AuditSchedule).where(AuditSchedule.is_active == True).where(AuditSchedule.next_run_at <= now))
                 for schedule in res.scalars().all():
+                    # Check credits before creating scheduled audit
+                    from app.services.credit_service import check_credits, deduct_credits, calculate_audit_cost
+                    competitors_count = len(schedule.competitors_urls or []) if schedule.include_competitors else 0
+                    audit_cost = calculate_audit_cost(True, competitors_count)
+                    has_credits = await check_credits(db, str(schedule.workspace_id), audit_cost)
+                    if not has_credits:
+                        logger.warning("Insufficient credits for scheduled audit %s (workspace %s, need %d kr)", schedule.id, schedule.workspace_id, audit_cost)
+                        schedule.last_run_at = now
+                        freq_map = {ScheduleFrequency.DAILY: timedelta(days=1), ScheduleFrequency.WEEKLY: timedelta(weeks=1), ScheduleFrequency.MONTHLY: timedelta(days=30)}
+                        schedule.next_run_at = now + freq_map.get(schedule.frequency, timedelta(days=7))
+                        await db.commit()
+                        continue
+
                     new_audit = Audit(workspace_id=schedule.workspace_id, user_id=schedule.user_id, url=schedule.url, status=AuditStatus.PENDING)
                     db.add(new_audit)
                     await db.flush()
                     if schedule.include_competitors and schedule.competitors_urls:
                         for c_url in schedule.competitors_urls:
                             db.add(Competitor(audit_id=new_audit.id, url=c_url))
+
+                    # Deduct credits
+                    user_id = str(schedule.user_id) if schedule.user_id else "00000000-0000-0000-0000-000000000000"
+                    await deduct_credits(db, str(schedule.workspace_id), user_id, audit_cost, "deduct_audit", {"audit_id": str(new_audit.id), "scheduled": True})
+
                     schedule.last_run_at = now
                     freq_map = {ScheduleFrequency.DAILY: timedelta(days=1), ScheduleFrequency.WEEKLY: timedelta(weeks=1), ScheduleFrequency.MONTHLY: timedelta(days=30)}
                     schedule.next_run_at = now + freq_map.get(schedule.frequency, timedelta(days=7))

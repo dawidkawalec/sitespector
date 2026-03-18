@@ -158,13 +158,17 @@ async def create_audit(
             )
         audit_project_id = project_id
     
-    # 3. Check subscription limits
-    can_create = await check_audit_limit(workspace_id)
-    if not can_create:
-        subscription = await get_workspace_subscription(workspace_id)
+    # 3. Check credit balance (replaces old audit_limit check)
+    from app.services.credit_service import calculate_audit_cost, check_credits
+    run_ai = audit_data.run_ai_pipeline if audit_data.run_ai_pipeline is not None else True
+    audit_cost = calculate_audit_cost(run_ai, len(audit_data.competitors))
+    has_credits = await check_credits(db, workspace_id, audit_cost)
+    if not has_credits:
+        from app.services.credit_service import get_balance
+        balance = await get_balance(db, workspace_id)
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Audit limit reached ({subscription['audit_limit']} audits/month). Upgrade to Pro for more audits."
+            detail=f"Niewystarczające kredyty. Potrzeba: {audit_cost} kr, saldo: {balance.total} kr."
         )
     
     # 4. Create audit
@@ -195,7 +199,13 @@ async def create_audit(
     await db.commit()
     await db.refresh(new_audit)
     
-    # 5. Increment workspace audit usage
+    # 5. Deduct credits for this audit
+    from app.services.credit_service import deduct_credits
+    await deduct_credits(
+        db, workspace_id, current_user["id"], audit_cost, "deduct_audit",
+        {"audit_id": str(new_audit.id), "breakdown": {"tech": 20, "ai": 10 if run_ai else 0, "competitors": len(audit_data.competitors) * 3}},
+    )
+    # Legacy: also increment old counter for backward compatibility
     await increment_audit_usage(workspace_id)
     
     # 6. Load competitors relationship

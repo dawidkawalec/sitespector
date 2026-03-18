@@ -3,16 +3,23 @@ Billing endpoints for Stripe integration.
 
 Handles:
 - Creating checkout sessions
-- Processing webhooks
+- Processing webhooks (subscriptions + credit packages)
 - Managing subscriptions
 """
 
 import stripe
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
+from app.database import get_db
 from app.auth_supabase import get_current_user, verify_workspace_access
 from app.lib.supabase import supabase, get_workspace_subscription
+from app.services.credit_service import (
+    reset_subscription_credits,
+    grant_credits,
+    PLAN_CREDITS,
+)
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -167,7 +174,19 @@ async def stripe_webhook(request: Request):
         }).eq("workspace_id", workspace_id).execute()
         
         logger.info(f"Activated {plan} plan for workspace {workspace_id}")
-    
+
+        # Grant subscription credits
+        try:
+            from app.database import AsyncSessionLocal
+            async with AsyncSessionLocal() as db:
+                plan_credits = PLAN_CREDITS.get(plan, 0)
+                if plan_credits > 0:
+                    await reset_subscription_credits(db, workspace_id, plan_credits)
+                    await db.commit()
+                    logger.info(f"Granted {plan_credits} credits to workspace {workspace_id}")
+        except Exception as e:
+            logger.error(f"Failed to grant credits for workspace {workspace_id}: {e}")
+
     elif event_type == "customer.subscription.updated":
         # Subscription updated (renewal, plan change)
         subscription_obj = data
@@ -211,7 +230,17 @@ async def stripe_webhook(request: Request):
             }).eq("workspace_id", workspace_id).execute()
             
             logger.info(f"Downgraded workspace {workspace_id} to free plan")
-    
+
+            # Zero subscription credits (purchased credits remain)
+            try:
+                from app.database import AsyncSessionLocal
+                async with AsyncSessionLocal() as credit_db:
+                    await reset_subscription_credits(credit_db, workspace_id, 0)
+                    await credit_db.commit()
+                    logger.info(f"Zeroed subscription credits for workspace {workspace_id}")
+            except Exception as e:
+                logger.error(f"Failed to zero credits for workspace {workspace_id}: {e}")
+
     elif event_type == "invoice.paid":
         # Invoice paid, record in invoices table
         invoice = data
@@ -235,7 +264,20 @@ async def stripe_webhook(request: Request):
             }).execute()
             
             logger.info(f"Recorded invoice for workspace {workspace_id}")
-    
+
+            # Grant subscription credits on renewal
+            try:
+                plan = subscription_data.data[0].get("plan", "free")
+                from app.database import AsyncSessionLocal
+                async with AsyncSessionLocal() as credit_db:
+                    plan_credits = PLAN_CREDITS.get(plan, 0)
+                    if plan_credits > 0:
+                        await reset_subscription_credits(credit_db, workspace_id, plan_credits)
+                        await credit_db.commit()
+                        logger.info(f"Renewed {plan_credits} credits for workspace {workspace_id} (plan={plan})")
+            except Exception as e:
+                logger.error(f"Failed to renew credits for workspace {workspace_id}: {e}")
+
     return {"status": "success"}
 
 

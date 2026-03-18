@@ -209,19 +209,30 @@ async def get_usage(db: AsyncSession, *, user_id: str, workspace_id: str, user_m
 
 
 async def assert_rate_limit(db: AsyncSession, *, user_id: str, workspace_id: str, user_metadata: Optional[dict]) -> None:
-    month, sent, limit, _tier = await get_usage(
-        db, user_id=user_id, workspace_id=workspace_id, user_metadata=user_metadata
-    )
-    if limit is None:
-        return
-    if sent >= limit:
+    # Credit-based rate limiting (new system)
+    from app.services.credit_service import check_credits, get_balance
+    has_credits = await check_credits(db, workspace_id, 1)
+    if not has_credits:
+        balance = await get_balance(db, workspace_id)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Monthly chat limit reached ({sent}/{limit})",
+            detail=f"Brak kredytów na wiadomość chat. Saldo: {balance.total} kr.",
         )
 
 
-async def increment_usage(db: AsyncSession, *, user_id: str) -> None:
+async def increment_usage(db: AsyncSession, *, user_id: str, workspace_id: str = "", conversation_id: str = "") -> None:
+    # Deduct 1 credit for chat message (new system)
+    if workspace_id:
+        from app.services.credit_service import deduct_credits
+        try:
+            await deduct_credits(
+                db, workspace_id, user_id, 1, "deduct_chat",
+                {"conversation_id": conversation_id} if conversation_id else None,
+            )
+        except Exception:
+            pass  # Credit deduction is best-effort for chat; rate limit already checked
+
+    # Legacy: also increment old counter for analytics
     month = _month_key()
     user_uuid = _as_uuid(user_id)
 
@@ -927,7 +938,7 @@ async def stream_chat_response(
                 tokens_used=None,
             )
             db.add(assistant_msg)
-            await increment_usage(db, user_id=user_id)
+            await increment_usage(db, user_id=user_id, workspace_id=str(convo.workspace_id), conversation_id=str(convo.id))
             await db.flush()
             yield msg
             return
@@ -1029,7 +1040,7 @@ async def stream_chat_response(
     )
     db.add(assistant_msg)
 
-    await increment_usage(db, user_id=user_id)
+    await increment_usage(db, user_id=user_id, workspace_id=str(convo.workspace_id), conversation_id=str(convo.id))
     await db.flush()
 
     # Suggested follow-up prompts (best-effort, emitted after the answer).
