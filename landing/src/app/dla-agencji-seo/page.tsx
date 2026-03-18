@@ -24,7 +24,7 @@ import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 export const metadata = buildMetadata({
   title: 'Dla Agencji SEO — Jeden panel dla wszystkich klientów | SiteSpector',
   description:
-    'SiteSpector dla agencji: workspace per klient, raporty PDF white-label, harmonogramy audytów i Execution Plan z kodem. Oferta jest aktualizowana.',
+    'SiteSpector dla agencji: plan Agency od $29.99/msc (400 crawli), Enterprise od $99/msc. Workspace per klient, raporty PDF white-label, harmonogramy audytów i Execution Plan z kodem.',
   keywords: [
     'agencja SEO',
     'audyt SEO agencja',
@@ -105,7 +105,7 @@ export default function DlaAgencjiSeoPage() {
             path: '/dla-agencji-seo',
             title: 'Dla Agencji SEO — Jeden panel dla wszystkich klientów | SiteSpector',
             description:
-              'SiteSpector dla agencji: workspace per klient, raporty PDF white-label, harmonogramy audytów i Execution Plan z kodem. Oferta jest aktualizowana.',
+              'SiteSpector dla agencji: plan Agency od $29.99/msc (400 crawli), Enterprise od $99/msc. Workspace per klient, raporty PDF white-label, harmonogramy audytów i Execution Plan z kodem.',
           }),
           buildBreadcrumbSchema([
             { name: 'SiteSpector', path: '/' },
@@ -128,12 +128,12 @@ export default function DlaAgencjiSeoPage() {
                   </h1>
                 </div>
                 <p className="text-muted mt-4 mb-0">
-                  Przestań płacić za pięć narzędzi i tracić godziny na raporty. SiteSpector łączy Screaming Frog, Lighthouse, Senuto i AI w jednym dashboardzie.
-                  Szczegóły oferty opublikujemy wkrótce.
+                  Przestań płacić za pięć narzędzi i tracić godziny na raporty. SiteSpector łączy Screaming Frog, Lighthouse, Senuto i AI w jednym dashboardzie
+                  — od $29.99/msc za plan Agency.
                 </p>
                 <div className="mt-4">
-                  <Link href="/kontakt" className="btn btn-primary me-2 my-2">
-                    Skontaktuj się z nami
+                  <Link href="/register" className="btn btn-primary me-2 my-2">
+                    Zacznij za darmo
                   </Link>
                   <Link href="#koszty" className="btn btn-outline-primary my-2">
                     Zobacz porównanie kosztów
@@ -143,7 +143,7 @@ export default function DlaAgencjiSeoPage() {
 
               <div className="col-lg-5">
                 <div className="p-3 bg-light rounded-4 border shadow-sm">
-                  <Image src={DashboardHero} alt="Lista workspace'ów klientów (placeholder)" className="img-fluid rounded-3" />
+                  <Image src={DashboardHero} alt="Dashboard SiteSpector — workspace'y klientów" className="img-fluid rounded-3" />
                   <div className="mt-3 d-flex gap-2 flex-wrap">
                     <span className="badge bg-white text-primary border">Workspace: Klient A</span>
                     <span className="badge bg-white text-primary border">Klient B</span>
@@ -204,10 +204,10 @@ export default function DlaAgencjiSeoPage() {
                 </div>
                 <div className="main-title mt-3">
                   <h2 className="text-primary">
-                    Oferta <span className="text-orange text-line">wkrótce</span>
+                    Jeden tool zamiast <span className="text-orange text-line">pięciu subskrypcji</span>
                   </h2>
                 </div>
-                <p className="text-muted mt-3 mb-0">Finalizujemy pakiety i warunki współpracy dla agencji.</p>
+                <p className="text-muted mt-3 mb-0">Agency $29.99/msc (400 crawli) | Enterprise $99/msc (2000 crawli, white-label, API, dedykowane wsparcie).</p>
               </div>
             </div>
 
@@ -233,8 +233,8 @@ export default function DlaAgencjiSeoPage() {
                         ))}
                         <tr>
                           <td className="p-4 border-top fw-bold text-primary">Podsumowanie</td>
-                          <td className="p-4 border-top fw-bold text-muted">Zależne od dostawców</td>
-                          <td className="p-4 border-top fw-bold text-orange">Wkrótce — skontaktuj się z nami</td>
+                          <td className="p-4 border-top fw-bold text-muted">Setki $ miesięcznie</td>
+                          <td className="p-4 border-top fw-bold text-orange">Od $29.99/msc — wszystko w jednym</td>
                         </tr>
                       </tbody>
                     </table>
@@ -242,13 +242,13 @@ export default function DlaAgencjiSeoPage() {
                 </div>
 
                 <div className="mt-4 text-center">
-                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
-                    Skontaktuj się z nami
+                  <Link href="/register" className="btn btn-primary px-5 py-3 fw-bold">
+                    Zacznij za darmo
                     <RiArrowRightLine className="ms-2" />
                   </Link>
                 </div>
                 <p className="text-muted small text-center mt-3 mb-0">
-                  Szczegóły pakietów i zakresu funkcji opublikujemy wkrótce.
+                  Agency $29.99/msc (400 crawli) | Enterprise $99/msc (2000 crawli) — bez lock-in, zmień plan kiedy chcesz.
                 </p>
               </div>
             </div>
@@ -277,7 +277,7 @@ export default function DlaAgencjiSeoPage() {
             <div className="row align-items-center justify-content-center g-4">
               <div className="col-lg-5">
                 <div className="p-3 bg-white rounded-4 border shadow-sm">
-                  <Image src={DashboardWide} alt="Workspace i role (placeholder)" className="img-fluid rounded-3" />
+                  <Image src={DashboardWide} alt="Workspace SiteSpector — role i zaproszenia" className="img-fluid rounded-3" />
                 </div>
               </div>
               <div className="col-lg-6">
@@ -316,7 +316,7 @@ export default function DlaAgencjiSeoPage() {
                 </div>
                 <p className="text-muted mt-3 mb-0">
                   Profesjonalny raport PDF z SEO, Performance, Visibility, AI Overviews, Backlinks, Links, Images, AI Strategy i Execution Plan. W planie
-                  dedykowanym — własne logo i branding. Pełne warunki podamy wkrótce.
+                  Enterprise — własne logo i branding (white-label).
                 </p>
               </div>
             </div>
@@ -324,7 +324,7 @@ export default function DlaAgencjiSeoPage() {
             <div className="row align-items-center justify-content-center g-4">
               <div className="col-lg-5">
                 <div className="p-3 bg-light rounded-4 border shadow-sm">
-                  <Image src={DashboardMetrics} alt="Podgląd PDF (placeholder)" className="img-fluid rounded-3" />
+                  <Image src={DashboardMetrics} alt="Raport PDF SiteSpector — 9 sekcji audytu" className="img-fluid rounded-3" />
                 </div>
               </div>
               <div className="col-lg-6">
@@ -346,7 +346,12 @@ export default function DlaAgencjiSeoPage() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-muted small mt-3 mb-0">CTA do demo PDF podmienimy, gdy bedzie gotowy screenshot/plik.</p>
+                    <div className="mt-3">
+                      <Link href="/register" className="btn btn-primary btn-sm">
+                        Zacznij za darmo
+                        <RiArrowRightLine className="ms-2" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -376,7 +381,7 @@ export default function DlaAgencjiSeoPage() {
             <div className="row align-items-center justify-content-center g-4">
               <div className="col-lg-5">
                 <div className="p-3 bg-white rounded-4 border shadow-sm">
-                  <Image src={DashboardHero} alt="Konfiguracja harmonogramu (placeholder)" className="img-fluid rounded-3" />
+                  <Image src={DashboardHero} alt="Harmonogramy audytów SiteSpector" className="img-fluid rounded-3" />
                 </div>
               </div>
               <div className="col-lg-6">
@@ -423,7 +428,7 @@ export default function DlaAgencjiSeoPage() {
             <div className="row align-items-center justify-content-center g-4">
               <div className="col-lg-5">
                 <div className="p-3 bg-light rounded-4 border shadow-sm">
-                  <Image src={DashboardWide} alt="Execution Plan (placeholder)" className="img-fluid rounded-3" />
+                  <Image src={DashboardWide} alt="Execution Plan — konkretne zadania z kodem" className="img-fluid rounded-3" />
                 </div>
               </div>
               <div className="col-lg-6">
@@ -487,7 +492,7 @@ export default function DlaAgencjiSeoPage() {
                     </div>
                     <div className="col-lg-6">
                       <div className="p-3 bg-light rounded-4 border">
-                        <Image src={DashboardMetrics} alt="AI Strategy (placeholder)" className="img-fluid rounded-3" />
+                        <Image src={DashboardMetrics} alt="AI Strategy — roadmapa i executive summary" className="img-fluid rounded-3" />
                       </div>
                     </div>
                   </div>
@@ -554,7 +559,7 @@ export default function DlaAgencjiSeoPage() {
             <div className="row justify-content-center">
               <div className="col-lg-10">
                 <div className="p-3 bg-white rounded-4 border shadow-sm">
-                  <Image src={DashboardHero} alt="Benchmark view (placeholder)" className="img-fluid rounded-3" />
+                  <Image src={DashboardHero} alt="Benchmark — porównanie ze standardami branży" className="img-fluid rounded-3" />
                 </div>
               </div>
             </div>
@@ -604,15 +609,15 @@ export default function DlaAgencjiSeoPage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3">
-                  Pakiety są w trakcie finalizacji. Skontaktuj się z nami, aby omówić aktualne możliwości współpracy.
+                  Agency od $29.99/msc (400 crawli) | Enterprise od $99/msc (2000 crawli, white-label, API). Bez karty kredytowej na start.
                 </p>
                 <div className="mt-4">
-                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
-                    Skontaktuj się z nami
+                  <Link href="/register" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
+                    Zacznij za darmo
                     <RiArrowRightLine className="ms-2" />
                   </Link>
-                  <Link href="/jak-to-dziala" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">
-                    Zobacz jak to działa
+                  <Link href="/cennik" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">
+                    Porównaj wszystkie plany
                   </Link>
                 </div>
               </div>

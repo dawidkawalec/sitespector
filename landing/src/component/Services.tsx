@@ -25,7 +25,7 @@ const Services = () => {
                   <span className="text-orange text-line">Kilka Minut</span>
                 </h2>
                 <p className="my-3">
-                  Nasze algorytmy analizują setki czynników rankingowych. Otrzymujesz priorytetyzowaną listę zadań w Execution
+                  Screaming Frog, Lighthouse, Senuto i Gemini AI analizują Twoją stronę. Otrzymujesz priorytetyzowaną listę zadań w Execution
                   Plan — nie tylko „co poprawić”, ale konkretne kroki z gotowym kodem. 3 fazy audytu: technika → AI → plan
                   wykonania.
                 </p>
@@ -34,50 +34,33 @@ const Services = () => {
                 <Col lg={6}>
                   <div className="counter">
                     <h3 className="text-primary fw-bold">
-                      <CountUp end={200} duration={5} suffix="K+" />
+                      <CountUp end={4} duration={3} />
                     </h3>
-                    <h6 className="text-muted">Przeanalizowanych podstron</h6>
+                    <h6 className="text-muted">Narzędzia w jednym</h6>
                   </div>
                 </Col>
                 <Col lg={6}>
                   <div className="counter">
                     <h3 className="text-primary fw-bold">
-                      <CountUp end={98} duration={5} suffix="%" />{' '}
-                      <span className="fs-6 text-muted">(Zadowolonych Agencji)</span>
+                      $<CountUp end={9} duration={3} suffix=".99" />
                     </h3>
-                    <ul className="d-flex text-orange">
-                      <li>
-                        <RiStarFill />
-                      </li>
-                      <li>
-                        <RiStarFill />
-                      </li>
-                      <li>
-                        <RiStarFill />
-                      </li>
-                      <li>
-                        <RiStarFill />
-                      </li>
-                      <li>
-                        <RiStarFill />
-                      </li>
-                    </ul>
+                    <h6 className="text-muted">Najtańszy plan / msc</h6>
                   </div>
                 </Col>
                 <Col lg={6} className="mt-4 mt-lg-0">
                   <div className="counter">
                     <h3 className="text-primary fw-bold">
-                      <CountUp end={1} duration={5} suffix="M+" />
+                      <CountUp end={30} duration={3} suffix=" min" />
                     </h3>
-                    <h6 className="text-muted">Wykrytych błędów</h6>
+                    <h6 className="text-muted">Czas pełnego audytu</h6>
                   </div>
                 </Col>
                 <Col lg={6} className="mt-4 mt-lg-0">
                   <div className="counter">
                     <h3 className="text-primary fw-bold">
-                      <CountUp end={10} duration={5} suffix="k+" />
+                      <CountUp end={200} duration={3} />
                     </h3>
-                    <h6 className="text-muted">Zaoszczędzonych godzin</h6>
+                    <h6 className="text-muted">Zadań w Execution Plan</h6>
                   </div>
                 </Col>
               </Row>

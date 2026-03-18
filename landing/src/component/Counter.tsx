@@ -13,28 +13,26 @@ type CounterItem = {
 
 const counterData: CounterItem[] = [
   {
-    icon: <RiTeamLine size={72} className="p-3 bg-success-subtle rounded-3 text-primary" />,
-    end: 500,
-    suffix: '+',
-    label: 'Aktywnych Agencji',
+    icon: <RiCheckboxLine size={72} className="p-3 bg-success-subtle rounded-3 text-primary" />,
+    end: 9,
+    label: 'Obszarów Analizy AI',
   },
   {
-    icon: <RiCheckboxLine size={72} className="p-3 bg-success-subtle rounded-3 text-primary" />,
-    end: 150,
-    suffix: '+',
-    label: 'Krajów Analizy',
+    icon: <RiTeamLine size={72} className="p-3 bg-success-subtle rounded-3 text-primary" />,
+    end: 200,
+    suffix: '',
+    label: 'Zadań w Execution Plan',
   },
   {
     icon: <RiVidiconLine size={72} className="p-3 bg-success-subtle rounded-3 text-primary" />,
-    end: 1,
-    suffix: 'M+',
-    label: 'Wykrytych Błędów',
+    end: 3,
+    label: 'Formaty Raportów PDF',
   },
   {
     icon: <RiHourglassFill size={72} className="p-3 bg-success-subtle rounded-3 text-primary" />,
-    end: 10,
-    suffix: 'k+',
-    label: 'Zaoszczędzonych Godzin',
+    end: 30,
+    suffix: ' min',
+    label: 'Czas Audytu',
   },
 ];
 

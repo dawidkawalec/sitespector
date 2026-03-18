@@ -8,6 +8,7 @@ import {
   RiFilePdfLine,
   RiGiftLine,
   RiRobotLine,
+  RiTeamLine,
   RiTimerLine,
 } from 'react-icons/ri';
 import DashboardHero from '@/assets/images/Dashboard.png';
@@ -20,7 +21,7 @@ import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 export const metadata = buildMetadata({
   title: 'Dla Freelancerów SEO — Profesjonalne audyty bez drogich narzędzi | SiteSpector',
   description:
-    'Oferta SiteSpector dla freelancerów jest aktualizowana. Skontaktuj się z nami, aby poznać aktualne możliwości i zakres współpracy.',
+    'SiteSpector dla freelancerów: plan Solo od $9.99/msc (100 crawli), Agency od $29.99/msc (400 crawli). Audyt SEO, PDF, AI Strategy i Execution Plan.',
   keywords: ['freelancer SEO', 'audyt SEO freelancer', 'narzędzie SEO za darmo', 'audyt strony darmowy', 'SiteSpector free', 'konsultant SEO'],
   path: '/dla-freelancerow',
   ogImageType: 'page',
@@ -33,11 +34,22 @@ const challengeCards = [
   { icon: RiCheckboxCircleLine, title: 'Klient chce konkretów', desc: 'Nie „lista błędów”, tylko plan działania: co zrobić, w jakiej kolejności i jak.' },
 ];
 
-const freePlanBullets = [
-  'Szczegóły pakietów opublikujemy wkrótce',
-  'Zakres funkcji będzie dostępny po publikacji oferty',
-  'Skontaktuj się z nami, aby poznać aktualne możliwości',
-  'Oferta będzie dopasowana do potrzeb freelancerów',
+const soloPlanBullets = [
+  '100 crawli miesięcznie',
+  'Pełny audyt SEO + Lighthouse',
+  'Raport PDF (9 sekcji)',
+  'AI Strategy + Execution Plan',
+  'Quick Wins — lista zadań o najwyższym ROI',
+  '1 workspace',
+];
+
+const agencyPlanBullets = [
+  '400 crawli miesięcznie',
+  'Wszystko z Solo +',
+  'White-label PDF (własne logo)',
+  'Harmonogramy audytów',
+  'Wiele workspace\'ów',
+  'Zapraszanie członków zespołu',
 ];
 
 const aiAssistantBullets = [
@@ -62,7 +74,7 @@ export default function DlaFreelancerowPage() {
             path: '/dla-freelancerow',
             title: 'Dla Freelancerów SEO — Profesjonalne audyty bez drogich narzędzi | SiteSpector',
             description:
-              'Oferta SiteSpector dla freelancerów jest aktualizowana. Skontaktuj się z nami, aby poznać aktualne możliwości i zakres współpracy.',
+              'SiteSpector dla freelancerów: plan Solo od $9.99/msc (100 crawli), Agency od $29.99/msc (400 crawli). Audyt SEO, PDF, AI Strategy i Execution Plan.',
           }),
           buildBreadcrumbSchema([
             { name: 'SiteSpector', path: '/' },
@@ -85,24 +97,24 @@ export default function DlaFreelancerowPage() {
                   </h1>
                 </div>
                 <p className="text-muted mt-4 mb-0">
-                  Oferta dla freelancerów jest obecnie aktualizowana. Szczegóły pakietów opublikujemy wkrótce.
+                  Pełny audyt SEO z AI, raportem PDF i Execution Plan — od $9.99/msc. Bez zbędnych narzędzi, bez ukrytych kosztów.
                 </p>
                 <div className="mt-4">
-                  <Link href="/kontakt" className="btn btn-primary me-2 my-2">
-                    Skontaktuj się z nami
+                  <Link href="/register" className="btn btn-primary me-2 my-2">
+                    Zacznij za darmo
                   </Link>
                   <Link href="#plan-free" className="btn btn-outline-primary my-2">
-                    Sprawdź szczegóły
+                    Porównaj plany
                   </Link>
                 </div>
                 <div className="mt-3 text-muted small">
-                  Wkrótce opublikujemy finalne warianty współpracy dla freelancerów.
+                  Solo $9.99/msc (100 crawli) | Agency $29.99/msc (400 crawli) — bez lock-in, zmień plan kiedy chcesz.
                 </div>
               </div>
 
               <div className="col-lg-5">
                 <div className="p-3 bg-light rounded-4 border shadow-sm">
-                  <Image src={DashboardHero} alt="Audyt gotowy + PDF (placeholder)" className="img-fluid rounded-3" />
+                  <Image src={DashboardHero} alt="Dashboard SiteSpector — audyt gotowy z raportem PDF" className="img-fluid rounded-3" />
                   <div className="mt-3 d-flex gap-2 flex-wrap">
                     <span className="badge bg-white text-primary border">Audyt gotowy</span>
                     <span className="badge bg-white text-primary border">Pobierz PDF</span>
@@ -159,31 +171,34 @@ export default function DlaFreelancerowPage() {
             <div className="row justify-content-center text-center mb-5">
               <div className="col-lg-10">
                 <div className="title-sm">
-                  <span>OFERTA WKRÓTCE</span>
+                  <span>CENNIK</span>
                 </div>
                 <div className="main-title mt-3">
                   <h2 className="text-primary">
-                    Szczegóły pakietów dla freelancerów <span className="text-orange text-line">wkrótce</span>
+                    Wybierz plan dopasowany do <span className="text-orange text-line">Twojego biznesu</span>
                   </h2>
                 </div>
                 <p className="text-muted mt-3 mb-0">
-                  Finalizujemy zakres oferty i warunki współpracy. Po aktualne informacje zapraszamy do kontaktu.
+                  Bez lock-in, bez ukrytych opłat. Zmień plan lub zrezygnuj w dowolnym momencie.
                 </p>
               </div>
             </div>
 
-            <div className="row align-items-center justify-content-center g-4">
+            <div className="row justify-content-center g-4">
               <div className="col-lg-5">
-                <div className="bg-light rounded-4 border p-4 p-lg-5 shadow-sm">
+                <div className="bg-light rounded-4 border p-4 p-lg-5 shadow-sm h-100">
                   <div className="d-flex align-items-center mb-3">
                     <div className="bg-white rounded-circle d-inline-flex p-3 me-3 shadow-sm">
                       <RiGiftLine size={28} className="text-orange" />
                     </div>
-                    <h3 className="h5 text-primary fw-bold mb-0">Co będzie dostępne</h3>
+                    <div>
+                      <h3 className="h5 text-primary fw-bold mb-0">Solo</h3>
+                      <div className="text-orange fw-bold fs-4">$9.99<span className="text-muted fw-normal fs-6">/msc</span></div>
+                    </div>
                   </div>
                   <div className="row g-2">
-                    {freePlanBullets.map((t, i) => (
-                      <div className="col-md-6" key={i}>
+                    {soloPlanBullets.map((t, i) => (
+                      <div className="col-12" key={i}>
                         <div className="d-flex">
                           <RiCheckboxCircleLine className="text-orange flex-shrink-0 me-2 mt-1" size={18} />
                           <div className="text-muted small lh-lg">{t}</div>
@@ -192,17 +207,42 @@ export default function DlaFreelancerowPage() {
                     ))}
                   </div>
                   <div className="mt-4">
-                    <Link href="/kontakt" className="btn btn-primary px-4 py-3 fw-bold">
-                      Skontaktuj się z nami
+                    <Link href="/register" className="btn btn-primary px-4 py-3 fw-bold w-100">
+                      Zacznij za darmo
                       <RiArrowRightLine className="ms-2" />
                     </Link>
                   </div>
                 </div>
               </div>
 
-              <div className="col-lg-6">
-                <div className="p-3 bg-white rounded-4 border shadow-sm">
-                  <Image src={DashboardWide} alt="Podgląd audytu (placeholder)" className="img-fluid rounded-3" />
+              <div className="col-lg-5">
+                <div className="bg-light rounded-4 border border-orange p-4 p-lg-5 shadow-sm h-100 position-relative">
+                  <span className="badge bg-orange text-white position-absolute top-0 start-50 translate-middle px-3 py-2">Najpopularniejszy</span>
+                  <div className="d-flex align-items-center mb-3">
+                    <div className="bg-white rounded-circle d-inline-flex p-3 me-3 shadow-sm">
+                      <RiTeamLine size={28} className="text-orange" />
+                    </div>
+                    <div>
+                      <h3 className="h5 text-primary fw-bold mb-0">Agency</h3>
+                      <div className="text-orange fw-bold fs-4">$29.99<span className="text-muted fw-normal fs-6">/msc</span></div>
+                    </div>
+                  </div>
+                  <div className="row g-2">
+                    {agencyPlanBullets.map((t, i) => (
+                      <div className="col-12" key={i}>
+                        <div className="d-flex">
+                          <RiCheckboxCircleLine className="text-orange flex-shrink-0 me-2 mt-1" size={18} />
+                          <div className="text-muted small lh-lg">{t}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4">
+                    <Link href="/register" className="btn btn-primary px-4 py-3 fw-bold w-100">
+                      Zacznij za darmo
+                      <RiArrowRightLine className="ms-2" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -230,7 +270,7 @@ export default function DlaFreelancerowPage() {
             <div className="row align-items-center justify-content-center g-4">
               <div className="col-lg-5">
                 <div className="p-3 bg-white rounded-4 border shadow-sm">
-                  <Image src={DashboardMetrics} alt="Miniatury PDF (placeholder)" className="img-fluid rounded-3" />
+                  <Image src={DashboardMetrics} alt="Raport PDF SiteSpector — 9 sekcji audytu" className="img-fluid rounded-3" />
                 </div>
               </div>
               <div className="col-lg-6">
@@ -243,7 +283,7 @@ export default function DlaFreelancerowPage() {
                       <h3 className="h5 text-primary fw-bold mb-0">Raport gotowy do wysyłki</h3>
                     </div>
                     <p className="text-muted mb-0">
-                      Klient widzi dane i rekomendacje, a Ty skupiasz się na konsultingu. Szczegóły pakietów i dodatków opublikujemy wkrótce.
+                      Klient widzi dane i rekomendacje, a Ty skupiasz się na konsultingu. Raport PDF dostępny w każdym planie — od Solo ($9.99/msc).
                     </p>
                   </div>
                 </div>
@@ -273,7 +313,7 @@ export default function DlaFreelancerowPage() {
             <div className="row align-items-center justify-content-center g-4">
               <div className="col-lg-5">
                 <div className="p-3 bg-light rounded-4 border shadow-sm">
-                  <Image src={DashboardHero} alt="Quick Wins / AI Strategy (placeholder)" className="img-fluid rounded-3" />
+                  <Image src={DashboardHero} alt="AI Strategy — Quick Wins i roadmapa" className="img-fluid rounded-3" />
                 </div>
               </div>
               <div className="col-lg-6">
@@ -343,7 +383,7 @@ export default function DlaFreelancerowPage() {
                     </div>
                     <div className="col-lg-6">
                       <div className="p-3 bg-light rounded-4 border">
-                        <Image src={DashboardWide} alt="Execution Plan (placeholder)" className="img-fluid rounded-3" />
+                        <Image src={DashboardWide} alt="Execution Plan — konkretne zadania z kodem" className="img-fluid rounded-3" />
                       </div>
                     </div>
                   </div>
@@ -362,11 +402,11 @@ export default function DlaFreelancerowPage() {
                 </div>
                 <div className="main-title mt-3">
                   <h2 className="text-primary">
-                    Oferta dla rosnących biznesów <span className="text-orange text-line">wkrótce</span>
+                    Zacznij od Solo, przejdź na Agency <span className="text-orange text-line">kiedy chcesz</span>
                   </h2>
                 </div>
                 <p className="text-muted mt-3 mb-0">
-                  Przygotowujemy finalne pakiety pod skalowanie pracy z klientami. Skontaktuj się z nami, aby omówić bieżące możliwości.
+                  Bez lock-in — zmień plan w dowolnym momencie. Rośnij razem z portfolio klientów.
                 </p>
               </div>
             </div>
@@ -377,16 +417,16 @@ export default function DlaFreelancerowPage() {
                   <div className="row g-4">
                     <div className="col-md-4">
                       <div className="bg-white rounded-4 border p-4 h-100 shadow-sm">
-                        <div className="text-primary fw-bold">Pakiet startowy</div>
-                        <div className="text-muted small mt-2">W przygotowaniu</div>
-                        <div className="text-orange fw-bold mt-3">Wkrótce</div>
+                        <div className="text-primary fw-bold">Solo</div>
+                        <div className="text-muted small mt-2">100 crawli/msc, 1 workspace</div>
+                        <div className="text-orange fw-bold mt-3">$9.99/msc</div>
                       </div>
                     </div>
                     <div className="col-md-4">
                       <div className="bg-white rounded-4 border p-4 h-100 shadow-sm">
-                        <div className="text-primary fw-bold">Pakiet rozwojowy</div>
-                        <div className="text-muted small mt-2">W przygotowaniu</div>
-                        <div className="text-orange fw-bold mt-3">Wkrótce</div>
+                        <div className="text-primary fw-bold">Agency</div>
+                        <div className="text-muted small mt-2">400 crawli/msc, wiele workspace&apos;ów</div>
+                        <div className="text-orange fw-bold mt-3">$29.99/msc</div>
                       </div>
                     </div>
                     <div className="col-md-4">
@@ -412,7 +452,7 @@ export default function DlaFreelancerowPage() {
                 </div>
                 <div className="main-title mt-3">
                   <h2 className="text-primary">
-                    Szczegóły oferty <span className="text-orange text-line">wkrótce</span>
+                    Solo vs Agency — wybierz <span className="text-orange text-line">swój plan</span>
                   </h2>
                 </div>
               </div>
@@ -426,15 +466,15 @@ export default function DlaFreelancerowPage() {
                       <thead className="bg-light">
                         <tr>
                           <th className="p-4 border-0">Funkcja</th>
-                          <th className="p-4 border-0 text-center">Pakiet A</th>
-                          <th className="p-4 border-0 text-center text-orange">Pakiet B</th>
+                          <th className="p-4 border-0 text-center">Solo — $9.99/msc</th>
+                          <th className="p-4 border-0 text-center text-orange">Agency — $29.99/msc</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">Dostępność pakietu</td>
-                          <td className="p-4 border-top text-center text-muted">Wkrótce</td>
-                          <td className="p-4 border-top text-center text-muted">Wkrótce</td>
+                          <td className="p-4 border-top fw-semibold text-primary">Crawle miesięcznie</td>
+                          <td className="p-4 border-top text-center text-muted">100</td>
+                          <td className="p-4 border-top text-center text-orange fw-bold">400</td>
                         </tr>
                         <tr>
                           <td className="p-4 border-top fw-semibold text-primary">Crawling + Lighthouse + AI</td>
@@ -442,32 +482,32 @@ export default function DlaFreelancerowPage() {
                           <td className="p-4 border-top text-center text-muted">✓</td>
                         </tr>
                         <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">Raport PDF</td>
-                          <td className="p-4 border-top text-center text-muted">Szczegóły wkrótce</td>
-                          <td className="p-4 border-top text-center text-muted">Szczegóły wkrótce</td>
+                          <td className="p-4 border-top fw-semibold text-primary">Raport PDF (9 sekcji)</td>
+                          <td className="p-4 border-top text-center text-muted">✓</td>
+                          <td className="p-4 border-top text-center text-muted">✓</td>
                         </tr>
                         <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">Rozszerzenia</td>
+                          <td className="p-4 border-top fw-semibold text-primary">AI Strategy + Execution Plan</td>
+                          <td className="p-4 border-top text-center text-muted">✓</td>
+                          <td className="p-4 border-top text-center text-muted">✓</td>
+                        </tr>
+                        <tr>
+                          <td className="p-4 border-top fw-semibold text-primary">White-label PDF</td>
                           <td className="p-4 border-top text-center text-muted">✗</td>
                           <td className="p-4 border-top text-center text-muted">✓</td>
                         </tr>
                         <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">Dodatkowe opcje</td>
+                          <td className="p-4 border-top fw-semibold text-primary">Wiele workspace&apos;ów</td>
+                          <td className="p-4 border-top text-center text-muted">1</td>
+                          <td className="p-4 border-top text-center text-muted">✓</td>
+                        </tr>
+                        <tr>
+                          <td className="p-4 border-top fw-semibold text-primary">Harmonogramy audytów</td>
                           <td className="p-4 border-top text-center text-muted">✗</td>
                           <td className="p-4 border-top text-center text-muted">✓</td>
                         </tr>
                         <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">Workspace’y</td>
-                          <td className="p-4 border-top text-center text-muted">✗</td>
-                          <td className="p-4 border-top text-center text-muted">✓</td>
-                        </tr>
-                        <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">Harmonogramy</td>
-                          <td className="p-4 border-top text-center text-muted">✗</td>
-                          <td className="p-4 border-top text-center text-muted">✓</td>
-                        </tr>
-                        <tr>
-                          <td className="p-4 border-top fw-semibold text-primary">API</td>
+                          <td className="p-4 border-top fw-semibold text-primary">Zapraszanie członków zespołu</td>
                           <td className="p-4 border-top text-center text-muted">✗</td>
                           <td className="p-4 border-top text-center text-muted">✓</td>
                         </tr>
@@ -477,8 +517,8 @@ export default function DlaFreelancerowPage() {
                 </div>
 
                 <div className="mt-4 text-center">
-                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
-                    Skontaktuj się z nami
+                  <Link href="/register" className="btn btn-primary px-5 py-3 fw-bold">
+                    Zacznij za darmo
                     <RiArrowRightLine className="ms-2" />
                   </Link>
                 </div>
@@ -500,15 +540,15 @@ export default function DlaFreelancerowPage() {
                   </h2>
                 </div>
                 <p className="text-muted mt-3">
-                  Pakiety i zakres współpracy są obecnie aktualizowane. Skontaktuj się z nami, aby poznać aktualne możliwości.
+                  Solo od $9.99/msc (100 crawli) — pełny audyt SEO z AI, raportem PDF i Execution Plan. Bez karty kredytowej na start.
                 </p>
                 <div className="mt-4">
-                  <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
-                    Skontaktuj się z nami
+                  <Link href="/register" className="btn btn-primary px-5 py-3 fw-bold me-2 my-2">
+                    Zacznij za darmo
                     <RiArrowRightLine className="ms-2" />
                   </Link>
-                  <Link href="/porownanie" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">
-                                Zobacz szczegóły oferty
+                  <Link href="/cennik" className="btn btn-outline-primary px-5 py-3 fw-bold my-2">
+                    Porównaj wszystkie plany
                   </Link>
                 </div>
               </div>

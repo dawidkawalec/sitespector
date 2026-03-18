@@ -26,8 +26,8 @@ export const ctaData: CtaItem[] = [
   },
   {
     icon: phoneIcon,
-    title: 'Infolinia',
-    description: '+48 123 456 789',
+    title: 'Pomoc',
+    description: 'sitespector.app/kontakt',
     colors: 'primary:#121331,secondary:#ee8f66,tertiary:#ebe6ef',
   },
   {
@@ -73,12 +73,15 @@ const Cta = () => {
         </Row>
         <Row className="justify-content-center text-center mt-5">
           <Col lg={8}>
-            <h3 className="text-primary fw-bold mb-3">{OFFER_PLACEHOLDER_COPY.title}</h3>
+            <h3 className="text-primary fw-bold mb-3">Audyt SEO w 30 minut — od $9.99/msc</h3>
             <p className="text-muted mb-4">
-              Wkrótce opublikujemy finalne pakiety. Jeśli chcesz poznać aktualne możliwości SiteSpector, skontaktuj się z nami.
+              Screaming Frog + Lighthouse + Senuto + AI w jednym narzędziu. Bez opłat per-seat.
             </p>
-            <Link href="/kontakt" className="btn btn-primary px-5 py-3 fw-bold">
-              {OFFER_PLACEHOLDER_COPY.cta}
+            <Link href="/register" className="btn btn-primary px-5 py-3 fw-bold me-2">
+              Zacznij za darmo
+            </Link>
+            <Link href="/cennik" className="btn btn-outline-primary px-5 py-3 fw-bold">
+              Zobacz cennik
             </Link>
           </Col>
         </Row>
