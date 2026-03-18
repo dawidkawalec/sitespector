@@ -80,8 +80,11 @@ const Cta = () => {
             <Link href="/register" className="btn btn-primary px-5 py-3 fw-bold me-2">
               Zacznij za darmo
             </Link>
+            <Link href="/demo" className="btn btn-outline-primary px-5 py-3 fw-bold me-2">
+              Zobacz demo audytu
+            </Link>
             <Link href="/cennik" className="btn btn-outline-primary px-5 py-3 fw-bold">
-              Zobacz cennik
+              Cennik
             </Link>
           </Col>
         </Row>
