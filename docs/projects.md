@@ -11,8 +11,8 @@
 |-----------|----------|----------|
 | **P0 — Blokery launch** | ~~P1~~✅, ~~P2~~✅, ~~P3~~✅ | DONE — kredyty, cennik, paywall |
 | **BLOKER** | Stripe setup (Piotr) | Założyć konto, stworzyć produkty, wpisać klucze |
-| **P1 — Pre-launch** | ~~P4~~✅, ~~P5~~✅, P9, P10 | P4+P5 done. P9 (pixel) + P10 (blog) przed Meta Ads |
-| **P2 — Post-launch** | P6, ~~P7~~✅, P8, P11 | P7 done. P6 (PQL) + P8 (pakiety) + P11 (porównanie) |
+| **P1 — Pre-launch** | ~~P4~~✅, ~~P5~~✅, P9, ~~P10~~✅ | P4+P5+P10 done. P9 (pixel) jako ostatni pre-launch |
+| **P2 — Post-launch** | P6, ~~P7~~✅, P8, ~~P11~~✅ | P7+P11 done. P6 (PQL) + P8 (pakiety) |
 | **P3 — Skalowanie** | P12, P13 | Długoterminowy growth |
 
 ---
@@ -65,6 +65,15 @@ Commit: d7393b4. 13 poprawek UX: puste stany, brakujące dane schema/links/quick
 ### Dodatkowe: Aktualizacja Dokumentacji Marketingowej ✅ (2026-03-18)
 12 plików marketing/*.md zaktualizowanych pod nowe businessdocs: cennik (3 plany → 4+Custom), segmenty (5→7), Meta Ads jako primary paid channel, PQL model, nowy sales process.
 
+### Dodatkowe: Nav fix + Client Report rozbudowa ✅ (2026-03-18)
+Commit: 3a7e168. UserMenu dropdown sync (Automatyzacja + Branding), Breadcrumbs fix, Client Report z 3→11 sekcji (CWV, Widoczność, Techniczne, CQI, Roadmap, Executive Summary), branding logo, cross-linki PDF↔Client Report.
+
+### P10: Blog — 23 artykuły + cover images ✅ (2026-03-19)
+Commit: ab56b35 + 646804b. 23 artykuły SEO przepisane z placeholderów (~50k słów), 23 AI-generated cover images (Gemini, teal+orange brandbook). 5 batchy: filary, poradniki, produkt, edukacja, niszowe.
+
+### P11: Strona /porownanie ✅ (2026-03-19)
+Commit: 56c05ae. Pełna strona porównawcza: 6 narzędzi × 14 kryteriów, ceny 2026, 5 wyróżników, 4 scenariusze per persona, FAQ (6 pytań), CTA. Usunięte wszystkie "wkrótce".
+
 ---
 
 ## W toku
@@ -114,34 +123,6 @@ Commit: d7393b4. 13 poprawek UX: puste stany, brakujące dane schema/links/quick
 - Eventy: PageView, CompleteRegistration, StartAudit, ViewResults, Upgrade
 - Custom conversions: signup, first_audit, upgrade
 - Przygotowanie pod Lookalike audiences
-
-**Status:** Backlog
-
----
-
-### P10: Blog — Pierwsze Artykuły (Landing) — WYSOKI
-
-**Zakres:** Uruchomienie bloga z pierwszymi 4-6 artykułami SEO.
-
-**Co obejmuje:**
-- CMS / MDX setup w landing (jeśli nie ma)
-- 4-6 artykułów: "Audyt SEO — kompletny przewodnik", "Screaming Frog alternatywa", "Core Web Vitals 2026", "AI Overviews — co to?"
-- SEO optimization: meta, schema, internal linking
-- Newsletter signup form
-
-**Status:** Backlog
-
----
-
-### P11: Strona /porownanie (Landing) — ŚREDNI
-
-**Zakres:** Strona porównawcza SiteSpector vs konkurencja.
-
-**Co obejmuje:**
-- Feature matrix: SiteSpector vs Ahrefs vs SEMrush vs SE Ranking vs Mangools vs Screaming Frog
-- Cennik porównawczy
-- "Dlaczego SiteSpector" sekcja
-- SEO: target "Screaming Frog alternatywa", "Ahrefs zamiennik"
 
 **Status:** Backlog
 

@@ -1,5 +1,17 @@
 # Architectural Decisions Log
 
+## ADR-074: P11 /porownanie — strona porównawcza z realnymi danymi (2026-03-19)
+
+- **Decision**: Pełna strona porównawcza 6 narzędzi × 14 kryteriów z aktualnymi cenami 2026 (web research). Obiektywne porównanie z naturalnym highlightem SiteSpector. FAQ z objection handling z marketing docs.
+- **Rationale**: Kluczowa strona konwersji — target keywords "Screaming Frog alternatywa", "Ahrefs zamiennik". Dane cenowe zweryfikowane z oficjalnych stron (marzec 2026).
+- **Trade-off**: Ceny hardcoded w komponencie (nie z API) — wymaga ręcznej aktualizacji gdy konkurencja zmieni ceny.
+
+## ADR-073: P10 Blog — 23 artykułów z web research + AI cover images (2026-03-19)
+
+- **Decision**: Wszystkie 23 draftów blogowych przepisane równolegle (5 batchów × 5 agentów) z web research per artykuł. Cover images wygenerowane via Gemini (nano-banana MCP) w brandbooku SiteSpector (teal + orange flat design).
+- **Rationale**: Blog jest kluczowy dla SEO organic i content marketing. 23 artykuły pokrywają 4 filary: edukacja SEO, AI w SEO, produkt + case studies, branżowe insighty.
+- **Trade-off**: AI-generated images (Gemini) zamiast custom design — spójny styl ale ograniczona kontrola nad detalami. Artykuły pisane przez AI z web research — wymagają review przed promowaniem.
+
 ## ADR-072: P7 Branding & White-Label PDF (2026-03-18)
 
 - **Decision**: Dwa poziomy brandingu: Agency+ = logo na PDF (cover + footer), Enterprise = full white-label (company name, kontakt, kolory, usunięcie "SiteSpector"). Branding przechowywany w Supabase `workspaces` table (5 kolumn branding_*). Logo uploadowane do Supabase Storage bucket `branding-logos`.
