@@ -6,10 +6,10 @@ import { JsonLd } from '@/components/JsonLd';
 import { buildBreadcrumbSchema, buildWebPageSchema } from '@/lib/schema';
 
 export const metadata = buildMetadata({
-  title: 'Porównanie narzędzi SEO — SiteSpector vs Screaming Frog vs Ahrefs vs SEMrush',
+  title: 'Porownanie narzedzi SEO 2026 — SiteSpector vs Ahrefs vs SEMrush vs Screaming Frog',
   description:
-    'Porównaj SiteSpector z Screaming Frog, Ahrefs i SEMrush. Execution Plan, AI Overviews, Senuto, 3-fazowy audyt. Oferta jest w przygotowaniu.',
-  keywords: ['porównanie SEO', 'SiteSpector vs Screaming Frog', 'SiteSpector vs Ahrefs', 'narzędzie audytu SEO', 'cena SEO'],
+    'Porownaj 6 narzedzi SEO: SiteSpector, Ahrefs, SEMrush, Screaming Frog, SE Ranking, Mangools. 14 kryteriow, aktualne ceny 2026, tabela funkcji. Od $9.99/mies.',
+  keywords: ['porownanie narzedzi SEO', 'SiteSpector vs Ahrefs', 'SiteSpector vs SEMrush', 'Screaming Frog alternatywa', 'narzedzie audytu SEO', 'cena SEO 2026', 'SE Ranking vs Ahrefs'],
   path: '/porownanie',
   ogImageType: 'page',
 });
@@ -21,9 +21,9 @@ export default function PorownaniePage() {
         data={[
           buildWebPageSchema({
             path: '/porownanie',
-            title: 'Porównanie narzędzi SEO — SiteSpector vs Screaming Frog vs Ahrefs vs SEMrush',
+            title: 'Porownanie narzedzi SEO 2026 — SiteSpector vs Ahrefs vs SEMrush vs Screaming Frog',
             description:
-              'Porównaj SiteSpector z Screaming Frog, Ahrefs i SEMrush. Execution Plan, AI Overviews, Senuto, 3-fazowy audyt. Oferta jest w przygotowaniu.',
+              'Porownaj 6 narzedzi SEO: SiteSpector, Ahrefs, SEMrush, Screaming Frog, SE Ranking, Mangools. 14 kryteriow, aktualne ceny 2026.',
           }),
           buildBreadcrumbSchema([
             { name: 'SiteSpector', path: '/' },
