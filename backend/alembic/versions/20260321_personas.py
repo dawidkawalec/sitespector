@@ -8,7 +8,6 @@ Create Date: 2026-03-21
 
 from __future__ import annotations
 
-import json
 import uuid
 import sqlalchemy as sa
 from alembic import op
@@ -38,7 +37,7 @@ SEED_PERSONAS = [
             "- Priorytetyzuj po wplywie na biznes, nie po technicznej waznosci\n"
             "- Tlumacz metryki techniczne na jezyk biznesowy (np. 'strona laduje sie 4s — klienci odchodza')\n"
         ),
-        "dashboard_config": json.dumps({
+        "dashboard_config": {
             "kpi_cards": [
                 {"key": "overall_score", "label": "Ocena ogolna", "source": "audit.overall_score", "format": "score", "icon": "Activity"},
                 {"key": "performance_score", "label": "Szybkosc strony", "source": "audit.performance_score", "format": "score", "icon": "Gauge"},
@@ -46,11 +45,11 @@ SEED_PERSONAS = [
                 {"key": "critical_issues", "label": "Krytyczne bledy", "source": "tasks.critical_count", "format": "count", "icon": "AlertTriangle"},
             ],
             "focus_modules": ["seo", "performance", "quick_wins"],
-        }),
-        "context_questions": json.dumps([
+        },
+        "context_questions": [
             {"id": "owner_goal", "question": "Co jest Twoim glownym celem?", "type": "select", "options": ["Wiecej klientow z Google", "Szybsza strona", "Poprawa widocznosci", "Nie wiem — sprawdz wszystko"]},
             {"id": "owner_challenge", "question": "Czy masz jakies znane problemy ze strona?", "type": "text", "hint": "Np. spadek ruchu, wolne ladowanie, brak w Google"},
-        ]),
+        ],
     },
     {
         "id": str(uuid.uuid4()),
@@ -68,7 +67,7 @@ SEED_PERSONAS = [
             "- Wskazuj konkretne URL-e i elementy do poprawy\n"
             "- Priorytetyzuj po wplywie na ranking i indeksowanie\n"
         ),
-        "dashboard_config": json.dumps({
+        "dashboard_config": {
             "kpi_cards": [
                 {"key": "seo_score", "label": "SEO Score", "source": "audit.seo_score", "format": "score", "icon": "Search"},
                 {"key": "performance_score", "label": "Performance", "source": "audit.performance_score", "format": "score", "icon": "Gauge"},
@@ -76,10 +75,10 @@ SEED_PERSONAS = [
                 {"key": "tasks_pending", "label": "Zadania", "source": "tasks.pending_count", "format": "count", "icon": "ListTodo"},
             ],
             "focus_modules": ["seo", "performance", "visibility", "links", "schema", "content_quality", "architecture"],
-        }),
-        "context_questions": json.dumps([
+        },
+        "context_questions": [
             {"id": "seo_focus", "question": "Na czym chcesz sie skupic?", "type": "multiselect", "options": ["Technical SEO", "Content", "Widocznosc/Senuto", "Performance", "Link building"]},
-        ]),
+        ],
     },
     {
         "id": str(uuid.uuid4()),
@@ -97,7 +96,7 @@ SEED_PERSONAS = [
             "- Uwzgledniaj kontekst kampanii i budzetu\n"
             "- Porownuj z konkurencja gdzie to mozliwe\n"
         ),
-        "dashboard_config": json.dumps({
+        "dashboard_config": {
             "kpi_cards": [
                 {"key": "visibility_top10", "label": "TOP10 frazy", "source": "senuto.top10", "format": "count", "icon": "TrendingUp"},
                 {"key": "estimated_traffic", "label": "Est. ruch mies.", "source": "traffic_estimation.total", "format": "count", "icon": "Users"},
@@ -105,11 +104,11 @@ SEED_PERSONAS = [
                 {"key": "ai_overviews", "label": "AI Overviews", "source": "senuto.aio_count", "format": "count", "icon": "Sparkles"},
             ],
             "focus_modules": ["visibility", "content_quality", "ai_overviews", "backlinks"],
-        }),
-        "context_questions": json.dumps([
+        },
+        "context_questions": [
             {"id": "mkt_goal", "question": "Jaki jest glowny cel marketingowy?", "type": "select", "options": ["Wzrost ruchu organicznego", "Generowanie leadow", "Brand awareness", "Wsparcie kampanii paid"]},
             {"id": "mkt_budget", "question": "Jaki masz budzet na SEO miesiecznie?", "type": "select", "options": ["Do 2000 PLN", "2000-5000 PLN", "5000-15000 PLN", "Powyzej 15000 PLN"]},
-        ]),
+        ],
     },
     {
         "id": str(uuid.uuid4()),
@@ -127,7 +126,7 @@ SEED_PERSONAS = [
             "- Wskazuj konkretne pliki/komponenty do modyfikacji\n"
             "- Priorytetyzuj po wplywie na wydajnosc i bezpieczenstwo\n"
         ),
-        "dashboard_config": json.dumps({
+        "dashboard_config": {
             "kpi_cards": [
                 {"key": "lcp", "label": "LCP", "source": "lighthouse.desktop.lcp", "format": "ms", "icon": "Timer"},
                 {"key": "cls", "label": "CLS", "source": "lighthouse.desktop.cls", "format": "decimal", "icon": "Move"},
@@ -135,11 +134,11 @@ SEED_PERSONAS = [
                 {"key": "security_issues", "label": "Security", "source": "tasks.security_count", "format": "count", "icon": "Shield"},
             ],
             "focus_modules": ["performance", "architecture", "schema", "security"],
-        }),
-        "context_questions": json.dumps([
+        },
+        "context_questions": [
             {"id": "dev_stack", "question": "Jaki stack technologiczny?", "type": "text", "hint": "Np. WordPress, Next.js, Shopify, custom PHP"},
             {"id": "dev_focus", "question": "Na czym chcesz sie skupic?", "type": "multiselect", "options": ["Core Web Vitals", "Schema.org / Structured Data", "Security headers", "Architektura URL", "Rendering/JS"]},
-        ]),
+        ],
     },
     {
         "id": str(uuid.uuid4()),
@@ -157,7 +156,7 @@ SEED_PERSONAS = [
             "- Estymuj wplyw zmian na GMV/konwersje\n"
             "- Porownuj z best practices e-commerce (Allegro, Zalando, Amazon)\n"
         ),
-        "dashboard_config": json.dumps({
+        "dashboard_config": {
             "kpi_cards": [
                 {"key": "product_pages", "label": "Stron produktowych", "source": "page_types.product", "format": "count", "icon": "ShoppingBag"},
                 {"key": "seo_score", "label": "SEO Score", "source": "audit.seo_score", "format": "score", "icon": "Search"},
@@ -165,11 +164,11 @@ SEED_PERSONAS = [
                 {"key": "schema_found", "label": "Schema Product", "source": "schema.product_found", "format": "boolean", "icon": "Code2"},
             ],
             "focus_modules": ["seo", "schema", "content_quality", "performance", "images"],
-        }),
-        "context_questions": json.dumps([
+        },
+        "context_questions": [
             {"id": "ecom_platform", "question": "Jaka platforma e-commerce?", "type": "select", "options": ["Shopify", "WooCommerce", "PrestaShop", "Magento", "Shoper", "IdoSell", "Custom", "Inna"]},
             {"id": "ecom_goal", "question": "Glowny cel?", "type": "select", "options": ["Wiecej ruchu organicznego na produkty", "Lepsze rich snippets w Google", "Szybsze ladowanie kart produktow", "Poprawa konwersji"]},
-        ]),
+        ],
     },
 ]
 
