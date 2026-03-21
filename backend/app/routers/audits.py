@@ -237,7 +237,7 @@ async def list_audits(
     project_id: Optional[str] = Query(None, description="Optional project ID to filter by"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-    status: Optional[AuditStatus] = Query(None, description="Filter by status"),
+    audit_status: Optional[AuditStatus] = Query(None, alias="status", description="Filter by status"),
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
@@ -284,8 +284,8 @@ async def list_audits(
     if project_id:
         query = query.where(Audit.project_id == UUID(project_id))
     
-    if status:
-        query = query.where(Audit.status == status)
+    if audit_status:
+        query = query.where(Audit.status == audit_status)
     
     # Count total
     count_query = select(func.count()).select_from(query.subquery())
