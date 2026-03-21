@@ -3050,3 +3050,43 @@ Replaced all instances of `{% from '../macros.html' import ... %}` with `{% from
 **Verification**:
 - `rg "sitespector_logo_transp.svg"` dla `frontend/`, `landing/`, `backend/` nie zwraca juz wynikow.
 - Linty frontendu i landingu przeszly bez nowych bledow w zmienionych plikach.
+
+### BUG-074: list_audits crash — status param shadows FastAPI status import
+
+**Reported**: 2026-03-21
+**Status**: FIXED (2026-03-21)
+**Severity**: CRITICAL
+
+**Description**: Multiple pages returned 500 errors (visibility, ux-check, pdf, page-types) because sidebar audit list failed to load.
+**Root cause**: In `audits.py:list_audits()`, query param `status: Optional[AuditStatus]` shadowed the `from fastapi import status` module. When status=None, any HTTPException using `status.HTTP_400_BAD_REQUEST` crashed with `'NoneType' has no attribute 'HTTP_400_BAD_REQUEST'`.
+**Fix** (`backend/app/routers/audits.py`): Renamed param to `audit_status` with `alias="status"` to preserve API compatibility.
+
+### BUG-075: TaskListView crash — React hooks after conditional return
+
+**Reported**: 2026-03-21
+**Status**: FIXED (2026-03-21)
+**Severity**: CRITICAL
+
+**Description**: `/quick-wins` and all pages with `?mode=plan` (seo, performance, links, etc.) crashed with React error #310.
+**Root cause**: `useState` and `useMemo` hooks were placed AFTER the `if (isFree) return ...` early-return block in `TaskListView.tsx`, violating React Rules of Hooks.
+**Fix** (`frontend/components/audit/TaskListView.tsx`): Moved all hooks before the conditional return. Paywall block now renders after hooks are called.
+
+### BUG-076: crawl-data crash — PageTypeFilter useSearchParams
+
+**Reported**: 2026-03-21
+**Status**: FIXED (2026-03-21)
+**Severity**: HIGH
+
+**Description**: `/crawl-data` page crashed with React error #310 after PageTypeFilter integration.
+**Root cause**: `useSearchParams` + `useMemo` filtering added complexity that caused rendering issues. Exact trigger unclear (Suspense boundary was present).
+**Fix** (`frontend/app/(app)/audits/[id]/crawl-data/page.tsx`): Reverted to original structure without PageTypeFilter integration. Will re-integrate using state management instead of URL params in future.
+
+### BUG-077: Persona seed data — double-encoded JSONB strings
+
+**Reported**: 2026-03-21
+**Status**: FIXED (2026-03-21)
+**Severity**: HIGH
+
+**Description**: `GET /api/personas` returned 500 — Pydantic ResponseValidationError (expected dict, got string) for `dashboard_config` and `context_questions` fields.
+**Root cause**: Alembic migration used `json.dumps(dict)` to insert JSONB values, creating double-encoded JSON strings (JSONB containing a string literal of JSON instead of actual JSON object).
+**Fix** (`backend/alembic/versions/20260321_personas.py`): Removed `json.dumps()` wrappers — pass raw Python dicts/lists directly. Existing DB data fixed via SQL: `UPDATE personas SET dashboard_config = (dashboard_config #>> '{}')::jsonb`.
