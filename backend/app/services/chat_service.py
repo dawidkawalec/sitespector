@@ -798,6 +798,8 @@ def _build_prompt(
     user_message: str,
     verbosity: str = "balanced",
     tone: str = "professional",
+    persona_context: Optional[str] = None,
+    action_cards_context: Optional[str] = None,
 ) -> Tuple[str, str]:
     """
     Returns (system_prompt, user_prompt) for the LLM call.
@@ -816,9 +818,42 @@ def _build_prompt(
         )
 
     system_prompt = agent.system_prompt.strip()
+
+    # Inject persona context into system prompt
+    if persona_context:
+        system_prompt = "\n".join([system_prompt, "", persona_context]).strip()
+
     style_lines = _style_instructions(verbosity=verbosity, tone=tone)
     if style_lines:
         system_prompt = "\n".join([system_prompt, "", "STYLE:", *style_lines]).strip()
+
+    instructions = [
+        "INSTRUCTIONS:",
+        "- If data is missing in CONTEXT, say 'brak danych w raporcie'.",
+        "- Provide concrete, actionable next steps.",
+        "- Prefer bullet points and short paragraphs.",
+    ]
+
+    # Add action card instructions when persona is active
+    if action_cards_context:
+        instructions.extend([
+            "",
+            "ACTION CARDS:",
+            action_cards_context,
+            "",
+            "Mozesz sugerowac akcje uzywajac blokow :::action. Przyklad:",
+            ":::action",
+            "type: create_card",
+            "title: Tytul akcji",
+            "description: Krotki opis co zrobic",
+            "priority: high",
+            "category: performance",
+            ":::",
+            "",
+            "Dostepne typy: create_card (nowa karta), update_card (zmien status karty: card_id + status).",
+            "Uzywaj :::action TYLKO gdy user prosi o konkretna akcje lub gdy naturalnie wynika z rozmowy.",
+        ])
+
     user_prompt = "\n".join(
         [
             "CONTEXT (audit-scoped; do not use external knowledge unless explicitly asked):",
@@ -828,10 +863,7 @@ def _build_prompt(
             "",
             f"USER: {user_message}",
             "",
-            "INSTRUCTIONS:",
-            "- If data is missing in CONTEXT, say 'brak danych w raporcie'.",
-            "- Provide concrete, actionable next steps.",
-            "- Prefer bullet points and short paragraphs.",
+            *instructions,
         ]
     ).strip()
 
@@ -943,6 +975,32 @@ async def stream_chat_response(
             yield msg
             return
 
+    # Load persona + action cards for chat context
+    persona_ctx = None
+    action_cards_ctx = None
+    if convo.audit_id:
+        audit_result = await db.execute(select(Audit).where(Audit.id == convo.audit_id))
+        chat_audit = audit_result.scalar_one_or_none()
+        if chat_audit and chat_audit.persona_id:
+            from app.models import Persona, ActionCard
+            p_result = await db.execute(select(Persona).where(Persona.id == chat_audit.persona_id))
+            persona_obj = p_result.scalar_one_or_none()
+            if persona_obj and persona_obj.prompt_modifier:
+                persona_ctx = f"PERSONA ({persona_obj.name}):\n{persona_obj.prompt_modifier}"
+
+            # Load current action cards
+            cards_result = await db.execute(
+                select(ActionCard)
+                .where(ActionCard.audit_id == convo.audit_id, ActionCard.status != "dismissed")
+                .order_by(ActionCard.sort_order)
+            )
+            cards = cards_result.scalars().all()
+            if cards:
+                card_lines = [f"Aktualne karty akcji ({len(cards)}):"]
+                for c in cards:
+                    card_lines.append(f"- [{c.status}] {c.title} (id={c.id}, priority={c.priority})")
+                action_cards_ctx = "\n".join(card_lines)
+
     system_prompt, prompt = _build_prompt(
         agent=agent,
         rag_chunks=rag_chunks,
@@ -950,6 +1008,8 @@ async def stream_chat_response(
         user_message=user_message,
         verbosity=getattr(convo, "verbosity", "balanced") or "balanced",
         tone=getattr(convo, "tone", "professional") or "professional",
+        persona_context=persona_ctx,
+        action_cards_context=action_cards_ctx,
     )
 
     # Phase: generating response
