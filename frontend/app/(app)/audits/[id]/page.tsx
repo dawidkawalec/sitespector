@@ -229,12 +229,16 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
   })
 
   // Fetch persona details if audit has one
-  const { data: persona } = useQuery<PersonaConfig>({
+  const { data: persona } = useQuery<PersonaConfig | null>({
     queryKey: ['persona', audit?.persona_id],
     queryFn: async () => {
-      // We need slug — fetch all personas and find by id
-      const all = await personasAPI.list()
-      return all.find((p: PersonaConfig) => p.id === audit?.persona_id) || null
+      try {
+        const all = await personasAPI.list()
+        if (!Array.isArray(all)) return null
+        return all.find((p: PersonaConfig) => p.id === audit?.persona_id) ?? null
+      } catch {
+        return null
+      }
     },
     enabled: !!audit?.persona_id,
     staleTime: 5 * 60 * 1000,

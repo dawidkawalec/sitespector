@@ -64,7 +64,7 @@ export function ModeSwitcher({
   isExecutionPlanLoading = false,
   hasPersona = false,
 }: ModeSwitcherProps) {
-  const config = modeConfig[mode]
+  const config = modeConfig[mode] || modeConfig.data
 
   return (
     <div className="space-y-4">
@@ -154,12 +154,15 @@ export function ModeSwitcher({
  * Usage:
  * const [mode, setMode] = useAuditMode('data')
  */
+const VALID_MODES: AuditMode[] = ['dashboard', 'data', 'analysis', 'plan']
+
 export function useAuditMode(defaultMode: AuditMode = 'data'): [AuditMode, (mode: AuditMode) => void] {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const currentMode = (searchParams.get('mode') as AuditMode) || defaultMode
+  const rawMode = searchParams.get('mode')
+  const currentMode = (rawMode && VALID_MODES.includes(rawMode as AuditMode)) ? rawMode as AuditMode : defaultMode
 
   const setMode = (newMode: AuditMode) => {
     const params = new URLSearchParams(searchParams.toString())
