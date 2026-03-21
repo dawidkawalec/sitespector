@@ -1,5 +1,11 @@
 # Architectural Decisions Log
 
+## ADR-075: Stripe Live Setup (2026-03-20)
+
+- **Decision**: Stripe LIVE mode. 7 produktów (3 subskrypcje + 4 credit packs), 10 cen (6 recurring + 4 one-time). Webhook na /api/billing/webhook (6 eventów). Klucze w .env na VPS.
+- **Rationale**: Przejście z test na live dla real payments. Price IDs przechowywane jako env vars (nie w DB).
+- **Trade-off**: Price IDs w .env — prostsze ale wymaga ręcznego updatu przy zmianach cen w Stripe Dashboard.
+
 ## ADR-074: P11 /porownanie — strona porównawcza z realnymi danymi (2026-03-19)
 
 - **Decision**: Pełna strona porównawcza 6 narzędzi × 14 kryteriów z aktualnymi cenami 2026 (web research). Obiektywne porównanie z naturalnym highlightem SiteSpector. FAQ z objection handling z marketing docs.

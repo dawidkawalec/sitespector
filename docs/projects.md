@@ -9,8 +9,7 @@
 
 | Priorytet | Projekty | Dlaczego |
 |-----------|----------|----------|
-| **P0 — Blokery launch** | ~~P1~~✅, ~~P2~~✅, ~~P3~~✅ | DONE — kredyty, cennik, paywall |
-| **BLOKER** | Stripe setup (Piotr) | Założyć konto, stworzyć produkty, wpisać klucze |
+| **P0 — Blokery launch** | ~~P1~~✅, ~~P2~~✅, ~~P3~~✅, ~~Stripe~~✅ | DONE — kredyty, cennik, paywall, Stripe live |
 | **P1 — Pre-launch** | ~~P4~~✅, ~~P5~~✅, P9, ~~P10~~✅ | P4+P5+P10 done. P9 (pixel) jako ostatni pre-launch |
 | **P2 — Post-launch** | P6, ~~P7~~✅, P8, ~~P11~~✅ | P7+P11 done. P6 (PQL) + P8 (pakiety) |
 | **P3 — Skalowanie** | P12, P13 | Długoterminowy growth |
@@ -73,6 +72,9 @@ Commit: ab56b35 + 646804b. 23 artykuły SEO przepisane z placeholderów (~50k s�
 
 ### P11: Strona /porownanie ✅ (2026-03-19)
 Commit: 56c05ae. Pełna strona porównawcza: 6 narzędzi × 14 kryteriów, ceny 2026, 5 wyróżników, 4 scenariusze per persona, FAQ (6 pytań), CTA. Usunięte wszystkie "wkrótce".
+
+### Stripe Setup ✅ (2026-03-20)
+Stripe LIVE skonfigurowany: 3 produkty subskrypcyjne (Solo/Agency/Enterprise) × 2 ceny (monthly+annual) = 6 price IDs. 4 pakiety kredytów (Starter/Standard/Pro/Agency). Webhook na sitespector.app/api/billing/webhook. Klucze + price IDs w .env na VPS.
 
 ---
 
