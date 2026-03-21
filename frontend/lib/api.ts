@@ -937,3 +937,37 @@ export const businessContextAPI = {
       { method: 'POST' }
     ),
 }
+
+// Scoped Report types
+export interface ScopedReport {
+  id: string
+  audit_id: string
+  scope_type: string
+  scope_label: string
+  scope_filter: Record<string, any>
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  error_message?: string | null
+  results?: any
+  credits_used: number
+  created_at: string
+  completed_at?: string | null
+}
+
+export const scopedReportsAPI = {
+  list: (auditId: string) =>
+    apiRequest<ScopedReport[]>(`/api/scoped-reports/audit/${auditId}`),
+
+  create: (auditId: string, data: { scope_type: string; scope_label?: string; scope_filter?: Record<string, any> }) =>
+    apiRequest<ScopedReport>(`/api/scoped-reports/audit/${auditId}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  get: (reportId: string) =>
+    apiRequest<ScopedReport>(`/api/scoped-reports/${reportId}`),
+
+  delete: (reportId: string) =>
+    apiRequest<void>(`/api/scoped-reports/${reportId}`, {
+      method: 'DELETE',
+    }),
+}

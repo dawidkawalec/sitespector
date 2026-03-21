@@ -524,6 +524,35 @@ class SmartFormResponse(BaseModel):
 
 
 # ============================================
+# Scoped Report Schemas
+# ============================================
+
+class ScopedReportCreate(BaseModel):
+    """Schema for requesting a scoped report generation."""
+    scope_type: str  # product, category, service, blog, custom
+    scope_label: Optional[str] = None
+    scope_filter: Optional[Dict[str, Any]] = None  # {"page_type": "product"} or {"urls": [...]}
+
+
+class ScopedReportResponse(BaseModel):
+    """Schema for scoped report response."""
+    id: UUID
+    audit_id: UUID
+    scope_type: str
+    scope_label: str
+    scope_filter: Dict[str, Any]
+    status: str
+    error_message: Optional[str] = None
+    results: Optional[Dict[str, Any]] = None
+    credits_used: int
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================
 # Health Check Schema
 # ============================================
 

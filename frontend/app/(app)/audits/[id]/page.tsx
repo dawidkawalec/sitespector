@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { PageStatusChart } from '@/components/AuditCharts'
+import { ScopeSelector } from '@/components/audit/ScopeSelector'
 import type { Audit } from '@/lib/api'
 import {
   Accordion,
@@ -324,6 +325,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
 
   const lh = audit.results?.lighthouse?.desktop
   const crawl = audit.results?.crawl
+  const pageTypeStats = crawl?.page_type_stats
   const senuto = audit.results?.senuto
   const ai = audit.results?.content_analysis
   const technicalHealth = audit.results?.technical_health_index
@@ -1360,6 +1362,14 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             </div>
           </div>
         </>
+      )}
+
+      {/* Scoped Reports Selector */}
+      {audit.status === 'completed' && pageTypeStats && Object.keys(pageTypeStats).length > 1 && (
+        <ScopeSelector
+          auditId={params.id}
+          pageTypeStats={pageTypeStats}
+        />
       )}
     </div>
   )

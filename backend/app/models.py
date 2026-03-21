@@ -230,6 +230,7 @@ class Audit(Base):
     business_context = relationship("BusinessContext", back_populates="audits")
     competitors = relationship("Competitor", back_populates="audit", cascade="all, delete-orphan")
     tasks = relationship("AuditTask", back_populates="audit", cascade="all, delete-orphan")
+    scoped_reports = relationship("ScopedReport", back_populates="audit", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Audit(id={self.id}, url={self.url}, status={self.status})>"
@@ -381,6 +382,39 @@ class AuditTask(Base):
 
     def __repr__(self) -> str:
         return f"<AuditTask(id={self.id}, module={self.module}, title={self.title[:50]}, status={self.status})>"
+
+
+class ScopedReport(Base):
+    """Scoped sub-report: AI analysis focused on a specific page type."""
+
+    __tablename__ = "scoped_reports"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    audit_id = Column(UUID(as_uuid=True), ForeignKey("audits.id"), nullable=False, index=True)
+
+    # Scope definition
+    scope_type = Column(String(50), nullable=False)  # product, category, service, blog, custom
+    scope_label = Column(String(200), nullable=False)  # display name
+    scope_filter = Column(JSONB, nullable=False)  # {"page_type": "product"} or {"urls": [...]}
+
+    # Processing
+    status = Column(String(20), default="pending", nullable=False, index=True)  # pending, processing, completed, failed
+    error_message = Column(Text, nullable=True)
+
+    # Results (same structure as audit.results.ai_contexts but scoped)
+    results = Column(JSONB, nullable=True)
+
+    # Cost tracking
+    credits_used = Column(Integer, default=0, nullable=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    audit = relationship("Audit", back_populates="scoped_reports")
+
+    def __repr__(self) -> str:
+        return f"<ScopedReport(id={self.id}, scope={self.scope_type}, status={self.status})>"
 
 
 # ============================================
