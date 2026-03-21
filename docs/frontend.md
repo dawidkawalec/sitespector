@@ -57,6 +57,9 @@ Location: `frontend/`
 | `images` | Image optimization audit |
 | `lighthouse-data` | Lighthouse raw metrics |
 | `links` | Internal & external link analysis |
+| `page-types` | Page type overview (classification results) |
+| `context` | Business context smart form (after Phase 1) |
+| `scope/[scopeId]` | Scoped sub-report view |
 | `pages/[pageIndex]` | Single-page detail view |
 | `pdf` | PDF report generation |
 | `performance` | Core Web Vitals & performance |
@@ -68,7 +71,7 @@ Location: `frontend/`
 | `ux-check` | UX heuristic evaluation |
 | `visibility` | Search visibility / keyword data |
 
-**Total: 27 subpages** (including index and `pages/[pageIndex]`)
+**Total: 30 subpages** (including index, `pages/[pageIndex]`, `scope/[scopeId]`)
 
 ### Settings `/settings/...`
 
@@ -126,7 +129,7 @@ switch, table, tabs, textarea, tooltip
 | File | Purpose |
 |------|---------|
 | `ChatPanel.tsx` | Persistent right sidebar panel |
-| `ChatMessages.tsx` | Message list with markdown rendering |
+| `ChatMessages.tsx` | Message list with markdown rendering + `:::action` block parsing (ChatActionBlock inline component) |
 | `ChatInput.tsx` | Message composer with send button |
 | `ChatConversationList.tsx` | Conversation history selector |
 | `AgentSelector.tsx` | AI agent type picker |
@@ -137,10 +140,13 @@ switch, table, tabs, textarea, tooltip
 
 | File | Purpose |
 |------|---------|
-| `ModeSwitcher.tsx` | Dane / Analiza / Plan tab switcher |
+| `ModeSwitcher.tsx` | Dane / Analiza / Plan tab switcher (+ "Dashboard" mode when persona active) |
 | `AnalysisView.tsx` | AI analysis markdown renderer (Free tier: blurred with PaywallOverlay) |
 | `TaskListView.tsx` | Execution plan task list (Free tier: titles visible, details blurred) |
 | `TaskCard.tsx` | Single task card with status/notes |
+| `PageTypeFilter.tsx` | Pills filter for page types + `usePageTypeFilter` hook |
+| `ScopeSelector.tsx` | Scope selector on audit overview (triggers scoped report generation) |
+| `PersonaDashboard.tsx` | KPI cards + action cards dashboard (when persona active) |
 | `QuickWinBadge.tsx` | Priority/impact badge for quick wins |
 
 ### `components/brand/`
@@ -174,7 +180,9 @@ switch, table, tabs, textarea, tooltip
 | `CreditBalance.tsx` | Compact credit balance widget (in TopBar) |
 | `CreditPackagesDialog.tsx` | Credit package purchase modal (Stripe one-time) |
 | `PaywallOverlay.tsx` | Blur overlay + upgrade CTA for Free tier |
-| `NewAuditDialog.tsx` | Start new audit modal (credit-based cost display) |
+| `BusinessContextForm.tsx` | Smart form UI for business context after Phase 1 |
+| `PersonaPicker.tsx` | Persona card grid for NewAuditDialog |
+| `NewAuditDialog.tsx` | Start new audit modal (credit-based cost display, persona selection) |
 | `Providers.tsx` | Root providers (QueryClient, Theme, Workspace) |
 | `SystemStatus.tsx` | System status indicator |
 | `ThemeToggle.tsx` | Light/dark theme switch |
@@ -261,4 +269,4 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 
 ---
 
-Last updated: 2026-03-17
+Last updated: 2026-03-21

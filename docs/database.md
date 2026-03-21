@@ -12,7 +12,7 @@ SiteSpector uses a **dual-database** architecture:
 Cross-database references (e.g. `audits.project_id` on VPS pointing to `projects.id` in Supabase) are **UUID-based with no foreign key** -- integrity is enforced in the application layer.
 
 **ORM**: SQLAlchemy 2.0 (async) with asyncpg driver
-**Migrations**: Alembic (18 migration files in `backend/alembic/versions/`)
+**Migrations**: Alembic (21 migration files in `backend/alembic/versions/`)
 
 ---
 
@@ -67,7 +67,7 @@ Website audit records with scores and full JSONB results.
 | workspace_id | UUID | nullable, indexed (Supabase workspace, no FK) |
 | project_id | UUID | nullable, indexed (Supabase project, no FK) |
 | url | VARCHAR(2048) | NOT NULL |
-| status | ENUM (pending/processing/completed/failed) | NOT NULL, default 'pending', indexed |
+| status | ENUM (pending/processing/awaiting_context/completed/failed) | NOT NULL, default 'pending', indexed |
 | overall_score | FLOAT | nullable |
 | seo_score | FLOAT | nullable |
 | performance_score | FLOAT | nullable |
@@ -86,12 +86,15 @@ Website audit records with scores and full JSONB results.
 | execution_plan_status | VARCHAR(20) | nullable (processing/completed/failed) |
 | crawler_user_agent | VARCHAR(500) | nullable |
 | crawl_blocked | BOOLEAN | NOT NULL, default false |
+| business_context_id | UUID | FK -> business_contexts.id, nullable |
+| mode | VARCHAR(20) | NOT NULL, default 'professional' (professional/owner) |
+| persona_id | UUID | FK -> personas.id, nullable |
 | created_at | TIMESTAMPTZ | NOT NULL, indexed |
 | started_at | TIMESTAMPTZ | nullable |
 | completed_at | TIMESTAMPTZ | nullable |
 | rag_indexed_at | TIMESTAMPTZ | nullable, indexed |
 
-**Relationships**: `audits` 1--N `competitors` (cascade), `audits` 1--N `audit_tasks` (cascade)
+**Relationships**: `audits` 1--N `competitors` (cascade), `audits` 1--N `audit_tasks` (cascade), `audits` 1--N `scoped_reports` (cascade), `audits` 1--N `action_cards` (cascade), `audits` N--1 `business_contexts`, `audits` N--1 `personas`
 
 ---
 
@@ -351,6 +354,101 @@ Append-only credit transaction ledger. Never delete rows.
 
 ---
 
+### 15. personas
+
+Extensible persona definitions. 5 system personas seeded: owner, freelancer, marketing, webdev, ecommerce.
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | UUID | PK, default uuid4 |
+| slug | VARCHAR(60) | UNIQUE, NOT NULL, indexed |
+| name | VARCHAR(120) | NOT NULL |
+| description | TEXT | nullable |
+| icon | VARCHAR(60) | nullable (Lucide icon name) |
+| sort_order | INTEGER | NOT NULL, default 0 |
+| prompt_modifier | TEXT | nullable (injected into all AI prompts) |
+| dashboard_config | JSONB | nullable (`{kpi_cards, focus_modules}`) |
+| context_questions | JSONB | nullable (persona-specific creation questions) |
+| is_system | BOOLEAN | NOT NULL, default true |
+| workspace_id | UUID | nullable, indexed (null = system persona) |
+| created_at | TIMESTAMPTZ | NOT NULL, server default now() |
+| updated_at | TIMESTAMPTZ | NOT NULL, auto-update |
+
+---
+
+### 16. business_contexts
+
+Business context per project, gathered via smart form or manual input. Reused across audits.
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | UUID | PK, default uuid4 |
+| workspace_id | UUID | NOT NULL, indexed |
+| project_id | UUID | nullable, indexed |
+| business_type | VARCHAR(100) | nullable (ecommerce/service/saas/portal/blog/corporate) |
+| industry | VARCHAR(200) | nullable |
+| target_audience | TEXT | nullable |
+| geographic_focus | VARCHAR(200) | nullable |
+| business_goals | JSONB | nullable (`["leads", "sales", "brand_awareness"]`) |
+| priorities | JSONB | nullable (`["performance", "visibility", "content"]`) |
+| key_products_services | JSONB | nullable (list of strings) |
+| competitors_context | TEXT | nullable |
+| current_challenges | TEXT | nullable |
+| budget_range | VARCHAR(50) | nullable (low/medium/high) |
+| team_capabilities | VARCHAR(50) | nullable (no_dev/basic_dev/full_team) |
+| smart_form_questions | JSONB | nullable (`[{question, answer}]`) |
+| source | VARCHAR(30) | nullable (manual_form/smart_form/both) |
+| created_at | TIMESTAMPTZ | NOT NULL, server default now() |
+| updated_at | TIMESTAMPTZ | NOT NULL, auto-update |
+
+**Relationships**: `business_contexts` 1--N `audits`
+
+---
+
+### 17. scoped_reports
+
+Per-audit scoped AI sub-reports, focused on a specific page type. Credit-based generation.
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | UUID | PK, default uuid4 |
+| audit_id | UUID | FK -> audits.id, NOT NULL, indexed |
+| scope_type | VARCHAR(50) | NOT NULL (product/category/service/blog/custom) |
+| scope_label | VARCHAR(200) | NOT NULL (display name) |
+| scope_filter | JSONB | NOT NULL (`{"page_type": "product"}` or `{"urls": [...]}`) |
+| status | VARCHAR(20) | NOT NULL, default 'pending', indexed (pending/processing/completed/failed) |
+| error_message | TEXT | nullable |
+| results | JSONB | nullable (scoped AI analysis results) |
+| credits_used | INTEGER | NOT NULL, default 0 |
+| created_at | TIMESTAMPTZ | NOT NULL, indexed |
+| completed_at | TIMESTAMPTZ | nullable |
+
+---
+
+### 18. action_cards
+
+AI-generated interactive action cards for persona dashboard. Different lifecycle from AuditTask.
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | UUID | PK, default uuid4 |
+| audit_id | UUID | FK -> audits.id, NOT NULL, indexed |
+| persona_id | UUID | FK -> personas.id, nullable |
+| title | VARCHAR(500) | NOT NULL |
+| description | TEXT | NOT NULL |
+| category | VARCHAR(50) | nullable (performance/seo/content/ux/security) |
+| priority | VARCHAR(20) | nullable (critical/high/medium/low) |
+| kpi_impact | JSONB | nullable (`{"metric": "lcp", "improvement": "-500ms"}`) |
+| action_data | JSONB | nullable (code snippets, URLs, structured data) |
+| status | VARCHAR(20) | NOT NULL, default 'suggested', indexed |
+| source | VARCHAR(30) | NOT NULL (auto_generation/chat_created/user_created) |
+| sort_order | INTEGER | NOT NULL, default 0 |
+| created_at | TIMESTAMPTZ | NOT NULL |
+| updated_at | TIMESTAMPTZ | NOT NULL, auto-update |
+| completed_at | TIMESTAMPTZ | nullable |
+
+---
+
 ## Supabase PostgreSQL Tables
 
 Defined in `supabase/schema.sql`. All tables are in the `public` schema with Row Level Security (RLS).
@@ -511,26 +609,32 @@ VPS PostgreSQL                          Supabase PostgreSQL
 --------------                          -------------------
 users 1──N audits 1──N competitors      auth.users 1──1 profiles
                   1──N audit_tasks                 1──N workspaces (via owner_id)
-                                                        1──N workspace_members
-audit_schedules (FK user_id)                            1──1 subscriptions
-                                                        1──N invoices
-agent_types 1──N chat_conversations                     1──N projects
-                 1──N chat_messages                          1──N project_members
+                  1──N scoped_reports                   1──N workspace_members
+                  1──N action_cards                     1──1 subscriptions
+                  N──1 business_contexts                1──N invoices
+                  N──1 personas                         1──N projects
+                                                             1──N project_members
+audit_schedules (FK user_id)
+agent_types 1──N chat_conversations
+                 1──N chat_messages
                  1──N chat_shares
 
 Cross-database (UUID, no FK):
-  audits.workspace_id        --> workspaces.id
-  audits.project_id          --> projects.id
-  audit_schedules.project_id --> projects.id
-  chat_conversations.workspace_id --> workspaces.id
-  chat_conversations.created_by   --> auth.users.id
-  agent_types.workspace_id        --> workspaces.id
-  agent_types.created_by          --> auth.users.id
+  audits.workspace_id              --> workspaces.id
+  audits.project_id                --> projects.id
+  audit_schedules.project_id       --> projects.id
+  chat_conversations.workspace_id  --> workspaces.id
+  chat_conversations.created_by    --> auth.users.id
+  agent_types.workspace_id         --> workspaces.id
+  agent_types.created_by           --> auth.users.id
+  business_contexts.workspace_id   --> workspaces.id
+  business_contexts.project_id     --> projects.id
+  personas.workspace_id            --> workspaces.id
 ```
 
 **Cascade rules (VPS)**:
-- Delete user -> delete audits -> delete competitors + audit_tasks
-- Delete audit -> delete competitors + audit_tasks
+- Delete user -> delete audits -> delete competitors + audit_tasks + scoped_reports + action_cards
+- Delete audit -> delete competitors + audit_tasks + scoped_reports + action_cards
 - Delete conversation -> delete messages + shares + attachments
 - Delete message -> attachment.message_id set NULL
 
@@ -662,7 +766,7 @@ Cross-database (UUID, no FK):
 
 **Tool**: Alembic
 **Location**: `backend/alembic/versions/`
-**Total**: 17 migration files
+**Total**: 21 migration files
 
 | # | File | Description |
 |---|---|---|
@@ -683,6 +787,10 @@ Cross-database (UUID, no FK):
 | 15 | `20260216_chat_feedback.py` | Create chat_message_feedback table |
 | 16 | `20260217_add_crawler_ua_and_crawl_blocked.py` | Add crawler_user_agent, crawl_blocked to audits |
 | 17 | `20260217_add_project_id.py` | Add project_id to audits + audit_schedules |
+| 18 | `20260318_credit_system.py` | Add credit_balances + credit_transactions tables |
+| 19 | `20260321_business_context.py` | Create business_contexts table, add business_context_id + mode to audits |
+| 20 | `20260321_personas.py` | Create personas table, add persona_id to audits |
+| 21 | `20260321_scoped_reports.py` | Create scoped_reports + action_cards tables |
 
 ### Running Migrations
 
@@ -828,7 +936,8 @@ When testing requires a clean slate after model changes:
    ```sql
    TRUNCATE audits, competitors, audit_tasks, audit_schedules,
             chat_conversations, chat_messages, chat_attachments,
-            chat_message_feedback, chat_shares, chat_usage CASCADE;
+            chat_message_feedback, chat_shares, chat_usage,
+            scoped_reports, action_cards, business_contexts CASCADE;
    UPDATE users SET audits_count = 0;
    ```
 2. **Supabase** -- clear project data and reset counters:
@@ -843,8 +952,8 @@ This preserves schema, triggers, RLS policies, users, profiles, workspaces, and 
 
 ---
 
-**Last Updated**: 2026-03-17
+**Last Updated**: 2026-03-21
 **VPS Database**: PostgreSQL 16 (Docker)
 **Supabase**: Managed PostgreSQL
 **ORM**: SQLAlchemy 2.0 (async) + asyncpg
-**Migrations**: Alembic (17 files)
+**Migrations**: Alembic (21 files)

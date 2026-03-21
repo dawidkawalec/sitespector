@@ -21,6 +21,8 @@ import {
 import Link from 'next/link'
 import { PageStatusChart } from '@/components/AuditCharts'
 import { ScopeSelector } from '@/components/audit/ScopeSelector'
+import { PersonaDashboard } from '@/components/audit/PersonaDashboard'
+import { personasAPI, type PersonaConfig } from '@/lib/api'
 import type { Audit } from '@/lib/api'
 import {
   Accordion,
@@ -224,6 +226,18 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
       }
       return false
     },
+  })
+
+  // Fetch persona details if audit has one
+  const { data: persona } = useQuery<PersonaConfig>({
+    queryKey: ['persona', audit?.persona_id],
+    queryFn: async () => {
+      // We need slug — fetch all personas and find by id
+      const all = await personasAPI.list()
+      return all.find((p: PersonaConfig) => p.id === audit?.persona_id) || null
+    },
+    enabled: !!audit?.persona_id,
+    staleTime: 5 * 60 * 1000,
   })
 
   // Auto-scroll logs to bottom
@@ -587,6 +601,11 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Persona Dashboard (shown when audit has persona and is completed) */}
+      {persona && audit.status === 'completed' && (
+        <PersonaDashboard audit={audit} persona={persona} />
       )}
 
       {audit.status === 'processing' || audit.status === 'pending' ? (

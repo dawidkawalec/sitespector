@@ -10,7 +10,7 @@
 | Priorytet | Projekty | Status |
 |-----------|----------|--------|
 | **P0 — Blokery** | ~~P1~~✅ ~~P2~~✅ ~~P3~~✅ ~~Stripe~~✅ | **DONE** — kredyty, cennik, paywall, Stripe live |
-| **P1 — Pre-launch** | ~~P4~~✅ ~~P5~~✅ ~~P10~~✅ ~~P11~~✅ / **P9** | P9 (Meta Pixel) jedyny remaining |
+| **P1 — Pre-launch** | ~~P4~~✅ ~~P5~~✅ ~~P10~~✅ ~~P11~~✅ ~~PhA~~✅ ~~PhB~~✅ / **P9** | P9 (Meta Pixel) jedyny remaining |
 | **P2 — Post-launch** | ~~P7~~✅ / **P6, P8** | P6 (PQL+email) + P8 (dokupywanie kredytów) |
 | **P3 — Skalowanie** | **P12, P13** | Referral + Platforma rozszerzeń |
 
@@ -53,6 +53,12 @@ Commit: 56c05ae. Pełna strona porównawcza: 6 narzędzi × 14 kryteriów, ceny 
 
 ### Stripe Setup ✅ (2026-03-20)
 Stripe LIVE skonfigurowany: 3 produkty subskrypcyjne (Solo/Agency/Enterprise) × 2 ceny (monthly+annual) = 6 price IDs. 4 pakiety kredytów (Starter/Standard/Pro/Agency). Webhook na sitespector.app/api/billing/webhook. Klucze + price IDs w .env na VPS.
+
+### Phase A: Platform Modes — Batch 1-4 ✅ (2026-03-21)
+Kontekstowe raporty AI. Backend: page_classifier (8 typow stron), business_context_service (smart form + AI), scoped_analysis (sub-raporty per page type). Frontend: /context (smart form), /page-types, /scope/[scopeId], PageTypeFilter, ScopeSelector, BusinessContextForm. DB: business_contexts + scoped_reports. Worker: AWAITING_CONTEXT status, page classification (4b), multi-page LH (4c). Audit: business_context_id + mode kolumny.
+
+### Phase B: Persona System — Batch 5 ✅ (2026-03-21)
+Multi-persona system. Backend: action_card_service, personas router, action_cards router. Frontend: PersonaPicker, PersonaDashboard, ModeSwitcher "Dashboard" mode, ChatMessages :::action block parsing. DB: personas (5 seeded) + action_cards. Worker: Phase 3.5 auto-generation action cards. Audit: persona_id kolumna.
 
 ---
 

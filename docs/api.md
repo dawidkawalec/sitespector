@@ -909,6 +909,156 @@ Creates Stripe checkout for one-time credit package purchase. Requires Solo+ pla
 
 ---
 
+## Business Context Endpoints
+
+Business context management for context-aware AI reports. All endpoints require **Supabase JWT** authentication and workspace membership.
+
+#### `POST /api/business-context`
+
+Create or update business context for a workspace/project. If context already exists for the project, updates it.
+
+**Body**: `{ workspace_id, project_id?, business_type?, industry?, target_audience?, geographic_focus?, business_goals?, priorities?, key_products_services?, competitors_context?, current_challenges?, budget_range?, team_capabilities?, smart_form_questions?, source? }`
+
+**Response** (201): `BusinessContext` object
+
+#### `GET /api/business-context/{context_id}`
+
+Get business context by ID.
+
+#### `GET /api/business-context/project/{project_id}`
+
+Get latest business context for a project.
+
+#### `PUT /api/business-context/{context_id}`
+
+Update existing business context.
+
+#### `POST /api/business-context/audits/{audit_id}/generate-smart-form`
+
+Generate AI-powered smart form questions based on audit Phase 1 data (crawl, lighthouse, senuto). Returns contextual questions tailored to the site.
+
+**Response**: `{ questions: [{ question, field_hint?, options? }] }`
+
+**Errors**: `400` if audit has no Phase 1 results yet.
+
+#### `POST /api/business-context/audits/{audit_id}/save-context-and-continue`
+
+Save business context and resume audit processing (Phase 2). Links context to audit, sets status back to PENDING for worker pickup.
+
+**Body**: Same as `POST /api/business-context`
+
+**Response**: `{ status: "ok", business_context_id, audit_status }`
+
+#### `POST /api/business-context/audits/{audit_id}/skip-context`
+
+Skip business context and resume audit (Phase 2) without context data. Sets audit status back to PENDING.
+
+**Response**: `{ status: "ok", audit_status }`
+
+---
+
+## Personas Endpoints
+
+Persona definitions for multi-perspective audits. All endpoints require **Supabase JWT** authentication.
+
+#### `GET /api/personas`
+
+List system personas + workspace-specific ones.
+
+**Query**: `workspace_id` (optional) — includes workspace-scoped custom personas.
+
+**Response**: Array of `Persona` objects (sorted by sort_order, then name).
+
+#### `GET /api/personas/{slug}`
+
+Get a single persona by slug.
+
+**Response**: `Persona` object
+
+**Errors**: `404` if persona not found.
+
+---
+
+## Scoped Reports Endpoints
+
+Per-audit scoped AI sub-reports focused on a specific page type. Credit-based. All endpoints require **Supabase JWT** authentication and workspace membership.
+
+#### `GET /api/scoped-reports/audit/{audit_id}`
+
+List all scoped reports for an audit (newest first).
+
+**Response**: Array of `ScopedReport` objects.
+
+#### `POST /api/scoped-reports/audit/{audit_id}`
+
+Create and start generating a scoped report. Deducts credits automatically.
+
+**Body**: `{ scope_type, scope_label?, scope_filter? }`
+
+- `scope_type`: page type key (product, category, blog, service, etc.)
+- `scope_label`: display name (auto-generated from scope_type if omitted)
+- `scope_filter`: custom filter (defaults to `{"page_type": scope_type}`)
+
+**Response** (201): `ScopedReport` object (status=pending, generation runs in background).
+
+**Errors**:
+- `400`: Audit has no crawl data, or no pages match scope type
+- `402`: Insufficient credits
+
+#### `GET /api/scoped-reports/{report_id}`
+
+Get a single scoped report (including results when completed).
+
+#### `DELETE /api/scoped-reports/{report_id}`
+
+Delete a scoped report. No credit refund.
+
+---
+
+## Action Cards Endpoints
+
+AI-generated interactive action cards for persona dashboard. All endpoints require **Supabase JWT** authentication and workspace membership for the audit.
+
+#### `GET /api/audits/{audit_id}/action-cards`
+
+List action cards for an audit.
+
+**Query**: `status` (optional) — filter by status (suggested, accepted, completed, dismissed).
+
+**Response**: Array of `ActionCard` objects (sorted by sort_order, then created_at).
+
+#### `POST /api/audits/{audit_id}/action-cards`
+
+Create an action card (manual or from chat).
+
+**Body**: `{ title, description, category?, priority?, kpi_impact?, action_data?, source }`
+
+**Response** (201): `ActionCard` object
+
+#### `PATCH /api/audits/{audit_id}/action-cards/{card_id}`
+
+Update an action card (status, priority, etc.). Sets `completed_at` when status changes to "completed".
+
+**Body**: `{ status?, title?, description?, priority?, category? }`
+
+**Response**: Updated `ActionCard` object
+
+#### `DELETE /api/audits/{audit_id}/action-cards/{card_id}`
+
+Delete an action card.
+
+**Response** (204): No content
+
+#### `POST /api/audits/{audit_id}/action-cards/generate`
+
+Manually trigger AI action card generation for an audit. Requires completed AI analysis.
+
+**Response**: Array of generated `ActionCard` objects.
+
+**Errors**: `400` if audit AI analysis not completed yet.
+
+---
+
 ## Branding Endpoints
 
 Workspace branding for PDF white-label. Agency+ can upload logo. Enterprise can set full white-label (company name, contact, colors).
@@ -1065,7 +1215,10 @@ interface Audit {
   id: string  // UUID
   user_id: string  // UUID
   url: string
-  status: 'pending' | 'processing' | 'completed' | 'failed'
+  status: 'pending' | 'processing' | 'awaiting_context' | 'completed' | 'failed'
+  mode: 'professional' | 'owner'
+  business_context_id?: string | null  // UUID
+  persona_id?: string | null  // UUID
   ai_status?: 'processing' | 'completed' | 'failed' | 'skipped' | null
   processing_step?: string | null
   processing_logs?: Array<{
@@ -1604,6 +1757,6 @@ Returns health status of all critical services.
 
 ---
 
-**Last Updated**: 2026-03-17  
-**API Version**: v1  
+**Last Updated**: 2026-03-21
+**API Version**: v1
 **Base URL**: https://sitespector.app/api

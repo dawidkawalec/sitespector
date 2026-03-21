@@ -1,5 +1,23 @@
 # Architectural Decisions Log
 
+## ADR-078: :::action blocks in chat — text-based, not function calling (2026-03-21)
+
+- **Decision**: Chat AI outputs `:::action` fenced blocks in markdown (title, description, category, priority). Frontend parses them inline as `ChatActionBlock` components with "Add to actions" button. No function calling / tool_use.
+- **Rationale**: Simplicity — text-based approach works with any LLM, no function schema maintenance, no structured output parsing. User sees the card inline and decides whether to save it. Graceful degradation: if parsing fails, block renders as plain text.
+- **Trade-off**: Less structured than function calling — AI may produce malformed blocks. Mitigated by lenient regex parser with fallback to raw text.
+
+## ADR-077: Action cards separate from AuditTask — different lifecycle (2026-03-21)
+
+- **Decision**: Action cards (`action_cards` table) are separate from execution plan tasks (`audit_tasks` table) despite similar fields. Action cards have: persona_id, kpi_impact (JSONB), action_data (JSONB), status flow (suggested→accepted→completed→dismissed), source tracking (auto_generation/chat_created/user_created).
+- **Rationale**: Different lifecycle — AuditTask is a static checklist generated once per audit. ActionCard is interactive: AI-generated per persona, can be created from chat, has KPI impact estimates, and supports dismiss/accept flow. Mixing them would require nullable columns and complex status logic.
+- **Trade-off**: Some field duplication (title, description, priority, category). Accepted because the domain semantics and UI flows are different enough to justify separate tables.
+
+## ADR-076: Persona as DB table, not enum (2026-03-21)
+
+- **Decision**: Personas stored in `personas` table (not a Python enum or config file). 5 system personas seeded via migration. Supports workspace-scoped custom personas via `workspace_id` + `is_system=false`.
+- **Rationale**: Extensibility — agencies can create custom personas for their clients without code changes. Each persona has: prompt_modifier (injected into AI), dashboard_config (KPI cards), context_questions (smart form customization). Enum would require migration for every new persona.
+- **Trade-off**: Extra DB table and join for something that starts as 5 static rows. Accepted because persona extensibility is a planned premium feature.
+
 ## ADR-075: Stripe Live Setup (2026-03-20)
 
 - **Decision**: Stripe LIVE mode. 7 produktów (3 subskrypcje + 4 credit packs), 10 cen (6 recurring + 4 one-time). Webhook na /api/billing/webhook (6 eventów). Klucze w .env na VPS.

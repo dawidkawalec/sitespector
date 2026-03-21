@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { auditsAPI, creditsAPI, type CreateAuditData, type CreditBalance } from '@/lib/api'
+import { PersonaPicker } from '@/components/PersonaPicker'
 import { useWorkspace } from '@/lib/WorkspaceContext'
 import {
   Dialog,
@@ -61,6 +62,8 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, proje
   const [runExecutionPlan, setRunExecutionPlan] = useState(true)
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [crawlerUserAgent, setCrawlerUserAgent] = useState('')
+  const [step, setStep] = useState<1 | 2>(1)
+  const [personaSlug, setPersonaSlug] = useState<string | null>(null)
   const { currentWorkspace } = useWorkspace()
 
   const {
@@ -124,11 +127,14 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, proje
         run_ai_pipeline: runAiPipeline,
         run_execution_plan: runExecutionPlan,
         crawler_user_agent: crawlerUserAgent.trim() || undefined,
+        persona_slug: personaSlug,
       }
 
       const newAudit = await auditsAPI.create(currentWorkspace.id, auditData, projectId)
       reset()
       setCompetitors([''])
+      setStep(1)
+      setPersonaSlug(null)
       onOpenChange(false)
       router.push(`/audits/${newAudit.id}`)
       onSuccess?.()
@@ -145,17 +151,47 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, proje
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px] border-none shadow-2xl">
+      <DialogContent className="sm:max-w-[560px] border-none shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black text-primary">
             <span className="text-line">Nowy Audyt</span> Strony
           </DialogTitle>
           <DialogDescription>
-            Wprowadź adres URL do analizy i opcjonalnie dodaj do 3 konkurentów.
+            {step === 1
+              ? 'Wybierz perspektywe audytu — dopasujemy dashboard i rekomendacje.'
+              : 'Wprowadz adres URL do analizy i opcjonalnie dodaj do 3 konkurentow.'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
+        {/* Step 1: Persona Picker */}
+        {step === 1 && (
+          <div className="pt-2 space-y-4">
+            <PersonaPicker
+              selected={personaSlug}
+              onSelect={setPersonaSlug}
+              workspaceId={currentWorkspace?.id}
+            />
+            <div className="flex justify-end">
+              <Button type="button" onClick={() => setStep(2)} className="gap-1.5">
+                Dalej
+                <ChevronDown className="h-3.5 w-3.5 rotate-[-90deg]" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: URL + Config */}
+        {step === 2 && (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+          {/* Back to step 1 */}
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+          >
+            <ChevronUp className="h-3 w-3 rotate-[-90deg]" />
+            {personaSlug ? `Perspektywa: ${personaSlug}` : 'Pelny audyt'} — zmien
+          </button>
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -376,6 +412,7 @@ export function NewAuditDialog({ open, onOpenChange, onSuccess, projectId, proje
             </Button>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   )

@@ -7,9 +7,9 @@ FastAPI (Python 3.11), SQLAlchemy 2.0 async, Supabase JWT auth.
 | Component | Location | Description |
 |-----------|----------|-------------|
 | API server | `backend/app/` | FastAPI application with routers, services, models |
-| Worker | `backend/worker.py` | Background audit processor (994 lines) |
+| Worker | `backend/worker.py` | Background audit processor (1171 lines) |
 | PDF engine | `backend/app/services/pdf/` + `backend/templates/pdf/` | Jinja2 + WeasyPrint report generation |
-| Migrations | `backend/alembic/versions/` | 17 Alembic migration files |
+| Migrations | `backend/alembic/versions/` | 21 Alembic migration files |
 
 Container: `sitespector-worker` shares the backend codebase; worker runs via `python worker.py`.
 
@@ -27,6 +27,10 @@ Container: `sitespector-worker` shares the backend codebase; worker runs via `py
 | `schedules.py` | `/schedules` | `POST ""` create, `GET ""` list, `PATCH /{id}`, `DELETE /{id}` |
 | `billing.py` | `/billing` | `POST /create-checkout-session`, `POST /webhook` (Stripe events), `POST /create-portal-session` |
 | `public.py` | (no prefix) | `POST /contact`, `POST /newsletter` |
+| `business_context.py` | `/business-context` | `POST ""` create/update, `GET /{id}`, `GET /project/{project_id}`, `PUT /{id}`, `POST /audits/{id}/generate-smart-form`, `POST /audits/{id}/save-context-and-continue`, `POST /audits/{id}/skip-context` |
+| `scoped_reports.py` | `/scoped-reports` | `GET /audit/{audit_id}` list, `POST /audit/{audit_id}` create (credit-based), `GET /{id}`, `DELETE /{id}` |
+| `personas.py` | `/personas` | `GET ""` list (system + workspace), `GET /{slug}` |
+| `action_cards.py` | (nested) | `GET /audits/{id}/action-cards`, `POST /audits/{id}/action-cards`, `PATCH /audits/{id}/action-cards/{card_id}`, `DELETE /audits/{id}/action-cards/{card_id}`, `POST /audits/{id}/action-cards/generate` |
 | `admin.py` | `/admin` | `GET /stats`, `GET /users`, `GET /users/{id}`, `PATCH /users/{id}/plan`, `GET /workspaces`, `POST /workspaces/{id}/reset-usage`, `GET /audits`, `GET /audits/{id}`, `POST /impersonation/sessions`, `GET /system` |
 
 ---
@@ -38,6 +42,10 @@ Container: `sitespector-worker` shares the backend codebase; worker runs via `py
 | `ai_analysis.py` | 1960 | Claude-powered SEO/content/UX/security analysis; per-area context generators; cross-tool synthesis; quick wins aggregation |
 | `ai_client.py` | 393 | Anthropic Claude API wrapper with retry, token counting, prompt templating |
 | `ai_execution_plan.py` | 1375 | Task generators per module (SEO, performance, visibility, AI overviews, links, images, schema, content quality, AI readiness, architecture, UX, security) |
+| `page_classifier.py` | 277 | URL pattern + content signal page type classification (8 types: homepage, product, category, blog, service, contact, about, other) |
+| `business_context_service.py` | 238 | AI smart form generation from Phase 1 data + business context formatting for AI prompts |
+| `scoped_analysis.py` | 282 | Scoped AI analysis per page type — filters audit data by scope, runs 5 AI contexts |
+| `action_card_service.py` | 150 | AI auto-generation of action cards per persona from audit results |
 | `audit_access.py` | 62 | Unified workspace + project ACL check (`get_audit_with_access`) |
 | `chat_service.py` | 1043 | RAG-augmented chat: conversation CRUD, SSE streaming, attachment handling, usage tracking, feedback, sharing |
 | `data_exporter.py` | 143 | ZIP export of raw audit JSON data |
@@ -67,23 +75,32 @@ worker_loop (infinite)
   ├── poll PENDING audits (up to 3)
   │   └── process_audit(audit_id)
   │       ├── Phase 1: run_technical_analysis()
+  │       │   ├── Steps 1-3: crawl, lighthouse, senuto (unchanged)
+  │       │   ├── Step 4b: page classification (URL patterns + content signals → 8 types)
+  │       │   └── Step 4c: multi-page Lighthouse (subpage sampling per page type)
+  │       ├── → AWAITING_CONTEXT (if run_ai_pipeline=true, pauses for user input)
+  │       │     └── User saves context or skips → status back to PENDING
   │       ├── Phase 2: run_ai_analysis()     # skipped if run_ai_pipeline=false
-  │       └── Phase 3: run_execution_plan()  # blocked if Phase 2 != "completed"
+  │       │   └── Business context + persona modifier injected into all AI prompts
+  │       ├── Phase 3: run_execution_plan()  # blocked if Phase 2 != "completed"
+  │       └── Phase 3.5: generate_action_cards()  # when audit has persona_id
   └── timeout check (PROCESSING > 10 min → FAILED)
 ```
 
-Each phase saves results to DB immediately. If Phase 2 fails, the audit still completes with Phase 1 data. Phase 3 is hard-blocked if Phase 2 did not succeed (`ai_status != "completed"`).
+Each phase saves results to DB immediately. If Phase 2 fails, the audit still completes with Phase 1 data. Phase 3 is hard-blocked if Phase 2 did not succeed (`ai_status != "completed"`). When `run_ai_pipeline=true`, the audit pauses at `AWAITING_CONTEXT` after Phase 1, waiting for the user to save business context or skip. The worker picks it back up when status returns to `PENDING`.
 
 ### Phase 1: Technical Analysis (`run_technical_analysis`)
 
 1. **Screaming Frog crawl** -- pages, metadata, on-page SEO signals (max 500 pages)
-2. **Lighthouse audit** -- desktop + mobile in parallel
+2. **Lighthouse audit** -- desktop + mobile in parallel (main URL)
 3. **Senuto analysis** -- visibility, keywords, positions, backlinks, AI Overviews (non-fatal)
 4. **Competitor analysis** -- parallel crawl of up to 3 competitor URLs
+4b. **Page classification** -- URL pattern + content signal classification into 8 types (homepage, product, category, blog, service, contact, about, other). Results stored in `results.crawl.page_classifications`.
+4c. **Multi-page Lighthouse** -- Lighthouse audits on sampled subpages per page type (up to 3 per type). Results stored in `results.lighthouse.subpages`.
 5. **Technical SEO extras** -- structured data, robots.txt, sitemap, semantic HTML, render-noJS, soft-404, directives/hreflang, AI readiness
 6. **Score calculation** -- SEO score, performance score, health indices
 
-Results and scores are persisted to DB after this phase. If `run_ai_pipeline` is disabled, the audit completes here.
+Results and scores are persisted to DB after this phase. If `run_ai_pipeline` is enabled, audit transitions to `AWAITING_CONTEXT` (user fills business context form or skips). If disabled, the audit completes here.
 
 ### Phase 2: AI Analysis (`run_ai_analysis`)
 
@@ -109,6 +126,10 @@ Each task includes: module, title, description, category, priority, impact, effo
 
 After generation, `synthesize_execution_plan()` deduplicates tasks, tags quick wins, and sorts by priority. Existing tasks for the audit are deleted before bulk insert. RAG is re-indexed after execution plan completes.
 
+### Phase 3.5: Action Card Generation
+
+When the audit has a `persona_id`, the worker automatically generates action cards via `action_card_service.generate_action_cards()`. This runs after Phase 3 (execution plan) completes. Action cards are persona-specific, AI-generated recommendations stored in the `action_cards` table with KPI impact estimates and actionable data.
+
 ### Scheduled Audits
 
 The worker loop checks `AuditSchedule` records on every tick, creating new `PENDING` audits when `next_run_at` has passed. It also copies competitor URLs from the schedule if `include_competitors=true`.
@@ -133,7 +154,8 @@ crawl:start(10%) → crawl:done(20%) → lighthouse:start(22%) → lighthouse:do
 | Enum | Values |
 |------|--------|
 | `SubscriptionTier` | free, pro, enterprise |
-| `AuditStatus` | pending, processing, completed, failed |
+| `AuditStatus` | pending, processing, awaiting_context, completed, failed |
+| `AuditMode` | professional, owner |
 | `ScheduleFrequency` | daily, weekly, monthly |
 | `CompetitorStatus` | pending, completed, failed |
 | `TaskStatus` | pending, done |
@@ -146,7 +168,7 @@ crawl:start(10%) → crawl:done(20%) → lighthouse:start(22%) → lighthouse:do
 | Model | Table | Key Fields |
 |-------|-------|------------|
 | `User` | `users` | id, email, password_hash, subscription_tier, stripe_customer_id, audits_count |
-| `Audit` | `audits` | id, user_id (legacy), workspace_id, project_id, url, status, overall/seo/performance/content_score, results (JSONB), pdf_url, processing_step, processing_logs (JSONB), ai_status, execution_plan_status, run_ai_pipeline, run_execution_plan, crawler_user_agent, crawl_blocked, rag_indexed_at, senuto_country_id, senuto_fetch_mode |
+| `Audit` | `audits` | id, user_id (legacy), workspace_id, project_id, url, status, overall/seo/performance/content_score, results (JSONB), pdf_url, processing_step, processing_logs (JSONB), ai_status, execution_plan_status, run_ai_pipeline, run_execution_plan, crawler_user_agent, crawl_blocked, rag_indexed_at, senuto_country_id, senuto_fetch_mode, **business_context_id** (FK), **mode**, **persona_id** (FK) |
 | `Competitor` | `competitors` | id, audit_id (FK), url, status, results (JSONB) |
 | `AuditSchedule` | `audit_schedules` | id, user_id (FK), workspace_id, project_id, url, frequency, is_active, competitors_urls (JSONB), last_run_at, next_run_at |
 | `ContactSubmission` | `contact_submissions` | id, name, email, subject, message, is_read |
@@ -159,6 +181,10 @@ crawl:start(10%) → crawl:done(20%) → lighthouse:start(22%) → lighthouse:do
 | `ChatMessageFeedback` | `chat_message_feedback` | id, message_id (FK), user_id, rating (+1/-1). Unique: (message_id, user_id) |
 | `ChatShare` | `chat_shares` | id, conversation_id (FK), shared_with_user_id, shared_by_user_id, permission. Unique: (conversation_id, shared_with_user_id) |
 | `ChatUsage` | `chat_usage` | id, user_id, month (YYYY-MM), messages_sent. Unique: (user_id, month) |
+| `Persona` | `personas` | id, slug, name, description, icon, sort_order, prompt_modifier, dashboard_config (JSONB), context_questions (JSONB), is_system, workspace_id |
+| `BusinessContext` | `business_contexts` | id, workspace_id, project_id, business_type, industry, target_audience, geographic_focus, business_goals (JSONB), priorities (JSONB), key_products_services (JSONB), competitors_context, current_challenges, budget_range, team_capabilities, smart_form_questions (JSONB), source |
+| `ScopedReport` | `scoped_reports` | id, audit_id (FK), scope_type, scope_label, scope_filter (JSONB), status, error_message, results (JSONB), credits_used |
+| `ActionCard` | `action_cards` | id, audit_id (FK), persona_id (FK), title, description, category, priority, kpi_impact (JSONB), action_data (JSONB), status, source, sort_order |
 
 ---
 
@@ -209,7 +235,7 @@ Assets directory: `backend/templates/pdf/assets/` (logo SVGs).
 
 ## Migrations (`backend/alembic/versions/`)
 
-17 migration files (Dec 2025 -- Feb 2026):
+21 migration files (Dec 2025 -- Mar 2026):
 
 | Date | Migration | Change |
 |------|-----------|--------|
@@ -230,6 +256,10 @@ Assets directory: `backend/templates/pdf/assets/` (logo SVGs).
 | 2026-02-16 | `chat_feedback` | ChatMessageFeedback + ChatUsage models |
 | 2026-02-17 | `add_crawler_ua_and_crawl_blocked` | Custom User-Agent + crawl_blocked flag |
 | 2026-02-17 | `add_project_id` | `project_id` on audits and schedules |
+| 2026-03-18 | `credit_system` | credit_balances + credit_transactions tables |
+| 2026-03-21 | `business_context` | business_contexts table, business_context_id + mode on audits |
+| 2026-03-21 | `personas` | personas table, persona_id on audits |
+| 2026-03-21 | `scoped_reports` | scoped_reports + action_cards tables |
 
 ---
 
@@ -255,7 +285,7 @@ These tables live in Supabase (managed via Supabase dashboard/migrations, not Al
 - **Multi-tenancy**: Audits belong to workspaces (Supabase RLS). Projects and workspace membership live in Supabase; audit/task/chat data lives in VPS PostgreSQL with `workspace_id` columns.
 - **Worker polling**: Polls `PENDING` audits every 10s, max 3 concurrent. Uses `asyncio.create_task()` with a processing set for deduplication.
 - **AI providers**: Claude (Anthropic) for analysis and generation; Gemini (Google) for text embeddings. Key rotation supported for Gemini via `GEMINI_API_KEYS`.
-- **Global context**: `build_global_snapshot()` creates a compact site-wide stats object passed to every AI prompt to reduce redundancy and improve consistency across modules.
+- **Global context**: `build_global_snapshot()` creates a compact site-wide stats object passed to every AI prompt to reduce redundancy and improve consistency across modules. Business context and persona prompt modifier are injected into the global snapshot when available.
 - **RAG pipeline**: Non-blocking background task after AI phase and after execution plan. Chunks audit results by section type, embeds with Gemini `text-embedding-004`, stores in Qdrant collection `audit_rag_chunks`. Manual re-indexing available via `POST /audits/{id}/reindex-rag`.
 - **Crawl-blocked handling**: If Screaming Frog gets 403/4xx, `crawl_blocked=True` is set. AI analysis and execution plan are skipped with explicit log entries.
 - **PDF generation**: V2 engine uses 40 section templates with conditional inclusion based on report type (executive/standard/full). Three report types: executive (summary only), standard (default), full (with appendices).
@@ -264,4 +294,4 @@ These tables live in Supabase (managed via Supabase dashboard/migrations, not Al
 
 ---
 
-Last updated: 2026-03-17
+Last updated: 2026-03-21
