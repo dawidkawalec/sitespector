@@ -483,6 +483,78 @@ function DeviceTab({ lhData, device, audit }: { lhData: any; device: string; aud
   )
 }
 
+function SubpageLighthouseTable({ subpages }: { subpages?: Record<string, any> }) {
+  if (!subpages || Object.keys(subpages).length === 0) return null
+
+  const rows = Object.values(subpages).filter((r: any) => !r.error)
+  if (rows.length === 0) return null
+
+  // Sort by performance score ascending (worst first)
+  rows.sort((a: any, b: any) => (a.performance_score || 0) - (b.performance_score || 0))
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <ExternalLink className="h-4 w-4 text-teal-600" />
+          Lighthouse — podstrony ({rows.length})
+        </CardTitle>
+        <CardDescription>
+          Wyniki Lighthouse dla representative subpages (desktop). Porownaj z homepage.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-xs text-muted-foreground">
+                <th className="text-left py-2 pr-4">URL</th>
+                <th className="text-center py-2 px-2">Perf</th>
+                <th className="text-center py-2 px-2">SEO</th>
+                <th className="text-center py-2 px-2">LCP</th>
+                <th className="text-center py-2 px-2">CLS</th>
+                <th className="text-center py-2 px-2">FCP</th>
+                <th className="text-center py-2 px-2">TTFB</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r: any) => {
+                let pathname = r.url
+                try { pathname = new URL(r.url).pathname } catch {}
+                return (
+                  <tr key={r.url} className="border-b last:border-0">
+                    <td className="py-2 pr-4 max-w-[250px] truncate font-medium" title={r.url}>
+                      {pathname}
+                    </td>
+                    <td className="text-center py-2 px-2">
+                      <span className={getScoreColor(r.performance_score)}>{r.performance_score}</span>
+                    </td>
+                    <td className="text-center py-2 px-2">
+                      <span className={getScoreColor(r.seo_score)}>{r.seo_score}</span>
+                    </td>
+                    <td className="text-center py-2 px-2 text-muted-foreground">
+                      {r.lcp ? `${(r.lcp / 1000).toFixed(1)}s` : '—'}
+                    </td>
+                    <td className="text-center py-2 px-2 text-muted-foreground">
+                      {typeof r.cls === 'number' ? r.cls.toFixed(3) : '—'}
+                    </td>
+                    <td className="text-center py-2 px-2 text-muted-foreground">
+                      {r.fcp ? `${(r.fcp / 1000).toFixed(1)}s` : '—'}
+                    </td>
+                    <td className="text-center py-2 px-2 text-muted-foreground">
+                      {r.ttfb ? `${Math.round(r.ttfb)}ms` : '—'}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 function RawDataTab({ audit }: { audit: Audit }) {
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop')
   const lhRaw = audit.results?.lighthouse?.[device]?.raw
@@ -687,6 +759,9 @@ export default function PerformancePage({ params }: { params: { id: string } }) 
             </Tabs>
 
             <CWVGapAnalysis desktop={lhDesktop} mobile={lhMobile} />
+
+            {/* Subpage Lighthouse Results */}
+            <SubpageLighthouseTable subpages={audit.results?.crawl?.lighthouse_subpages} />
           </TabsContent>
 
           <TabsContent value="raw">

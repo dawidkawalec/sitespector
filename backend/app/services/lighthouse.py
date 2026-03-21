@@ -6,7 +6,7 @@ import logging
 import json
 import asyncio
 import subprocess
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
@@ -247,3 +247,68 @@ async def audit_both(url: str) -> Dict[str, Dict[str, Any]]:
         "desktop": results[0],
         "mobile": results[1],
     }
+
+
+async def audit_subpages(
+    urls: List[str],
+    max_concurrent: int = 2,
+    device: str = "desktop",
+) -> Dict[str, Dict[str, Any]]:
+    """
+    Run Lighthouse on multiple subpages with concurrency limit.
+    Desktop-only by default to save time (homepage already covers mobile).
+
+    Args:
+        urls: List of URLs to audit
+        max_concurrent: Max parallel Lighthouse runs (default 2 to avoid VPS overload)
+        device: Device type (default desktop)
+
+    Returns:
+        {url: {performance_score, seo_score, lcp, cls, fcp, ...}, ...}
+    """
+    if not urls:
+        return {}
+
+    # Cap at 10 subpages max
+    urls = urls[:10]
+    logger.info("Lighthouse subpages: auditing %d URLs (device=%s, concurrency=%d)", len(urls), device, max_concurrent)
+
+    semaphore = asyncio.Semaphore(max_concurrent)
+    results: Dict[str, Dict[str, Any]] = {}
+
+    async def _audit_one(url: str) -> None:
+        async with semaphore:
+            try:
+                data = await audit_url(url, device)
+                # Store compact result (no raw, no audit details — save space)
+                results[url] = {
+                    "url": url,
+                    "device": device,
+                    "performance_score": data.get("performance_score", 0),
+                    "seo_score": data.get("seo_score", 0),
+                    "accessibility_score": data.get("accessibility_score", 0),
+                    "best_practices_score": data.get("best_practices_score", 0),
+                    "fcp": data.get("fcp", 0),
+                    "lcp": data.get("lcp", 0),
+                    "cls": data.get("cls", 0),
+                    "tbt": data.get("total_blocking_time", 0),
+                    "ttfb": data.get("ttfb", 0),
+                    "speed_index": data.get("speed_index", 0),
+                    "dom_size": data.get("dom_size", 0),
+                    "total_byte_weight": data.get("total_byte_weight", 0),
+                }
+                logger.info("Lighthouse subpage OK: %s (perf=%s)", url, data.get("performance_score", 0))
+            except Exception as e:
+                logger.warning("Lighthouse subpage failed (non-fatal): %s — %s", url, e)
+                results[url] = {
+                    "url": url,
+                    "device": device,
+                    "error": str(e)[:200],
+                }
+
+    tasks = [_audit_one(url) for url in urls]
+    await asyncio.gather(*tasks)
+
+    successful = sum(1 for r in results.values() if "error" not in r)
+    logger.info("Lighthouse subpages done: %d/%d successful", successful, len(urls))
+    return results

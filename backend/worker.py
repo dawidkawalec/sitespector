@@ -233,7 +233,38 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
                 await add_audit_log(audit, "page_classification", "warning", f"Page classification skipped: {str(e)}")
             await db.commit()
 
-            # 4c. Calculate Technical Scores
+            # 4c. Lighthouse Subpages (representative pages per type)
+            lighthouse_subpages = {}
+            if crawl_data.get("page_classifications"):
+                audit.processing_step = "lighthouse_subpages:start"
+                await add_audit_log(audit, "lighthouse_subpages", "running", "Running Lighthouse on representative subpages...")
+                await db.commit()
+
+                step_start = datetime.utcnow()
+                try:
+                    from app.services.page_classifier import select_representative_pages
+                    subpage_urls = select_representative_pages(
+                        crawl_data.get("all_pages", []),
+                        crawl_data.get("page_classifications", {}),
+                        max_per_type=2,
+                        max_total=8,
+                    )
+                    if subpage_urls:
+                        lighthouse_subpages = await lighthouse.audit_subpages(subpage_urls, max_concurrent=2)
+                        crawl_data["lighthouse_subpages"] = lighthouse_subpages
+                    duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
+                    successful = sum(1 for r in lighthouse_subpages.values() if "error" not in r)
+                    audit.processing_step = "lighthouse_subpages:done"
+                    await add_audit_log(
+                        audit, "lighthouse_subpages", "success",
+                        f"Subpage Lighthouse: {successful}/{len(subpage_urls)} OK", duration,
+                    )
+                except Exception as e:
+                    logger.warning("Lighthouse subpages failed (non-fatal): %s", e)
+                    await add_audit_log(audit, "lighthouse_subpages", "warning", f"Subpage LH skipped: {str(e)}")
+                await db.commit()
+
+            # 4d. Calculate Technical Scores
             desktop_data = lighthouse_data.get("desktop", {})
             seo_score = calculate_seo_score(crawl_data, desktop_data)
             performance_score = desktop_data.get("performance_score", 0)
