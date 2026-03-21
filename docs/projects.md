@@ -7,34 +7,12 @@
 
 ## Priorytetyzacja
 
-| Priorytet | Projekty | Dlaczego |
-|-----------|----------|----------|
-| **P0 — Blokery launch** | ~~P1~~✅, ~~P2~~✅, ~~P3~~✅, ~~Stripe~~✅ | DONE — kredyty, cennik, paywall, Stripe live |
-| **P1 — Pre-launch** | ~~P4~~✅, ~~P5~~✅, P9, ~~P10~~✅ | P4+P5+P10 done. P9 (pixel) jako ostatni pre-launch |
-| **P2 — Post-launch** | P6, ~~P7~~✅, P8, ~~P11~~✅ | P7+P11 done. P6 (PQL) + P8 (pakiety) |
-| **P3 — Skalowanie** | P12, P13 | Długoterminowy growth |
-
----
-
-## BLOKER: Konfiguracja Stripe (Piotr)
-
-**Konto Stripe musi założyć partner (Piotr).** Bez tego nie działają:
-- Checkout (upgrade planów)
-- Zakup pakietów kredytów
-- Webhook (grant kredytów po płatności)
-
-**Co trzeba zrobić:**
-1. Założyć konto Stripe (lub aktywować istniejące)
-2. Stworzyć 10 produktów/cen (skrypt gotowy — uruchomić po uzyskaniu klucza):
-   - 3 subskrypcje × 2 okresy = 6 cen (Solo/Agency/Enterprise × monthly/annual)
-   - 4 pakiety kredytów (Starter $4.99, Standard $12.99, Pro $34.99, Agency $89.99)
-3. Wpisać klucze do .env na VPS:
-   - `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`
-   - 6 price ID subskrypcji + 4 price ID pakietów
-4. Skonfigurować webhook w Stripe Dashboard: URL `https://sitespector.app/api/billing/webhook`
-5. Restart backend: `docker compose -f docker-compose.prod.yml restart backend worker`
-
-**Status:** Czeka na Piotra
+| Priorytet | Projekty | Status |
+|-----------|----------|--------|
+| **P0 — Blokery** | ~~P1~~✅ ~~P2~~✅ ~~P3~~✅ ~~Stripe~~✅ | **DONE** — kredyty, cennik, paywall, Stripe live |
+| **P1 — Pre-launch** | ~~P4~~✅ ~~P5~~✅ ~~P10~~✅ ~~P11~~✅ / **P9** | P9 (Meta Pixel) jedyny remaining |
+| **P2 — Post-launch** | ~~P7~~✅ / **P6, P8** | P6 (PQL+email) + P8 (dokupywanie kredytów) |
+| **P3 — Skalowanie** | **P12, P13** | Referral + Platforma rozszerzeń |
 
 ---
 
@@ -110,7 +88,7 @@ Stripe LIVE skonfigurowany: 3 produkty subskrypcyjne (Solo/Agency/Enterprise) ×
 - Backend: webhook Stripe → dodanie kredytów do salda
 - Gating: zablokowane w Free (wymaga upgrade do Solo)
 
-**Zależności:** Wymaga Stripe setup (BLOKER).
+**Zależności:** ~~Stripe setup~~ ✅ — produkty kredytowe już w Stripe (4 price IDs).
 
 **Status:** Backlog
 
