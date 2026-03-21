@@ -15,6 +15,7 @@ from app.config import settings
 from app.services import screaming_frog, lighthouse, ai_analysis, senuto
 from app.services import ai_execution_plan
 from app.services import technical_seo_extras
+from app.services.page_classifier import classify_pages
 from app.services.health_index import (
     compute_content_quality_index,
     compute_technical_health_index,
@@ -203,7 +204,36 @@ async def run_technical_analysis(audit_id: str) -> Dict[str, Any]:
                 await add_audit_log(audit, "technical_extras", "warning", f"Technical extras skipped: {str(e)}")
             await db.commit()
 
-            # 4b. Calculate Technical Scores
+            # 4b. Page Classification
+            audit.processing_step = "page_classification:start"
+            await add_audit_log(audit, "page_classification", "running", "Classifying pages by type...")
+            await db.commit()
+
+            step_start = datetime.utcnow()
+            try:
+                page_class_result = classify_pages(
+                    crawl_data.get("all_pages", []),
+                    audit.url,
+                    structured_data_v2=crawl_data.get("structured_data_v2"),
+                )
+                crawl_data["page_classifications"] = page_class_result.get("classifications", {})
+                crawl_data["page_type_stats"] = page_class_result.get("page_type_stats", {})
+                crawl_data["sample_urls_by_type"] = page_class_result.get("sample_urls_by_type", {})
+                duration = int((datetime.utcnow() - step_start).total_seconds() * 1000)
+                audit.processing_step = "page_classification:done"
+                stats_summary = ", ".join(
+                    f"{k}={v}" for k, v in sorted(
+                        page_class_result.get("page_type_stats", {}).items(),
+                        key=lambda x: -x[1],
+                    )
+                )
+                await add_audit_log(audit, "page_classification", "success", f"Pages classified: {stats_summary}", duration)
+            except Exception as e:
+                logger.warning("Page classification failed (non-fatal): %s", e)
+                await add_audit_log(audit, "page_classification", "warning", f"Page classification skipped: {str(e)}")
+            await db.commit()
+
+            # 4c. Calculate Technical Scores
             desktop_data = lighthouse_data.get("desktop", {})
             seo_score = calculate_seo_score(crawl_data, desktop_data)
             performance_score = desktop_data.get("performance_score", 0)
@@ -260,6 +290,28 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
         audit = result.scalar_one_or_none()
         if not audit:
             return
+
+        # Load business context if linked
+        bc_dict = None
+        if audit.business_context_id:
+            from app.models import BusinessContext
+            bc_result = await db.execute(select(BusinessContext).where(BusinessContext.id == audit.business_context_id))
+            bc = bc_result.scalar_one_or_none()
+            if bc:
+                bc_dict = {
+                    "business_type": bc.business_type,
+                    "industry": bc.industry,
+                    "target_audience": bc.target_audience,
+                    "geographic_focus": bc.geographic_focus,
+                    "business_goals": bc.business_goals,
+                    "priorities": bc.priorities,
+                    "key_products_services": bc.key_products_services,
+                    "competitors_context": bc.competitors_context,
+                    "current_challenges": bc.current_challenges,
+                    "budget_range": bc.budget_range,
+                    "team_capabilities": bc.team_capabilities,
+                }
+                logger.info("Business context loaded for audit %s: type=%s, industry=%s", audit_id, bc.business_type, bc.industry)
 
         crawl_data = tech_data.get("crawl", {})
         if crawl_data.get("crawl_blocked"):
@@ -396,6 +448,7 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 lighthouse=lighthouse_data,
                 senuto=senuto_data,
                 extra={"phase": "ai_contexts"},
+                business_context=bc_dict,
             )
             
             # Helper to call AI with sequential context to avoid duplication
@@ -532,6 +585,7 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 lighthouse=lighthouse_data,
                 senuto=results.get("senuto", {}),
                 extra={"phase": "ai_strategy"},
+                business_context=bc_dict,
             )
             strategy_tasks = {
                 "cross_tool": ai_analysis.analyze_cross_tool(results, global_snapshot=strategy_snapshot),
@@ -847,15 +901,59 @@ async def run_execution_plan(audit_id: str, tech_data: Dict[str, Any]) -> None:
 async def process_audit(audit_id: str) -> None:
     """Main entry point for processing an audit."""
     try:
-        # Phase 1: Technical
-        tech_data = await run_technical_analysis(audit_id)
-        
-        # Phase 2: AI (runs after Phase 1, unless disabled)
+        # Check if this is a resumed audit (Phase 1 already done, context saved/skipped)
         async with AsyncSessionLocal() as db:
             result = await db.execute(select(Audit).where(Audit.id == audit_id))
             audit = result.scalar_one_or_none()
+            if not audit:
+                logger.error(f"Audit {audit_id} not found")
+                return
+
+            phase1_done = audit.processing_step in ("context:saved", "context:skipped")
             should_run_ai = audit.run_ai_pipeline if audit else True
             should_run_execution_plan = audit.run_execution_plan if audit else True
+
+        if phase1_done:
+            # Resuming after context step — load tech data from saved results
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(Audit).where(Audit.id == audit_id))
+                audit = result.scalar_one_or_none()
+                tech_data = {
+                    "crawl": (audit.results or {}).get("crawl", {}),
+                    "lighthouse": (audit.results or {}).get("lighthouse", {}),
+                    "senuto": (audit.results or {}).get("senuto", {}),
+                    "technical_health_index": (audit.results or {}).get("technical_health_index"),
+                    "visibility_momentum": (audit.results or {}).get("visibility_momentum"),
+                    "traffic_estimation": (audit.results or {}).get("traffic_estimation"),
+                    "content_quality_index": (audit.results or {}).get("content_quality_index"),
+                }
+                audit.status = AuditStatus.PROCESSING
+                audit.processing_step = "phase2:resume"
+                await add_audit_log(audit, "context", "success", "Resuming after business context step")
+                await db.commit()
+            logger.info(f"Resuming audit {audit_id} after context step (Phase 2+3)")
+        else:
+            # Fresh audit — run Phase 1 first
+            tech_data = await run_technical_analysis(audit_id)
+
+            # After Phase 1: pause for business context
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(Audit).where(Audit.id == audit_id))
+                audit = result.scalar_one_or_none()
+                if audit and not audit.crawl_blocked:
+                    audit.status = AuditStatus.AWAITING_CONTEXT
+                    audit.processing_step = "awaiting_context"
+                    await add_audit_log(audit, "context", "waiting", "Awaiting business context from user (or skip)")
+                    await db.commit()
+                    logger.info(f"Audit {audit_id} paused for business context (status=awaiting_context)")
+                    return  # Exit — worker will pick it up again after user saves/skips context
+
+            # Re-read flags after Phase 1
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(Audit).where(Audit.id == audit_id))
+                audit = result.scalar_one_or_none()
+                should_run_ai = audit.run_ai_pipeline if audit else True
+                should_run_execution_plan = audit.run_execution_plan if audit else True
         
         if should_run_ai:
             await run_ai_analysis(audit_id, tech_data)

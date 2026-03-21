@@ -41,12 +41,14 @@ export function getScoreColor(score: number | null | undefined): string {
 
 // Status badge variants
 export function getStatusBadgeVariant(
-  status: 'pending' | 'processing' | 'completed' | 'failed'
+  status: 'pending' | 'processing' | 'awaiting_context' | 'completed' | 'failed'
 ): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
     case 'pending':
       return 'secondary'
     case 'processing':
+      return 'default'
+    case 'awaiting_context':
       return 'default'
     case 'completed':
       return 'outline'

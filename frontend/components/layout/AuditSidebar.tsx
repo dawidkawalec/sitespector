@@ -24,6 +24,7 @@ import {
   Users,
   FileDown,
   ScrollText,
+  LayoutGrid,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { NavSection } from './NavSection'
@@ -130,6 +131,7 @@ export function AuditSidebar({ auditId, onNavigate, className }: AuditSidebarPro
         icon: Wrench,
         value: 'audit-tools',
         items: [
+          { href: `/audits/${auditId}/page-types`, icon: LayoutGrid, label: 'Typy podstron' },
           { href: `/audits/${auditId}/crawl-data`, icon: ScrollText, label: 'Crawl data' },
           { href: `/audits/${auditId}/debug`, icon: Wrench, label: 'Debug' },
         ],

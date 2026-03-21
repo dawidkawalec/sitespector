@@ -7,8 +7,8 @@
  * searchable, paginated tables with CSV/JSON export.
  */
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { auditsAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
@@ -20,6 +20,7 @@ import { AuditPageLayout } from '@/components/AuditPageLayout'
 import { AiInsightsPanel } from '@/components/AiInsightsPanel'
 import { DataExplorerTable } from '@/components/DataExplorerTable'
 import type { Audit } from '@/lib/api'
+import { PageTypeFilter, usePageTypeFilter } from '@/components/audit/PageTypeFilter'
 
 // Tab configurations for SF raw data
 const SF_TABS: Record<string, { label: string; description: string; columns: any[] }> = {
@@ -123,8 +124,9 @@ const SF_TABS: Record<string, { label: string; description: string; columns: any
   },
 }
 
-export default function CrawlDataPage({ params }: { params: { id: string } }) {
+function CrawlDataPageInner({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isAuth, setIsAuth] = useState(false)
 
   useEffect(() => {
@@ -168,6 +170,24 @@ export default function CrawlDataPage({ params }: { params: { id: string } }) {
       availableTabs.unshift('internal_all')
     }
   }
+
+  // Page type filter
+  const pageTypeStats = audit.results?.crawl?.page_type_stats
+  const classifications = audit.results?.crawl?.page_classifications
+  const activePageType = searchParams.get('pageType')
+
+  // Filter internal_all tab data when page type filter is active
+  const filteredRawTabs = useMemo(() => {
+    if (!activePageType || !classifications) return rawTabs
+    const filtered = { ...rawTabs }
+    if (filtered.internal_all) {
+      filtered.internal_all = filtered.internal_all.filter((row: any) => {
+        const url = row.Address || row.url || ''
+        return classifications[url] === activePageType
+      })
+    }
+    return filtered
+  }, [rawTabs, activePageType, classifications])
 
   const hasAiData = !!(audit.results?.ai_contexts?.crawl || audit.results?.tech_stack || audit.results?.security)
 
@@ -215,6 +235,9 @@ export default function CrawlDataPage({ params }: { params: { id: string } }) {
         </Card>
       </div>
 
+      {/* Page Type Filter */}
+      <PageTypeFilter pageTypeStats={pageTypeStats} />
+
       {/* Tabs with tables */}
       {availableTabs.length > 0 ? (
         <Card>
@@ -224,7 +247,7 @@ export default function CrawlDataPage({ params }: { params: { id: string } }) {
                 <TabsList className="h-auto flex-wrap">
                   {availableTabs.map(tabKey => {
                     const config = SF_TABS[tabKey]
-                    const count = rawTabs[tabKey]?.length || 0
+                    const count = filteredRawTabs[tabKey]?.length || 0
                     return (
                       <TabsTrigger key={tabKey} value={tabKey} className="text-xs gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                         {config?.label || tabKey}
@@ -237,7 +260,7 @@ export default function CrawlDataPage({ params }: { params: { id: string } }) {
 
               {availableTabs.map(tabKey => {
                 const config = SF_TABS[tabKey]
-                const tabData = rawTabs[tabKey] || []
+                const tabData = filteredRawTabs[tabKey] || []
 
                 // Auto-detect columns if no config
                 const columns = config?.columns || (tabData.length > 0
@@ -271,5 +294,13 @@ export default function CrawlDataPage({ params }: { params: { id: string } }) {
         </Card>
       )}
     </AuditPageLayout>
+  )
+}
+
+export default function CrawlDataPage({ params }: { params: { id: string } }) {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}>
+      <CrawlDataPageInner params={params} />
+    </Suspense>
   )
 }

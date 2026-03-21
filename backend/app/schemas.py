@@ -471,6 +471,59 @@ class NewsletterForm(BaseModel):
 
 
 # ============================================
+# Business Context Schemas
+# ============================================
+
+class BusinessContextCreate(BaseModel):
+    """Schema for creating/updating business context."""
+    workspace_id: UUID
+    project_id: Optional[UUID] = None
+    business_type: Optional[str] = None
+    industry: Optional[str] = None
+    target_audience: Optional[str] = None
+    geographic_focus: Optional[str] = None
+    business_goals: Optional[List[str]] = None
+    priorities: Optional[List[str]] = None
+    key_products_services: Optional[List[str]] = None
+    competitors_context: Optional[str] = None
+    current_challenges: Optional[str] = None
+    budget_range: Optional[str] = None
+    team_capabilities: Optional[str] = None
+    smart_form_questions: Optional[List[Dict[str, Any]]] = None
+    source: Optional[str] = None
+
+
+class BusinessContextResponse(BaseModel):
+    """Schema for business context response."""
+    id: UUID
+    workspace_id: UUID
+    project_id: Optional[UUID] = None
+    business_type: Optional[str] = None
+    industry: Optional[str] = None
+    target_audience: Optional[str] = None
+    geographic_focus: Optional[str] = None
+    business_goals: Optional[List[str]] = None
+    priorities: Optional[List[str]] = None
+    key_products_services: Optional[List[str]] = None
+    competitors_context: Optional[str] = None
+    current_challenges: Optional[str] = None
+    budget_range: Optional[str] = None
+    team_capabilities: Optional[str] = None
+    smart_form_questions: Optional[List[Dict[str, Any]]] = None
+    source: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SmartFormResponse(BaseModel):
+    """Schema for AI-generated smart form questions."""
+    questions: List[Dict[str, Any]]
+
+
+# ============================================
 # Health Check Schema
 # ============================================
 

@@ -68,6 +68,7 @@ def build_global_snapshot(
     lighthouse: Optional[Dict[str, Any]] = None,
     senuto: Optional[Dict[str, Any]] = None,
     extra: Optional[Dict[str, Any]] = None,
+    business_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Small cross-module snapshot injected into AI prompts to prevent contradictions.
@@ -107,6 +108,12 @@ def build_global_snapshot(
         # Ensure serializable & compact.
         snapshot["extra"] = {k: v for k, v in extra.items() if k and v is not None}
 
+    if isinstance(business_context, dict) and business_context:
+        snapshot["business_context"] = {
+            k: v for k, v in business_context.items()
+            if k and v is not None and v != "" and v != []
+        }
+
     return snapshot
 
 
@@ -138,5 +145,14 @@ def format_global_snapshot_for_prompt(snapshot: Optional[Dict[str, Any]]) -> str
         "- Do not claim \"brak AIO\" when GLOBAL_SNAPSHOT.ai_overviews.has_aio=true.\n"
         "- IMPORTANT: Do not repeat findings from PREVIOUS_FINDINGS. Focus on new insights for this specific section.\n"
     )
+
+    # Inject business context rules if available
+    bc = snapshot.get("business_context") if isinstance(snapshot, dict) else None
+    if bc:
+        from app.services.business_context_service import format_business_context_for_prompt
+        bc_prompt = format_business_context_for_prompt(bc)
+        if bc_prompt:
+            prompt += "\n" + bc_prompt
+
     return prompt
 

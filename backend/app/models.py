@@ -35,8 +35,15 @@ class AuditStatus(str, enum.Enum):
     """Audit processing status."""
     PENDING = "pending"
     PROCESSING = "processing"
+    AWAITING_CONTEXT = "awaiting_context"
     COMPLETED = "completed"
     FAILED = "failed"
+
+
+class AuditMode(str, enum.Enum):
+    """Audit mode."""
+    PROFESSIONAL = "professional"
+    OWNER = "owner"
 
 
 class ScheduleFrequency(str, enum.Enum):
@@ -105,6 +112,44 @@ class User(Base):
         return f"<User(id={self.id}, email={self.email}, tier={self.subscription_tier})>"
 
 
+class BusinessContext(Base):
+    """Business context gathered via form or AI interview, linked to project for reuse."""
+
+    __tablename__ = "business_contexts"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    project_id = Column(UUID(as_uuid=True), nullable=True, index=True)
+
+    # Core business info
+    business_type = Column(String(100), nullable=True)  # ecommerce, service, saas, portal, blog, corporate
+    industry = Column(String(200), nullable=True)
+    target_audience = Column(Text, nullable=True)
+    geographic_focus = Column(String(200), nullable=True)
+    business_goals = Column(JSONB, nullable=True)  # ["leads", "sales", "brand_awareness", ...]
+    priorities = Column(JSONB, nullable=True)  # ["performance", "visibility", "content"]
+
+    # Detailed context
+    key_products_services = Column(JSONB, nullable=True)  # list of strings
+    competitors_context = Column(Text, nullable=True)
+    current_challenges = Column(Text, nullable=True)
+    budget_range = Column(String(50), nullable=True)  # low, medium, high
+    team_capabilities = Column(String(50), nullable=True)  # no_dev, basic_dev, full_team
+
+    # Smart form data
+    smart_form_questions = Column(JSONB, nullable=True)  # [{question, answer}, ...]
+    source = Column(String(30), nullable=True)  # manual_form, smart_form, both
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    audits = relationship("Audit", back_populates="business_context")
+
+    def __repr__(self) -> str:
+        return f"<BusinessContext(id={self.id}, type={self.business_type}, industry={self.industry})>"
+
+
 class Audit(Base):
     """Audit model for website analysis records."""
 
@@ -168,6 +213,10 @@ class Audit(Base):
     crawler_user_agent = Column(String(500), nullable=True)
     crawl_blocked = Column(Boolean, default=False, nullable=False)
 
+    # Business context (Phase A: context-aware reports)
+    business_context_id = Column(UUID(as_uuid=True), ForeignKey("business_contexts.id"), nullable=True)
+    mode = Column(String(20), default="professional", nullable=False)  # professional | owner
+
     # Timestamps
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
@@ -178,6 +227,7 @@ class Audit(Base):
 
     # Relationships
     user = relationship("User", back_populates="audits")
+    business_context = relationship("BusinessContext", back_populates="audits")
     competitors = relationship("Competitor", back_populates="audit", cascade="all, delete-orphan")
     tasks = relationship("AuditTask", back_populates="audit", cascade="all, delete-orphan")
 

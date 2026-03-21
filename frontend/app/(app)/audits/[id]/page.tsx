@@ -214,7 +214,7 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
     enabled: isAuth,
     refetchInterval: (query) => {
       const data = query?.state?.data as Audit | undefined
-      const isAuditRunning = data?.status === 'processing' || data?.status === 'pending'
+      const isAuditRunning = data?.status === 'processing' || data?.status === 'pending' || data?.status === 'awaiting_context'
       const isAiRunning = data?.ai_status === 'processing'
       const isPlanRunning = data?.execution_plan_status === 'processing'
       // Poll every 3 seconds while technical audit or AI pipeline is running
@@ -538,6 +538,34 @@ export default function AuditDetailsPage({ params }: { params: { id: string } })
           </AlertDialog>
         </div>
       </div>
+
+      {/* Awaiting Context Banner */}
+      {audit.status === 'awaiting_context' && (
+        <Card className="border-teal-400 bg-teal-50 dark:bg-teal-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <Sparkles className="h-5 w-5 text-teal-600 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-teal-900 dark:text-teal-200">
+                  Dane zebrane — dodaj kontekst biznesowy
+                </h3>
+                <p className="text-sm text-teal-800 dark:text-teal-300 mt-1">
+                  Analiza techniczna zakonczona. AI wygenerowalo spersonalizowane pytania
+                  na bazie Twoich danych. Odpowiedz na nie, aby raporty byly dopasowane do Twojego biznesu.
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <Link href={`/audits/${params.id}/context`}>
+                    <Button size="sm" className="gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Wypelnij kontekst
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* AI Failed Warning Banner */}
       {audit.ai_status === 'failed' && (

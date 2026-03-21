@@ -172,7 +172,7 @@ export interface Audit {
   workspace_id?: string | null
   project_id?: string | null
   url: string
-  status: 'pending' | 'processing' | 'completed' | 'failed'
+  status: 'pending' | 'processing' | 'awaiting_context' | 'completed' | 'failed'
   ai_status?: 'processing' | 'completed' | 'failed' | 'skipped' | null
   execution_plan_status?: 'processing' | 'completed' | 'failed' | 'skipped' | null
   processing_step?: string | null
@@ -198,6 +198,8 @@ export interface Audit {
   senuto_fetch_mode?: string | null
   crawler_user_agent?: string | null
   crawl_blocked?: boolean
+  business_context_id?: string | null
+  mode?: string
 }
 
 export interface CreateAuditData {
@@ -864,4 +866,74 @@ export const brandingAPI = {
     apiRequest<BrandingSettings>(`/api/branding/logo?workspace_id=${workspaceId}`, {
       method: 'DELETE',
     }),
+}
+
+// Business Context types
+export interface BusinessContext {
+  id: string
+  workspace_id: string
+  project_id?: string | null
+  business_type?: string | null
+  industry?: string | null
+  target_audience?: string | null
+  geographic_focus?: string | null
+  business_goals?: string[] | null
+  priorities?: string[] | null
+  key_products_services?: string[] | null
+  competitors_context?: string | null
+  current_challenges?: string | null
+  budget_range?: string | null
+  team_capabilities?: string | null
+  smart_form_questions?: Array<Record<string, any>> | null
+  source?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SmartFormQuestion {
+  id: string
+  question: string
+  type: 'text' | 'select' | 'multiselect'
+  options?: string[]
+  hint?: string
+}
+
+export const businessContextAPI = {
+  create: (data: Partial<BusinessContext>) =>
+    apiRequest<BusinessContext>('/api/business-context', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  get: (id: string) =>
+    apiRequest<BusinessContext>(`/api/business-context/${id}`),
+
+  getByProject: (projectId: string) =>
+    apiRequest<BusinessContext>(`/api/business-context/project/${projectId}`),
+
+  update: (id: string, data: Partial<BusinessContext>) =>
+    apiRequest<BusinessContext>(`/api/business-context/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  generateSmartForm: (auditId: string) =>
+    apiRequest<{ questions: SmartFormQuestion[] }>(`/api/business-context/audits/${auditId}/generate-smart-form`, {
+      method: 'POST',
+    }),
+
+  saveContextAndContinue: (auditId: string, data: Partial<BusinessContext>) =>
+    apiRequest<{ status: string; business_context_id: string; audit_status: string }>(
+      `/api/business-context/audits/${auditId}/save-context-and-continue`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    ),
+
+  skipContext: (auditId: string) =>
+    apiRequest<{ status: string; audit_status: string }>(
+      `/api/business-context/audits/${auditId}/skip-context`,
+      { method: 'POST' }
+    ),
 }
