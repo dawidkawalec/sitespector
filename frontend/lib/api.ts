@@ -210,6 +210,43 @@ export interface CreateAuditData {
   run_ai_pipeline?: boolean
   run_execution_plan?: boolean
   crawler_user_agent?: string | null
+  persona_slug?: string | null
+}
+
+// Persona types
+export interface PersonaConfig {
+  id: string
+  slug: string
+  name: string
+  description?: string | null
+  icon?: string | null
+  sort_order: number
+  prompt_modifier?: string | null
+  dashboard_config?: {
+    kpi_cards?: Array<{ key: string; label: string; source: string; format: string; icon?: string }>
+    focus_modules?: string[]
+  } | null
+  context_questions?: Array<{ id: string; question: string; type: string; options?: string[]; hint?: string }> | null
+  is_system: boolean
+}
+
+// Action Card types
+export interface ActionCardData {
+  id: string
+  audit_id: string
+  persona_id?: string | null
+  title: string
+  description: string
+  category?: string | null
+  priority?: string | null
+  kpi_impact?: Record<string, any> | null
+  action_data?: Record<string, any> | null
+  status: 'suggested' | 'accepted' | 'dismissed' | 'completed'
+  source: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+  completed_at?: string | null
 }
 
 export interface AuditListResponse {
@@ -969,5 +1006,42 @@ export const scopedReportsAPI = {
   delete: (reportId: string) =>
     apiRequest<void>(`/api/scoped-reports/${reportId}`, {
       method: 'DELETE',
+    }),
+}
+
+export const personasAPI = {
+  list: (workspaceId?: string) =>
+    apiRequest<PersonaConfig[]>(`/api/personas${workspaceId ? `?workspace_id=${workspaceId}` : ''}`),
+
+  get: (slug: string) =>
+    apiRequest<PersonaConfig>(`/api/personas/${slug}`),
+}
+
+export const actionCardsAPI = {
+  list: (auditId: string, status?: string) =>
+    apiRequest<ActionCardData[]>(
+      `/api/audits/${auditId}/action-cards${status ? `?status=${status}` : ''}`
+    ),
+
+  create: (auditId: string, data: { title: string; description: string; category?: string; priority?: string; source?: string }) =>
+    apiRequest<ActionCardData>(`/api/audits/${auditId}/action-cards`, {
+      method: 'POST',
+      body: JSON.stringify({ ...data, source: data.source || 'user_created' }),
+    }),
+
+  update: (auditId: string, cardId: string, data: { status?: string; priority?: string; title?: string }) =>
+    apiRequest<ActionCardData>(`/api/audits/${auditId}/action-cards/${cardId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  delete: (auditId: string, cardId: string) =>
+    apiRequest<void>(`/api/audits/${auditId}/action-cards/${cardId}`, {
+      method: 'DELETE',
+    }),
+
+  generate: (auditId: string) =>
+    apiRequest<ActionCardData[]>(`/api/audits/${auditId}/action-cards/generate`, {
+      method: 'POST',
     }),
 }

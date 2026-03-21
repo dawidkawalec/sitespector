@@ -266,6 +266,7 @@ class AuditCreate(AuditBase):
     run_ai_pipeline: Optional[bool] = Field(default=True, description="Run AI analysis automatically")
     run_execution_plan: Optional[bool] = Field(default=True, description="Generate execution plan automatically")
     crawler_user_agent: Optional[str] = Field(default=None, max_length=500, description="Custom User-Agent for crawler (whitelist in Cloudflare)")
+    persona_slug: Optional[str] = Field(default=None, description="Persona slug (owner, freelancer, etc.)")
 
     @validator("competitors")
     def validate_competitors(cls, v: List[str]) -> List[str]:
@@ -319,6 +320,8 @@ class AuditResponse(AuditBase):
     senuto_fetch_mode: Optional[str] = None
     crawler_user_agent: Optional[str] = None
     crawl_blocked: bool = False
+    persona_id: Optional[UUID] = None
+    mode: Optional[str] = "professional"
 
     class Config:
         from_attributes = True
@@ -521,6 +524,73 @@ class BusinessContextResponse(BaseModel):
 class SmartFormResponse(BaseModel):
     """Schema for AI-generated smart form questions."""
     questions: List[Dict[str, Any]]
+
+
+# ============================================
+# Persona Schemas
+# ============================================
+
+class PersonaResponse(BaseModel):
+    """Schema for persona response."""
+    id: UUID
+    slug: str
+    name: str
+    description: Optional[str] = None
+    icon: Optional[str] = None
+    sort_order: int = 0
+    prompt_modifier: Optional[str] = None
+    dashboard_config: Optional[Dict[str, Any]] = None
+    context_questions: Optional[List[Dict[str, Any]]] = None
+    is_system: bool = True
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================
+# Action Card Schemas
+# ============================================
+
+class ActionCardCreate(BaseModel):
+    """Schema for creating an action card."""
+    title: str
+    description: str
+    category: Optional[str] = None
+    priority: Optional[str] = "medium"
+    kpi_impact: Optional[Dict[str, Any]] = None
+    action_data: Optional[Dict[str, Any]] = None
+    source: str = "user_created"
+
+
+class ActionCardUpdate(BaseModel):
+    """Schema for updating an action card."""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    category: Optional[str] = None
+
+
+class ActionCardResponse(BaseModel):
+    """Schema for action card response."""
+    id: UUID
+    audit_id: UUID
+    persona_id: Optional[UUID] = None
+    title: str
+    description: str
+    category: Optional[str] = None
+    priority: Optional[str] = None
+    kpi_impact: Optional[Dict[str, Any]] = None
+    action_data: Optional[Dict[str, Any]] = None
+    status: str
+    source: str
+    sort_order: int = 0
+    created_at: datetime
+    updated_at: datetime
+    completed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
 
 
 # ============================================

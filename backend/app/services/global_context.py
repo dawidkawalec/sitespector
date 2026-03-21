@@ -114,13 +114,23 @@ def build_global_snapshot(
             if k and v is not None and v != "" and v != []
         }
 
+    # Store persona for extraction in format_global_snapshot_for_prompt
+    if isinstance(extra, dict) and extra.get("_persona"):
+        snapshot["_persona"] = extra.pop("_persona")
+
     return snapshot
 
 
-def format_global_snapshot_for_prompt(snapshot: Optional[Dict[str, Any]]) -> str:
+def format_global_snapshot_for_prompt(snapshot: Optional[Dict[str, Any]], persona: Optional[Dict[str, Any]] = None) -> str:
     if not snapshot:
         return ""
-    
+
+    # Extract persona from snapshot if not passed explicitly
+    if persona is None and isinstance(snapshot, dict):
+        persona = snapshot.pop("_persona", None)
+    else:
+        snapshot.pop("_persona", None) if isinstance(snapshot, dict) else None
+
     # Extract and remove previous findings to keep the main snapshot clean
     previous_findings = snapshot.pop("previous_findings", [])
     
@@ -153,6 +163,15 @@ def format_global_snapshot_for_prompt(snapshot: Optional[Dict[str, Any]]) -> str
         bc_prompt = format_business_context_for_prompt(bc)
         if bc_prompt:
             prompt += "\n" + bc_prompt
+
+    # Inject persona modifier if available
+    if persona and persona.get("prompt_modifier"):
+        prompt += f"\nPERSONA ({persona.get('name', 'custom')}):\n"
+        prompt += persona["prompt_modifier"] + "\n"
+        focus = (persona.get("dashboard_config") or {}).get("focus_modules", [])
+        if focus:
+            prompt += f"FOCUS AREAS: {', '.join(focus)}\n"
+            prompt += "Priorytetyzuj rekomendacje pod katem tych obszarow.\n"
 
     return prompt
 

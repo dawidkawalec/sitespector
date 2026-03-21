@@ -171,6 +171,15 @@ async def create_audit(
             detail=f"Niewystarczające kredyty. Potrzeba: {audit_cost} kr, saldo: {balance.total} kr."
         )
     
+    # 3b. Resolve persona if provided
+    persona_id = None
+    if audit_data.persona_slug:
+        from app.models import Persona
+        p_result = await db.execute(select(Persona).where(Persona.slug == audit_data.persona_slug))
+        persona = p_result.scalar_one_or_none()
+        if persona:
+            persona_id = persona.id
+
     # 4. Create audit
     new_audit = Audit(
         workspace_id=workspace_id,
@@ -183,6 +192,7 @@ async def create_audit(
         run_ai_pipeline=audit_data.run_ai_pipeline if audit_data.run_ai_pipeline is not None else True,
         run_execution_plan=audit_data.run_execution_plan if audit_data.run_execution_plan is not None else True,
         crawler_user_agent=(audit_data.crawler_user_agent or "").strip() or None,
+        persona_id=persona_id,
     )
     
     db.add(new_audit)

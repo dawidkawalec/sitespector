@@ -344,6 +344,21 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 }
                 logger.info("Business context loaded for audit %s: type=%s, industry=%s", audit_id, bc.business_type, bc.industry)
 
+        # Load persona if linked
+        persona_dict = None
+        if audit.persona_id:
+            from app.models import Persona
+            p_result = await db.execute(select(Persona).where(Persona.id == audit.persona_id))
+            persona_obj = p_result.scalar_one_or_none()
+            if persona_obj:
+                persona_dict = {
+                    "name": persona_obj.name,
+                    "slug": persona_obj.slug,
+                    "prompt_modifier": persona_obj.prompt_modifier,
+                    "dashboard_config": persona_obj.dashboard_config,
+                }
+                logger.info("Persona loaded for audit %s: %s", audit_id, persona_obj.slug)
+
         crawl_data = tech_data.get("crawl", {})
         if crawl_data.get("crawl_blocked"):
             audit.ai_status = "skipped_blocked"
@@ -478,7 +493,7 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 crawl=crawl_data,
                 lighthouse=lighthouse_data,
                 senuto=senuto_data,
-                extra={"phase": "ai_contexts"},
+                extra={"phase": "ai_contexts", "_persona": persona_dict},
                 business_context=bc_dict,
             )
             
@@ -615,7 +630,7 @@ async def run_ai_analysis(audit_id: str, tech_data: Dict[str, Any]) -> None:
                 crawl=crawl_data,
                 lighthouse=lighthouse_data,
                 senuto=results.get("senuto", {}),
-                extra={"phase": "ai_strategy"},
+                extra={"phase": "ai_strategy", "_persona": persona_dict},
                 business_context=bc_dict,
             )
             strategy_tasks = {
@@ -1001,6 +1016,21 @@ async def process_audit(audit_id: str) -> None:
                     await add_audit_log(audit, "ai", "skipped", "AI pipeline disabled by user")
                     await db.commit()
         
+        # Phase 3.5: Action Card Generation (if audit has persona)
+        try:
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(Audit).where(Audit.id == audit_id))
+                audit = result.scalar_one_or_none()
+                if audit and audit.persona_id and audit.ai_status == "completed":
+                    from app.services.action_card_service import generate_action_cards
+                    await add_audit_log(audit, "action_cards", "running", "Generating persona action cards...")
+                    await db.commit()
+                    cards = await generate_action_cards(db, audit_id, audit.persona_id)
+                    await add_audit_log(audit, "action_cards", "success", f"Generated {len(cards)} action cards")
+                    await db.commit()
+        except Exception as e:
+            logger.warning("Action card generation failed (non-fatal): %s", e)
+
         # Phase 3: Execution Plan (runs after Phase 2, unless disabled)
         if should_run_execution_plan:
             # HARD BLOCK: Phase 3 MUST NOT run if Phase 2 (AI Analysis) did not complete successfully

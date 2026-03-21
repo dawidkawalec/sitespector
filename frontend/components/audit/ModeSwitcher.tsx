@@ -4,7 +4,7 @@ import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-export type AuditMode = 'data' | 'analysis' | 'plan'
+export type AuditMode = 'dashboard' | 'data' | 'analysis' | 'plan'
 
 interface ModeSwitcherProps {
   mode: AuditMode
@@ -15,9 +15,18 @@ interface ModeSwitcherProps {
   hasExecutionPlan?: boolean
   isAiLoading?: boolean
   isExecutionPlanLoading?: boolean
+  hasPersona?: boolean
 }
 
 const modeConfig = {
+  dashboard: {
+    label: 'Dashboard',
+    color: 'teal',
+    gradient: 'from-teal-500/10 to-teal-600/10',
+    borderColor: 'border-teal-500',
+    bgColor: 'bg-teal-500/10 hover:bg-teal-500/20',
+    textColor: 'text-teal-700 dark:text-teal-300'
+  },
   data: {
     label: 'Dane',
     color: 'blue',
@@ -52,7 +61,8 @@ export function ModeSwitcher({
   hasAiData = true,
   hasExecutionPlan = true,
   isAiLoading = false,
-  isExecutionPlanLoading = false
+  isExecutionPlanLoading = false,
+  hasPersona = false,
 }: ModeSwitcherProps) {
   const config = modeConfig[mode]
 
@@ -60,6 +70,21 @@ export function ModeSwitcher({
     <div className="space-y-4">
       {/* Mode Switcher */}
       <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg w-fit">
+        {/* Dashboard Mode (only when persona is set) */}
+        {hasPersona && (
+          <button
+            onClick={() => onModeChange('dashboard')}
+            className={cn(
+              'px-4 py-2 rounded-md text-sm font-medium transition-all',
+              mode === 'dashboard'
+                ? `${modeConfig.dashboard.bgColor} ${modeConfig.dashboard.textColor}`
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {modeConfig.dashboard.label}
+          </button>
+        )}
+
         {/* Data Mode */}
         <button
           onClick={() => onModeChange('data')}
